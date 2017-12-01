@@ -12,7 +12,7 @@ class Profile(models.Model, MyBaseModel):
     user = models.OneToOneField(User)
     phone_number = models.CharField(max_length=100)
     cell_phone_number = models.CharField(max_length=100)
-    business_name = models.CharField(max_length=255):""
+    business_name = models.CharField(max_length=255)
     lat = models.DecimalField()
     lon = models.DecimalField()
 
