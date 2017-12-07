@@ -1,0 +1,33 @@
+{% extends "base.html" %}
+
+{% block content %}
+
+<div class="container">
+    <div class="login">
+
+  	     <h1 class="login-heading">
+            <strong>Welcome.</strong>
+            Please login.
+        </h1>
+
+        {% if form.errors %}
+            <p>Your username and password didn't match. Please try again.</p>
+        {%  endif %}
+
+        <form method="post" action="{% url 'login' %}">
+            {% csrf_token %}
+            <input type="text" name="username" placeholder="Username" required="required" class="input-txt" />
+            <input type="password" name="password" placeholder="Password" required="required" class="input-txt" />
+            <div class="login-footer">
+               <a href="{% url 'password_reset' %}" class="lnk">
+                <span class="icon icon--min">ಠ╭╮ಠ</span>
+                I've forgotten something
+              </a>
+              <button type="submit" class="btn btn--right">Sign in</button>
+            </div>
+        </form>
+
+    </div>
+</div>
+
+{% endblock %}

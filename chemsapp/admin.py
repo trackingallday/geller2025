@@ -38,7 +38,6 @@ class ProductRemoveAdmin(admin.ModelAdmin):
 admin.site.register(SafetyWear, SafetyWearAdmin)
 admin.site.register(Distributor, DistributorAdmin)
 admin.site.register(Customer, CustomerAdmin)
-admin.site.register(Profile, ProfileAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductAdd, ProductAddAdmin)
 admin.site.register(ProductRemove, ProductRemoveAdmin)

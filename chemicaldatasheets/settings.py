@@ -37,12 +37,16 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'chemsapp'
+    'rest_framework',
+    'rest_framework.authtoken',
+    'chemsapp',
+    'corsheaders',
 ]
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -50,12 +54,13 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
+CORS_ORIGIN_ALLOW_ALL = True
 ROOT_URLCONF = 'chemicaldatasheets.urls'
 
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': ['.//templates',],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -68,8 +73,10 @@ TEMPLATES = [
     },
 ]
 
-WSGI_APPLICATION = 'chemicaldatasheets.wsgi.application'
+LOGIN_REDIRECT_URL = '/'
 
+WSGI_APPLICATION = 'chemicaldatasheets.wsgi.application'
+APPEND_SLASH=False
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -81,6 +88,14 @@ DATABASES = {
     }
 }
 
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': (
+        'rest_framework.authentication.TokenAuthentication',
+    ),
+    'DEFAULT_PERMISSION_CLASSES': (
+        'rest_framework.permissions.IsAuthenticated',
+    )
+}
 
 # Password validation
 # https://docs.djangoproject.com/en/1.11/ref/settings/#auth-password-validators
@@ -119,3 +134,12 @@ USE_TZ = True
 # https://docs.djangoproject.com/en/1.11/howto/static-files/
 
 STATIC_URL = '/static/'
+
+#react app files config
+REACT_APP_DIR = os.path.join(BASE_DIR, 'frontend')
+CHEMS_APP_DIR = os.path.join(BASE_DIR, 'chemsapp')
+
+STATICFILES_DIRS = [
+    os.path.join(REACT_APP_DIR, 'build', 'static'),
+    os.path.join(CHEMS_APP_DIR, 'static', 'chemsapp')
+]
