@@ -1,5 +1,17 @@
 from django.db import models
 from django.contrib.auth.models import User
+from django.conf import settings
+from django.db.models.signals import post_save
+from django.dispatch import receiver
+from rest_framework.authtoken.models import Token
+
+typeChoices = [("customer", "customer"), ("distributor", "distributor"), ("admin", "admin")]
+
+
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_auth_token(sender, instance=None, created=False, **kwargs):
+    if created:
+        Token.objects.create(user=instance)
 
 
 class MyBaseModel(models.Model):
@@ -9,15 +21,19 @@ class MyBaseModel(models.Model):
 
 
 class Profile(MyBaseModel):
-    user = models.OneToOneField(User)
-    phone_number = models.CharField(max_length=100)
-    cell_phone_number = models.CharField(max_length=100)
-    business_name = models.CharField(max_length=255)
+    user = models.OneToOneField(User, unique=True)
+    phoneNumber = models.CharField(max_length=100)
+    cellPhoneNumber = models.CharField(max_length=100)
+    businessName = models.CharField(max_length=255)
+    address = models.CharField(max_length=500)
     lat = models.DecimalField(max_digits=80, decimal_places=8)
     lon = models.DecimalField(max_digits=80, decimal_places=8)
+    profileType = models.CharField(choices=typeChoices, default="customer",
+                                   max_length=255, null=True)
+    hasSetPassword = models.BooleanField(default=False)
 
     def __str__(self):
-        return '%s %s %s'.format(self.business_name, self.user.first_name, self.user.last_name)
+        return "{} - {} - {}".format(self.businessName, self.user.first_name, self.user.last_name)
 
 
 class Product(MyBaseModel):
@@ -34,7 +50,7 @@ class Product(MyBaseModel):
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products")
 
     def __str__(self):
-        return '%s %s'.format(self.name, self.brand)
+        return "{} ".format(self.name)
 
 
 class Customer(Profile):
@@ -51,7 +67,7 @@ class ProductAdd(MyBaseModel):
     distributor = models.ForeignKey(Distributor, related_name="productAdds", on_delete=models.CASCADE)
 
     def __str__(self):
-        return '%s %s %s'.format(self.distributor.business_name, self.customer.business_name, self.product.name)
+        return "{} - {} - {}".format(self.distributor.businessName, self.customer.businessName, self.productAdded.name)
 
 
 class ProductRemove(MyBaseModel):
@@ -60,7 +76,7 @@ class ProductRemove(MyBaseModel):
     distributor = models.ForeignKey(Distributor, related_name="productRemoves", on_delete=models.CASCADE)
 
     def __str__(self):
-        return '%s %s %s'.format(self.distributor.business_name, self.customer.business_name, self.product.name)
+        return "{} - {} - {}".format(self.distributor.business_name, self.customer.business_name, self.productRemoved.name)
 
 
 class SafetyWear(MyBaseModel):
