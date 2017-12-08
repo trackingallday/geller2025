@@ -8,3 +8,9 @@
 *.pdf
 
 chemsapp/media/documents 
+
+/node_modules
+
+
+chemicaldatasheets/__pycache__/
+
