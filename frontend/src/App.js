@@ -59,7 +59,11 @@ class App extends Component {
   }
 
   renderDistributorCustomer = () => {
-      return (<DistributorCustomers token={this.state.token} />)
+      return (<DistributorCustomers token={this.state.token} />);
+  }
+
+  renderDistributorProducts = () => {
+    return (<DistributorProducts token={this.state.token} />);
   }
 
   render() {
@@ -76,7 +80,7 @@ class App extends Component {
         <Content>
           <div style={{ background: '#fff', padding: 12, minHeight: 600 }}>
             <Route path="/customers" render={this.renderDistributorCustomer} />
-          <Route path="/products" render={this.renderDistributorCustomer} />
+          <Route path="/products" render={this.renderDistributorProducts} />
             <Route path="/" component={distProducts} token={token} />
           </div>
         </Content>
