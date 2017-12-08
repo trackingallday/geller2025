@@ -27,8 +27,8 @@ def customers_list(request):
 @csrf_exempt
 @api_view(['GET'])
 def products_list(request):
-    customers = Customer.objects.all()
-    serializer = CustomerSerializer(customers, many=True)
+    products = Product.objects.all()
+    serializer = ProductSerializer(products, many=True)
     return JsonResponse(serializer.data, safe=False)
 
 
