@@ -4,3 +4,7 @@
 .idea/misc.xml
 
 *.pyc
+
+*.pdf
+
+chemsapp/media/documents 
