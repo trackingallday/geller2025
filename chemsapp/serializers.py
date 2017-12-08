@@ -5,13 +5,13 @@ from rest_framework import serializers
 
 class ProductSerializer(serializers.ModelSerializer):
 
-    customers = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    customers = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Product
         fields = (
-            'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
-            'instructions', 'productCode', 'brand', 'infoSheetLink', 'sdsSheetLink',
+            'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
+            'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet',
             'safetyWears', 'customers',
         )
 
