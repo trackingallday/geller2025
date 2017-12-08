@@ -3,7 +3,7 @@
 .idea/workspace.xml
 .idea/misc.xml
 
-*.pyc
+*.swp
 
 *.pdf
 
@@ -12,5 +12,15 @@ chemsapp/media/documents
 /node_modules
 
 
-chemicaldatasheets/__pycache__/
+*.pyc
+
+db.sqlite3
+
+
+__pycache__/
+
+
+
+*.sqlite3
+
 
