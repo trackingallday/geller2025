@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
 import DistributorCustomers from './components/distributor/DistributorCustomers';
+import DistributorProducts from './components/distributor/DistributorProducts';
+
 import logo from './logo.svg';
 import { Route, Link } from 'react-router-dom';
-import { Layout, Menu } from 'antd';
+import { Layout, Menu, Icon, Row, Col } from 'antd';
 import axios from 'axios';
 import serverUrl from './constants/serverUrl';
 import './App.css';
@@ -25,7 +27,7 @@ class App extends Component {
 
   componentDidMount() {
     axios.post(serverUrl + '/get_auth_token/', {
-      username: 'dist1',
+      username: 'rimuboddy',
       password: 'cbr400rr'
     }).then((response) => {
       console.log(response.data);
@@ -39,22 +41,33 @@ class App extends Component {
 
   renderMenu() {
     return (
-      <Menu
-        theme="dark"
-        mode="horizontal"
-        defaultSelectedKeys={['customers']}
-        style={{ lineHeight: '64px' }}
-      >
-        <Menu.Item key="home">
-          <Link to="/" label="Home">Home</Link>
-        </Menu.Item>
-        <Menu.Item key="customers">
-          <Link to="/customers" label="Customers">Customers</Link>
-        </Menu.Item>
-        <Menu.Item key="products">
-          <Link to="/products" label="Products">Products</Link>
-        </Menu.Item>
-      </Menu>
+      <Row type="flex" justify="start">
+        <Col span="6">
+          <Menu
+          theme="dark"
+          mode="horizontal"
+          defaultSelectedKeys={['home']}
+          style={{ lineHeight: '64px', width: '100%' }}
+        >
+          <Menu.Item key="customers">
+            <Link to="/customers" label="Customers">Customers</Link>
+          </Menu.Item>
+          <Menu.Item key="products">
+            <Link to="/products" label="Products">Products</Link>
+          </Menu.Item>
+          </Menu>
+        </Col>
+        <Col span="18">
+          <Row type="flex" justify="end">
+            <Col>
+              <a href="/accounts/logout" style={{ color: '#fff' }}>
+                <Icon type="user-delete" style={{ fontSize: 20}} />
+                <span style={{ fontSize: 14}}>Logout</span>
+              </a>
+            </Col>
+          </Row>
+        </Col>
+      </Row>
     );
   }
 
