@@ -17,7 +17,8 @@ from django.conf.urls import url
 from django.contrib import admin
 from django.conf.urls import url, include
 from rest_framework.authtoken import views as rest_framework_views
-
+from django.conf.urls.static import static
+from django.conf import settings
 
 
 urlpatterns = [
@@ -27,5 +28,7 @@ urlpatterns = [
     url(r'^', include('chemsapp.urls', namespace='chemsapp', app_name='chemsapp')),
 ]
 
+if settings.DEBUG:
+    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
 
 
