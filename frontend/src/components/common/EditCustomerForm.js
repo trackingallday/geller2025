@@ -2,32 +2,9 @@ import React from 'react';
 import { Form, Button } from 'antd';
 import { postEditCustomer } from '../../util/DjangoApi';
 import CustomerForm from './CustomerForm';
-
+import { tailFormItemLayout } from '../../constants/tableLayout';
 
 const FormItem = Form.Item;
-
-const formItemLayout = {
-  labelCol: {
-    xs: { span: 24 },
-    sm: { span: 8 },
-  },
-  wrapperCol: {
-    xs: { span: 24 },
-    sm: { span: 16 },
-  },
-};
-const tailFormItemLayout = {
-  wrapperCol: {
-    xs: {
-      span: 24,
-      offset: 0,
-    },
-    sm: {
-      span: 16,
-      offset: 8,
-    },
-  },
-};
 
 class EditCustomerForm extends CustomerForm {
 

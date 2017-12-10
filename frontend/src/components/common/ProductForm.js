@@ -1,8 +1,10 @@
 import React, { Component } from 'react';
-import { Form, Input, Select } from 'antd';
-import { getProducts } from '../../util/DjangoApi';
+import { Form, Input, Select, Upload, Button } from 'antd';
+import { getProducts, getSafetyWears } from '../../util/DjangoApi';
+import { tailFormItemLayout } from '../../constants/tableLayout';
 
 
+const { TextArea } = Input;
 const FormItem = Form.Item;
 const Option = Select.Option;
 
@@ -21,6 +23,9 @@ class ProductForm extends Component {
 
   state = {
     files: [],
+    products: [],
+    safetyWears: [],
+    safetyWearOptions: [],
   }
 
   getInitialValue(key) {
@@ -31,71 +36,64 @@ class ProductForm extends Component {
   }
 
   componentDidMount() {
-    getProducts( (products) => {
+    getProducts((products) => {
       this.setState({ products });
     });
-  }
 
-  handleSubmit = (e) => {
-    e.preventDefault();
-    this.props.form.validateFieldsAndScroll((err, values) => {
-      if (!err) {
-        const data = Object.assign(values, { geocodingDetail: this.state.addressResult });
-        postNewCustomer(data, (response) => {
-          this.props.onCreate(response);
-        });
-      }
+    getSafetyWears((safetyWears) => {
+      this.setState({
+        safetyWears,
+        safetyWearOptions: safetyWears.map((sw, i) => (
+          <Option key={i} value={sw.id}>{ sw.name }</Option>
+        )),
+      });
     });
+
   }
-  'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
-            'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet',
-            'safetyWears', 'customers',
 
   render() {
     const { getFieldDecorator } = this.props.form;
     return (
       <Form onSubmit={this.handleSubmit} ref="form">
-        <FormItem
-          {...formItemLayout}
-          label="Name"
-        >
-          {getFieldDecorator('name', {
-            rules: [
-              { required: true, message: 'Please input an name!'},
-            ],
-          })(<Input />)}
+        <FormItem {...formItemLayout} label="Name">
+          {getFieldDecorator('name', {rules: [{ required: true, message: 'Required!'}]})(
+            <Input />)}
         </FormItem>
-        <FormItem {...formItemLayout}
-          label="Password"
-          help="Please set a temporary password for the customer"
-        >
-          {getFieldDecorator('password', {
-            rules: [{
-              required: true, message: 'Please input your password!',
-            }, {
-              validator: this.checkConfirm,
-            }],
-          })(
-            <Input type="password" />
-          )}
+        <FormItem {...formItemLayout} label="Brand">
+          {getFieldDecorator('brand', { rules: [{required: true, message: 'Required!'}]})(
+            <TextArea />)}
         </FormItem>
-        <FormItem
-          {...formItemLayout}
-          label="Confirm Password"
-        >
-          {getFieldDecorator('confirm', {
-            rules: [{
-              required: true, message: 'Please confirm your password!',
-            }, {
-              validator: this.checkPassword,
-            }],
-          })(
-            <Input type="password" onBlur={this.handleConfirmBlur} />
-          )}
+        <FormItem {...formItemLayout} label="Product Code">
+          {getFieldDecorator('productCode', { rules: [{required: true, message: 'Required!'}]})(
+            <Input />)}
         </FormItem>
-          { this.renderCommonFormFields() }
-        <FormItem {...tailFormItemLayout}>
-          <Button type="primary" htmlType="submit" onClick={this.handleSubmit}>Register</Button>
+        <FormItem {...formItemLayout} label="Usage Desc"
+          placeholder="ie: Hard surface cleaner"
+          help="Please set a temporary password for the customer">
+          {getFieldDecorator('usageType', { rules: [{required: true, message: 'Required!'}]})(
+            <Input />)}
+        </FormItem>
+        <FormItem {...formItemLayout} label="Amount Desc">
+          {getFieldDecorator('amountDesc', { rules: [{required: true, message: 'Required!'}]})(
+            <TextArea />)}
+        </FormItem>
+        <FormItem {...formItemLayout} label="Instructions">
+          {getFieldDecorator('instructions', { rules: [{required: true, message: 'Required!'}]})(
+            <TextArea />)}
+        </FormItem>
+        <FormItem {...formItemLayout} label="Safety Wear">
+          {getFieldDecorator('safetyWears', { rules: [{required: true, message: 'Required!'}]})(
+            <Select
+             mode="multiple"
+             style={{ width: '100%' }}
+             placeholder="Please select"
+             onChange={() => {}}
+           >
+             { this.state.safetyWearOptions }
+           </Select>)}
+        </FormItem>
+        <FormItem { ...tailFormItemLayout }>
+          <Button type="primary" htmlType="submit" onClick={this.handleSubmit}>Done</Button>
         </FormItem>
       </Form>
     );
