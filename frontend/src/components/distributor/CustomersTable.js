@@ -1,5 +1,50 @@
 import React, { Component } from 'react';
-import { Table, Input, Button, Icon } from 'antd';
+import { Table, Input, Button, Icon, Row, Col } from 'antd';
+
+
+const customerDetailList = [
+  [ 'Name', 'businessName'],
+  [ 'Contact First Name', 'first_name' ],
+  [ 'Contact Last Name', 'last_name'],
+  [ 'Email','email'], ['Address', 'address'], ['phoneNumber', 'phoneNumber'],
+  [ 'Cell Phone', 'cellPhoneNumber'], ['Products', 'products'],
+];
+
+
+const renderCustomerDetail = (record) => {
+   return customerDetailList.map((def, i) => {
+    return (
+      <Row key={i}>
+        <Col span={4}>
+          {def[0]}
+        </Col>
+        <Col span={20}>
+          <span style={{wordWrap: 'break-word'}}>
+            {record[def[1]]}
+          </span>
+        </Col>
+      </Row>
+    );
+  });
+}
+
+
+const expandedRowRender = (record) => {
+
+  const detail = renderCustomerDetail(record);
+
+  return (
+    <div>
+      <Row type="flex" justify="start">
+        <Col span={24}>
+          { detail }
+        </Col>
+      </Row>
+    </div>
+  );
+}
+
+
 
 export default class CustomersTable extends Component {
 
@@ -74,28 +119,16 @@ export default class CustomersTable extends Component {
       title: 'Address',
       dataIndex: 'address',
       key: 'address',
-      filters: [{
-        text: 'Dunedin',
-        value: 'Dunedin',
-      }, {
-        text: 'Christchurch',
-        value: 'Christchurch',
-      }],
-      onFilter: (value, record) => record.address.indexOf(value) === 0,
+      render: (value, record) => value.slice(0, 15) + "...",
     }, {
       title: 'Cell Ph',
       dataIndex: 'cellPhoneNumber',
       key: 'cellPhoneNumber',
     }, {
-      title: 'Phone',
+      title: 'phoneNumber',
       dataIndex: 'phoneNumber',
       key: 'phoneNumber',
-    }, {
-      title: 'Contact Name',
-      dataIndex: 'first_name',
-      key: 'first_name',
-      render: (value, record) => `${record.first_name} ${record.last_name}`,
-    }, {
+    },{
       title: 'Products',
       dataIndex: 'products',
       key: 'products',
@@ -105,11 +138,15 @@ export default class CustomersTable extends Component {
       title: 'Edit',
       key: 'operation',
       width: 80,
-      render: () => <a href="#">edit</a>,
+      render: (value, record) => (
+        <a href="#" onClick={() => this.props.onEditClick(value, record)}>
+          edit
+        </a>
+      ),
     },
     ];
     const data = filtered ? filteredData : this.props.data;
-    return <Table columns={columns} dataSource={data} />;
+    return <Table columns={columns} dataSource={data} expandedRowRender={expandedRowRender} onExpand={this.onTableExpand} />;
   }
 
  }
