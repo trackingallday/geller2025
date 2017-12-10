@@ -1,12 +1,14 @@
 import React, { Component } from 'react';
 import DistributorCustomers from './components/distributor/DistributorCustomers';
 import DistributorProducts from './components/distributor/DistributorProducts';
+import NewCustomerForm from './components/common/NewCustomerForm';
 
 import logo from './logo.svg';
 import { Route, Link } from 'react-router-dom';
 import { Layout, Menu, Icon, Row, Col } from 'antd';
 import axios from 'axios';
 import serverUrl from './constants/serverUrl';
+
 import './App.css';
 
 
@@ -30,10 +32,10 @@ class App extends Component {
       username: 'rimuboddy',
       password: 'cbr400rr'
     }).then((response) => {
-      console.log(response.data);
       this.setState({
         token: `Token ${response.data.token}`,
       });
+      localStorage.setItem('token', `Token ${response.data.token}`);
     }).catch((error) => {
       console.log(error);
     });
@@ -42,22 +44,25 @@ class App extends Component {
   renderMenu() {
     return (
       <Row type="flex" justify="start">
-        <Col span="6">
+        <Col span="20">
           <Menu
           theme="dark"
           mode="horizontal"
           defaultSelectedKeys={['home']}
           style={{ lineHeight: '64px', width: '100%' }}
         >
+          <Menu.Item key="home">
+            <Link to="/" label="Home">Home</Link>
+          </Menu.Item>
           <Menu.Item key="customers">
             <Link to="/customers" label="Customers">Customers</Link>
           </Menu.Item>
           <Menu.Item key="products">
             <Link to="/products" label="Products">Products</Link>
           </Menu.Item>
-          </Menu>
+         </Menu>
         </Col>
-        <Col span="18">
+        <Col span="4">
           <Row type="flex" justify="end">
             <Col>
               <a href="/accounts/logout" style={{ color: '#fff' }}>
@@ -71,16 +76,7 @@ class App extends Component {
     );
   }
 
-  renderDistributorCustomer = () => {
-      return (<DistributorCustomers token={this.state.token} />);
-  }
-
-  renderDistributorProducts = () => {
-    return (<DistributorProducts token={this.state.token} />);
-  }
-
   render() {
-    const token = this.state.token;
     if(!this.state.token) {
       return (<div>helloo woeld</div>)
     }
@@ -92,9 +88,9 @@ class App extends Component {
         </Header>
         <Content>
           <div style={{ background: '#fff', padding: 12, minHeight: 600 }}>
-            <Route path="/customers" render={this.renderDistributorCustomer} />
-          <Route path="/products" render={this.renderDistributorProducts} />
-            <Route path="/" component={distProducts} token={token} />
+            <Route exact path="/customers" component={DistributorCustomers} />
+            <Route exact path="/products" component={DistributorProducts} />
+            <Route exact path="/" component={NewCustomerForm} />
           </div>
         </Content>
         <Footer style={{ textAlign: 'center' }}>
