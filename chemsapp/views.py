@@ -40,6 +40,7 @@ def new_customer(request):
         return JsonResponse({"message": "you cannot create customers"})
 
     data = request.data['data']
+
     user = User.objects.create_user(
         first_name=data['first_name'],
         last_name=data['last_name'],
@@ -100,7 +101,8 @@ def edit_customer(request):
 @csrf_exempt
 @api_view(['GET'])
 def safety_wears_list(request):
-    return JsonResponse(SafetyWearSerializer(SafetyWear.objects.all(), many=True))
+    serializer = SafetyWearSerializer(SafetyWear.objects.all(), many=True)
+    return JsonResponse(serializer.data, safe=False)
 
 
 
