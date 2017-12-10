@@ -1,7 +1,12 @@
 import React, { Component } from 'react';
-import DistributorCustomers from './components/distributor/DistributorCustomers';
-import DistributorProducts from './components/distributor/DistributorProducts';
 import NewCustomerForm from './components/common/NewCustomerForm';
+import EditCustomerForm from './components/common/EditCustomerForm';
+import ProductForm from './components/common/ProductForm';
+import RecordAdmin from './components/common/RecordAdmin';
+import ProductsTable from './components/distributor/ProductsTable';
+import CustomersTable from './components/distributor/CustomersTable';
+import { getProducts, getCustomers } from './util/DjangoApi';
+
 
 import logo from './logo.svg';
 import { Route, Link } from 'react-router-dom';
@@ -75,6 +80,32 @@ class App extends Component {
     );
   }
 
+  renderDistributorProducts() {
+    return (
+      <RecordAdmin
+        newForm={ProductForm}
+        editForm={ProductForm}
+        recordsTable={ProductsTable}
+        getDataFunc={getProducts}
+        recordType="Product"
+        dataUrl="/products_list/"
+      />
+    );
+  }
+
+  renderDistributorCustomers() {
+    return (
+      <RecordAdmin
+        newForm={NewCustomerForm}
+        editForm={EditCustomerForm}
+        recordsTable={CustomersTable}
+        getDataFunc={getCustomers}
+        recordType="Customer"
+        dataUrl="/customers_list/"
+      />
+    )
+  }
+
   render() {
     if(!this.state.token) {
       return (<div>helloo woeld</div>)
@@ -87,8 +118,8 @@ class App extends Component {
         </Header>
         <Content>
           <div style={{ background: '#fff', padding: 12, minHeight: 600 }}>
-            <Route exact path="/customers" component={DistributorCustomers} />
-            <Route exact path="/products" component={DistributorProducts} />
+            <Route exact path="/customers" render={this.renderDistributorCustomers} />
+          <Route exact path="/products" render={this.renderDistributorProducts} />
           <Route exact path="/" render={() => <div>hi</div>} />
           </div>
         </Content>
