@@ -7,6 +7,7 @@ from chemsapp.serializers import ProductSerializer, CustomerSerializer
 from chemsapp.models import Customer, Product
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
+import json
 
 
 @csrf_exempt
@@ -36,23 +37,31 @@ def products_list(request):
 @api_view(['POST'])
 def new_customer(request):
     if not request.user.profile.profileType == "distributor":
-        return JsonResponse(False)
+        return JsonResponse({"message": "you cannot create customers"})
+
+    data = request.data['data']
     user = User.objects.create_user(
-        username=request.POST.get('username'),
-        email=request.POST.get('email'),
-        password=request.POST('password'),
+        first_name=data['first_name'],
+        last_name=data['last_name'],
+        email=data['email'],
+        password=['password'],
+        username=data['email'],
     )
 
     customer = Customer.objects.create(
         user=user,
-        phoneNumber=request.POST.get('phoneNumber'),
-        cellPhoneNumber=request.POST.get('cellPhoneNumber'),
-        businessName=request.POST.get('businessName'),
-        lat=request.POST.get('lat'),
-        lon=request.POST.get('lon'),
-        profileType=request.POST.get('profileType'),
-        products=[]
+        phoneNumber=data.get('phoneNumber'),
+        cellPhoneNumber=data.get('cellPhoneNumber'),
+        businessName=data.get('businessName'),
+        profileType=data.get('customer'),
+        geocodingDetail=data.get('geocodingDetail'),
+        address=data.get('address'),
     )
 
+    products = Product.objects.filter(pk__in=data.get('products'))
+    customer.products = products
     customer.save()
-    return JsonResponse(True)
+    request.user.profile.distributor.customers.add(customer)
+
+    return JsonResponse({"message": "customer saved"})
+
