@@ -65,3 +65,33 @@ def new_customer(request):
 
     return JsonResponse({"message": "customer saved"})
 
+
+@csrf_exempt
+@api_view(['POST'])
+def edit_customer(request):
+    if not request.user.profile.profileType == "distributor":
+        return JsonResponse({"message": "you cannot edit customers"})
+
+    data = request.data['data']
+    print(data)
+
+    customer = request.user.profile.distributor.customers.get(id=data.get('id'))
+
+    if not customer:
+        return JsonResponse({"message": "you may not edit this customer"})
+
+    customer.user.first_name = data.get('first_name')
+    customer.user.last_name = data.get('last_name')
+    customer.user.save()
+
+    customer.address = data.get('address')
+    customer.businessName = data.get('businessName')
+    customer.phoneNumber = data.get('phoneNumber')
+    customer.cellPhoneNumber = data.get('cellPhoneNumber')
+
+    if data.get('geocodingDetail'):
+        customer.geocodingDetail = data.get('geocodingDetail')
+
+    customer.save()
+
+    return JsonResponse({"message": "customer edited"})
