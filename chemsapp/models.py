@@ -30,8 +30,6 @@ class Profile(MyBaseModel, models.Model):
     cellPhoneNumber = models.CharField(max_length=100)
     businessName = models.CharField(max_length=255)
     address = models.CharField(max_length=500)
-    lat = models.DecimalField(max_digits=80, decimal_places=8)
-    lon = models.DecimalField(max_digits=80, decimal_places=8)
     profileType = models.CharField(choices=typeChoices, default="customer",
                                    max_length=255, null=True)
     hasSetPassword = models.BooleanField(default=False)
@@ -60,10 +58,13 @@ class Product(MyBaseModel, models.Model):
 
 class Customer(Profile):
     products = models.ManyToManyField(Product, related_name="customers", null=True)
+    geocodingDetail = models.TextField(max_length=1500, null=True)
+
 
 
 class Distributor(Profile):
     customers = models.ManyToManyField(Customer, related_name="distributors", null=True)
+    geocodingDetail = models.TextField(max_length=1500, null=True)
 
 
 class ProductAdd(MyBaseModel, models.Model):

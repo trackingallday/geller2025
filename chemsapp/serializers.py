@@ -34,6 +34,6 @@ class CustomerSerializer(serializers.ModelSerializer):
         model = Customer
         fields = (
             'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
-            'lat', 'lon', 'products', 'address',
+            'products', 'address', 'geocodingDetail',
         )
 
