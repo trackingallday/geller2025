@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Table, Input, Button, Icon, Row, Col, Card } from 'antd';
 import QRCode from 'qrcode.react';
+import { alphabetSort } from '../../util/Sorter';
 
 
 const { Meta } = Card;
@@ -155,10 +156,12 @@ export default class ProductsTable extends Component {
           filterDropdownVisible: visible,
         }, () => this.searchInput && this.searchInput.focus());
       },
+      sorter: (a, b) => alphabetSort(a.name, b.name),
     }, {
       title: 'Brand',
       dataIndex: 'brand',
       key: 'brand',
+      sorter: (a, b) => alphabetSort(a.brand, b.brand),
     },
     {
       title: 'Info',

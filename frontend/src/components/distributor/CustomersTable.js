@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { Table, Input, Button, Icon, Row, Col } from 'antd';
-
+import { getProducts } from '../../util/DjangoApi';
+import { alphabetSort } from '../../util/Sorter';
 
 const customerDetailList = [
   [ 'Name', 'businessName'],
@@ -45,16 +46,24 @@ const expandedRowRender = (record) => {
 }
 
 
-
 export default class CustomersTable extends Component {
 
   state = {
     filterDropdownVisible: false,
     data: [],
+    products: [],
+    productsFilterVisible: false,
     filteredData: [],
     searchText: '',
     filtered: false,
   };
+
+  componentDidMount() {
+    getProducts( (products) => {
+      this.setState({ products: products.map(p => ({ text: p.name, value: p.name })) });
+      console.log(this.state.products)
+    });
+  }
 
   onInputChange = (e) => {
     this.setState({ searchText: e.target.value });
@@ -111,28 +120,33 @@ export default class CustomersTable extends Component {
           filterDropdownVisible: visible,
         }, () => this.searchInput && this.searchInput.focus());
       },
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => alphabetSort(a.businessName, b.businessName),
     }, {
       title: 'Email',
       dataIndex: 'email',
       key: 'email',
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => alphabetSort(a.email, b.email),
     }, {
-      title: 'Address',
-      dataIndex: 'address',
-      key: 'address',
-      render: (value, record) => value.slice(0, 15) + "...",
-    }, {
-      title: 'Cell Ph',
-      dataIndex: 'cellPhoneNumber',
-      key: 'cellPhoneNumber',
-    }, {
-      title: 'phoneNumber',
-      dataIndex: 'phoneNumber',
-      key: 'phoneNumber',
+      title: 'First Name',
+      dataIndex: 'first_name',
+      key: 'first_name',
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => alphabetSort(a.first_name, b.first_name),
+    },{
+      title: 'Last Name',
+      dataIndex: 'last_name',
+      key: 'last_name',
+      defaultSortOrder: 'descend',
+      sorter: (a, b) => alphabetSort(a.last_name, b.last_name),
     },{
       title: 'Products',
       dataIndex: 'products',
       key: 'products',
-      render: (value, record) => value.slice(0, 15) + "...",
+      filters: this.state.products,
+      onFilter: (value, record) => record.products.find((p) => p.trim() === value.trim()),
+      render: (value, record) => value.slice(0, 30) + "...",
     },
     {
       title: 'Edit',
