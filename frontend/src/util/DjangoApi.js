@@ -47,3 +47,9 @@ export function postNewCustomer(data, callback) {
   return postData('/new_customer/', data, callback);
 
 }
+
+export function postEditCustomer(data, callback) {
+
+  return postData('/edit_customer/', data, callback);
+
+}

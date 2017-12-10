@@ -48,7 +48,6 @@ class App extends Component {
           <Menu
           theme="dark"
           mode="horizontal"
-          defaultSelectedKeys={['home']}
           style={{ lineHeight: '64px', width: '100%' }}
         >
           <Menu.Item key="home">
@@ -90,7 +89,7 @@ class App extends Component {
           <div style={{ background: '#fff', padding: 12, minHeight: 600 }}>
             <Route exact path="/customers" component={DistributorCustomers} />
             <Route exact path="/products" component={DistributorProducts} />
-            <Route exact path="/" component={NewCustomerForm} />
+          <Route exact path="/" render={() => <div>hi</div>} />
           </div>
         </Content>
         <Footer style={{ textAlign: 'center' }}>

@@ -33,7 +33,7 @@ class CustomerSerializer(serializers.ModelSerializer):
     class Meta:
         model = Customer
         fields = (
-            'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
+            'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
             'products', 'address', 'geocodingDetail',
         )
 

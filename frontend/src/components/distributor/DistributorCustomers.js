@@ -49,9 +49,6 @@ export default class DistributorCustomers extends Component {
   }
 
   toggleNew = () => {
-    if(this.state.show) {
-      this.props.form.resetFields();
-    }
     this.setState({
       showNew: this.state.showNew ? null : true,
     });
@@ -74,7 +71,7 @@ export default class DistributorCustomers extends Component {
       description: 'Nice work you have successfully added a customer'});
   }
 
-  onEditCustomer = (response) => {
+  onEditComplete = (response) => {
     this.toggleEdit();
     this.getCustomersData();
     openNotification({ message: response.data.message,
@@ -88,11 +85,11 @@ export default class DistributorCustomers extends Component {
 
     const formProps = {
       onCreate: onNewCustomer,
-      onEditComplete: this.onNewCustomer,
+      onEditComplete,
       customersData,
       customerToEdit,
     };
-
+    console.log(showNew, showEdit);
     const MyNewCustomerForm = this.MyNewCustomerForm;
     const MyEditCustomerForm = this.MyEditCustomerForm;
 
