@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from chemsapp.models import ProductRemove, ProductAdd, Product, Customer, Distributor
+from chemsapp.models import ProductRemove, ProductAdd, Product, Customer, Distributor, SafetyWear
 from rest_framework import serializers
 
 
@@ -35,5 +35,14 @@ class CustomerSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
             'products', 'address', 'geocodingDetail',
+        )
+
+
+class SafetyWearSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SafetyWear
+        fields = (
+            'id', 'name', 'imageLink',
         )
 
