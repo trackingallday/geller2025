@@ -122,6 +122,7 @@ class CustomerForm extends Component {
       </FormItem>),
       (<FormItem {...formItemLayout} label="Address" help="Try typing the name of the business" key={3}>
         {getFieldDecorator('address', {
+          initialValue: this.getInitialValue('address'),
           rules: [{ required: true, message: 'Please choose an address' }]})(
             <MapboxSearchInput onSelect={this.onAddressSelect} initialValue={this.getInitialValue('address')} />)}
       </FormItem>),

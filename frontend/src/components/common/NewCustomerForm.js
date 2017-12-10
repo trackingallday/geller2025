@@ -46,7 +46,6 @@ class NewCustomerForm extends CustomerForm {
 
   render() {
     const { getFieldDecorator } = this.props.form;
-
     return (
       <Form onSubmit={this.handleSubmit} ref="form">
         <FormItem
