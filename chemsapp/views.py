@@ -3,8 +3,8 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import os
-from chemsapp.serializers import ProductSerializer, CustomerSerializer
-from chemsapp.models import Customer, Product
+from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer
+from chemsapp.models import Customer, Product, SafetyWear
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 import json
@@ -95,3 +95,12 @@ def edit_customer(request):
     customer.save()
 
     return JsonResponse({"message": "customer edited"})
+
+
+@csrf_exempt
+@api_view(['GET'])
+def safety_wears_list(request):
+    return JsonResponse(SafetyWearSerializer(SafetyWear.objects.all(), many=True))
+
+
+

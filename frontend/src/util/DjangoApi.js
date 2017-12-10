@@ -42,6 +42,14 @@ export function getProducts(callback) {
 
 }
 
+export function getSafetyWears(callback) {
+
+  return getData('/safety_wears_list/',(response) => {
+    callback(response.data);
+  });
+
+}
+
 export function postNewCustomer(data, callback) {
 
   return postData('/new_customer/', data, callback);
