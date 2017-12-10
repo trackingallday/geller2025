@@ -15,7 +15,7 @@ class NewCustomerForm extends CustomerForm {
       if (!err) {
         const data = Object.assign(values, { geocodingDetail: this.state.addressResult });
         postNewCustomer(data, (response) => {
-          this.props.onCreate(response);
+          this.props.onNewRecord(response);
         });
       }
     });
@@ -23,6 +23,7 @@ class NewCustomerForm extends CustomerForm {
 
   render() {
     const { getFieldDecorator } = this.props.form;
+
     return (
       <Form onSubmit={this.handleSubmit} ref="form">
         <FormItem

@@ -10,16 +10,16 @@ class EditCustomerForm extends CustomerForm {
 
   handleSubmit = (e) => {
     e.preventDefault();
-    const { form, customerToEdit, onEditComplete } = this.props;
+    const { form, recordToEdit, onEditComplete } = this.props;
 
     form.validateFieldsAndScroll((err, values) => {
       if (!err) {
-        const data = Object.assign(values, { id: customerToEdit.id });
+        const data = Object.assign(values, { id: recordToEdit.id });
         if(this.state.addressResult !== "initialValue") {
           data.geocodingDetail = this.state.addressResult;
         }
         postEditCustomer(data, (response) => {
-          this.props.onEditComplete(response);
+          this.props.onEditRecord(response);
         });
       }
     });

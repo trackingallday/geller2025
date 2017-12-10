@@ -24,12 +24,16 @@ class CustomerForm extends Component {
     confirmPasswordValue: false,
     autoCompleteResult: [],
     products: [],
+    productOptions: [],
     addressResult: null,
   };
 
   componentDidMount() {
     getProducts( (products) => {
-      this.setState({ products });
+      const productOptions = products.map((p, i) => {
+        return (<Option key={i} value={p.id}>{ p.name }</Option>);
+      });
+      this.setState({ products, productOptions });
     });
   }
 
@@ -55,7 +59,8 @@ class CustomerForm extends Component {
     if(/(.+)@(.+){2,}\.(.+){2,}/.test(value) !== true) {
       return callback('This email is invalid')
     }
-    if(this.props.customersData.find(c => c.email === value)) {
+    console.log(this.props.recordsData);
+    if(this.props.recordsData.find(c => c.email === value)) {
       return callback(`${value} has already been taken already`);
     }
     callback();
@@ -97,16 +102,16 @@ class CustomerForm extends Component {
   }
 
   getInitialValue(key) {
-    if(!this.props.customerToEdit) {
+    if(!this.props.recordToEdit) {
       return;
     }
-    return this.props.customerToEdit[key]
+    return this.props.recordToEdit[key]
   }
 
   renderCommonFormFields() {
     const { getFieldDecorator } = this.props.form;
     const productOptions = this.state.products.map((p, i) => {
-      return (<Option key={i} value={p.id}>{ p.name }</Option>);
+      return (<Option key={i} selected={true} value={p.id}>{ p.name }</Option>);
     });
 
     return [
@@ -145,6 +150,17 @@ class CustomerForm extends Component {
           rules: [{ required: true, message: 'Please input a cell phone number!' }]})(
           <Input style={{ width: '100%' }} />
         )}
+      </FormItem>),
+      (<FormItem {...formItemLayout} label="Products">
+        {getFieldDecorator('products',{
+          initialValue: this.getInitialValue('products'),
+          rules:[{required: true, message: 'Required!'}]})(
+          <Select
+           mode="multiple"
+           placeholder="Please select"
+         >
+           { this.state.productOptions }
+         </Select>)}
       </FormItem>),
     ];
   }
