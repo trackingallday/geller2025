@@ -16,7 +16,6 @@ const productDetailList = [
 
 const renderProductDetail = (record) => {
    return productDetailList.map((def, i) => {
-    console.log(def, record, record[def[1]], def[1]);
     return (
       <Row key={i}>
         <Col span={4}>
@@ -56,7 +55,6 @@ const expandedRowRender = (record) => {
             </Card>
         </Col>
         <Col span={18}>
-          <div>
             { detail }
             <Row>
               <Col span={4}>
@@ -84,11 +82,6 @@ const expandedRowRender = (record) => {
                 </Row>
               </Col>
             </Row>
-            <div>
-            </div>
-            <div>
-            </div>
-          </div>
         </Col>
       </Row>
     </div>

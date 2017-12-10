@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Modal, Button, Row, Col  } from 'antd';
-import axios from 'axios';
-import serverUrl from '../../constants/serverUrl';
+import { getProducts } from '../../util/DjangoApi';
 import ProductsTable from './ProductsTable';
 
 
@@ -18,16 +17,11 @@ export default class DistributorProducts extends Component {
   }
 
   componentDidMount() {
-    axios.defaults.headers.common['Authorization'] = this.props.token;
-    axios.get(serverUrl + '/products_list/')
-      .then((response) => {
-        const products = response.data;
-        this.setState({
-          productsData: products.map((product, i) => Object.assign(product, { key: i })),
-        });
-      }).catch((error) => {
-        console.log(error);
+    getProducts( (products) => {
+      this.setState({
+        productsData: products.map((product, i) => Object.assign(product, { key: i })),
       });
+    });
   }
 
   onMenuClick = ({ item, key, keyPath }) => {
