@@ -1,22 +1,12 @@
 import React, { Component } from 'react';
 import { Form, Input, Select } from 'antd';
-import MapboxSearchInput from './MapboxSearchInput';
+import MapboxSearchInput from '../common/MapboxSearchInput';
 import { getProducts } from '../../util/DjangoApi';
-
+import { formItemLayout } from '../../constants/tableLayout';
 
 const FormItem = Form.Item;
 const Option = Select.Option;
 
-const formItemLayout = {
-  labelCol: {
-    xs: { span: 24 },
-    sm: { span: 8 },
-  },
-  wrapperCol: {
-    xs: { span: 24 },
-    sm: { span: 16 },
-  },
-};
 
 class CustomerForm extends Component {
 
@@ -75,14 +65,15 @@ class CustomerForm extends Component {
   }
 
   onAddressSelect = (result) => {
+    const geo = JSON.parse(result);
+    const { form } = this.props;
+    const { place_name, place_type, text, properties } = geo;
+
     if(result === "initialValue") {
       form.setFieldsValue({
         address: this.getInitialValue('address'),
       });
     }
-    const geo = JSON.parse(result);
-    const { form } = this.props;
-    const { place_name, place_type, text, properties } = geo;
 
     form.setFieldsValue({
       address: place_name,
@@ -110,9 +101,6 @@ class CustomerForm extends Component {
 
   renderCommonFormFields() {
     const { getFieldDecorator } = this.props.form;
-    const productOptions = this.state.products.map((p, i) => {
-      return (<Option key={i} selected={true} value={p.id}>{ p.name }</Option>);
-    });
 
     return [
       (<FormItem {...formItemLayout} label="Contact First Name" key={1}>

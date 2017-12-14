@@ -153,7 +153,7 @@ export default class CustomersTable extends Component {
       key: 'operation',
       width: 80,
       render: (value, record) => (
-        <a href="#" onClick={() => this.props.onEditClick(value, record)}>
+        <a onClick={() => this.props.onEditClick(value, record)}>
           edit
         </a>
       ),

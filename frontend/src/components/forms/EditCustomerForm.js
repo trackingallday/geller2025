@@ -10,7 +10,7 @@ class EditCustomerForm extends CustomerForm {
 
   handleSubmit = (e) => {
     e.preventDefault();
-    const { form, recordToEdit, onEditComplete } = this.props;
+    const { form, recordToEdit, onEditRecord } = this.props;
 
     form.validateFieldsAndScroll((err, values) => {
       if (!err) {
@@ -19,7 +19,7 @@ class EditCustomerForm extends CustomerForm {
           data.geocodingDetail = this.state.addressResult;
         }
         postEditCustomer(data, (response) => {
-          this.props.onEditRecord(response);
+          onEditRecord(response);
         });
       }
     });

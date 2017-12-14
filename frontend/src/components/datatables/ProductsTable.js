@@ -12,7 +12,7 @@ const productDetailList = [
   [ 'Usage', 'usageType' ],
   ['Amount', 'amountDesc'],
   [ 'Instructions','instructions'], ['Code', 'productCode'], ['Brand', 'brand'],
-  [ 'Saftey Wear', 'safetyWears'], ['Customers', 'customers'],
+  [ 'Saftey Wear', 'safetyWears'],
 ];
 
 const renderProductDetail = (record) => {
@@ -23,7 +23,7 @@ const renderProductDetail = (record) => {
           {def[0]}
         </Col>
         <Col span={20}>
-          {record[def[1]]}
+          <p>{record[def[1]]}</p>
         </Col>
       </Row>
     );
@@ -34,6 +34,7 @@ const renderProductDetail = (record) => {
 const expandedRowRender = (record) => {
 
   const detail = renderProductDetail(record);
+  const customers = record.customers.map((c,i) => (<p key={i}>{c}</p>));
   return (
     <div>
       <Row type="flex" justify="start">
@@ -41,7 +42,7 @@ const expandedRowRender = (record) => {
             <Card
               hoverable
               style={{ width: 180 }}
-              cover={<img alt="image 2" src={record.primaryImageLink} />}
+              cover={<img alt="" src={record.primaryImageLink} />}
             >
               <Meta
                 title={record.name}
@@ -51,7 +52,7 @@ const expandedRowRender = (record) => {
             <Card
               hoverable
               style={{ width: 180 }}
-              cover={<img alt="image 2" src={record.secondaryImageLink} />}
+              cover={<img alt="" src={record.secondaryImageLink} />}
             >
             </Card>
         </Col>
@@ -59,11 +60,20 @@ const expandedRowRender = (record) => {
             { detail }
             <Row>
               <Col span={4}>
+                Customers
+              </Col>
+              <Col span={20}>
+                { customers }
+              </Col>
+
+            </Row>
+            <Row>
+              <Col span={4}>
                 SDS Link
               </Col>
               <Col span={20}>
                 <Row>
-                  {url}{record.infoSheet}
+                  <p>{url}{record.infoSheet}</p>
                 </Row>
                 <Row>
                   <QRCode value={`${url}${record.sdsSheet}`} />
@@ -76,7 +86,7 @@ const expandedRowRender = (record) => {
               </Col>
               <Col span={20}>
                 <Row>
-                  {url}{record.infoSheet}
+                  <p>{url}{record.infoSheet}</p>
                 </Row>
                 <Row>
                   <QRCode value={`${url}${record.infoSheet}`} />
@@ -179,7 +189,7 @@ export default class ProductsTable extends Component {
       title: 'Edit',
       key: 'operation',
       width: 80,
-      render: () => <a href="#">edit</a>,
+      render: (value, record) => <a onClick={ () => this.props.onEditClick(value, record) }>edit</a>,
     },
     ];
     const data = filtered ? filteredData : this.props.data;

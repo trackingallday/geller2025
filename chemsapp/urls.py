@@ -1,7 +1,8 @@
 from django.contrib import admin
 from django.conf.urls import url
 from rest_framework.authtoken import views as drf_views
-from chemsapp.views import index, customers_list, products_list, new_customer, edit_customer, safety_wears_list
+from chemsapp.views import index, customers_list, products_list, new_customer, edit_customer, safety_wears_list,\
+    new_product, edit_product, user_details
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -12,4 +13,8 @@ urlpatterns = [
     url(r'^new_customer/', new_customer, name="new_customer"),
     url(r'^edit_customer/', edit_customer, name="edit_customer"),
     url(r'^safety_wears_list', safety_wears_list, name="safety_wears_list"),
+    url(r'^new_product/', new_product, name="new_product"),
+    url(r'^edit_product/', edit_product, name="edit_product"),
+    url(r'^user_details/', user_details, name="user_details"),
+
 ]

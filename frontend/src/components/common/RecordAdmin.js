@@ -32,6 +32,7 @@ export default class RecordAdmin extends Component {
 
   getRecordsData = () => {
     this.props.getDataFunc((records) => {
+      console.log(records)
       this.setState({
         recordsData: records,
       });
@@ -48,6 +49,7 @@ export default class RecordAdmin extends Component {
   }
 
   toggleEdit = (value, record) => {
+    console.log(value, record)
     if(!this.state.showEdit) {
       console.log(value, record)
       this.MyEditRecordForm = Form.create(record)(this.props.editForm);
@@ -77,12 +79,17 @@ export default class RecordAdmin extends Component {
     const { state, toggleNew, toggleEdit, onNewRecord, onEditRecord } = this;
     const { showNew, showEdit, recordsData, recordToEdit } = state;
 
-    const formProps = {
+    const newFormProps = {
       onNewRecord,
-      onEditRecord,
       recordsData,
-      recordToEdit,
     };
+
+    const editFormProps = {
+      onEditRecord,
+      recordToEdit,
+      recordsData,
+    }
+
     const MyNewRecordForm = this.MyNewRecordForm;
     const MyEditRecordForm = this.MyEditRecordForm;
     const RecordsTable = this.props.recordsTable;
@@ -107,7 +114,7 @@ export default class RecordAdmin extends Component {
           footer={null}
           onCancel={toggleNew}
         >
-          { showNew && <MyNewRecordForm { ...formProps }/> }
+          { showNew && <MyNewRecordForm { ...newFormProps }/> }
         </Modal>
         <Modal
           title={`Edit ${this.props.recordType}`}
@@ -115,7 +122,7 @@ export default class RecordAdmin extends Component {
           footer={null}
           onCancel={toggleEdit}
         >
-          { showEdit && <MyEditRecordForm { ...formProps } /> }
+          { showEdit && <MyEditRecordForm { ...editFormProps } /> }
         </Modal>
       </div>
     );

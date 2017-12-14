@@ -35,7 +35,7 @@ class Profile(MyBaseModel, models.Model):
     hasSetPassword = models.BooleanField(default=False)
 
     def __str__(self):
-        return "{} - {} - {}".format(self.businessName, self.user.first_name, self.user.last_name)
+        return "{} {} {}".format(self.businessName, self.user.first_name, self.user.last_name)
 
 
 class Product(MyBaseModel, models.Model):
@@ -50,6 +50,7 @@ class Product(MyBaseModel, models.Model):
     infoSheet = models.FileField(upload_to='documents/', null=True)
     sdsSheet = models.FileField(upload_to='documents/', null=True)
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products")
+    uploadedBy = models.ForeignKey(User, on_delete=None, related_name="products_added")
 
 
     def __str__(self):
@@ -73,7 +74,7 @@ class ProductAdd(MyBaseModel, models.Model):
     distributor = models.ForeignKey(Distributor, related_name="productAdds", on_delete=models.CASCADE)
 
     def __str__(self):
-        return "{} - {} - {}".format(self.distributor.businessName, self.customer.businessName, self.productAdded.name)
+        return "{} {} {}".format(self.distributor.businessName, self.customer.businessName, self.productAdded.name)
 
 
 class ProductRemove(MyBaseModel, models.Model):
@@ -82,7 +83,7 @@ class ProductRemove(MyBaseModel, models.Model):
     distributor = models.ForeignKey(Distributor, related_name="productRemoves", on_delete=models.CASCADE)
 
     def __str__(self):
-        return "{} - {} - {}".format(self.distributor.business_name, self.customer.business_name, self.productRemoved.name)
+        return "{} {} {}".format(self.distributor.business_name, self.customer.business_name, self.productRemoved.name)
 
 
 class SafetyWear(MyBaseModel, models.Model):
