@@ -1,26 +1,36 @@
 import serverUrl from '../constants/serverUrl';
 import axios from 'axios';
 
-function getData(path, callback) {
+
+const fail = (err) => console.warn(err);
+
+function getData(path, onSuccess, onFail=fail) {
   const token = localStorage.getItem('token');
   axios.defaults.headers.common['Authorization'] = token;
+  console.log(onSuccess, onFail)
   return axios.get(serverUrl + path)
     .then((response) => {
-      callback(response);
+      return onSuccess(response);
     }).catch((error) => {
-      console.log(error);
+      return onFail(error);
     });
 }
 
-function postData(path, data, callback) {
+function postData(path, data, onSuccess, onFail=fail) {
   const token = localStorage.getItem('token');
   axios.defaults.headers.common['Authorization'] = token;
   return axios.post(serverUrl + path, { data })
     .then((response) => {
-      callback(response);
+      onSuccess(response);
     }).catch((error) => {
-      console.log(error);
+      onFail(error);
     });
+}
+
+function addKeys(records) {
+  return records.map((r, i) => {
+    return Object.assign(r,{ key: i, rowKey: i });
+  });
 }
 
 export function getCustomers(callback) {
@@ -37,7 +47,7 @@ export function getCustomers(callback) {
 export function getProducts(callback) {
 
   return getData('/products_list/',(response) => {
-    callback(response.data);
+    callback(addKeys(response.data));
   });
 
 }
@@ -45,19 +55,38 @@ export function getProducts(callback) {
 export function getSafetyWears(callback) {
 
   return getData('/safety_wears_list/',(response) => {
-    callback(response.data);
+    callback(addKeys(response.data));
   });
 
 }
 
 export function postNewCustomer(data, callback) {
-
   return postData('/new_customer/', data, callback);
-
 }
 
 export function postEditCustomer(data, callback) {
-
   return postData('/edit_customer/', data, callback);
+}
 
+export function postNewProduct(data, callback) {
+  return postData('/new_product/', data, callback);
+}
+
+export function postEditProduct(data, callback) {
+  return postData('/edit_product/', data, callback);
+}
+
+export function getUserDetails(onSuccess, onFail) {
+  return getData('/user_details/', (res) => onSuccess(res.data), onFail);
+}
+
+export function postLogin(username, password, onSuccess, onFail) {
+  return axios.post(serverUrl + '/get_auth_token/', { username, password })
+    .then((response) => {
+      console.log(response);
+      localStorage.setItem('token', `Token ${response.data.token}`);
+      return getUserDetails(onSuccess, onFail);
+    }).catch((error) => {
+      onFail(error);
+    });
 }
