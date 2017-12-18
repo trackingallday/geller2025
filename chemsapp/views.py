@@ -3,13 +3,15 @@ from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import os
-from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, UserSerializer
+from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
+    ProductMapSerializer, UserSerializer
 from chemsapp.models import Customer, Product, SafetyWear
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 import base64
 from django.core.files.base import ContentFile
 import datetime
+from django.db.models import Q
 
 
 def getFileFromBase64(data, filename):
@@ -35,7 +37,6 @@ def addSDSSheetToProduct(product, data):
 
 
 @csrf_exempt
-@login_required
 def index(request):
     with open(os.path.join(settings.REACT_APP_DIR, 'build', 'index.html')) as f:
         return HttpResponse(f.read())
@@ -52,9 +53,8 @@ def customers_list(request):
 @csrf_exempt
 @api_view(['GET'])
 def products_list(request):
-    products = []
 
-    if not request.user.profile.customer:
+    if not request.user.profile.profileType == 'customer':
         products = Product.objects.all()
     else:
         products = request.user.profile.customer.products
@@ -66,7 +66,8 @@ def products_list(request):
 @csrf_exempt
 @api_view(['POST'])
 def new_customer(request):
-    if not request.user.profile.profileType == "distributor":
+    proType = request.user.profile.profileType
+    if proType not in ["distributor", "admin"]:
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
@@ -100,7 +101,8 @@ def new_customer(request):
 @csrf_exempt
 @api_view(['POST'])
 def edit_customer(request):
-    if not request.user.profile.profileType == "distributor":
+    proType = request.user.profile.profileType
+    if proType not in ["distributor", "admin"]:
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
@@ -122,6 +124,13 @@ def edit_customer(request):
     if data.get('geocodingDetail'):
         customer.geocodingDetail = data.get('geocodingDetail')
 
+    ids = [b for b in data.get('products') if isinstance(b, int)]
+    names = [b.strip() for b in data.get('products') if isinstance(b, str)]
+
+    my_filter = {}
+    my_filter['name__in'] = names
+    products = Product.objects.filter(Q(pk__in=ids) | Q(**my_filter))
+    customer.products = products
     customer.save()
 
     return JsonResponse({"message": "customer edited"})
@@ -137,7 +146,8 @@ def safety_wears_list(request):
 @csrf_exempt
 @api_view(['POST'])
 def new_product(request):
-    if not request.user.profile.profileType == "distributor":
+    proType = request.user.profile.profileType
+    if proType not in ["distributor", "admin"]:
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
@@ -165,7 +175,8 @@ def new_product(request):
 @csrf_exempt
 @api_view(['POST'])
 def edit_product(request):
-    if not request.user.profile.profileType == "distributor":
+    proType = request.user.profile.profileType
+    if proType not in ["distributor", "admin"]:
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
@@ -200,8 +211,18 @@ def edit_product(request):
 @api_view(['POST', 'GET'])
 def user_details(request):
     data = UserSerializer(request.user).data
-    print(data)
     return JsonResponse(data)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def products_map(request):
+    if not request.user.profile.profileType == "admin":
+        return JsonResponse({"error": "evildoer"})
+
+    products = Product.objects.all()
+    return JsonResponse(ProductMapSerializer(products, many=True).data, safe=False)
+
 
 
 

@@ -18,7 +18,7 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
-class MyBaseModel():
+class MyBaseModel:
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     archived = models.BooleanField(default=False)
@@ -35,7 +35,7 @@ class Profile(MyBaseModel, models.Model):
     hasSetPassword = models.BooleanField(default=False)
 
     def __str__(self):
-        return "{} {} {}".format(self.businessName, self.user.first_name, self.user.last_name)
+        return "{} {} {} {} {}".format(self.businessName, self.user.first_name, self.user.last_name, self.user.email, self.user.username)
 
 
 class Product(MyBaseModel, models.Model):
