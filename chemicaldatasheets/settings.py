@@ -139,3 +139,10 @@ STATICFILES_DIRS = [
 ]
 #media files where uploaded files go to
 MEDIA_ROOT = os.path.join(CHEMS_APP_DIR, 'media')
+
+#email settings
+EMAIL_HOST = 'smtp.gmail.com'
+EMAIL_HOST_USER = 'chemicaldataapp@gmail.com'
+EMAIL_HOST_PASSWORD = 'cbr400rr'
+EMAIL_PORT = 587
+EMAIL_USE_TLS = True
