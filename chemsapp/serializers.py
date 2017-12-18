@@ -105,6 +105,7 @@ class DistributorSerializer(serializers.ModelSerializer):
             'customers', 'address', 'geocodingDetail',
         )
 
+class CustomerMapSerializer(serializers.ModelSerializer):
 
     distributors = DistributorSerializer(many=True, read_only=True)
     products = serializers.StringRelatedField(many=True, read_only=True)
