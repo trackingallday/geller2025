@@ -25,31 +25,44 @@ class LoginForm extends Component {
     return (
       <Form onSubmit={this.handleSubmit} className="login-form">
         <Row>
-          <Col>
-            <FormItem { ...formItemLayout }>
-              {getFieldDecorator('username', {
-                rules: [{ required: true, message: 'input your username!' }],
-              })(
-                <Input prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />} placeholder="Username" />
-              )}
-            </FormItem>
-            <FormItem { ...formItemLayout }>
-              {getFieldDecorator('password', {
-                rules: [{ required: true, message: 'input your Password!' }],
-              })(
-                <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />} type="password" placeholder="Password" />
-              )}
-            </FormItem>
-          </Col>
-        </Row>
-        <Row type="flex" justify="center">
-          <Col>
-            <FormItem { ...tailFormItemLayout }>
-              <Button type="primary" htmlType="submit" className="login-form-button">
-                Log in
-              </Button>
-            </FormItem>
-          </Col>
+          <Row>
+            <Col>
+              <FormItem { ...formItemLayout }>
+                {getFieldDecorator('username', {
+                  rules: [{ required: true, message: 'input your username!' }],
+                })(
+                  <Input prefix={<Icon type="user" style={{ color: 'rgba(0,0,0,.25)' }} />} placeholder="Username" />
+                )}
+              </FormItem>
+            </Col>
+            <Col>
+              <FormItem { ...formItemLayout }>
+                {getFieldDecorator('password', {
+                  rules: [{ required: true, message: 'input your Password!' }],
+                })(
+                  <Input prefix={<Icon type="lock" style={{ color: 'rgba(0,0,0,.25)' }} />} type="password" placeholder="Password" />
+                )}
+              </FormItem>
+            </Col>
+          </Row>
+          <Row>
+            <Row>
+              <Col span={24}>
+                <FormItem { ...formItemLayout }>
+                  <Button type="primary" htmlType="submit">
+                    Log in
+                  </Button>
+                </FormItem>
+              </Col>
+            </Row>
+            <Row>
+              <Col span={24}>
+                <FormItem { ...formItemLayout }>
+                  <a href="/accounts/password_reset/">reset password</a>
+                </FormItem>
+              </Col>
+            </Row>
+          </Row>
         </Row>
       </Form>
     );
@@ -64,7 +77,7 @@ class Login extends BasePage {
 
   onSuccess = (userDetails) => {
     this.stopLoading();
-    this.onLogin(userDetails);
+    this.props.onLogin(userDetails);
     message.success('Welcome back', 1);
   }
 
