@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import ReactMapboxGl, { Layer, Marker, Popup, Feature } from "react-mapbox-gl";
+import ReactMapboxGl, { Layer, Popup, Feature } from "react-mapbox-gl";
 import { Select, Row, Col } from 'antd';
 import { getProductsMap } from '../../util/DjangoApi';
 import imgsrc from '../image';

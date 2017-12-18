@@ -3,7 +3,7 @@ import BasePage from './BasePage';
 import styles from '../../styles';
 import { message, Form, Icon, Input, Button, Row, Col, Card } from 'antd';
 import { postLogin } from '../../util/DjangoApi';
-import { formItemLayout, tailFormItemLayout } from '../../constants/tableLayout';
+import { formItemLayout } from '../../constants/tableLayout';
 
 
 const FormItem = Form.Item;

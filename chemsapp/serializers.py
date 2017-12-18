@@ -45,24 +45,10 @@ class UserSerializer(serializers.ModelSerializer):
         )
 
 
-class CustomerSerializer(serializers.ModelSerializer):
-
-    user = UserSerializer(many=False, read_only=True)
-    products = serializers.StringRelatedField(many=True, read_only=True)
-
-    class Meta:
-        model = Customer
-        fields = (
-            'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
-            'products', 'address', 'geocodingDetail',
-        )
-
-
 class ProductSerializer(serializers.ModelSerializer):
 
     editable = serializers.SerializerMethodField('get_can_edit')
     sdsQrcode = serializers.SerializerMethodField('sds_qrcode')
-
     customers = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
@@ -79,18 +65,25 @@ class ProductSerializer(serializers.ModelSerializer):
             return obj.uploadedBy.id == self.context["user"].id
         return False
 
-    def get_my_customers(self, obj):
-        if "user" in self.context:
-            user = self.context["user"]
-            customers = user.profile.distributor.customers.filter(products=obj)
-            print(customers)
-            serializer = CustomerSerializer(customers, many=True)
-            print(serializer.data)
-            return serializer.data
-        return []
-
     def sds_qrcode(self, obj):
         return path_to_qr_code(obj.sdsSheet)
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer(many=False, read_only=True)
+    products = serializers.StringRelatedField(many=True, read_only=True)
+    productsExpanded = serializers.SerializerMethodField('products_expanded')
+
+    class Meta:
+        model = Customer
+        fields = (
+            'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
+            'products', 'address', 'geocodingDetail', 'productsExpanded',
+        )
+
+    def products_expanded(self, obj):
+        return ProductSerializer(obj.products, many=True).data
 
 
 class DistributorSerializer(serializers.ModelSerializer):

@@ -6,19 +6,12 @@ import EditProductForm from '../forms/EditProductForm';
 import RecordAdmin from '../common/RecordAdmin';
 import ProductsTable from '../datatables/ProductsTable';
 import CustomersTable from '../datatables/CustomersTable';
-import { getProducts, getCustomers } from '../../util/DjangoApi';
+import { getProducts, getCustomers, getSafetyWears } from '../../util/DjangoApi';
 import { Route, NavLink } from 'react-router-dom';
 import { Menu, Row, Col, Icon, Card, } from 'antd';
 import BasePage from './BasePage';
 import styles from '../../styles';
 import CustomerSheet from '../common/CustomerSheet';
-
-
-const gridStyle = {
-  width: '100%',
-  textAlign: 'center',
-  margin: 0,
-};
 
 
 class DistributorPage extends BasePage {
@@ -107,10 +100,13 @@ class DistributorPage extends BasePage {
   }
 
   componentDidMount() {
+    getSafetyWears((data) => {
+      this.setState({ safetyWears: data });
+    });
     this.setState({
       loading: true,
-    })
-    getCustomers((customers) => {
+    });
+    this.getCustomers((customers) => {
       this.stopLoading();
       this.setState({ customers });
     });
@@ -125,9 +121,12 @@ class DistributorPage extends BasePage {
     return contents.map((c, i) => (<Row key={i}><a href={`/customer_sheet/${c.id}`} target="blank">{c.businessName}</a></Row>));
   }
 
-  renderCustomerSheet = () => {
+  renderCustomerSheet = ({ match }) => {
+    const { customers, safetyWears } = this.state;
+    const customer = customers.find(c => c.id == match.params.customer_id);
+    const products = customer ? customer.productsExpanded : [];
     return (
-      <CustomerSheet user={this.props.user} />
+      <CustomerSheet user={this.props.user} products={products} safetyWears={safetyWears} />
     );
   }
 

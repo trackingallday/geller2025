@@ -30,7 +30,7 @@ import styles from '../../styles';
       primaryImageLink,
       secondaryImageLink,
       name, brand, usageType, amountDesc,
-      instructions, sdsSheetLink,
+      instructions,
     } = product
     const textStyle = {
       fontFamily: 'Helvetica',
@@ -110,7 +110,7 @@ import styles from '../../styles';
         </Col>
         <Col span="6">
           <Row>
-            <img crossOrigin='anonymous' style={{ width: '140px' }} src={"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/IBM_logo.svg/1200px-IBM_logo.svg.png"} />
+            <img alt="" crossOrigin='anonymous' style={{ width: '140px' }} src={"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/IBM_logo.svg/1200px-IBM_logo.svg.png"} />
           </Row>
         </Col>
       </Row>
