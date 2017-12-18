@@ -32,7 +32,6 @@ export default class RecordAdmin extends Component {
 
   getRecordsData = () => {
     this.props.getDataFunc((records) => {
-      console.log(records)
       this.setState({
         recordsData: records,
       });
@@ -49,9 +48,7 @@ export default class RecordAdmin extends Component {
   }
 
   toggleEdit = (value, record) => {
-    console.log(value, record)
     if(!this.state.showEdit) {
-      console.log(value, record)
       this.MyEditRecordForm = Form.create(record)(this.props.editForm);
     }
     this.setState({
@@ -61,6 +58,7 @@ export default class RecordAdmin extends Component {
   }
 
   onNewRecord = (response) => {
+    this.props.stopLoading();
     this.toggleNew();
     this.getRecordsData();
     openNotification({ message: response.data.message,
@@ -68,6 +66,7 @@ export default class RecordAdmin extends Component {
   }
 
   onEditRecord = (response) => {
+    this.props.stopLoading();
     this.toggleEdit();
     this.getRecordsData();
     openNotification({ message: response.data.message,
@@ -82,12 +81,14 @@ export default class RecordAdmin extends Component {
     const newFormProps = {
       onNewRecord,
       recordsData,
+      startLoading: this.props.startLoading,
     };
 
     const editFormProps = {
       onEditRecord,
       recordToEdit,
       recordsData,
+      startLoading: this.props.startLoading,
     }
 
     const MyNewRecordForm = this.MyNewRecordForm;

@@ -1,5 +1,7 @@
 import React, { Component } from 'react';
 import DistributorPage from './components/pages/Distributor';
+import AdminPage from './components/pages/Admin';
+import CustomerPage from './components/pages/Customer';
 import LoginPage from './components/pages/Login';
 import { getUserDetails } from './util/DjangoApi';
 import './App.css'
@@ -12,7 +14,7 @@ class App extends Component {
   }
 
   onLogin = (userDetails) => {
-    console.log(userDetails);
+
     this.setState({
       user: userDetails,
     });
@@ -27,17 +29,28 @@ class App extends Component {
 
   render() {
     const { user } = this.state;
-    if(!user) {
-      return (<LoginPage />)
+    console.log(user);
+    if(!(user && user.profile)) {
+      return (<LoginPage onLogin={this.onLogin} />)
     }
 
     switch(user.profile.profileType) {
+      case 'admin':
+        return (
+          <AdminPage user={user} />
+        );
       case 'distributor':
         return (
           <DistributorPage user={user} />
         );
+      case 'customer':
+        return (
+          <CustomerPage user={user} />
+        );
       default:
-        return null;
+        return (
+          <CustomerPage user={user} />
+        );;
     }
 
   }

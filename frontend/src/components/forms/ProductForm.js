@@ -99,7 +99,6 @@ class ProductForm extends Component {
     const { getFieldDecorator } = this.props.form;
     const req = true;
     const uploadsRequired = !this.props.recordToEdit;
-    console.log(this.props.recordToEdit)
     return (
       <Form onSubmit={this.handleSubmit} ref="form">
         <FormItem {...formItemLayout} label="Name">

@@ -13,6 +13,7 @@ class NewCustomerForm extends CustomerForm {
     e.preventDefault();
     this.props.form.validateFieldsAndScroll((err, values) => {
       if (!err) {
+        this.props.startLoading();
         const data = Object.assign(values, { geocodingDetail: this.state.addressResult });
         postNewCustomer(data, (response) => {
           this.props.onNewRecord(response);

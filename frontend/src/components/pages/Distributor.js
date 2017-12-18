@@ -11,6 +11,7 @@ import { Route, NavLink } from 'react-router-dom';
 import { Menu, Row, Col, Icon, Card, } from 'antd';
 import BasePage from './BasePage';
 import styles from '../../styles';
+import CustomerSheet from '../common/CustomerSheet';
 
 
 const gridStyle = {
@@ -50,7 +51,7 @@ class DistributorPage extends BasePage {
         <Col span="4">
           <Row type="flex" justify="end">
             <Col>
-              <a href="/accounts/logout" style={{ color: '#fff' }}>
+              <a onClick={this.logout} style={{ color: '#fff' }}>
                 <Icon type="user-delete" style={{ fontSize: 20}} />
                 <span style={{ fontSize: 14}}>Logout</span>
               </a>
@@ -61,26 +62,46 @@ class DistributorPage extends BasePage {
     );
   }
 
-  renderDistributorProducts() {
+  getDataAndLoading = (callback, getFunc) => {
+    this.startLoading();
+    getFunc((data) => {
+      callback(data);
+      this.stopLoading();
+    });
+  }
+
+  getProducts = (callback) => {
+    this.getDataAndLoading(callback, getProducts);
+  }
+
+  getCustomers = (callback) => {
+    this.getDataAndLoading(callback, getCustomers);
+  }
+
+  renderDistributorProducts = () => {
     return (
       <RecordAdmin
         newForm={NewProductForm}
         editForm={EditProductForm}
         recordsTable={ProductsTable}
-        getDataFunc={getProducts}
+        getDataFunc={this.getProducts}
         recordType="Product"
+        startLoading={this.startLoading}
+        stopLoading={this.stopLoading}
       />
     );
   }
 
-  renderDistributorCustomers() {
+  renderDistributorCustomers = () => {
     return (
       <RecordAdmin
         newForm={NewCustomerForm}
         editForm={EditCustomerForm}
         recordsTable={CustomersTable}
-        getDataFunc={getCustomers}
+        getDataFunc={this.getCustomers}
         recordType="Customer"
+        startLoading={this.startLoading}
+        stopLoading={this.stopLoading}
       />
     )
   }
@@ -97,7 +118,17 @@ class DistributorPage extends BasePage {
 
   renderCardGrid(contents) {
     return contents.map(
-      (t, i) => (<Card.Grid key={i} style={gridStyle}>{ t }</Card.Grid>));
+      (t, i) => (<Row key={`${i}_key`}>{ t }</Row>));
+  }
+
+  renderCustomerGrid(contents) {
+    return contents.map((c, i) => (<Row key={i}><a href={`/customer_sheet/${c.id}`} target="blank">{c.businessName}</a></Row>));
+  }
+
+  renderCustomerSheet = () => {
+    return (
+      <CustomerSheet user={this.props.user} />
+    );
   }
 
   renderHome = () => {
@@ -106,9 +137,6 @@ class DistributorPage extends BasePage {
 
     const details = [ businessName, `${first_name} ${last_name}`, email, phoneNumber, cellPhoneNumber, address];
     const headings = ['Business', 'Name', 'Email', 'Phone', 'Cell', 'Address'];
-
-    const customerNames = this.state.customers.map(c => c.businessName);
-    const customerSheetLinks = this.state.customers.map(c => c.id);
 
     return (
       <Row>
@@ -128,7 +156,7 @@ class DistributorPage extends BasePage {
           <Card title="My Customers" style={{padding: 0}}>
             <Row>
               <Col span={"24"}>
-                { this.renderCardGrid(customerNames) }
+                { this.renderCustomerGrid(this.state.customers) }
               </Col>
             </Row>
           </Card>
@@ -142,6 +170,7 @@ class DistributorPage extends BasePage {
       <div style={styles.container}>
         <Route exact={true} path="/customers" render={this.renderDistributorCustomers} key={1} />
         <Route exact={true} path="/products" render={this.renderDistributorProducts} key={2} />
+        <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={4} />
         <Route exact={true} path="/" render={this.renderHome} key={3} />
       </div>
     )

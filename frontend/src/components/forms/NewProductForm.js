@@ -8,6 +8,7 @@ class NewProductForm extends ProductForm {
     e.preventDefault();
     this.props.form.validateFieldsAndScroll(async (err, values) => {
       if (!err) {
+        this.props.startLoading();
         const newProduct = await this.prepareValues(values);
         postNewProduct(newProduct, this.props.onNewRecord);
       }

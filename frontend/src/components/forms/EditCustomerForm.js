@@ -14,6 +14,7 @@ class EditCustomerForm extends CustomerForm {
 
     form.validateFieldsAndScroll((err, values) => {
       if (!err) {
+        this.props.startLoading();
         const data = Object.assign(values, { id: recordToEdit.id });
         if(this.state.addressResult !== "initialValue") {
           data.geocodingDetail = this.state.addressResult;

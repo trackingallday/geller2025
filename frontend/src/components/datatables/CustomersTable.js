@@ -61,7 +61,6 @@ export default class CustomersTable extends Component {
   componentDidMount() {
     getProducts( (products) => {
       this.setState({ products: products.map(p => ({ text: p.name, value: p.name })) });
-      console.log(this.state.products)
     });
   }
 

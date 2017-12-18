@@ -20,13 +20,18 @@ class BasePage extends Component {
     color: getColor(),
   }
 
-  stopLoading() {
+  logout() {
+    localStorage.setItem('token', null);
+    window.location.replace("/");
+  }
+
+  stopLoading = () => {
     this.setState({
       loading: false,
     });
   }
 
-  startLoading() {
+  startLoading = () => {
     this.setState({
       loading: true,
       color: getColor(),
@@ -64,24 +69,24 @@ class BasePage extends Component {
 
   render() {
     return (
-      <Loadable
-        active={this.state.loading}
-        color={this.state.color}
-        spinner
-        text={'Loading ...'}
-        zIndex={9001}
-        spinnerSize={'200px'}
-        background={'rgba(255,255,255,0.7)'}
-        animate={true}
-      >
         <Layout className="layout">
           { this.renderHeader() }
           <Content>
-            { this.renderContent() }
+            <Loadable
+              active={this.state.loading}
+              color={this.state.color}
+              spinner
+              text={'Loading ...'}
+              zIndex={9001}
+              spinnerSize={'200px'}
+              background={'rgba(255,255,255,0.7)'}
+              animate={true}
+            >
+              { this.renderContent() }
+            </Loadable>
           </Content>
           { this.renderFooter() }
         </Layout>
-      </Loadable>
     );
   }
 }

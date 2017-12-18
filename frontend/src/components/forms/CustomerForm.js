@@ -21,7 +21,7 @@ class CustomerForm extends Component {
   componentDidMount() {
     getProducts( (products) => {
       const productOptions = products.map((p, i) => {
-        return (<Option key={i} value={p.id}>{ p.name }</Option>);
+        return (<Option key={`p${i}`} value={p.id}>{ p.name }</Option>);
       });
       this.setState({ products, productOptions });
     });
@@ -49,7 +49,6 @@ class CustomerForm extends Component {
     if(/(.+)@(.+){2,}\.(.+){2,}/.test(value) !== true) {
       return callback('This email is invalid')
     }
-    console.log(this.props.recordsData);
     if(this.props.recordsData.find(c => c.email === value)) {
       return callback(`${value} has already been taken already`);
     }
@@ -139,7 +138,7 @@ class CustomerForm extends Component {
           <Input style={{ width: '100%' }} />
         )}
       </FormItem>),
-      (<FormItem {...formItemLayout} label="Products">
+      (<FormItem {...formItemLayout} label="Products" key={7}>
         {getFieldDecorator('products',{
           initialValue: this.getInitialValue('products'),
           rules:[{required: true, message: 'Required!'}]})(
