@@ -31,7 +31,7 @@ class Profile(MyBaseModel, models.Model):
     businessName = models.CharField(max_length=255)
     address = models.CharField(max_length=500)
     profileType = models.CharField(choices=typeChoices, default="customer",
-                                   max_length=255, null=True)
+                                   max_length=255, blank=True)
     hasSetPassword = models.BooleanField(default=False)
 
     def __str__(self):
@@ -47,9 +47,9 @@ class Product(MyBaseModel, models.Model):
     instructions = models.TextField(max_length=2000)
     productCode = models.CharField(max_length=255, unique=True)
     brand = models.CharField(max_length=255)
-    infoSheet = models.FileField(upload_to='documents/', null=True)
-    sdsSheet = models.FileField(upload_to='documents/', null=True)
-    safetyWears = models.ManyToManyField("SafetyWear", related_name="products")
+    infoSheet = models.FileField(upload_to='documents/', blank=True)
+    sdsSheet = models.FileField(upload_to='documents/', blank=True)
+    safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
     uploadedBy = models.ForeignKey(User, on_delete=None, related_name="products_added")
 
 
@@ -58,14 +58,14 @@ class Product(MyBaseModel, models.Model):
 
 
 class Customer(Profile):
-    products = models.ManyToManyField(Product, related_name="customers", null=True)
-    geocodingDetail = models.TextField(max_length=1500, null=True)
+    products = models.ManyToManyField(Product, related_name="customers", blank=True)
+    geocodingDetail = models.TextField(max_length=1500, blank=True)
 
 
 
 class Distributor(Profile):
-    customers = models.ManyToManyField(Customer, related_name="distributors", null=True)
-    geocodingDetail = models.TextField(max_length=1500, null=True)
+    customers = models.ManyToManyField(Customer, related_name="distributors", blank=True)
+    geocodingDetail = models.TextField(max_length=1500, blank=True)
 
 
 class ProductAdd(MyBaseModel, models.Model):
