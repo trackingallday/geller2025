@@ -9,7 +9,7 @@ import chemicaldatasheets.settings
 
 
 def path_to_qr_code(path):
-    base_url = 'http://localhost:8000'
+    base_url = 'http://104.236.249.246:8000'
     base_data_url = 'data:image/png;base64,'
     link = base_url + path.url
     url = pyqrcode.create(link.upper())
