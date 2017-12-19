@@ -55,7 +55,7 @@ class AdminPage extends DistributorPage {
           <Menu.Item key="/maps">
             <NavLink exact to="/maps" label="Maps">Maps</NavLink>
           </Menu.Item>
-          { this.renderDownloadLink }
+          { this.renderDownloadLink() }
          </Menu>
         </Col>
         <Col span="4">
