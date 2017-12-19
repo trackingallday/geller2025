@@ -4,11 +4,36 @@ import { Menu, Row, Col, Icon, } from 'antd';
 import DistributorPage from './Distributor';
 import styles from '../../styles';
 import ProductMap from '../maps/ProductMap';
-
+import ReactDOMServer from 'react-dom/server';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import moment from 'moment';
+import CustomerSheet from '../common/CustomerSheet';
 
 class AdminPage extends DistributorPage {
 
+  download = () => {
+    const { products, safetyWears } = this.state;
+    const { user } = this.props;
+    if(! (products && products.length && user && safetyWears && safetyWears.length)) {
+      return null;
+    }
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <CustomerSheet
+        user={user} products={products} safetyWears={safetyWears}
+      />
+    );
+
+    html2canvas(document.getElementById('toprint'), { useCORS: true }).then((canvas) => {
+      const dataUrl = canvas.toDataURL("image/png", 1.0);
+      var doc = new jsPDF('p', 'mm', [canvas.height, canvas.width]);
+      doc.addImage(dataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
+      doc.save();
+    });
+  }
+
   renderMenu() {
+
     return (
       <Row type="flex" justify="start">
         <Col span="20">
@@ -30,6 +55,7 @@ class AdminPage extends DistributorPage {
           <Menu.Item key="/maps">
             <NavLink exact to="/maps" label="Maps">Maps</NavLink>
           </Menu.Item>
+          { this.renderDownloadLink }
          </Menu>
         </Col>
         <Col span="4">
@@ -53,7 +79,7 @@ class AdminPage extends DistributorPage {
         <Route exact={true} path="/products" render={this.renderDistributorProducts} key={2} />
         <Route exact={true} path="/" render={this.renderHome} key={3} />
         <Route exact={true} path="/maps" component={ProductMap} key={4} />
-        <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={4} />
+      <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={8} />
       </div>
     )
   }

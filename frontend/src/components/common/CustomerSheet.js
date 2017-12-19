@@ -34,7 +34,7 @@ import styles from '../../styles';
     } = product
     const textStyle = {
       fontFamily: 'Helvetica',
-      fontSize: '10px',
+      fontSize: '11px',
       wordWrap: 'elipsis',
       lineHeight: 1,
       whiteSpace: 'nowrap',
@@ -44,15 +44,15 @@ import styles from '../../styles';
       margin: '0 0 0 0',
     }
     const titleStyle = Object.assign({}, textStyle, { fontWeight: '800', fontSize: '11px', overflow: 'hidden' });
-    const midStyle = Object.assign({}, textStyle, { fontWeight: '600', fontSize: '10px' });
-    const bottomStyle = Object.assign({}, textStyle, { fontWeight: '400', fontSize: '10px', height: '40px', whiteSpace:'wrap-word'});
+    const midStyle = Object.assign({}, textStyle, { fontWeight: '600', fontSize: '11px' });
+    const bottomStyle = Object.assign({}, textStyle, { fontWeight: '400', fontSize: '11px', height: '40px', whiteSpace:'wrap-word'});
 
     const titleRowStyle = { height: '20px'}
     const midRowStyle = { height: '20px', top: '-10px' };
-    const bottomRowStyle = { height: '40px', top: '-7px'}
+    const bottomRowStyle = { height: '50px', top: '-7px'}
 
     return (
-      <div key={index} style={{height: '120px', borderWidth: '1px 0px 0px 0px', borderStyle: 'solid', paddingTop: '4px'}}>
+      <div key={index} style={{height: '145px', borderWidth: '1px 0px 0px 0px', borderStyle: 'solid', paddingTop: '4px'}}>
         <Row type="flex" justify="start">
           <Col span={3}>
               <img crossOrigin='anonymous' alt=""
@@ -65,7 +65,10 @@ import styles from '../../styles';
           </Col>
           <Col span={13}>
             <Row style={titleRowStyle}>
-              <span style={titleStyle}>{ `${brand} ${name}: ${usageType}`}</span>
+              <span style={titleStyle}>{ `${brand} ${name}`}</span>
+            </Row>
+            <Row style={midRowStyle}>
+              <span style={midStyle}>{usageType}</span>
             </Row>
             <Row style={midRowStyle}>
               <span style={midStyle}>{amountDesc}</span>
@@ -118,6 +121,7 @@ import styles from '../../styles';
   }
 
   render() {
+
     return (
       <div style={styles.a4Page} id={"toprint"}>
         <div>

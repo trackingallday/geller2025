@@ -1,11 +1,6 @@
 import React, { Component } from 'react';
 import { Layout, Row } from 'antd';
 import Loadable from 'react-loading-overlay';
-import ReactDOMServer from 'react-dom/server';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import moment from 'moment';
-import CustomerSheet from '../common/CustomerSheet';
 
 const { Header, Footer, Content } = Layout;
 
@@ -23,24 +18,6 @@ class BasePage extends Component {
     loading: false,
     color: getColor(),
   }
-
-  download = () => {
-    const { products, safetyWears } = this.state;
-    const { user } = this.props;
-    const markup = ReactDOMServer.renderToStaticMarkup(
-      <CustomerSheet
-        user={user} products={products} safetyWears={safetyWears}
-      />
-    );
-
-    html2canvas(document.getElementById('toprint'), { useCORS: true }).then((canvas) => {
-      const dataUrl = canvas.toDataURL("image/png", 1.0);
-      var doc = new jsPDF('p', 'mm', [canvas.height, canvas.width]);
-      doc.addImage(dataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
-      doc.save();
-    });
-  }
-
 
   logout() {
     localStorage.setItem('token', null);

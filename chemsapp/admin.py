@@ -1,18 +1,43 @@
 from django.contrib import admin
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove
+from import_export.admin import ImportExportModelAdmin
+from import_export import resources
 
 
-class SafetyWearAdmin(admin.ModelAdmin):
-    pass
+class SafetyWearResource(resources.ModelResource):
+    class Meta:
+        model = SafetyWear
 
 
-class DistributorAdmin(admin.ModelAdmin):
-    pass
+class DistributorResource(resources.ModelResource):
+    class Meta:
+        model = Distributor
 
 
-class CustomerAdmin(admin.ModelAdmin):
-    pass
+class CustomerResource(resources.ModelResource):
+    class Meta:
+        model = Customer
+
+
+class ProductResource(resources.ModelResource):
+    class Meta:
+        model = Product
+
+
+class SafetyWearAdmin(ImportExportModelAdmin):
+
+    resource_class = SafetyWearResource
+
+
+class DistributorAdmin(ImportExportModelAdmin):
+
+    resource_class = DistributorResource
+
+
+class CustomerAdmin(ImportExportModelAdmin):
+
+    resource_class = CustomerResource
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -23,19 +48,20 @@ class UserAdmin(admin.ModelAdmin):
     pass
 
 
-class ProductAdmin(admin.ModelAdmin):
-    pass
+class ProductAdmin(ImportExportModelAdmin):
+
+    resource_class = ProductResource
 
 
-class ProductAddAdmin(admin.ModelAdmin):
-    pass
+#class ProductAddAdmin(ImportExportModelAdmin):
+#    pass
 
 
-class ProductRemoveAdmin(admin.ModelAdmin):
-    pass
+#class ProductRemoveAdmin(ImportExportModelAdmin):
+#    pass
 
 
-class ProfileAdmin(admin.ModelAdmin):
+class ProfileAdmin(ImportExportModelAdmin):
     pass
 
 
@@ -43,7 +69,8 @@ admin.site.register(SafetyWear, SafetyWearAdmin)
 admin.site.register(Distributor, DistributorAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Product, ProductAdmin)
-admin.site.register(ProductAdd, ProductAddAdmin)
-admin.site.register(ProductRemove, ProductRemoveAdmin)
+#admin.site.register(ProductAdd, ProductAddAdmin)
+#admin.site.register(ProductRemove, ProductRemoveAdmin)
 admin.site.register(Profile, ProfileAdmin)
+
 

@@ -8,10 +8,14 @@ import ProductsTable from '../datatables/ProductsTable';
 import CustomersTable from '../datatables/CustomersTable';
 import { getProducts, getCustomers, getSafetyWears } from '../../util/DjangoApi';
 import { Route, NavLink } from 'react-router-dom';
-import { Menu, Row, Col, Icon, Card, } from 'antd';
+import { Menu, Row, Col, Icon, Card, Button } from 'antd';
 import BasePage from './BasePage';
 import styles from '../../styles';
 import CustomerSheet from '../common/CustomerSheet';
+import ReactDOMServer from 'react-dom/server';
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
+import moment from 'moment';
 
 
 class DistributorPage extends BasePage {
@@ -19,6 +23,27 @@ class DistributorPage extends BasePage {
   state = {
     customers: [],
   }
+
+  download = () => {
+    const { products, safetyWears } = this.state;
+    const { user } = this.props;
+    if(! (products && products.length && user && safetyWears && safetyWears.length)) {
+      return null;
+    }
+    const markup = ReactDOMServer.renderToStaticMarkup(
+      <CustomerSheet
+        user={user} products={products} safetyWears={safetyWears}
+      />
+    );
+
+    html2canvas(document.getElementById('toprint'), { useCORS: true }).then((canvas) => {
+      const dataUrl = canvas.toDataURL("image/png", 1.1);
+      var doc = new jsPDF('p', 'mm', [canvas.height, canvas.width]);
+      doc.addImage(dataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
+      doc.save();
+    });
+  }
+
 
   renderMenu() {
     return (
@@ -39,6 +64,7 @@ class DistributorPage extends BasePage {
           <Menu.Item key="/products">
             <NavLink exact to="/products" label="Products">Products</NavLink>
           </Menu.Item>
+          { this.renderDownloadLink() }
          </Menu>
         </Col>
         <Col span="4">
@@ -100,15 +126,17 @@ class DistributorPage extends BasePage {
   }
 
   componentDidMount() {
-    getSafetyWears((data) => {
-      this.setState({ safetyWears: data });
-    });
     this.setState({
       loading: true,
     });
+    getSafetyWears((data) => {
+      this.setState({ safetyWears: data });
+    });
     this.getCustomers((customers) => {
-      this.stopLoading();
       this.setState({ customers });
+    });
+    this.getProducts((products) => {
+      this.setState({ products });
     });
   }
 
@@ -127,6 +155,19 @@ class DistributorPage extends BasePage {
     const products = customer ? customer.productsExpanded : [];
     return (
       <CustomerSheet user={this.props.user} products={products} safetyWears={safetyWears} />
+    );
+  }
+
+  renderDownloadLink() {
+    if(window.location.pathname.split("/")[1] !== 'customer_sheet' || this.state.loading === true) {
+      return null;
+    }
+    return (
+      <Col span={4}>
+        <Button onClick={this.download}>
+          Print
+        </Button>
+      </Col>
     );
   }
 

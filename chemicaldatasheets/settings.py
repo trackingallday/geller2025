@@ -41,6 +41,7 @@ INSTALLED_APPS = [
     'rest_framework.authtoken',
     'chemsapp',
     'corsheaders',
+    'import_export',
 ]
 
 MIDDLEWARE = [
@@ -146,3 +147,6 @@ EMAIL_HOST_USER = 'chemicaldataapp@gmail.com'
 EMAIL_HOST_PASSWORD = 'cbr400rr'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+#import export settings
+IMPORT_EXPORT_USE_TRANSACTIONS = True
