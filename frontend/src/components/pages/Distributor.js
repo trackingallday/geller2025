@@ -65,6 +65,7 @@ class DistributorPage extends BasePage {
             <NavLink exact to="/products" label="Products">Products</NavLink>
           </Menu.Item>
           { this.renderDownloadLink() }
+          
          </Menu>
         </Col>
         <Col span="4">
