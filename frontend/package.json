@@ -12,6 +12,7 @@
     "mapbox-gl": "^0.42.2",
     "moment": "^2.19.4",
     "qrcode": "^1.0.0",
+    "qrcode.react": "^0.7.2",
     "react": "^16.2.0",
     "react-dom": "^16.2.0",
     "react-loading-overlay": "^0.2.8",
