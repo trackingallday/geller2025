@@ -9,6 +9,7 @@ urlpatterns = [
     url(r'^auth$', drf_views.obtain_auth_token, name='auth'),
     url(r'^$', index, name='index'),
     url(r'^customers$', index, name='index'),
+    url(r'^customer_sheet/*', index, name='index'),
     url(r'^products$', index, name='index'),
     url(r'^maps$', index, name='index'),
     url(r'^customers_list/', customers_list, name='customers_list'),
