@@ -2,11 +2,10 @@ import React, { Component } from 'react';
 import { Table, Input, Button, Icon, Row, Col, Card } from 'antd';
 import QRCode from 'qrcode.react';
 import { alphabetSort } from '../../util/Sorter';
+import url from '../../constants/serverUrl';
 
 
 const { Meta } = Card;
-//const url = 'http://127.0.0.1:8000';
-const url = 'http://104.236.249.246:8000';
 
 const productDetailList = [
   [ 'Name', 'name'],
