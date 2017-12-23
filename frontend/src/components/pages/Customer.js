@@ -30,10 +30,12 @@ class CutomerPage extends BasePage {
       />
     );
 
-    html2canvas(document.getElementById('toprint'), { useCORS: true }).then((canvas) => {
+    html2canvas(document.getElementById('toprint'), { useCORS: true, scale: 3.0 }).then((canvas) => {
       const dataUrl = canvas.toDataURL("image/png", 1.0);
-      var doc = new jsPDF('p', 'mm', [canvas.height, canvas.width]);
-      doc.addImage(dataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
+      const heightMM = canvas.height * 0.264583333;
+      const widthMM = canvas.width * 0.264583333;
+      var doc = new jsPDF('p', 'mm', [heightMM, widthMM]);
+      doc.addImage(dataUrl, 'PNG', 0, 0, widthMM, heightMM);
       doc.save();
     });
   }
