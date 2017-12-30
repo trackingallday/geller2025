@@ -224,6 +224,30 @@ def products_map(request):
     return JsonResponse(ProductMapSerializer(products, many=True).data, safe=False)
 
 
+@csrf_exempt
+@api_view(['GET'])
+def customers_table_admin(request):
+    if request.user.profile.profileType == 'admin':
+        products = Product.objects.only('id', 'name')
+        customers = CustomerSerializer(Customer.objects.all(), many=True).data
+        return JsonResponse({"customers": customers, "products": products})
+    else:
+        return JsonResponse({"error": "evildoer"})
+
+
+@csrf_exempt
+@api_view(['GET'])
+def customers_table(request):
+    profile = request.user.profile
+    if profile.profileType == "distributor":
+        products = profile.distributor.products.only('id', 'name')
+        customers = CustomerSerializer(profile.distributor.customers, many=True).data
+        return JsonResponse({"customers": customers, "products": products})
+
+    return JsonResponse({"error": "evildoer"})
+
+
+
 
 
 
