@@ -1,7 +1,4 @@
-.idea
-
-.idea/workspace.xml
-.idea/misc.xml
+.idea/
 
 *.swp
 
@@ -16,6 +13,7 @@ chemsapp/media/documents
 
 db.sqlite3
 
+venv/
 
 __pycache__/
 
@@ -24,3 +22,5 @@ __pycache__/
 *.sqlite3
 
 
+
+.idea/misc.xml
