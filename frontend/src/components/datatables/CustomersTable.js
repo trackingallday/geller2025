@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
-import { Table, Input, Button, Icon, Row, Col } from 'antd';
-import { getProducts } from '../../util/DjangoApi';
+import { Table, Input, Icon, Row, Col } from 'antd';
+import BaseTable from './BaseTable';
 import { alphabetSort } from '../../util/Sorter';
 
 const customerDetailList = [
@@ -12,56 +12,28 @@ const customerDetailList = [
 ];
 
 
-const renderCustomerDetail = (record) => {
-   return customerDetailList.map((def, i) => {
-    return (
-      <Row key={i}>
-        <Col span={4}>
-          {def[0]}
-        </Col>
-        <Col span={20}>
-          <span style={{wordWrap: 'break-word'}}>
-            {record[def[1]]}
-          </span>
-        </Col>
-      </Row>
-    );
-  });
-}
+const originalState = {
+  filterDropdownVisible: false,
+  data: [],
+  products: [],
+  productsFilterVisible: false,
+  filteredData: [],
+  searchText: '',
+  filtered: false,
+};
 
 
-const expandedRowRender = (record) => {
+export default class CustomersTable extends BaseTable {
 
-  const detail = renderCustomerDetail(record);
+  constructor(props) {
+    super(props);
+    this.expandedRowRender = this.expandedRowRender.bind(this);
+  }
 
-  return (
-    <div>
-      <Row type="flex" justify="start">
-        <Col span={24}>
-          { detail }
-        </Col>
-      </Row>
-    </div>
-  );
-}
-
-
-export default class CustomersTable extends Component {
-
-  state = {
-    filterDropdownVisible: false,
-    data: [],
-    products: [],
-    productsFilterVisible: false,
-    filteredData: [],
-    searchText: '',
-    filtered: false,
-  };
+  state = originalState
 
   componentDidMount() {
-    getProducts( (products) => {
-      this.setState({ products: products.map(p => ({ text: p.name, value: p.name })) });
-    });
+    this.setState(originalState);
   }
 
   onInputChange = (e) => {
@@ -74,46 +46,21 @@ export default class CustomersTable extends Component {
     this.setState({
       filterDropdownVisible: false,
       filtered: !!searchText,
-      filteredData: this.props.data.map((record) => {
-        const match = record.businessName.match(reg);
-        if (!match) {
-          return null;
-        }
-        return {
-          ...record,
-          name: (
-            <span>
-              {record.businessName.split(reg).map((text, i) => (
-                i > 0 ? [<span className="highlight">{match[0]}</span>, text] : text
-              ))}
-            </span>
-          ),
-        };
-      }).filter(record => !!record),
+      filteredData: this.searchRecords('businessName', searchText, this.props.data),
     });
   }
 
-  render() {
-    const { filteredData, filtered } = this.state;
-    const filterInput = (
-      <div className="custom-filter-dropdown">
-        <Input
-          ref={ele => this.searchInput = ele}
-          placeholder="Search"
-          value={this.state.searchText}
-          onChange={this.onInputChange}
-          onPressEnter={this.onSearch}
-        />
-        <Button type="primary" onClick={this.onSearch}>Search</Button>
-      </div>
-    );
+  getColumns = () => {
+    const { searchText, filterDropdownVisible, filtered } = this.state;
+    const filterInput = this.renderFilterInput(searchText, this.onInputChange, this.onSearch);
+
     const columns = [{
       title: 'Name',
       dataIndex: 'businessName',
       key: 'businessName',
       filterDropdown: filterInput,
-      filterIcon: <Icon type="smile-o" style={{ color: filtered ? '#108ee9' : '#aaa' }} />,
-      filterDropdownVisible: this.state.filterDropdownVisible,
+      filterIcon: <Icon type="search" style={{ color: filtered ? '#108ee9' : '#aaa' }} />,
+      filterDropdownVisible: filterDropdownVisible,
       onFilterDropdownVisibleChange: (visible) => {
         this.setState({
           filterDropdownVisible: visible,
@@ -145,7 +92,13 @@ export default class CustomersTable extends Component {
       key: 'products',
       filters: this.state.products,
       onFilter: (value, record) => record.products.find((p) => p.trim() === value.trim()),
-      render: (value, record) => value.slice(0, 30) + "...",
+      render: (value, record) => value.slice(0, 30),
+    },
+    {
+      title: 'Print Chem List',
+      dataIndex: 'id',
+      key: 'id',
+      render: (value, c) => <a href={`/customer_sheet/${c.id}`} target="blank">Chem List</a>,
     },
     {
       title: 'Edit',
@@ -158,8 +111,29 @@ export default class CustomersTable extends Component {
       ),
     },
     ];
-    const data = filtered ? filteredData : this.props.data;
-    return <Table columns={columns} dataSource={data} expandedRowRender={expandedRowRender} onExpand={this.onTableExpand} />;
+    return columns;
+  }
+
+  renderDetail = (record) => {
+     return customerDetailList.map((def, i) => {
+      return (
+        <Row key={i}>
+          <Col span={4}>
+            {def[0]}
+          </Col>
+          <Col span={20}>
+            <span style={{wordWrap: 'break-word'}}>
+              {record[def[1]]}
+            </span>
+          </Col>
+        </Row>
+      );
+    });
+  }
+
+  getData = () => {
+    const { filteredData, filtered, } = this.state;
+    return filtered ? filteredData : this.props.data;
   }
 
  }

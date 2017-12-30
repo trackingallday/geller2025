@@ -50,7 +50,7 @@ class App extends Component {
       default:
         return (
           <CustomerPage user={user} />
-        );;
+        );
     }
 
   }

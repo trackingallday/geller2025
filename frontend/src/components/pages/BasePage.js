@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import { Layout, Row } from 'antd';
 import Loadable from 'react-loading-overlay';
-
+import html2canvas from 'html2canvas';
+import jsPDF from 'jspdf';
 const { Header, Footer, Content } = Layout;
 
 const colors = [
@@ -17,6 +18,17 @@ class BasePage extends Component {
   state = {
     loading: false,
     color: getColor(),
+  }
+
+  download = () => {
+    html2canvas(document.getElementById('toprint'), { useCORS: true, scale: 3.0 }).then((canvas) => {
+      const dataUrl = canvas.toDataURL("image/png", 1.0);
+      const heightMM = canvas.height * 0.264583333;
+      const widthMM = canvas.width * 0.264583333;
+      var doc = new jsPDF('p', 'mm', [heightMM, widthMM]);
+      doc.addImage(dataUrl, 'PNG', 0, 0, widthMM, heightMM);
+      doc.save();
+    });
   }
 
   logout() {

@@ -12,10 +12,6 @@ import { Menu, Row, Col, Icon, Card, Button } from 'antd';
 import BasePage from './BasePage';
 import styles from '../../styles';
 import CustomerSheet from '../common/CustomerSheet';
-import ReactDOMServer from 'react-dom/server';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
-import moment from 'moment';
 
 
 class DistributorPage extends BasePage {
@@ -23,27 +19,6 @@ class DistributorPage extends BasePage {
   state = {
     customers: [],
   }
-
-  download = () => {
-    const { products, safetyWears } = this.state;
-    const { user } = this.props;
-    if(! (products && products.length && user && safetyWears && safetyWears.length)) {
-      return null;
-    }
-    const markup = ReactDOMServer.renderToStaticMarkup(
-      <CustomerSheet
-        user={user} products={products} safetyWears={safetyWears}
-      />
-    );
-
-    html2canvas(document.getElementById('toprint'), { useCORS: true }).then((canvas) => {
-      const dataUrl = canvas.toDataURL("image/png", 1.1);
-      var doc = new jsPDF('p', 'mm', [canvas.height, canvas.width]);
-      doc.addImage(dataUrl, 'PNG', 0, 0, canvas.width, canvas.height);
-      doc.save();
-    });
-  }
-
 
   renderMenu() {
     return (
@@ -65,7 +40,7 @@ class DistributorPage extends BasePage {
             <NavLink exact to="/products" label="Products">Products</NavLink>
           </Menu.Item>
           { this.renderDownloadLink() }
-          
+
          </Menu>
         </Col>
         <Col span="4">
@@ -80,6 +55,14 @@ class DistributorPage extends BasePage {
         </Col>
       </Row>
     );
+  }
+
+  getRecordsData = () => {
+    this.props.getDataFunc((records) => {
+      this.setState({
+        recordsData: records,
+      });
+    });
   }
 
   getDataAndLoading = (callback, getFunc) => {
@@ -127,9 +110,6 @@ class DistributorPage extends BasePage {
   }
 
   componentDidMount() {
-    this.setState({
-      loading: true,
-    });
     getSafetyWears((data) => {
       this.setState({ safetyWears: data });
     });

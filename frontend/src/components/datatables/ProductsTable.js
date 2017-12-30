@@ -1,5 +1,6 @@
 import React, { Component } from 'react';
 import { Table, Input, Button, Icon, Row, Col, Card } from 'antd';
+import BaseTable from './BaseTable';
 import QRCode from 'qrcode.react';
 import { alphabetSort } from '../../util/Sorter';
 import url from '../../constants/serverUrl';
@@ -100,66 +101,66 @@ const expandedRowRender = (record) => {
 }
 
 
-export default class ProductsTable extends Component {
+export default class ProductsTable extends BaseTable {
 
   state = {
     filterDropdownVisible: false,
+    codeFilterDropdownVisible: false,
     data: [],
     filteredData: [],
     searchText: '',
     filtered: false,
+    codeSearchText: '',
   };
 
   onInputChange = (e) => {
-    this.setState({ searchText: e.target.value });
+    this.setState({ searchText: e.target.value, codeSearchText: '', codeFilterDropdownVisible: false, filtered: false, });
   }
 
   onSearch = () => {
     const { searchText } = this.state;
     const reg = new RegExp(searchText, 'gi');
     this.setState({
-      filterDropdownVisible: false,
+      filterDropdownVisible: true,
       filtered: !!searchText,
-      filteredData: this.props.data.map((record) => {
-        const match = record.businessName.match(reg);
-        if (!match) {
-          return null;
-        }
-        return {
-          ...record,
-          name: (
-            <span>
-              {record.businessName.split(reg).map((text, i) => (
-                i > 0 ? [<span className="highlight">{match[0]}</span>, text] : text
-              ))}
-            </span>
-          ),
-        };
-      }).filter(record => !!record),
+      filteredData: this.searchRecords('name', searchText, this.props.data),
     });
   }
 
-  render() {
-    const { filteredData, filtered } = this.state;
-    const filterInput = (
-      <div className="custom-filter-dropdown">
-        <Input
-          ref={ele => this.searchInput = ele}
-          placeholder="Search"
-          value={this.state.searchText}
-          onChange={this.onInputChange}
-          onPressEnter={this.onSearch}
-        />
-        <Button type="primary" onClick={this.onSearch}>Search</Button>
-      </div>
-    );
+  onCodeInputChange = (e) => {
+    this.setState({ codeSearchText: e.target.value, searchText: '', filterDropdownVisible: false, filtered: false, });
+  }
 
-    const columns = [{
+  onCodeSearch = () => {
+    const { codeSearchText } = this.state;
+    const reg = new RegExp(codeSearchText, 'gi');
+    this.setState({
+      codeFilterDropdownVisible: true,
+      filtered: !!codeSearchText,
+      filteredData: this.searchRecords('productCode', codeSearchText, this.props.data),
+    });
+  }
+
+  getData = () => {
+    const { filteredData, filtered, } = this.state;
+    return filtered ? filteredData : this.props.data;
+  }
+
+  expandedRowRender(record) {
+    return expandedRowRender(record);
+  }
+
+  getColumns = () => {
+    const { searchText, filterDropdownVisible, filtered, codeSearchText } = this.state;
+    const filterInput = this.renderFilterInput(searchText, this.onInputChange, this.onSearch);
+    const codeFilterInput = this.renderFilterInput(codeSearchText, this.onCodeInputChange, this.onCodeSearch);
+
+    return [{
       title: 'Name',
       dataIndex: 'name',
       key: 'name',
       filterDropdown: filterInput,
-      filterIcon: <Icon type="smile-o" style={{ color: filtered ? '#108ee9' : '#aaa' }} />,
+      filterIcon: <Icon type="search" style={{ color: filtered ? '#108ee9' : '#aaa' }} />,
       filterDropdownVisible: this.state.filterDropdownVisible,
       onFilterDropdownVisibleChange: (visible) => {
         this.setState({
@@ -167,6 +168,18 @@ export default class ProductsTable extends Component {
         }, () => this.searchInput && this.searchInput.focus());
       },
       sorter: (a, b) => alphabetSort(a.name, b.name),
+    }, {
+      title: 'Code',
+      dataIndex: 'productCode',
+      key: 'productCode',
+      filterDropdown: codeFilterInput,
+      filterIcon: <Icon type="search" style={{ color: filtered ? '#108ee9' : '#aaa' }} />,
+      filterDropdownVisible: this.state.codeFilterDropdownVisible,
+      onFilterDropdownVisibleChange: (visible) => {
+        this.setState({
+          codeFilterDropdownVisible: visible,
+        }, () => this.searchInput && this.searchInput.focus());
+      },
     }, {
       title: 'Brand',
       dataIndex: 'brand',
@@ -192,8 +205,6 @@ export default class ProductsTable extends Component {
       render: (value, record) => <a onClick={ () => this.props.onEditClick(value, record) }>edit</a>,
     },
     ];
-    const data = filtered ? filteredData : this.props.data;
-    return <Table columns={columns} dataSource={data} expandedRowRender={expandedRowRender} onExpand={this.onTableExpand} />;
   }
 
  }

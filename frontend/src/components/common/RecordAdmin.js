@@ -17,7 +17,7 @@ export default class RecordAdmin extends Component {
     super();
     this.state = {
       filterDropdownVisible: false,
-      recordssData: [],
+      recordsData: [],
       searchText: '',
       filtered: false,
       recordToEdit: null,

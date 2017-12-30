@@ -52,7 +52,6 @@ class Product(MyBaseModel, models.Model):
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
     uploadedBy = models.ForeignKey(User, on_delete=None, related_name="products_added")
 
-
     def __str__(self):
         return "{} ".format(self.name)
 
