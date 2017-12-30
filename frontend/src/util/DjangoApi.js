@@ -83,6 +83,14 @@ export function getProductsMap(onSuccess, onFail=fail) {
   return getData('/products_map/', (res) => onSuccess(res.data), (err) => onFail(err));
 }
 
+export function getCustomersTable(onSuccess) {
+  return getData('/customers_table/', onSuccess);
+}
+
+export function getCustomersTableAdmin(onSuccess) {
+  return getData('/customers_table_admin/', onSuccess);
+}
+
 export function postLogin(username, password, onSuccess, onFail=fail) {
   return axios.post(serverUrl + '/get_auth_token/', { username, password })
     .then((response) => {
