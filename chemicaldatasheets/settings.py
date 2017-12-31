@@ -25,7 +25,7 @@ SECRET_KEY = '-&4=0lk%oeq7e3yl%gc**!1(4617ky5)i&c(ejj+b_8v*%n=@n'
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = False
 
-ALLOWED_HOSTS = ['104.236.249.246', 'localhost', '127.0.0.1', '0.0.0.0']
+ALLOWED_HOSTS = ['104.236.249.246', 'localhost', '127.0.0.1', '0.0.0.0', 'chemicaldataapp']
 
 
 # Application definition
@@ -188,7 +188,7 @@ LOGGING = {
         # Your own app - this assumes all your logger names start with "myapp."
         'myapp': {
             'handlers': ['logfile'],
-            'level': 'WARNING', # Or maybe INFO or DEBUG
+            'level': 'WARNING',# Or maybe INFO or DEBUG
             'propagate': False
         },
     },
