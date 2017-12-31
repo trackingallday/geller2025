@@ -1,4 +1,4 @@
-const dev = false;
+const dev = true;
 const DEV_URL = '0.0.0.0';
 const PRODUCTION_URL = '104.236.249.246';
 let url = PRODUCTION_URL;

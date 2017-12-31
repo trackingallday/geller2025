@@ -24,11 +24,8 @@ from django.conf import settings
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
     url(r'^get_auth_token/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
-    url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^', include('chemsapp.urls', namespace='chemsapp', app_name='chemsapp')),
 ]
 
 if settings.DEBUG:
     urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
-
-

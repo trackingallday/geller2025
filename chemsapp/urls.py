@@ -27,5 +27,5 @@ urlpatterns = [
     url(r'^products_map/', products_map, name="products_map"),
     url(r'^customers_table_admin/', customers_table_admin, name="customers_table_admin"),
     url(r'^customers_table/', customers_table, name="customers_table"),
-    url(r'^customer_sheet/*', customer_sheet, name="customer_sheet"),
+    url(r'^customer_sheet/*$', customer_sheet, name="customer_sheet"),
 ]
