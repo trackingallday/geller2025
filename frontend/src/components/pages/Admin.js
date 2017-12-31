@@ -95,7 +95,7 @@ class AdminPage extends DistributorPage {
         <Route exact={true} path="/distributors" render={this.renderDistributors} key={9} />
         <Route exact={true} path="/" render={this.renderHome} key={3} />
         <Route exact={true} path="/maps" component={ProductMap} key={4} />
-      <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={8} />
+        <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={8} />
       </div>
     )
   }

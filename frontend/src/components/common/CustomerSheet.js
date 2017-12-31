@@ -68,12 +68,12 @@ import styles from '../../styles';
       margin: '0 0 0 0',
     }
     const titleStyle = Object.assign({}, textStyle, { fontWeight: '800', fontSize: '11px', overflow: 'hidden' });
-    const midStyle = Object.assign({}, textStyle, { fontWeight: '600', fontSize: '11px' });
+    const midStyle = Object.assign({}, textStyle, { fontWeight: '500', fontSize: '11px' });
     const bottomStyle = Object.assign({}, textStyle, { fontWeight: '400', fontSize: '11px', height: '40px', whiteSpace:'wrap-word'});
 
     const titleRowStyle = { height: '20px'}
-    const midRowStyle = { height: '20px', top: '-10px' };
-    const bottomRowStyle = { minHeight: '50px', top: '-7px', overflow: 'elipsiss' }
+    const midRowStyle = { height: '20px', top: '-10px', overflow: 'ellipsis' };
+    const bottomRowStyle = { minHeight: '50px', top: '-7px', overflow: 'ellipsis' }
 
     return (
       <div key={index} style={{'minHeight': '130px', borderWidth: '0px 0px 0.5px 0px', borderStyle: 'solid', margin: '6px 0px 3px 0px'}}>
@@ -92,7 +92,7 @@ import styles from '../../styles';
               <span style={titleStyle}>{ `${brand} ${name}`}</span>
             </Row>
             <Row style={midRowStyle}>
-              <span style={midStyle}>{usageType}</span>
+              <span style={midStyle}>{usageType.substr(0, 50)}</span>
             </Row>
             <Row style={midRowStyle}>
               <span style={midStyle}>{amountDesc}</span>
