@@ -11,6 +11,7 @@ urlpatterns = [
     url(r'^$', index, name='index'),
     url(r'^customers$', index, name='index'),
     url(r'^products$', index, name='index'),
+    url(r'^distributors$', index, name='index'),
     url(r'^maps$', index, name='index'),
     url(r'^customers_list/', customers_list, name='customers_list'),
     url(r'^products_list/', products_list, name='products_list'),

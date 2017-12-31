@@ -193,3 +193,7 @@ LOGGING = {
         },
     },
 }
+
+'''If you are runnig Django on Apache using mod_wsgi you have to add
+WSGIPassAuthorization On
+in your httpd.conf. Otherwise authorization header will be stripped out by mod_wsgi.'''
