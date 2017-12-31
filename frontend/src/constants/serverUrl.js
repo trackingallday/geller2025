@@ -1,6 +1,6 @@
 const dev = false;
-const DEV_URL = '0.0.0.0:8000';
-const PRODUCTION_URL = '104.236.249.246:8000';
+const DEV_URL = '0.0.0.0';
+const PRODUCTION_URL = '104.236.249.246';
 let url = PRODUCTION_URL;
 
 if(dev) {

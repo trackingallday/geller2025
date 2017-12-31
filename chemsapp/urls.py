@@ -18,7 +18,6 @@ urlpatterns = [
     url(r'^new_customer/', new_customer, name="new_customer"),
     url(r'^edit_customer/', edit_customer, name="edit_customer"),
     url(r'^safety_wears_list', safety_wears_list, name="safety_wears_list"),
-    url(r'^new_/', new_product, name="new_product"),
     url(r'^new_distributor/', new_distributor, name="new_distributor"),
     url(r'^edit_distributor/', edit_distributor, name="edit_distributor"),
     url(r'^new_product/', new_product, name="new_product"),
@@ -27,5 +26,5 @@ urlpatterns = [
     url(r'^products_map/', products_map, name="products_map"),
     url(r'^customers_table_admin/', customers_table_admin, name="customers_table_admin"),
     url(r'^customers_table/', customers_table, name="customers_table"),
-    url(r'^customer_sheet/', customer_sheet, name="customer_sheet"),
+    url(r'^customer_sheet/*', customer_sheet, name="customer_sheet"),
 ]
