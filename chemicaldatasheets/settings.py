@@ -136,9 +136,8 @@ CHEMS_APP_DIR = os.path.join(BASE_DIR, 'chemsapp')
 MAIN_DIR = os.path.join(BASE_DIR, 'chemicaldatasheets')
 
 STATICFILES_DIRS = [
-    #os.path.join(REACT_APP_DIR, 'build', 'static'),
-    #os.path.join(CHEMS_APP_DIR, 'static', 'chemsapp')
-    os.path.join(MAIN_DIR, 'static')
+    os.path.join(REACT_APP_DIR, 'build', 'static'),
+    os.path.join(CHEMS_APP_DIR, 'static', 'chemsapp'),
 ]
 
 #media files where uploaded files go to
