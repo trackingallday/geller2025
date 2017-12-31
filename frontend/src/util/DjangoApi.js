@@ -111,11 +111,11 @@ export function getCustomersTableAdmin(onSuccess) {
 }
 
 export function postCustomerSheet(customer_id, onSuccess) {
-  return postData('/customer_sheet/', { customer_id }, onSuccess);
+  return postData('/customer_sheets/', { customer_id }, onSuccess);
 }
 
 export function getCustomerSheet(onSuccess) {
-  return getData('/customer_sheet/', onSuccess);
+  return getData('/customer_sheets/', onSuccess);
 }
 
 export function postLogin(username, password, onSuccess, onFail=fail) {
