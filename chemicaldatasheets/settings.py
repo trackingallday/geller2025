@@ -141,6 +141,9 @@ STATICFILES_DIRS = [
 #media files where uploaded files go to
 MEDIA_ROOT = os.path.join(CHEMS_APP_DIR, 'media')
 
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+
 #email settings
 EMAIL_HOST = 'smtp.gmail.com'
 EMAIL_HOST_USER = 'chemicaldataapp@gmail.com'
