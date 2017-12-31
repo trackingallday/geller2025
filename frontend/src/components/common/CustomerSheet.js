@@ -1,19 +1,43 @@
 import React, { Component } from 'react';
 import { Row, Col } from 'antd';
+import { getCustomerSheet, postCustomerSheet } from '../../util/DjangoApi';
 import moment from 'moment';
 import styles from '../../styles';
 
 
  export default class CustomerSheet extends Component {
 
+   state = {
+     data: null,
+   }
+
+   setData = ({ data }) => {
+     console.log(data);
+     const { products, distributor } = data;
+     this.setState({
+        customer: data,
+        distributor,
+        products,
+     });
+     this.props.onReady()
+   }
+
+  componentDidMount() {
+    const { customer_id, user } = this.props;
+    if(customer_id) {
+      postCustomerSheet(customer_id, this.setData);
+    } else {
+      getCustomerSheet(this.setData);
+    }
+  }
+
   renderSafetyWears = (product) => {
     if(!product.safetyWears){
       return null;
     }
-    return product.safetyWears.map((id, i) => {
-      const sf = this.props.safetyWears.find((s) => s.id === id);
+    return product.safetyWears.map((sf, i) => {
       return (
-        <Col span={3} key={id+"-"+i} style={{margin: '0 4px 0 4px'}}>
+        <Col span={3} key={sf.id+"-"+i} style={{margin: '0 4px 0 4px'}}>
           <img
             crossOrigin='anonymous'
             width='18px'
@@ -49,19 +73,19 @@ import styles from '../../styles';
 
     const titleRowStyle = { height: '20px'}
     const midRowStyle = { height: '20px', top: '-10px' };
-    const bottomRowStyle = { height: '50px', top: '-7px'}
+    const bottomRowStyle = { minHeight: '50px', top: '-7px', overflow: 'elipsiss' }
 
     return (
-      <div key={index} style={{height: '145px', borderWidth: '1px 0px 0px 0px', borderStyle: 'solid', paddingTop: '4px'}}>
+      <div key={index} style={{'minHeight': '130px', borderWidth: '0px 0px 0.5px 0px', borderStyle: 'solid', margin: '6px 0px 3px 0px'}}>
         <Row type="flex" justify="start">
           <Col span={3}>
               <img crossOrigin='anonymous' alt=""
-                style={{ width: '100%', height: 100 }}
+                style={{ width: '100%', height: 125 }}
                 src={primaryImageLink}
               />
           </Col>
           <Col span={4}>
-            <img crossOrigin='anonymous' alt="" style={{ width: '100%', height: 100, borderLeft: '4px solid #fff', borderRight: '5px solid #fff' }} src={secondaryImageLink} />
+            <img crossOrigin='anonymous' alt="" style={{ width: '100%', height: 125, borderLeft: '4px solid #fff', borderRight: '5px solid #fff' }} src={secondaryImageLink} />
           </Col>
           <Col span={13}>
             <Row style={titleRowStyle}>
@@ -81,7 +105,7 @@ import styles from '../../styles';
           <Col span={4}>
             <Row>
               <Col span={24}>
-                <img width={90} src={product.sdsQrcode} />
+                <img width={100} src={product.sdsQrcode} />
               </Col>
             </Row>
             <Row>
@@ -96,24 +120,30 @@ import styles from '../../styles';
   }
 
   renderHeader = () => {
-    const user = this.props.user;
-    const profile = user.profile;
+    const { customer, distributor } = this.state;
+    const date = moment().add('years', 1).format("DD MMMM YYYY");
     return (
-      <Row type="flex" justify="start" style={{}}>
+      <Row type="flex" justify="start" style={{ borderWidth: '0px 0px 0.5px 0px', borderStyle: 'solid',}}>
         <Col span="18">
-          <Row style={{fontSize: '18px', wordSpacing: '8px'}}>
+          <Row style={{fontSize: '18px', wordSpacing: '5px'}}>
             <span>Chemical Cleaning Safety Procedures</span>
           </Row>
-          <Row style={{fontSize: '16px', wordSpacing: '8px' }}>
-            <span>{ profile.businessName }</span>
+          <Row style={{fontSize: '18px', wordSpacing: '4px' }}>
+            <span>{ customer.businessName }</span>
           </Row>
-          <Row style={{fontSize: '14px', paddingBottom: '10px', wordSpacing: '8px'}}>
-            <span>{ `${moment().format("DD MMMM YYYY")}` }</span>
+          <Row style={{fontSize: '13px', wordSpacing: '4px'}}>
+            <span>{ distributor.businessName}</span>
+          </Row>
+          <Row style={{fontSize: '13px', wordSpacing: '6px'}}>
+            <span>{ `Re-order: ${distributor.businessName} ${distributor.cellPhoneNumber} ${distributor.phoneNumber}`}</span>
+          </Row>
+          <Row style={{fontSize: '13px', paddingBottom: '10px', wordSpacing: '4px'}}>
+            <span>{ `Vaild until: ${date}` }</span>
           </Row>
         </Col>
         <Col span="6">
           <Row>
-            <img alt="" crossOrigin='anonymous' style={{ width: '140px' }} src={"https://upload.wikimedia.org/wikipedia/commons/thumb/5/51/IBM_logo.svg/1200px-IBM_logo.svg.png"} />
+            <img alt="" crossOrigin='anonymous' style={{ width: '160px' }} src={distributor.primaryImageLink} />
           </Row>
         </Col>
       </Row>
@@ -122,13 +152,18 @@ import styles from '../../styles';
 
   render() {
 
+    const { products } = this.state;
+    if(!products) {
+      return <div />
+    }
+
     return (
       <div style={styles.a4Page} id={"toprint"}>
         <div>
           { this.renderHeader()}
         </div>
         <div>
-          { this.props.products.map(this.renderProduct) }
+          { products.map(this.renderProduct) }
         </div>
       </div>
     );

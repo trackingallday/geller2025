@@ -51,12 +51,31 @@ export function getProducts(callback) {
 
 }
 
+export function getDistributors(callback) {
+
+  return getData('/distributors_list/',(response) => {
+    const dudes = response.data.map((c, i) => {
+      return Object.assign(c, c.user, { key: i });
+    });
+    callback(dudes);
+  });
+
+}
+
 export function getSafetyWears(callback) {
 
   return getData('/safety_wears_list/',(response) => {
     callback(addKeys(response.data));
   });
 
+}
+
+export function postNewDistributor(data, callback) {
+  return postData('/new_distributor/', data, callback);
+}
+
+export function postEditDistributor(data, callback) {
+  return postData('/edit_distributor/', data, callback);
 }
 
 export function postNewCustomer(data, callback) {
@@ -89,6 +108,14 @@ export function getCustomersTable(onSuccess) {
 
 export function getCustomersTableAdmin(onSuccess) {
   return getData('/customers_table_admin/', onSuccess);
+}
+
+export function postCustomerSheet(customer_id, onSuccess) {
+  return postData('/customer_sheet/', { customer_id }, onSuccess);
+}
+
+export function getCustomerSheet(onSuccess) {
+  return getData('/customer_sheet/', onSuccess);
 }
 
 export function postLogin(username, password, onSuccess, onFail=fail) {

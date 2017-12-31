@@ -11,25 +11,34 @@ class App extends Component {
 
   state = {
     user: null,
+    started: false,
   }
 
   onLogin = (userDetails) => {
-
     this.setState({
       user: userDetails,
+      started: true,
     });
   }
 
   componentDidMount() {
     const token = localStorage.getItem('token');
-    if(token) {
+    if(token && token !== "null") {
       getUserDetails(this.onLogin);
+    } else {
+      this.setState({
+        started: true,
+      });
     }
   }
 
   render() {
-    const { user } = this.state;
-    console.log(user);
+    const { user, started } = this.state;
+
+    if(!started) {
+      return (<div />);
+    }
+
     if(!(user && user.profile)) {
       return (<LoginPage onLogin={this.onLogin} />)
     }

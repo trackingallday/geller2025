@@ -22,8 +22,12 @@ class LoginForm extends Component {
 
   handleSubmit = (e) => {
     e.preventDefault();
+    if(this.state.submitting) {
+      return;
+    }
     this.props.form.validateFields((err, values) => {
       if (!err) {
+        this.setState({ submitting: true })
         this.props.startLoading();
         postLogin(values.username, values.password, this.onLogin)
       } else {

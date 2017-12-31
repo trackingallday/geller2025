@@ -3,10 +3,46 @@ import { Route, NavLink } from 'react-router-dom';
 import { Menu, Row, Col, Icon, } from 'antd';
 import DistributorPage from './Distributor';
 import styles from '../../styles';
+import NewDistributorForm from '../forms/NewDistributorForm';
+import EditDistributorForm from '../forms/EditDistributorForm';
 import ProductMap from '../maps/ProductMap';
-
+import DistributorsTable from '../datatables/DistributorsTable';
+import RecordAdmin from '../common/RecordAdmin';
+import { postNewDistributor, editDistributor, getDistributors, getSafetyWears, getCustomers, getProducts } from '../../util/DjangoApi';
 
 class AdminPage extends DistributorPage {
+
+    getDistributors = (callback) => {
+      this.getDataAndLoading(callback, getDistributors);
+    }
+
+    componentDidMount() {
+      this.startLoading();
+      Promise.all([
+        this.getRecordsData(getSafetyWears, 'safetyWears'),
+        this.getRecordsData(getCustomers, 'customers'),
+        this.getRecordsData(getProducts, 'products'),
+        this.getRecordsData(getDistributors, 'distributors'),
+      ]).then(datas => {
+        this.stopLoading();
+      });
+    }
+
+
+    renderDistributors = () => {
+      return (
+        <RecordAdmin
+          newForm={NewDistributorForm}
+          editForm={EditDistributorForm}
+          recordsTable={DistributorsTable}
+          records={this.state.distributors}
+          getDataFunc={() => this.loadData(getDistributors, 'distributors')}
+          recordType="Distributor"
+          startLoading={this.startLoading}
+          stopLoading={this.stopLoading}
+        />
+      );
+    }
 
   renderMenu() {
 
@@ -21,6 +57,9 @@ class AdminPage extends DistributorPage {
           >
           <Menu.Item key="/">
             <NavLink exact to="/" label="Home">Home</NavLink>
+          </Menu.Item>
+          <Menu.Item key="/distributors">
+            <NavLink exact to="/distributors" label="Distributors">Distributors</NavLink>
           </Menu.Item>
           <Menu.Item key="/customers">
             <NavLink exact to="/customers" label="Customers">Customers</NavLink>
@@ -53,6 +92,7 @@ class AdminPage extends DistributorPage {
       <div style={styles.container}>
         <Route exact={true} path="/customers" render={this.renderDistributorCustomers} key={1} />
         <Route exact={true} path="/products" render={this.renderDistributorProducts} key={2} />
+        <Route exact={true} path="/distributors" render={this.renderDistributors} key={9} />
         <Route exact={true} path="/" render={this.renderHome} key={3} />
         <Route exact={true} path="/maps" component={ProductMap} key={4} />
       <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={8} />

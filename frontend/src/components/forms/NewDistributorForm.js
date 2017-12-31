@@ -1,27 +1,25 @@
 import React from 'react';
 import { Form, Input, Button } from 'antd';
-import { postNewCustomer } from '../../util/DjangoApi';
-import CustomerForm from './CustomerForm';
+import { postNewDistributor } from '../../util/DjangoApi';
+import DistributorForm from './DistributorForm';
 import { tailFormItemLayout, formItemLayout } from '../../constants/tableLayout';
 
 
 const FormItem = Form.Item;
 
-class NewCustomerForm extends CustomerForm {
+class NewDistributorForm extends DistributorForm {
 
-  handleSubmit = (e) => {
+  handleSubmit = async (e) => {
     e.preventDefault();
     if(this.state.submitting) {
       return;
     }
-    this.props.form.validateFieldsAndScroll((err, values) => {
-      this.setState({ submitting: true })
+    this.props.form.validateFieldsAndScroll(async (err, values) => {
       if (!err) {
+        this.setState({ submitting: true })
         this.props.startLoading();
-        const data = Object.assign(values, { geocodingDetail: this.state.addressResult });
-        postNewCustomer(data, (response) => {
-          this.props.onNewRecord(response);
-        });
+        const newDistributor = await this.prepareValues(values);
+        postNewDistributor(newDistributor, this.props.onNewRecord);
       }
     });
   }
@@ -71,12 +69,9 @@ class NewCustomerForm extends CustomerForm {
           )}
         </FormItem>
           { this.renderCommonFormFields() }
-        <FormItem {...tailFormItemLayout}>
-          <Button type="primary" htmlType="submit" onClick={this.handleSubmit}>Register</Button>
-        </FormItem>
       </Form>
     );
   }
 }
 
-export default NewCustomerForm;
+export default NewDistributorForm;

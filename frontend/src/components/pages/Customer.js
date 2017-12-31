@@ -11,66 +11,39 @@ const { Content, Header } = Layout;
 
 class CutomerPage extends BasePage {
 
-  state = {
-    user: null,
-    products: null,
-    safetyWears: null,
-  }
-
   componentDidMount() {
-    getSafetyWears((data) => {
-      this.setState({ safetyWears: data });
-    });
-    getProducts((data) => {
-      this.setState({ products: data });
-    });
-    getUserDetails((data) => {
-      this.setState({ user: data });
-    });
+    this.setState({ loading: true });
   }
 
-  render() {
-    const { products, safetyWears } = this.state;
-    const { user } = this.props;
-    const loaded = !!(user && products && safetyWears);
-
+  renderHeader = () => {
+    const button = !this.state.loading && (
+      <Button onClick={this.download}>
+        Print
+      </Button>
+    );
     return (
-      <Loadable
-        active={!loaded }
-        color={'#fea3aa'}
-        spinner
-        text={'Loading ...'}
-        zIndex={9001}
-        spinnerSize={'200px'}
-        background={'rgba(255,255,255,0.7)'}
-        animate={true}
-      >
-        <Layout className="layout">
-          <Header>
-            <Row>
-              <Col span={4}>
-                <Button onClick={this.download}>
-                  Print
-                </Button>
-              </Col>
-              <Col span={20}>
-                <Row type={'flex'} justify='end'>
-                  <Col>
-                    <a onClick={this.logout} style={{ color: '#fff' }}>
-                      <Icon type="user-delete" style={{ fontSize: 20}} />
-                      <span style={{ fontSize: 14}}>Logout</span>
-                    </a>
-                  </Col>
-                </Row>
+      <Header>
+        <Row>
+          <Col span={4}>
+            { button }
+          </Col>
+          <Col span={20}>
+            <Row type={'flex'} justify='end'>
+              <Col>
+                <a onClick={this.logout} style={{ color: '#fff' }}>
+                  <Icon type="user-delete" style={{ fontSize: 20}} />
+                  <span style={{ fontSize: 14}}>Logout</span>
+                </a>
               </Col>
             </Row>
-          </Header>
-          <Content>
-            { loaded && <CustomerSheet user={user} products={products} safetyWears={safetyWears} /> }
-          </Content>
-        </Layout>
-      </Loadable>
+          </Col>
+        </Row>
+      </Header>
     );
+  }
+
+  renderContent() {
+    return (<CustomerSheet onReady={this.stopLoading} />);
   }
 
 }

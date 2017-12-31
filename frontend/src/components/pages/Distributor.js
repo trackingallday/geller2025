@@ -18,6 +18,9 @@ class DistributorPage extends BasePage {
 
   state = {
     customers: [],
+    products: [],
+    safetyWears: [],
+    distributors: [],
   }
 
   renderMenu() {
@@ -57,28 +60,15 @@ class DistributorPage extends BasePage {
     );
   }
 
-  getRecordsData = () => {
-    this.props.getDataFunc((records) => {
-      this.setState({
-        recordsData: records,
+  getRecordsData = (dataFunction, name) => {
+    return new Promise(resolve => {
+      dataFunction((records) => {
+        this.setState({
+          [name]: records,
+        });
+        resolve(records);
       });
     });
-  }
-
-  getDataAndLoading = (callback, getFunc) => {
-    this.startLoading();
-    getFunc((data) => {
-      callback(data);
-      this.stopLoading();
-    });
-  }
-
-  getProducts = (callback) => {
-    this.getDataAndLoading(callback, getProducts);
-  }
-
-  getCustomers = (callback) => {
-    this.getDataAndLoading(callback, getCustomers);
   }
 
   renderDistributorProducts = () => {
@@ -87,7 +77,10 @@ class DistributorPage extends BasePage {
         newForm={NewProductForm}
         editForm={EditProductForm}
         recordsTable={ProductsTable}
-        getDataFunc={this.getProducts}
+        getDataFunc={() => this.loadData(getProducts, 'products')}
+        customers={this.state.customers}
+        records={this.state.products}
+        safetyWears={this.state.safetyWears}
         recordType="Product"
         startLoading={this.startLoading}
         stopLoading={this.stopLoading}
@@ -101,7 +94,9 @@ class DistributorPage extends BasePage {
         newForm={NewCustomerForm}
         editForm={EditCustomerForm}
         recordsTable={CustomersTable}
-        getDataFunc={this.getCustomers}
+        records={this.state.customers}
+        products={this.state.products}
+        getDataFunc={() => this.loadData(getCustomers, 'customers')}
         recordType="Customer"
         startLoading={this.startLoading}
         stopLoading={this.stopLoading}
@@ -109,15 +104,21 @@ class DistributorPage extends BasePage {
     )
   }
 
+  loadData = (func, name) => {
+    this.startLoading();
+    this.getRecordsData(func, name).then(d => {
+      this.stopLoading();
+    });
+  }
+
   componentDidMount() {
-    getSafetyWears((data) => {
-      this.setState({ safetyWears: data });
-    });
-    this.getCustomers((customers) => {
-      this.setState({ customers });
-    });
-    this.getProducts((products) => {
-      this.setState({ products });
+    this.startLoading();
+    Promise.all([
+      this.getRecordsData(getSafetyWears, 'safetyWears'),
+      this.getRecordsData(getCustomers, 'customers'),
+      this.getRecordsData(getProducts, 'products'),
+    ]).then(datas => {
+      this.stopLoading();
     });
   }
 
@@ -132,10 +133,13 @@ class DistributorPage extends BasePage {
 
   renderCustomerSheet = ({ match }) => {
     const { customers, safetyWears } = this.state;
-    const customer = customers.find(c => c.id == match.params.customer_id);
-    const products = customer ? customer.productsExpanded : [];
+    const customer_id = match.params.customer_id;
+    const customer = customers.find(c => c.id == customer_id);
+    if(!customer) {
+      return (<div />);
+    }
     return (
-      <CustomerSheet user={this.props.user} products={products} safetyWears={safetyWears} />
+      <CustomerSheet customer_id={customer_id} onReady={this.stopLoading} />
     );
   }
 
@@ -145,7 +149,7 @@ class DistributorPage extends BasePage {
     }
     return (
       <Col span={4}>
-        <Button onClick={this.download}>
+        <Button onClick={this.download} disabled={this.state.loading}>
           Print
         </Button>
       </Col>
@@ -158,7 +162,6 @@ class DistributorPage extends BasePage {
 
     const details = [ businessName, `${first_name} ${last_name}`, email, phoneNumber, cellPhoneNumber, address];
     const headings = ['Business', 'Name', 'Email', 'Phone', 'Cell', 'Address'];
-
     return (
       <Row>
         <Col span="12">

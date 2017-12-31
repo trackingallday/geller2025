@@ -16,15 +16,15 @@ class CustomerForm extends Component {
     products: [],
     productOptions: [],
     addressResult: null,
+    submitting: false,
   };
 
   componentDidMount() {
-    getProducts( (products) => {
-      const productOptions = products.map((p, i) => {
-        return (<Option key={`p${i}`} value={p.id}>{ p.name }</Option>);
-      });
-      this.setState({ products, productOptions });
+    const { products } = this.props;
+    const productOptions = products.map((p, i) => {
+      return (<Option key={`p${i}`} value={p.id}>{ p.name }</Option>);
     });
+    this.setState({ products, productOptions });
   }
 
   handleConfirmBlur = (e) => {

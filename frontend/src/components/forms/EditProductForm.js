@@ -46,8 +46,12 @@ class EditProductForm extends ProductForm {
 
   handleSubmit = async (e) => {
     e.preventDefault();
+    if(this.state.submitting) {
+      return;
+    }
     this.props.form.validateFieldsAndScroll(async (err, values) => {
       if (!err) {
+        this.setState({ submitting: true })
         this.props.startLoading();
         const newProduct = await this.prepareValues(values);
         postEditProduct(newProduct, this.props.onEditRecord);

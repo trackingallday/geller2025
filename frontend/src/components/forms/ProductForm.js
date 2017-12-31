@@ -15,7 +15,6 @@ class ProductForm extends Component {
   state = {
     imageFiles: [],
     products: [],
-    safetyWears: [],
     safetyWearOptions: [],
   }
 
@@ -27,17 +26,13 @@ class ProductForm extends Component {
   }
 
   componentDidMount() {
-    getProducts((products) => {
-      this.setState({ products });
-    });
-
-    getSafetyWears((safetyWears) => {
-      this.setState({
-        safetyWears,
-        safetyWearOptions: safetyWears.map((sw, i) => (
-          <Option key={i} value={sw.id}>{ sw.name }</Option>
-        )),
-      });
+    const { products, safetyWears } = this.props;
+    this.setState({
+      safetyWears,
+      products,
+      safetyWearOptions: safetyWears.map((sw, i) => (
+        <Option key={i} value={sw.id}>{ sw.name }</Option>
+      )),
     });
   }
 
@@ -168,7 +163,7 @@ class ProductForm extends Component {
         </FormItem>
         <FormItem {...formItemLayout} extra="Upload Two Photos primary then Secondary" label="Images .png .jpg">
             <div className="dropbox">
-              {getFieldDecorator('images', { valuePropName: 'Images',
+              {getFieldDecorator('images', {
                 getValueFromEvent: this.normFile, rules: [{required: uploadsRequired, message: '2 Images Required!'}],
               })(<div>{ this.renderImageUpload() }</div>)}
             </div>

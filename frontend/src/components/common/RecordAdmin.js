@@ -27,15 +27,7 @@ export default class RecordAdmin extends Component {
   }
 
   componentDidMount() {
-    this.getRecordsData();
-  }
-
-  getRecordsData = () => {
-    this.props.getDataFunc((records) => {
-      this.setState({
-        recordsData: records,
-      });
-    });
+    console.log(this.props)
   }
 
   toggleNew = () => {
@@ -60,7 +52,7 @@ export default class RecordAdmin extends Component {
   onNewRecord = (response) => {
     this.props.stopLoading();
     this.toggleNew();
-    this.getRecordsData();
+    this.props.getDataFunc();
     openNotification({ message: response.data.message,
       description: `Nice work you have successfully added a ${this.props.recordType}`});
   }
@@ -68,7 +60,7 @@ export default class RecordAdmin extends Component {
   onEditRecord = (response) => {
     this.props.stopLoading();
     this.toggleEdit();
-    this.getRecordsData();
+    this.props.getDataFunc();
     openNotification({ message: response.data.message,
       description: `Wonderful work you have successfully edited the ${this.props.recordType}`});
   }
@@ -76,19 +68,28 @@ export default class RecordAdmin extends Component {
   render = () => {
 
     const { state, toggleNew, toggleEdit, onNewRecord, onEditRecord } = this;
-    const { showNew, showEdit, recordsData, recordToEdit } = state;
+    const { showNew, showEdit, recordToEdit } = state;
+    const { customers, products, safetyWears, distributors, records } = this.props;
 
     const newFormProps = {
       onNewRecord,
-      recordsData,
+      recordsData: records,
       startLoading: this.props.startLoading,
+      customers,
+      products,
+      safetyWears,
+      distributors,
     };
 
     const editFormProps = {
       onEditRecord,
       recordToEdit,
-      recordsData,
+      recordsData: records,
       startLoading: this.props.startLoading,
+      customers,
+      products,
+      safetyWears,
+      distributors,
     }
 
     const MyNewRecordForm = this.MyNewRecordForm;
@@ -106,7 +107,7 @@ export default class RecordAdmin extends Component {
         </Row>
         <Row>
           <Col span={24}>
-            <RecordsTable data={state.recordsData} onEditClick={this.toggleEdit} />
+            <RecordsTable data={records} onEditClick={this.toggleEdit} />
           </Col>
         </Row>
         <Modal

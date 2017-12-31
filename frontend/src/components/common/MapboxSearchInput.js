@@ -58,6 +58,7 @@ export default class MapboxSearchInput extends Component {
   }
 
   handleSearch = (value) => {
+    console.log('search', value)
     searchMapbox(value, this.onSearchComplete);
   }
 

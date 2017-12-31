@@ -1,14 +1,14 @@
 import React, { Component } from 'react';
 import { Table, Input, Icon, Row, Col } from 'antd';
-import BaseTable from './BaseTable';
+import CustomersTable from './CustomersTable';
 import { alphabetSort } from '../../util/Sorter';
 
-const customerDetailList = [
+const distributorDetailList = [
   [ 'Name', 'businessName'],
   [ 'Contact First Name', 'first_name' ],
   [ 'Contact Last Name', 'last_name'],
   [ 'Email','email'], ['Address', 'address'], ['phoneNumber', 'phoneNumber'],
-  [ 'Cell Phone', 'cellPhoneNumber'], ['Products', 'products'],
+  [ 'Cell Phone', 'cellPhoneNumber'],
 ];
 
 
@@ -23,7 +23,7 @@ const originalState = {
 };
 
 
-export default class CustomersTable extends BaseTable {
+export default class DistributorsTable extends CustomersTable {
 
   constructor(props) {
     super(props);
@@ -86,19 +86,6 @@ export default class CustomersTable extends BaseTable {
       key: 'last_name',
       defaultSortOrder: 'descend',
       sorter: (a, b) => alphabetSort(a.last_name, b.last_name),
-    },{
-      title: 'Products',
-      dataIndex: 'products',
-      key: 'products',
-      filters: this.state.products,
-      onFilter: (value, record) => record.products.find((p) => p.trim() === value.trim()),
-      render: (value, record) => value.slice(0, 30),
-    },
-    {
-      title: 'Safety Sheet',
-      dataIndex: 'id',
-      key: 'id',
-      render: (value, c) => <a href={`/customer_sheet/${c.id}`} target="_blank">Link</a>,
     },
     {
       title: 'Edit',
@@ -115,7 +102,7 @@ export default class CustomersTable extends BaseTable {
   }
 
   renderDetail = (record) => {
-     return customerDetailList.map((def, i) => {
+     return distributorDetailList.map((def, i) => {
       return (
         <Row key={i}>
           <Col span={4}>
@@ -129,11 +116,6 @@ export default class CustomersTable extends BaseTable {
         </Row>
       );
     });
-  }
-
-  getData = () => {
-    const { filteredData, filtered, } = this.state;
-    return filtered ? filteredData : this.props.data;
   }
 
  }

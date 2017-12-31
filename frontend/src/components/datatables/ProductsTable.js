@@ -202,7 +202,7 @@ export default class ProductsTable extends BaseTable {
       title: 'Edit',
       key: 'operation',
       width: 80,
-      render: (value, record) => <a onClick={ () => this.props.onEditClick(value, record) }>edit</a>,
+      render: (value, record) => record.editable && <a onClick={ () => this.props.onEditClick(value, record) }>edit</a>,
     },
     ];
   }

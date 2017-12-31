@@ -1,26 +1,27 @@
 import React from 'react';
 import { Form, Button } from 'antd';
-import { postEditCustomer } from '../../util/DjangoApi';
-import CustomerForm from './CustomerForm';
+import { postEditDistributor } from '../../util/DjangoApi';
+import DistributorForm from './DistributorForm';
 import { tailFormItemLayout } from '../../constants/tableLayout';
 
 const FormItem = Form.Item;
 
-class EditCustomerForm extends CustomerForm {
+class EditDistributorForm extends DistributorForm {
 
   handleSubmit = (e) => {
     e.preventDefault();
+    if(this.state.submitting) {
+      return;
+    }
     const { form, recordToEdit, onEditRecord } = this.props;
 
-    form.validateFieldsAndScroll((err, values) => {
+    form.validateFieldsAndScroll(async (err, values) => {
       if (!err) {
-        this.setState({ submitting: true })
         this.props.startLoading();
+        this.setState({ submitting: true })
         const data = Object.assign(values, { id: recordToEdit.id });
-        if(this.state.addressResult !== "initialValue") {
-          data.geocodingDetail = this.state.addressResult;
-        }
-        postEditCustomer(data, (response) => {
+        const newDistributor = await this.prepareValues(data);
+        postEditDistributor(newDistributor, (response) => {
           onEditRecord(response);
         });
       }
@@ -31,12 +32,9 @@ class EditCustomerForm extends CustomerForm {
     return (
       <Form onSubmit={this.handleSubmit}>
         { this.renderCommonFormFields() }
-        <FormItem {...tailFormItemLayout}>
-          <Button type="primary" htmlType="submit">Done</Button>
-        </FormItem>
       </Form>
     );
   }
 }
 
-export default EditCustomerForm;
+export default EditDistributorForm;

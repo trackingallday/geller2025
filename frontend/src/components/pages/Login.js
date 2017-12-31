@@ -87,6 +87,9 @@ class Login extends BasePage {
   }
 
   handleSubmit = ({ username, password }) => {
+    if(this.state.submitting) {
+      return;
+    }
     this.startLoading();
     postLogin(username, password, this.onSuccess, this.onFail);
   }
