@@ -19,6 +19,14 @@ def path_to_qr_code(path):
     return base_data_url + encoded_string
 
 
+class SafetyWearSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = SafetyWear
+        fields = (
+            'id', 'name', 'imageLink',
+        )
+
 
 class ProfileSerializer(serializers.ModelSerializer):
 
@@ -48,7 +56,6 @@ class UserSerializer(serializers.ModelSerializer):
 class ProductSerializer(serializers.ModelSerializer):
 
     editable = serializers.SerializerMethodField('get_can_edit')
-    sdsQrcode = serializers.SerializerMethodField('sds_qrcode')
     customers = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
@@ -57,7 +64,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
             'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet',
-            'safetyWears', 'customers', 'editable', 'sdsQrcode',
+            'safetyWears', 'customers', 'editable',
         )
 
     def get_can_edit(self, obj):
@@ -65,25 +72,23 @@ class ProductSerializer(serializers.ModelSerializer):
             return obj.uploadedBy.id == self.context["user"].id
         return False
 
-    def sds_qrcode(self, obj):
-        return path_to_qr_code(obj.sdsSheet)
 
+class ProductSheetSerializer(serializers.ModelSerializer):
 
-class CustomerSerializer(serializers.ModelSerializer):
-
-    user = UserSerializer(many=False, read_only=True)
-    products = serializers.StringRelatedField(many=True, read_only=True)
-    productsExpanded = serializers.SerializerMethodField('products_expanded')
+    safetyWears = SafetyWearSerializer(many=True, read_only=True)
+    sdsQrcode = serializers.SerializerMethodField('sds_qrcode')
 
     class Meta:
-        model = Customer
+        model = Product
+        read_only_fields = ('editable', 'customers')
         fields = (
-            'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
-            'products', 'address', 'geocodingDetail', 'productsExpanded',
+            'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
+            'instructions', 'productCode', 'brand', 'sdsSheet',
+            'safetyWears', 'sdsQrcode',
         )
 
-    def products_expanded(self, obj):
-        return ProductSerializer(obj.products, many=True).data
+    def sds_qrcode(self, obj):
+        return path_to_qr_code(obj.sdsSheet)
 
 
 class DistributorSerializer(serializers.ModelSerializer):
@@ -95,8 +100,49 @@ class DistributorSerializer(serializers.ModelSerializer):
         model = Distributor
         fields = (
             'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
-            'customers', 'address', 'geocodingDetail',
+            'customers', 'address', 'geocodingDetail', 'primaryImageLink',
         )
+
+
+class CustomerSheetSerializer(serializers.ModelSerializer):
+
+    products = ProductSheetSerializer(many=True, read_only=True)
+    distributor = serializers.SerializerMethodField('distributor_parent')
+
+    class Meta:
+        model = Customer
+        fields = (
+            'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
+            'products', 'address', 'geocodingDetail', 'distributor',
+        )
+
+    def distributor_parent(self, obj):
+        return DistributorSerializer(obj.distributorParent, many=False, read_only=True).data
+
+
+
+class CustomerSerializer(serializers.ModelSerializer):
+
+    user = UserSerializer(many=False, read_only=True)
+    products = serializers.StringRelatedField(many=True, read_only=True)
+    productsExpanded = serializers.SerializerMethodField('products_expanded')
+    distributor = serializers.SerializerMethodField('distributor_parent')
+
+    class Meta:
+        model = Customer
+        fields = (
+            'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
+            'products', 'address', 'geocodingDetail', 'productsExpanded', 'distributor',
+        )
+
+    def products_expanded(self, obj):
+        return ProductSerializer(obj.products, many=True).data
+
+    def distributor_parent(self, obj):
+        if not obj.distributorParent:
+            print('NOOOOO', obj.user.email)
+            return "None"
+        return obj.distributorParent.businessName
 
 
 class CustomerMapSerializer(serializers.ModelSerializer):
@@ -132,14 +178,5 @@ class ProductMapSerializer(serializers.ModelSerializer):
         read_only_fields = ('customers', )
         fields = (
             'id', 'name', 'brand', 'customers',
-        )
-
-
-class SafetyWearSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = SafetyWear
-        fields = (
-            'id', 'name', 'imageLink',
         )
 

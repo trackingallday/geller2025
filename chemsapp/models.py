@@ -31,7 +31,7 @@ class Profile(MyBaseModel, models.Model):
     businessName = models.CharField(max_length=255)
     address = models.CharField(max_length=500)
     profileType = models.CharField(choices=typeChoices, default="customer",
-                                   max_length=255, blank=True)
+                                   max_length=255, blank=True, null=True)
     hasSetPassword = models.BooleanField(default=False)
 
     def __str__(self):
@@ -47,24 +47,30 @@ class Product(MyBaseModel, models.Model):
     instructions = models.TextField(max_length=2000)
     productCode = models.CharField(max_length=255, unique=True)
     brand = models.CharField(max_length=255)
-    infoSheet = models.FileField(upload_to='documents/', blank=True)
-    sdsSheet = models.FileField(upload_to='documents/', blank=True)
+    infoSheet = models.FileField(upload_to='documents/', blank=True, null=True)
+    sdsSheet = models.FileField(upload_to='documents/', blank=True, null=True)
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
     uploadedBy = models.ForeignKey(User, on_delete=None, related_name="products_added")
+
 
     def __str__(self):
         return "{} ".format(self.name)
 
 
 class Customer(Profile):
-    products = models.ManyToManyField(Product, related_name="customers", blank=True)
-    geocodingDetail = models.TextField(max_length=1500, blank=True)
+    products = models.ManyToManyField(Product, related_name="customers", blank=True, null=True)
+    geocodingDetail = models.TextField(max_length=1500, blank=True, null=True)
+    distributorParent = models.ForeignKey('Distributor', blank=True, null=True)
+
+    def __str__(self):
+        return "{} {} {}".format(self.businessName, self.user.email, self.distributorParent)
 
 
 
 class Distributor(Profile):
-    customers = models.ManyToManyField(Customer, related_name="distributors", blank=True)
-    geocodingDetail = models.TextField(max_length=1500, blank=True)
+    customers = models.ManyToManyField(Customer, related_name="distributors", blank=True, null=True)
+    geocodingDetail = models.TextField(max_length=1500, blank=True, null=True)
+    primaryImageLink = models.CharField(max_length=500, blank=True, null=True)
 
 
 class ProductAdd(MyBaseModel, models.Model):
