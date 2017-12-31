@@ -335,7 +335,10 @@ def customers_table(request):
 def printout(request):
     if request.method == 'POST':
         data = request.data['data']
-        customer = request.user.profile.distributor.customers.get(pk=int(data['customer_id']))
+        if request.user.profile.profileType == 'admin':
+            customer = Customer.objects.get(pk=int(data['customer_id']))
+        else:
+            customer = request.user.profile.distributor.customers.get(pk=int(data['customer_id']))
         if not customer:
             return JsonResponse({'error': 'evildoer'})
 
