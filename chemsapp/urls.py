@@ -3,7 +3,7 @@ from django.conf.urls import url
 from rest_framework.authtoken import views as drf_views
 from chemsapp.views import index, customers_list, products_list, new_customer, edit_customer, safety_wears_list,\
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
-    new_distributor, edit_distributor, customer_sheet
+    new_distributor, edit_distributor, printout
 
 urlpatterns = [
     url(r'^admin/', admin.site.urls),
@@ -28,5 +28,5 @@ urlpatterns = [
     url(r'^products_map/', products_map, name="products_map"),
     url(r'^customers_table_admin/', customers_table_admin, name="customers_table_admin"),
     url(r'^customers_table/', customers_table, name="customers_table"),
-    url(r'^printout/', customer_sheet, name="printout"),
+    url(r'^printout/', printout, name="printout"),
 ]

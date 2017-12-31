@@ -332,7 +332,7 @@ def customers_table(request):
 
 @csrf_exempt
 @api_view(['POST', 'GET'])
-def customer_sheet(request):
+def printout(request):
     if request.method == 'POST':
         data = request.data['data']
         customer = request.user.profile.distributor.customers.get(pk=int(data['customer_id']))
