@@ -36,6 +36,18 @@ def addSDSSheetToProduct(product, data):
     return product
 
 
+def create_user(data):
+    user = User.objects.create_user(
+        first_name=data['first_name'],
+        last_name=data['last_name'],
+        email=data['email'],
+        username=data['email'],
+    )
+    user.set_password(data['password'])
+    user.save()
+    return user
+
+
 @csrf_exempt
 def index(request):
     with open(os.path.join(settings.REACT_APP_DIR, 'build', 'index.html')) as f:
@@ -74,14 +86,7 @@ def new_customer(request):
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
-
-    user = User.objects.create_user(
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        email=data['email'],
-        password=['password'],
-        username=data['email'],
-    )
+    user = create_user(data)
 
     customer = Customer.objects.create(
         user=user,
@@ -152,14 +157,7 @@ def new_distributor(request):
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
-
-    user = User.objects.create_user(
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        email=data['email'],
-        password=['password'],
-        username=data['email'],
-    )
+    user = create_user(data)
 
     distributor = Distributor.objects.create(
         user=user,
