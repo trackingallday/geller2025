@@ -86,7 +86,10 @@ def new_customer(request):
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
-    user = create_user(data)
+    try:
+        user = create_user(data)
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
 
     customer = Customer.objects.create(
         user=user,
@@ -157,7 +160,10 @@ def new_distributor(request):
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
-    user = create_user(data)
+    try:
+        user = create_user(data)
+    except Exception as e:
+        return JsonResponse({'error': str(e)})
 
     distributor = Distributor.objects.create(
         user=user,
@@ -292,6 +298,7 @@ def edit_product(request):
 @api_view(['POST', 'GET'])
 def user_details(request):
     data = UserSerializer(request.user).data
+    data['emails'] = [u.email for u in User.objects.all()]
     return JsonResponse(data)
 
 
