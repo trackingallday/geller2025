@@ -78,14 +78,14 @@ import styles from '../../styles';
     return (
       <div key={index} style={{'minHeight': '130px', borderWidth: '0px 0px 0.5px 0px', borderStyle: 'solid', margin: '6px 0px 3px 0px'}}>
         <Row type="flex" justify="start">
-          <Col span={3}>
-              <img crossOrigin='anonymous' alt=""
-                style={{ width: '100%', height: 125 }}
-                src={primaryImageLink}
-              />
+          <Col span={3} align="middle">
+            <img crossOrigin='anonymous' alt=""
+              style={{ width: '100%' }}
+              src={primaryImageLink}
+            />
           </Col>
-          <Col span={4}>
-            <img crossOrigin='anonymous' alt="" style={{ width: '100%', height: 125, borderLeft: '4px solid #fff', borderRight: '5px solid #fff' }} src={secondaryImageLink} />
+          <Col span={4} align="middle">
+            <img crossOrigin='anonymous' alt="" style={{ width: '100%', borderLeft: '4px solid #fff', borderRight: '5px solid #fff'}} src={secondaryImageLink} />
           </Col>
           <Col span={13}>
             <Row style={titleRowStyle}>
@@ -101,7 +101,6 @@ import styles from '../../styles';
               <span style={bottomStyle}>{ instructions }</span>
             </Row>
           </Col>
-
           <Col span={4}>
             <Row>
               <Col span={24}>
@@ -124,26 +123,26 @@ import styles from '../../styles';
     const date = moment().add('years', 1).format("DD MMMM YYYY");
     return (
       <Row type="flex" justify="start" style={{ borderWidth: '0px 0px 0.5px 0px', borderStyle: 'solid',}}>
-        <Col span="18">
-          <Row style={{fontSize: '18px', wordSpacing: '5px'}}>
-            <span>Chemical Cleaning Safety Procedures</span>
+        <Col span="15">
+          <Row style={{fontSize: '18px', paddingBottom: '10px'}}>
+            <span>Chemical Safety Procedures</span>
           </Row>
-          <Row style={{fontSize: '18px', wordSpacing: '4px' }}>
+          <Row style={{fontSize: '18px', paddingBottom: '6px'}}>
             <span>{ customer.businessName }</span>
           </Row>
-          <Row style={{fontSize: '13px', wordSpacing: '4px'}}>
+          <Row style={{fontSize: '13px', paddingBottom: '6px'}}>
             <span>{ distributor.businessName}</span>
           </Row>
-          <Row style={{fontSize: '13px', wordSpacing: '6px'}}>
-            <span>{ `Re-order: ${distributor.businessName} ${distributor.cellPhoneNumber} ${distributor.phoneNumber}`}</span>
+          <Row style={{fontSize: '13px', paddingBottom: '6px'}}>
+            <span>{ `Re-order: ${distributor.phoneNumber}`}</span>
           </Row>
-          <Row style={{fontSize: '13px', paddingBottom: '10px', wordSpacing: '4px'}}>
-            <span>{ `Vaild until: ${date}` }</span>
+          <Row style={{fontSize: '11px', paddingBottom: '6px'}}>
+            <span>{ `Vaild until:  ${date}` }</span>
           </Row>
         </Col>
-        <Col span="6">
-          <Row>
-            <img alt="" crossOrigin='anonymous' style={{ width: '160px' }} src={distributor.primaryImageLink} />
+        <Col span="9">
+          <Row style={{paddingBottom: '10px'}}>
+            <img alt="" crossOrigin='anonymous' style={{ width: '100%' }} src={distributor.primaryImageLink} />
           </Row>
         </Col>
       </Row>

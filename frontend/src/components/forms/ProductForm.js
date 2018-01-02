@@ -161,7 +161,7 @@ class ProductForm extends Component {
               )}
             </div>
         </FormItem>
-        <FormItem {...formItemLayout} extra="Upload Two Photos primary then Secondary" label="Images .png .jpg">
+        <FormItem {...formItemLayout} extra="Upload a Product Image then an Application Image" label="Images .png .jpg">
             <div className="dropbox">
               {getFieldDecorator('images', {
                 getValueFromEvent: this.normFile, rules: [{required: uploadsRequired, message: '2 Images Required!'}],
