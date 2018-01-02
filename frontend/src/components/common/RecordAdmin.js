@@ -1,13 +1,13 @@
 import React, { Component } from 'react';
 import { Modal, Button, notification, Row, Col, Form  } from 'antd';
 
-const openNotification = ({ message, description }) => {
+const openNotification = ({ message, description }, type='info') => {
   const args = {
     message,
     description,
     duration: 6,
   };
-  notification.open(args);
+  notification[type](args);
 };
 
 
@@ -51,6 +51,11 @@ export default class RecordAdmin extends Component {
 
   onNewRecord = (response) => {
     this.props.stopLoading();
+    if(response.data.error) {
+      openNotification({ message: `${this.props.recordType} was not created`,
+        description: response.data.error}, 'error');
+        return;
+    }
     this.toggleNew();
     this.props.getDataFunc();
     openNotification({ message: response.data.message,
@@ -58,6 +63,11 @@ export default class RecordAdmin extends Component {
   }
 
   onEditRecord = (response) => {
+    if(response.data.error) {
+      openNotification({ message: `${this.props.recordType} was not created`,
+        description: response.data.error}, 'error');
+        return;
+    }
     this.props.stopLoading();
     this.toggleEdit();
     this.props.getDataFunc();
