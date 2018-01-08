@@ -33,11 +33,13 @@ class DistributorForm extends CustomerForm {
 
     const { imageFiles } = this.state;
 
-    const primaryImage = await uploader.upload(imageFiles[0]);
+    if(imageFiles[0]) {
+      const primaryImage = await uploader.upload(imageFiles[0]);
 
-    const newDistributor = Object.assign({}, values, {
-      primaryImageLink: primaryImage.url,
-    });
+      const newDistributor = Object.assign({}, values, {
+        primaryImageLink: primaryImage.url,
+      });
+    }
 
     return newDistributor;
   }
