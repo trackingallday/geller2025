@@ -36,12 +36,14 @@ class DistributorForm extends CustomerForm {
     if(imageFiles[0]) {
       const primaryImage = await uploader.upload(imageFiles[0]);
 
-      const newDistributor = Object.assign({}, values, {
+      let newDistributor = Object.assign({}, values, {
         primaryImageLink: primaryImage.url,
       });
-    }
 
-    return newDistributor;
+      return newDistributor;
+    }
+    return values;
+
   }
 
   onImageRemove = (img) => {
