@@ -117,6 +117,7 @@ class CustomerForm extends Component {
         label="Email"
       >
         {getFieldDecorator('email', {
+          initialValue: this.getInitialValue('email'),
           rules: [
             { required: true, message: 'Please input an email!'},
             { validator: this.checkEmail},

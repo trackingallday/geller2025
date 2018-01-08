@@ -87,6 +87,7 @@ class DistributorForm extends CustomerForm {
         label="Email"
        >
         {getFieldDecorator('email', {
+          initialValue: this.getInitialValue('email'),
           rules: [
             { required: true, message: 'Please input an email!'},
             { validator: this.checkEmail},
