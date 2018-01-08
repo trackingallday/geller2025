@@ -1,5 +1,4 @@
 const dev = false;
-const dev = true;
 const DEV_URL = '0.0.0.0:8000';
 const PRODUCTION_URL = 'app.integraindustries.co.nz';
 let url = PRODUCTION_URL;
