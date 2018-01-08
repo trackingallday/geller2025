@@ -112,6 +112,17 @@ class CustomerForm extends Component {
           initialValue: this.getInitialValue('last_name'),
           rules: [{ required: true, message: 'Please enter last name', }]})(<Input />)}
       </FormItem>),
+      (<FormItem
+        {...formItemLayout}
+        label="Email"
+      >
+        {getFieldDecorator('email', {
+          rules: [
+            { required: true, message: 'Please input an email!'},
+            { validator: this.checkEmail},
+          ],
+        })(<Input />)}
+      </FormItem>),
       (<FormItem {...formItemLayout} label="Address" help="Try typing the name of the business" key={3}>
         {getFieldDecorator('address', {
           initialValue: this.getInitialValue('address'),

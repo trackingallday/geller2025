@@ -31,17 +31,6 @@ class NewCustomerForm extends CustomerForm {
 
     return (
       <Form onSubmit={this.handleSubmit} ref="form">
-        <FormItem
-          {...formItemLayout}
-          label="Email"
-        >
-          {getFieldDecorator('email', {
-            rules: [
-              { required: true, message: 'Please input an email!'},
-              { validator: this.checkEmail},
-            ],
-          })(<Input />)}
-        </FormItem>
         <FormItem {...formItemLayout}
           label="Password"
           help="Please set a temporary password for the customer"

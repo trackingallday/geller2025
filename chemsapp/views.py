@@ -133,6 +133,7 @@ def edit_customer(request):
 
     customer.user.first_name = data.get('first_name')
     customer.user.last_name = data.get('last_name')
+    customer.user.email = data.get('email')
     customer.user.save()
 
     customer.address = data.get('address')
@@ -204,6 +205,8 @@ def edit_distributor(request):
 
     distributor.user.first_name = data.get('first_name')
     distributor.user.last_name = data.get('last_name')
+    distributor.user.email = data.get('email')
+
     distributor.user.save()
 
     distributor.address = data.get('address')
