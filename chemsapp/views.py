@@ -123,7 +123,7 @@ def edit_customer(request):
 
     data = request.data['data']
     customer = None
-    if protype == 'admin':
+    if proType == 'admin':
         customer = Customer.objects.get(pk=data.get('id'))
     else:
         customer = request.user.profile.distributor.customers.get(id=data.get('id'))
