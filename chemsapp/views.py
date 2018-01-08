@@ -122,8 +122,11 @@ def edit_customer(request):
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
-
-    customer = request.user.profile.distributor.customers.get(id=data.get('id'))
+    customer = None
+    if protype = 'admin':
+        customer = Customer.objects.get(pk=data.get('id'))
+    else:
+        customer = request.user.profile.distributor.customers.get(id=data.get('id'))
 
     if not customer:
         return JsonResponse({"error": "evildoer"})
@@ -362,11 +365,3 @@ def distributors_list(request):
         return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'evildoer'})
-
-
-
-
-
-
-
-
