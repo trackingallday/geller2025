@@ -222,7 +222,7 @@ def edit_distributor(request):
 
     distributor.save()
 
-    return JsonResponse({"message": "customer edited"})
+    return JsonResponse({"message": "distributor edited"})
 
 
 
@@ -297,7 +297,7 @@ def edit_product(request):
 
     product.save()
 
-    return JsonResponse({"message": "customer edited"})
+    return JsonResponse({"message": "product edited"})
 
 
 @csrf_exempt
