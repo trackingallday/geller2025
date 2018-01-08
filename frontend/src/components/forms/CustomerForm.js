@@ -49,7 +49,8 @@ class CustomerForm extends Component {
     if(/(.+)@(.+){2,}\.(.+){2,}/.test(value) !== true) {
       return callback('This email is invalid')
     }
-    if(this.props.recordsData.find(c => c.email === value)) {
+    const { recordsData, recordToEdit } = this.props;
+    if(recordsData.find(c => c.email === value) &! (recordToEdit && recordToEdit.email === value)) {
       return callback(`${value} has already been taken already`);
     }
     callback();
