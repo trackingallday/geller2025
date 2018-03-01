@@ -1,6 +1,6 @@
-const dev = false;
-const DEV_URL = '0.0.0.0:8000';
-const PRODUCTION_URL = 'app.integraindustries.co.nz';
+const dev = true;
+const DEV_URL = 'http://0.0.0.0:8000';
+const PRODUCTION_URL = 'https://app.integraindustries.co.nz';
 let url = PRODUCTION_URL;
 
 if(dev) {
@@ -9,4 +9,4 @@ if(dev) {
 
 console.log(DEV_URL, PRODUCTION_URL);
 
-export default `https://${url}`
+export default url;
