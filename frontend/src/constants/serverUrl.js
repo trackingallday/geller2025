@@ -9,4 +9,4 @@ if(dev) {
 
 console.log(DEV_URL, PRODUCTION_URL);
 
-export default `http://${url}`
+export default `https://${url}`
