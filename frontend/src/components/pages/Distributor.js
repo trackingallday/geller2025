@@ -21,6 +21,7 @@ class DistributorPage extends BasePage {
     products: [],
     safetyWears: [],
     distributors: [],
+    markets: [],
   }
 
   renderMenu() {
@@ -79,6 +80,7 @@ class DistributorPage extends BasePage {
         recordsTable={ProductsTable}
         getDataFunc={() => this.loadData(getProducts, 'products')}
         customers={this.state.customers}
+        markets={this.state.markets}
         records={this.state.products}
         safetyWears={this.state.safetyWears}
         recordType="Product"

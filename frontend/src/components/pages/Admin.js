@@ -8,7 +8,7 @@ import EditDistributorForm from '../forms/EditDistributorForm';
 import ProductMap from '../maps/ProductMap';
 import DistributorsTable from '../datatables/DistributorsTable';
 import RecordAdmin from '../common/RecordAdmin';
-import { postNewDistributor, editDistributor, getDistributors, getSafetyWears, getCustomers, getProducts } from '../../util/DjangoApi';
+import { postNewDistributor, editDistributor, getDistributors, getSafetyWears, getCustomers, getMarkets, getProducts } from '../../util/DjangoApi';
 
 class AdminPage extends DistributorPage {
 
@@ -23,6 +23,7 @@ class AdminPage extends DistributorPage {
         this.getRecordsData(getCustomers, 'customers'),
         this.getRecordsData(getProducts, 'products'),
         this.getRecordsData(getDistributors, 'distributors'),
+        this.getRecordsData(getMarkets, 'markets'),
       ]).then(datas => {
         this.stopLoading();
       });

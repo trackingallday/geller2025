@@ -1,11 +1,10 @@
 from django.contrib.auth.models import User
-from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear
+from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear, ProductCategory, Post, MarketCategory
 from rest_framework import serializers
 import pyqrcode
 import base64
 import io
 import chemicaldatasheets.settings
-
 
 
 def path_to_qr_code(path):
@@ -25,6 +24,15 @@ class SafetyWearSerializer(serializers.ModelSerializer):
         model = SafetyWear
         fields = (
             'id', 'name', 'imageLink',
+        )
+
+
+class CategorySerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = ProductCategory
+        fields = (
+            'id', 'name', 'description',
         )
 
 
@@ -64,13 +72,25 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
             'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet',
-            'safetyWears', 'customers', 'editable',
+            'safetyWears', 'customers', 'editable',  'markets', 'properties', 'application'
         )
 
     def get_can_edit(self, obj):
         if "user" in self.context:
             return obj.uploadedBy.id == self.context["user"].id
         return False
+
+
+class PublicProductSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Product
+        fields = (
+            'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
+            'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet', 'productCategory', 'marketingDesc',
+            'description', 'markets', 'properties', 'application'
+
+        )
 
 
 class ProductSheetSerializer(serializers.ModelSerializer):
@@ -178,5 +198,23 @@ class ProductMapSerializer(serializers.ModelSerializer):
         read_only_fields = ('customers', )
         fields = (
             'id', 'name', 'brand', 'customers',
+        )
+
+
+class PostSererializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Post
+        fields = (
+            'id', 'title', 'name', 'content', 'image', 'page',
+        )
+
+
+class MarketSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = MarketCategory
+        fields = (
+            'id', 'name', 'image',
         )
 

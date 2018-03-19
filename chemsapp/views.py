@@ -4,14 +4,16 @@ from django.contrib.auth.decorators import login_required
 from django.conf import settings
 import os
 from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
-    ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer
-from chemsapp.models import Customer, Product, SafetyWear, Distributor
+    ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
+    CategorySerializer, PostSererializer, MarketSerializer
+from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 import base64
 from django.core.files.base import ContentFile
 import datetime
 from django.db.models import Q
+from django.core import serializers
 
 
 def getFileFromBase64(data, filename):
@@ -250,6 +252,8 @@ def new_product(request):
         instructions=data.get('instructions'),
         productCode=data.get('productCode'),
         brand=data.get('brand'),
+        properties=data.get('properties'),
+        application=data.get('application'),
         uploadedBy=request.user,
     )
     product.save()
@@ -257,6 +261,7 @@ def new_product(request):
     product = addInfoSheetToProduct(product, data.get('infoSheet'))
     product = addSDSSheetToProduct(product, data.get('sdsSheet'))
     product.safetyWears = SafetyWear.objects.filter(pk__in=data.get('safetyWears'))
+    product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
     product.updated_at = datetime.datetime.now()
     product.save()
 
@@ -278,14 +283,21 @@ def edit_product(request):
 
     product.safetyWears = SafetyWear.objects.filter(pk__in=data.get('safetyWears'))
     product.name = data.get('name')
-    product.primaryImageLink = data.get('primaryImageLink')
-    product.secondaryImageLink = data.get('secondaryImageLink')
     product.usageType = data.get('usageType')
     product.amountDesc = data.get('amountDesc')
     product.instructions = data.get('instructions')
     product.productCode = data.get('productCode')
     product.brand = data.get('brand')
+    product.properties = data.get('properties')
+    product.application = data.get('application')
+    product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
     product.updated_at = datetime.datetime.now()
+
+    if data.get('secondaryImageLink'):
+        product.secondaryImageLink = data.get('secondaryImageLink')
+
+    if data.get('primaryImageLink'):
+        product.primaryImageLink = data.get('primaryImageLink')
 
     if data.get('sdsSheet'):
         product = addSDSSheetToProduct(product, data.get('sdsSheet'))
@@ -365,6 +377,27 @@ def printout(request):
 def distributors_list(request):
     if request.user.profile.profileType == 'admin':
         data = DistributorSerializer(Distributor.objects.all(), many=True).data
+        return JsonResponse(data, safe=False)
+
+    return JsonResponse({'error': 'evildoer'})
+
+@csrf_exempt
+def public_products(request):
+    try:
+        products = PublicProductSerializer(Product.objects.all(), many=True).data
+        categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
+        posts = PostSererializer(Post.objects.all(), many=True).data
+        return JsonResponse({'products': products, 'categories': categories, 'posts': posts}, safe=False)
+    except Exception as a:
+        print(a)
+    pass
+
+
+@csrf_exempt
+@api_view(['GET'])
+def markets_list(request):
+    if request.user:
+        data = MarketSerializer(MarketCategory.objects.all(), many=True).data
         return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'evildoer'})

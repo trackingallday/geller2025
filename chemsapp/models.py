@@ -38,6 +38,15 @@ class Profile(MyBaseModel, models.Model):
         return "{} {} {} {} {}".format(self.businessName, self.user.first_name, self.user.last_name, self.user.email, self.user.username)
 
 
+class ProductCategory(MyBaseModel, models.Model):
+    name = models.CharField(max_length=100, unique=True)
+    description = models.TextField(max_length=1000)
+
+
+    def __str__(self):
+        return "{} ".format(self.name)
+
+
 class Product(MyBaseModel, models.Model):
     name = models.CharField(max_length=255, unique=True)
     primaryImageLink = models.CharField(max_length=500)
@@ -51,10 +60,35 @@ class Product(MyBaseModel, models.Model):
     sdsSheet = models.FileField(upload_to='documents/', blank=True, null=True)
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
     uploadedBy = models.ForeignKey(User, on_delete=None, related_name="products_added")
-
+    description = models.CharField(max_length=455, blank=True, null=True)
+    subCategory = models.CharField(max_length=100, blank=True, null=True)
+    properties = models.CharField(max_length=500, blank=True, null=True)
+    public = models.BooleanField(default=False)
+    productCategory = models.ForeignKey(ProductCategory, blank=True, null=True, related_name='products')
+    application = models.CharField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return "{} ".format(self.name)
+
+
+class Post(MyBaseModel, models.Model):
+    name = models.CharField(max_length=500, blank=True, null=True)
+    page = models.CharField(max_length=100)
+    content = models.TextField(max_length=2000, blank=True, null=True)
+    image = models.FileField(upload_to='documents/', blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True, null=True)
+
+    def __str__(self):
+        return "{} {} {}".format(self.page, self.title, self.name)
+
+
+class MarketCategory(MyBaseModel, models.Model):
+    name = models.CharField(max_length=500, blank=True, null=True)
+    image = models.FileField(upload_to='documents/', blank=True, null=True)
+    products = models.ManyToManyField(Product, related_name="markets", blank=True, null=True)
+
+    def __str__(self):
+        return self.name
 
 
 class Customer(Profile):
@@ -64,7 +98,6 @@ class Customer(Profile):
 
     def __str__(self):
         return "{} {} {}".format(self.businessName, self.user.email, self.distributorParent)
-
 
 
 class Distributor(Profile):

@@ -16,6 +16,8 @@ class ProductForm extends Component {
     imageFiles: [],
     products: [],
     safetyWearOptions: [],
+    markets: [],
+    marketOptions: [],
   }
 
   getInitialValue = (key) => {
@@ -26,11 +28,15 @@ class ProductForm extends Component {
   }
 
   componentDidMount() {
-    const { products, safetyWears } = this.props;
+    const { products, safetyWears, markets } = this.props;
     this.setState({
       safetyWears,
       products,
       safetyWearOptions: safetyWears.map((sw, i) => (
+        <Option key={i} value={sw.id}>{ sw.name }</Option>
+      )),
+      markets,
+      marketOptions: markets.map((sw, i) => (
         <Option key={i} value={sw.id}>{ sw.name }</Option>
       )),
     });
@@ -126,6 +132,16 @@ class ProductForm extends Component {
           rules: [{required: req, message: 'Required!'}]})(
             <TextArea />)}
         </FormItem>
+        <FormItem {...formItemLayout} label="Applications">
+          {getFieldDecorator('application', { initialValue: this.getInitialValue('application'),
+          rules: [{required: req, message: 'Required!'}]})(
+            <TextArea placeholder="ie: Use for Carpets, and mats"  />)}
+        </FormItem>
+        <FormItem {...formItemLayout} label="Properties">
+          {getFieldDecorator('properties', { initialValue: this.getInitialValue('properties'),
+          rules: [{required: req, message: 'Required!'}]})(
+            <TextArea />)}
+        </FormItem>
         <FormItem {...formItemLayout} label="Safety Wear">
           {getFieldDecorator('safetyWears', { initialValue: this.getInitialValue('safetyWears'),
             rules: [{required: req, message: 'Required!'}]})(
@@ -138,7 +154,18 @@ class ProductForm extends Component {
              { this.state.safetyWearOptions }
            </Select>)}
          </FormItem>
-
+         <FormItem {...formItemLayout} label="Markets">
+           {getFieldDecorator('markets', { initialValue: this.getInitialValue('markets'),
+             rules: [{required: req, message: 'Required!'}]})(
+             <Select
+              mode="multiple"
+              style={{ width: '100%' }}
+              placeholder="Please select"
+              onChange={() => {}}
+            >
+              { this.state.marketOptions }
+            </Select>)}
+          </FormItem>
          <FormItem {...formItemLayout} label="SDSSheet .pdf">
            <div className="dropbox">
              {getFieldDecorator('sdsSheet', { valuePropName: 'sDSSheet',

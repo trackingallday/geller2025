@@ -23,7 +23,7 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 SECRET_KEY = '-&4=0lk%oeq7e3yl%gc**!1(4617ky5)i&c(ejj+b_8v*%n=@n'
 
 # SECURITY WARNING: don't run with debug turned on in production!
-DEBUG = False
+DEBUG = True
 
 ALLOWED_HOSTS = ['104.236.249.246', 'localhost', '127.0.0.1', '0.0.0.0', 'chemicaldataapp',
                  'app.integraindustries.co.nz']

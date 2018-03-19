@@ -43,6 +43,17 @@ export function getCustomers(callback) {
 
 }
 
+export function getMarkets(callback) {
+
+  return getData('/markets_list/', (response) => {
+    const items = response.data.map((c, i) => {
+      return Object.assign(c, c.user, { key: i });
+    });
+    callback(items);
+  });
+
+}
+
 export function getProducts(callback) {
 
   return getData('/products_list/',(response) => {
