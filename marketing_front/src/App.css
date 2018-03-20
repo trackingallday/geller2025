@@ -1,0 +1,381 @@
+
+ .top-nav-row {
+   height: 100px;
+   overflow: hidden !important;
+   display: none;
+   margin-right: 90px;
+ }
+
+ .top-nav {
+   padding-top: 6px;
+ }
+
+ .bottom-nav-row {
+   overflow: hidden !important;
+   height: 60px;
+   display: none;
+   margin-right: 50px;
+ }
+
+ @media(min-width: 840px) {
+   .top-nav {
+     margin-left: 40px;
+   }
+ }
+
+ @media(max-width: 640px) {
+   .top-nav-row, .bottom-nav-row {
+     height: 0px !important;
+   }
+ }
+
+ .cover-nav {
+   display: none;
+ }
+
+.main-message {
+  margin-top: 40px;
+  padding-left: 60px;
+  width: 550px;
+}
+
+.main-message p {
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 30px;
+}
+
+p {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.roman {
+  font-size: 15px;
+  font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif; font-weight:400; font-stretch:normal;
+}
+
+.roman-small {
+  font-size: 11px;
+  font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif; font-weight:400; font-stretch:normal;
+}
+
+.roman-smallest {
+  font-size: 10px;
+  font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif; font-weight:400; font-stretch:normal;
+}
+
+.roman-med {
+  font-size: 12px;
+  font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif; font-weight:700; font-stretch:normal;
+  color:
+}
+
+.back-white {
+  background-color: #ffffff;
+}
+
+.Header-branding {
+  display: none;
+}
+
+.around {
+  display: inline-block;
+  border-radius: 20px;
+  box-shadow: 0px 0px 2px #888;
+  padding: 4px 8px 4px 8px;
+}
+
+.icon {
+  width: 28px;
+  height: 28px;
+}
+
+.nav span {
+  line-height: 40px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  position: relative;
+  top: 5px;
+}
+
+.Site-inner {
+  position: initial;
+}
+
+.nav-link.bold {
+  color: #000;
+  font-size: 20px;
+  font-weight: bold;
+  padding: 8px 5px 0px 0px;
+}
+
+h1.header {
+  font-size: 38px;
+  font-weight: bold;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 65px;
+}
+
+span.heading {
+  font-size: 22px;
+  font-weight: bold;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 22px;
+}
+
+span.product-name {
+  font-size: 14px;
+  font-weight: bold;
+  color: #000;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+span.product-detail {
+  font-size: 13px;
+  font-weight: 400;
+  color: rgb(113,113,113);
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
+.product-name:hover {
+  color: #0275d8;
+}
+
+span.product-desc {
+  font-size: 11px;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  font-weight:400;
+  font-stretch:condensed;
+  color: #0275d8;
+}
+
+.block-with-text {
+  width: 100%;
+  max-height: 50px;
+  text-overflow: ellipsis;
+  white-space: pre-wrap;
+  overflow: hidden;
+}
+
+.description-text {
+  font-size: 10pt;
+  font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif; font-weight:400; font-stretch:normal;
+}
+
+.nav-link.roman {
+  padding: 14px 4px 0px 0px;
+  margin-left: 0px;
+}
+
+.nav-link.roman:hover {
+  color: #0275d8;
+}
+
+.nav-link.home:hover {
+  color: #0275d8;
+}
+
+.nav-link.home {
+  color: #777;
+}
+
+.nav-link.bold:hover {
+  color: #0275d8;
+}
+
+.cover img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+  overflow: hidden;
+}
+
+.pad-top {
+  padding-top: 50px;
+}
+
+.pad-left {
+  padding-left: 60px !important;
+}
+
+.wide { width: 100%; }
+
+body {
+  background-color: rgb(230,230,230) !important;
+}
+
+.grey-text {
+  color: rgb(113,113,113);
+}
+
+.grey-text-light {
+  color: rgb(200,200,200);
+}
+
+.white-text {
+  color: #ffffff;
+}
+
+.black-text {
+  color: #000;
+}
+
+.blue-back {
+  background-color: rgb(20, 177, 255);
+}
+
+.blue-back-dark {
+  background-color: rgb(0, 123, 222);
+}
+
+.bobn-back {
+  background-image: url(/assets/bobn.png);
+  background-size: cover;
+}
+
+.nav.foot-nav {
+  display: block;
+}
+
+.foot-nav-border {
+  border-style: solid;
+  border-width: 0px 1px 0px 0px;
+  border-color: #fff;
+}
+
+.nav.foot-nav .nav-link {
+  line-height: 1.1em;
+  display: inline-block;
+  font-size: 14px;
+  font-weight: bold;
+  padding: 0px 10px 0px 10px;
+}
+
+.nav.foot-nav .nav-link.first {
+  padding: 0px 10px 0px 0px;
+}
+
+.footer-row {
+  padding-bottom: 110px;
+}
+
+.pad-bottom {
+  padding-bottom: 40px;
+}
+
+.footer.first span {
+  margin-top: 50px;
+  font-size: 11px;
+}
+
+.col-5.footer.first {
+  border-style: solid;
+  border-width: 0px 1px 0px 0px;
+  border-color: #fff;
+  height: 120px;
+}
+
+h2.header {
+  font-size: 23px;
+  font-weight: bold;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+  line-height: 25px;
+}
+
+h1.massive-blue {
+  font-size: 50px;
+  line-height: 58px;
+  color: rgb(20, 177, 255);
+}
+
+.bottom {
+  bottom: 0px;
+  position: absolute;
+}
+
+img.footer-logo {
+  width: 260px;
+  right: 0px;
+  position: absolute;
+  top: -66px;
+}
+
+.footer-row .second {
+  padding-left: 25px;
+}
+
+.list-group-item.smaller {
+  padding: .25rem 0rem;
+}
+
+@keyframes pulse_animation {
+	0% { transform: rotateX(0deg) rotateY(0deg) scaleX(1.04) scaleY(1.01) scale(1.03) ; }
+	50% { transform: rotateX(-3deg) rotateY(6deg) scaleY(1.02) scale(1.03); }
+	100% { transform: rotateX(3deg) rotateY(-3deg) scaleY(1.0) scale(1.02); }
+}
+
+.pulse {
+	animation-name: pulse_animation;
+	animation-duration: 10000ms;
+	animation-direction: alternate;
+	animation-iteration-count: infinite;
+	transition-timing-function: ease;
+}
+
+.border {
+	padding: 0;
+	overflow: hidden;
+}
+
+.circle {
+	background: url(http://res.cloudinary.com/chemical-data-app/image/upload/v1518000681/Header5_rlqelp.jpg);
+	background-repeat: no-repeat;
+	background-size: cover;
+	position: absolute;
+	right: 0px;
+	left: 0px;
+	top: 0px;
+	height: 600px;
+	z-index: -1;
+	filter: brightness(80%);
+}
+
+.view{
+	height: 600px;
+	backround-color: white;
+}
+
+.hexagon {
+	height: 160px;
+	z-index: 99;
+	position: absolute;
+	top: 0px;
+  display: none;
+  z-index: 999;
+}
+
+@media (min-width: 800px) {
+  .hexagon {
+	  display: block;
+    right:-50px;
+  }
+  .main-message {
+    margin-top: 60px;
+  }
+}
+@media (min-width: 1200px) {
+  .hexagon, .cover-nav, .bottom-nav-row, .top-nav-row {
+	  display: block;
+  }
+  .mobile-nav {
+    display: none;
+  }
+  .hexagon {
+    height: 242px;
+    right: 0px;
+  }
+  .main-message {
+    margin-top: 160px;
+  }
+}
+
+.front {position:absolute;z-index:1000;}
