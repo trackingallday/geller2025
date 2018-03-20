@@ -83,11 +83,13 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class PublicProductSerializer(serializers.ModelSerializer):
 
+    markets = serializers.PrimaryKeyRelatedField(many=True, queryset=MarketCategory.objects.all())
+
     class Meta:
         model = Product
         fields = (
             'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
-            'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet', 'productCategory', 'marketingDesc',
+            'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet', 'productCategory',
             'description', 'markets', 'properties', 'application'
 
         )

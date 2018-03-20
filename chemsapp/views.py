@@ -55,6 +55,13 @@ def index(request):
     with open(os.path.join(settings.REACT_APP_DIR, 'build', 'index.html')) as f:
         return HttpResponse(f.read())
 
+@csrf_exempt
+def marketing_site(request):
+    print("FUG")
+    print(os.path.join(settings.MARKETING_APP_DIR, 'build', 'index.html'))
+    with open(os.path.join(settings.MARKETING_APP_DIR, 'build', 'index.html')) as f:
+        return HttpResponse(f.read())
+
 
 @csrf_exempt
 @api_view(['GET'])
@@ -387,7 +394,8 @@ def public_products(request):
         products = PublicProductSerializer(Product.objects.all(), many=True).data
         categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
         posts = PostSererializer(Post.objects.all(), many=True).data
-        return JsonResponse({'products': products, 'categories': categories, 'posts': posts}, safe=False)
+        markets = MarketSerializer(MarketCategory.objects.all(), many=True).data
+        return JsonResponse({'products': products, 'categories': categories, 'posts': posts, 'markets': markets}, safe=False)
     except Exception as a:
         print(a)
     pass

@@ -3,12 +3,17 @@ from django.conf.urls import url
 from rest_framework.authtoken import views as drf_views
 from chemsapp.views import index, customers_list, products_list, new_customer, edit_customer, safety_wears_list,\
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
-    new_distributor, edit_distributor, printout, public_products, markets_list
+    new_distributor, edit_distributor, printout, public_products, markets_list, marketing_site
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    url(r'^admin$', admin.site.urls),
     url(r'^auth$', drf_views.obtain_auth_token, name='auth'),
-    url(r'^$', index, name='index'),
+    url(r'^app$', index, name='index'),
+    url(r'^our_products/*', marketing_site, name='marketing_site'),
+    url(r'^about/*', marketing_site, name='marketing_site'),
+    url(r'^news/*', marketing_site, name='marketing_site'),
+    url(r'^support/*$', marketing_site, name='marketing_site'),
+    url(r'^markets/*$', marketing_site, name='marketing_site'),
     url(r'^customers$', index, name='index'),
     url(r'^products$', index, name='index'),
     url(r'^distributors$', index, name='index'),
@@ -31,5 +36,5 @@ urlpatterns = [
     url(r'^printout/', printout, name="printout"),
     url(r'^public_products/', public_products, name="public_products"),
     url(r'^markets_list/', markets_list, name="markets_list"),
-
+    url(r'^$', marketing_site, name='marketing_site'),
 ]

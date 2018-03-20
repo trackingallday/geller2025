@@ -12,6 +12,9 @@ const productDetailList = [
   [ 'Name', 'name'],
   [ 'Usage', 'usageType' ],
   ['Amount', 'amountDesc'],
+  ['application', 'application'],
+  ['properties', 'properties'],
+  ['markets', 'markets'],
   [ 'Instructions','instructions'], ['Code', 'productCode'], ['Brand', 'brand'],
   [ 'Saftey Wear', 'safetyWears'],
 ];
@@ -36,6 +39,7 @@ const expandedRowRender = (record) => {
 
   const detail = renderProductDetail(record);
   const customers = record.customers.map((c,i) => (<p key={i}>{c}</p>));
+  console.log(this.props);
   return (
     <div>
       <Row type="flex" justify="start">
@@ -146,8 +150,8 @@ export default class ProductsTable extends BaseTable {
     return filtered ? filteredData : this.props.data;
   }
 
-  expandedRowRender(record) {
-    return expandedRowRender(record);
+  expandedRowRender = (record) => {
+    return expandedRowRender(record, this.props.markets);
   }
 
   getColumns = () => {
