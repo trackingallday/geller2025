@@ -4,7 +4,7 @@ import CategoryList from '../CategoryList';
 import PostList from '../PostList';
 import { withRouter } from 'react-router'
 import Post from '../Post';
-//import URI from '../../constants/serverUrl';
+import URI from '../../constants/serverUrl';
 //const URI = 'http://localhost:8000';
 
 class News extends Component {
