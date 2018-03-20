@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router'
-import URI from '../../constants/serverUrl';
+import URI from '../constants/serverUrl';
 //const URI = 'http://localhost:8000';
 
 class Post extends Component {
