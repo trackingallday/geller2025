@@ -7,6 +7,7 @@ import Product from './components/pages/Product';
 import About from './components/pages/About';
 import Support from './components/pages/Support';
 import News from './components/pages/News';
+import URI from  './constants/serverUrl';
 
 import MobileNav from './components/MobileNav';
 import { Route, NavLink } from 'react-router-dom';
@@ -27,7 +28,7 @@ class App extends Component {
   }
 
   componentDidMount() {
-    reqeust.get('http://localhost:8000/public_products/')
+    reqeust.get(URI + '/public_products/')
       .set('accept', 'json')
       .end((err, res) => {
         this.setState({data: JSON.parse(res.text)});
