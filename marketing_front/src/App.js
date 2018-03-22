@@ -27,6 +27,10 @@ class App extends Component {
       });
   }
 
+  changePage = (url) => {
+    this.props.history.push(url);
+  }
+
   state = {
     data: {
       posts: [],
@@ -85,9 +89,9 @@ class App extends Component {
       <div>
         { isHome && outImg }
         <div className="container" style={{overflow: 'hidden', paddingRight: '0px'}}>
-          <img src={require('./assets/geller.svg')} className="hexagon" />
+          <img src={require('./assets/geller.svg')} className="hexagons" />
           { !isHome && inImg }
-          <PrimaryNav markets={this.state.data.markets} />
+          <PrimaryNav markets={this.state.data.markets} changePage={this.changePage} />
           <MobileNav />
           <Route exact={true} path="/" render={(match) => this.renderHome()} key={1} />
           <Route exact={true} path="/our_products/:category_id" render={(m) => this.renderProducts(m)} key={2} />
@@ -100,7 +104,13 @@ class App extends Component {
           <Route exact={true} path="/news/:post" render={(m) => this.renderNews(m)} key={9} />
           <Route exact={true} path="/support/:post" render={(m) => this.renderSupport(m)} key={10} />
           <Route exact={true} path="/support" render={(m) => this.renderSupport(m)} key={11} />
-          <div className="row pad-top blue-back-dark"></div>
+          <div className="row pad-top blue-back-dark">
+            <div className="col-md-6">
+              <div className="top-right">
+                <div className="hexagon blue-dark"></div>
+              </div>
+            </div>
+          </div>
           <Footer />
         </div>
       </div>);
