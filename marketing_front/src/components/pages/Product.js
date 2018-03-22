@@ -27,7 +27,6 @@ class Product extends Component {
 
   render() {
     const p = this.props.product;
-    console.log(this.props)
     return (
       <div>
         <div className="row" style={{ height: '80px'}}>

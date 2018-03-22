@@ -56,7 +56,7 @@ export default class Home extends Component {
                 { latest_news.content }
               </p>
             </div>
-            <div className="col-md-6 bobn-back cover">
+            <div className="col-md-6">
               <img src={URI+latest_news.image} className="wide" />
             </div>
         </div>
