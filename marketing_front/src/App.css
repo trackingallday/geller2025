@@ -34,15 +34,15 @@
  }
 
 .main-message {
-  margin-top: 40px;
-  padding-left: 60px;
-  width: 550px;
+  margin-top: 20px;
+  padding-left: 20px;
+  padding-right: 10px;
 }
 
 .main-message p {
   color: #ffffff;
   font-weight: bold;
-  font-size: 30px;
+  font-size: 20px;
 }
 
 p {
@@ -109,10 +109,10 @@ p {
 }
 
 h1.header {
-  font-size: 38px;
+  font-size: 28px;
   font-weight: bold;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  line-height: 65px;
+  line-height: 25px;
 }
 
 span.heading {
@@ -149,7 +149,7 @@ span.product-desc {
 }
 
 .block-with-text {
-  width: 100%;
+  width: 90%;
   max-height: 50px;
   text-overflow: ellipsis;
   white-space: pre-wrap;
@@ -194,7 +194,8 @@ span.product-desc {
 }
 
 .pad-left {
-  padding-left: 60px !important;
+  padding-left: 10px !important;
+  padding-right: 10px !important;
 }
 
 .wide { width: 100%; }
@@ -275,10 +276,10 @@ body {
 }
 
 h2.header {
-  font-size: 23px;
+  font-size: 18px;
   font-weight: bold;
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-  line-height: 25px;
+  line-height: 20px;
 }
 
 h1.massive-blue {
@@ -297,6 +298,7 @@ img.footer-logo {
   right: 0px;
   position: absolute;
   top: -66px;
+  display: none;
 }
 
 .footer-row .second {
@@ -358,11 +360,38 @@ img.footer-logo {
 	  display: block;
     right:-50px;
   }
-  .main-message {
-    margin-top: 60px;
+
+  h2.header {
+    font-size: 23px;
+    line-height: 25px;
   }
+
+  .main-message p {
+    font-size: 30px;
+  }
+
+  .main-message {
+    width: 500px;
+    margin-left: 40px;
+  }
+
+  .pad-left {
+    padding-left: 40px !important;
+    padding-right: 40px !important;
+  }
+
+  h1.header {
+    font-size: 28px;
+    line-height: 35px;
+  }
+
+
 }
 @media (min-width: 1200px) {
+  h1.header {
+    font-size: 34px;
+    line-height: 60px;
+  }
   .hexagon, .cover-nav, .bottom-nav-row, .top-nav-row {
 	  display: block;
   }
@@ -374,7 +403,17 @@ img.footer-logo {
     right: 0px;
   }
   .main-message {
-    margin-top: 160px;
+    margin-top: 60px;
+    margin-left: 60px;
+  }
+
+  img.footer-logo {
+    display: inline;
+  }
+
+  .pad-left {
+    padding-left: 60px !important;
+    padding-right: 60px !important;
   }
 }
 
