@@ -57,7 +57,6 @@ def index(request):
 
 @csrf_exempt
 def marketing_site(request):
-    print("FUG")
     print(os.path.join(settings.MARKETING_APP_DIR, 'build', 'index.html'))
     with open(os.path.join(settings.MARKETING_APP_DIR, 'build', 'index.html')) as f:
         return HttpResponse(f.read())
