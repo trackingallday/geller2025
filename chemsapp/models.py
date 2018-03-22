@@ -88,7 +88,7 @@ class MarketCategory(MyBaseModel, models.Model):
     products = models.ManyToManyField(Product, related_name="markets", blank=True, null=True)
 
     def __str__(self):
-        return self.name
+        return "{}".format(self.name)
 
 
 class Customer(Profile):
