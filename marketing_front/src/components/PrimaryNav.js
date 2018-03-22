@@ -16,7 +16,7 @@ class PrimaryNav extends Component {
 
   changePage = (uri) => {
     this.setState({ show:false})
-    this.props.changePage(uri)
+    this.props.changePage(uri);
   }
 
   render() {
@@ -50,7 +50,7 @@ class PrimaryNav extends Component {
           </div>
           <div className="col-md-4"></div>
         </div>
-        { this.state.show && <CoverNav markets={this.props.markets} changePage={this.props.changePage} onMouseOut={this.toggleShow}/> }
+        { this.state.show && <CoverNav markets={this.props.markets} changePage={this.changePage} onMouseOut={this.toggleShow}/> }
       </div>
     );
   }
