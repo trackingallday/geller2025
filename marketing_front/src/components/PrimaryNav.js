@@ -11,7 +11,7 @@ class PrimaryNav extends Component {
   }
 
   toggleShow = () => {
-    //this.setState({ show: !this.state.show})
+    this.setState({ show: !this.state.show})
   }
 
   render() {
@@ -36,7 +36,7 @@ class PrimaryNav extends Component {
           <div className="col-md-8 back-white">
             <nav className="nav top-nav">
               <a className="nav-link bold" href="/our_products/all">Products</a>
-              {/*<a className="nav-link bold" href="#" onClick={this.toggleShow}>Markets</a>*/}
+              {<a className="nav-link bold" href="#" onClick={this.toggleShow}>Markets</a>}
               <a className="nav-link bold" href="/support">Support</a>
               <a className="nav-link disabled roman" href="/news">News</a>
               <a className="nav-link disabled roman" href="/about">About</a>

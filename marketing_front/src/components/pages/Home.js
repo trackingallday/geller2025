@@ -20,12 +20,14 @@ export default class Home extends Component {
     return (
       <div>
         <div className="row">
-          <div className="col-md-12">
+          <div className="col-md-6 col-lg-6 col-xs-12">
             <div className="main-message">
               <p>
                 { mainBanner && mainBanner.content}
               </p>
             </div>
+          </div>
+          <div className="col-md-7">
           </div>
         </div>
         <div className="row pad-top back-white pad-bottom">

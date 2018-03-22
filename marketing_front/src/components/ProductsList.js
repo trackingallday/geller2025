@@ -35,7 +35,7 @@ export default class ProductList extends Component {
   render() {
     const products = this.props.showingProducts || this.props.products;
     return (
-      <div className="row">
+      <div className="row" style={{paddingLeft: '10px', paddingRight: '20px'}}>
         { products.map(this.renderProduct) }
       </div>
     );
