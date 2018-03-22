@@ -10,6 +10,7 @@ urlpatterns = [
     url(r'^auth$', drf_views.obtain_auth_token, name='auth'),
     url(r'^app$', index, name='index'),
     url(r'^our_products/*', marketing_site, name='marketing_site'),
+    url(r'^product/*', marketing_site, name='marketing_site'),
     url(r'^about/*', marketing_site, name='marketing_site'),
     url(r'^news/*', marketing_site, name='marketing_site'),
     url(r'^support/*$', marketing_site, name='marketing_site'),
