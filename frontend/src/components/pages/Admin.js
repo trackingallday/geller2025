@@ -57,7 +57,7 @@ class AdminPage extends DistributorPage {
             selectedKeys={[window.location.pathname]}
           >
           <Menu.Item key="/">
-            <NavLink exact to="/" label="Home">Home</NavLink>
+            <NavLink exact to="/app" label="Home">Home</NavLink>
           </Menu.Item>
           <Menu.Item key="/distributors">
             <NavLink exact to="/distributors" label="Distributors">Distributors</NavLink>
@@ -95,6 +95,7 @@ class AdminPage extends DistributorPage {
         <Route exact={true} path="/products" render={this.renderDistributorProducts} key={2} />
         <Route exact={true} path="/distributors" render={this.renderDistributors} key={9} />
         <Route exact={true} path="/" render={this.renderHome} key={3} />
+        <Route exact={true} path="/app" render={this.renderHome} key={3} />
         <Route exact={true} path="/maps" component={ProductMap} key={4} />
         <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={8} />
       </div>

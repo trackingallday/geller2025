@@ -34,8 +34,8 @@ class DistributorPage extends BasePage {
             style={{ lineHeight: '64px', width: '100%' }}
             selectedKeys={[window.location.pathname]}
           >
-          <Menu.Item key="/">
-            <NavLink exact to="/" label="Home">Home</NavLink>
+          <Menu.Item key="/app">
+            <NavLink exact to="/app" label="Home">Home</NavLink>
           </Menu.Item>
           <Menu.Item key="/customers">
             <NavLink exact to="/customers" label="Customers">Customers</NavLink>
@@ -197,7 +197,7 @@ class DistributorPage extends BasePage {
         <Route exact={true} path="/customers" render={this.renderDistributorCustomers} key={1} />
         <Route exact={true} path="/products" render={this.renderDistributorProducts} key={2} />
         <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={4} />
-        <Route exact={true} path="/" render={this.renderHome} key={3} />
+        <Route exact={true} path="/app" render={this.renderHome} key={3} />
       </div>
     )
   }
