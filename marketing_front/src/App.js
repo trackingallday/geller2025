@@ -18,6 +18,15 @@ import './App.css'
 
 class App extends Component {
 
+  constructor() {
+    super()
+    reqeust.get(URI + '/public_products/')
+      .set('accept', 'json')
+      .end((err, res) => {
+        this.setState({data: JSON.parse(res.text)});
+      });
+  }
+
   state = {
     data: {
       posts: [],
@@ -28,12 +37,6 @@ class App extends Component {
   }
 
   componentDidMount() {
-    reqeust.get(URI + '/public_products/')
-      .set('accept', 'json')
-      .end((err, res) => {
-        this.setState({data: JSON.parse(res.text)});
-        console.log(this.state)
-      });
   }
 
   renderHome() {
@@ -46,6 +49,7 @@ class App extends Component {
       categories={this.state.data.categories}
       category={match.match.params.category_id}
       market={match.match.params.market_id}
+      markets={this.state.data.markets}
     />
   }
 
