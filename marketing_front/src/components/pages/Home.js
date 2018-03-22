@@ -20,7 +20,7 @@ export default class Home extends Component {
     return (
       <div>
         <div className="row">
-          <div className="col-12">
+          <div className="col-md-12">
             <div className="main-message">
               <p>
                 { mainBanner && mainBanner.content}
@@ -29,28 +29,28 @@ export default class Home extends Component {
           </div>
         </div>
         <div className="row pad-top back-white pad-bottom">
-          <div className="col-6 pad-left">
-            <h1 className="header black-text">{home_row1_col2.title}</h1>
-            <p className="roman grey-text">
-              {home_row1_col2.content}
-            </p>
-          </div>
-          <div className="col-6" style={{padding: 0}}>
-            <img src={URI+home_row1_col2.image} className="wide" />
-          </div>
+            <div className="col-md-6 pad-left">
+              <h1 className="header black-text">{home_row1_col2.title}</h1>
+              <p className="roman grey-text">
+                {home_row1_col2.content}
+              </p>
+            </div>
+            <div className="col-md-6" style={{padding: 0}}>
+              <img src={URI+home_row1_col2.image} className="wide" />
+            </div>
         </div>
-        <div className="row blue-back">
-          <div className="col-6 pad-top pad-left pad-bottom">
-            <h1 className="header white-text">
-              { latest_news.title }
-            </h1>
-            <p className="roman white-text">
-              { latest_news.content }
-            </p>
-          </div>
-          <div className="col-6 bobn-back cover">
-            <img src={URI+latest_news.image} className="wide" />
-          </div>
+        <div className="row blue-back pad-top pad-left pad-bottom">
+            <div className="col-md-6">
+              <h1 className="header white-text">
+                { latest_news.title }
+              </h1>
+              <p className="roman white-text">
+                { latest_news.content }
+              </p>
+            </div>
+            <div className="col-md-6 bobn-back cover">
+              <img src={URI+latest_news.image} className="wide" />
+            </div>
         </div>
       </div>
     );

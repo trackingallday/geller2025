@@ -16,11 +16,11 @@ class About extends Component {
         <div className="row" style={{ height: '80px'}}>
           <div style={{height: '80px', width: '100%'}}></div>
         </div>
-        <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '45px', paddingTop: '15px', paddingBottom: '70px'}}>
-          <div className="col-2">
+        <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '30px', paddingTop: '15px', paddingBottom: '70px'}}>
+          <div className="col-md-2">
             <PostList posts={this.props.posts} post={this.props.post} />
           </div>
-          <div className="col-9">
+          <div className="col-md-9">
             <Post post={this.props.posts.find(p => p.id == this.props.post) || this.props.posts[0]} />
           </div>
         </div>

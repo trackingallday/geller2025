@@ -11,20 +11,20 @@ class Post extends Component {
       return <div />
     }
     return (
-      <div className="row" style={{padding: '20px 40px 70px 40px'}}>
-        <div className="col-12">
+      <div className="row" style={{padding: '20px 40px 70px 20px'}}>
+        <div className="col-md-12">
           <div className="row">
-            <div className="col-12">
-              <h1>{post.title}</h1>
+            <div className="col-md-12">
+              <h1 className="header">{post.title}</h1>
             </div>
           </div>
           <div class = "row">
-            <div className="col-12" style={{paddingTop: '45px'}}>
+            <div className="col-md-12" style={{paddingTop: '45px'}}>
               { post.image && <img src={URI+post.image} className="wide" /> }
             </div>
           </div>
           <div className="row" style={{ marginTop: '40px', paddingBottom: '80px' }}>
-            <div className="col-12">
+            <div className="col-md-12">
               <p style={{whiteSpace: 'pre-wrap'}}>{post.content}</p>
             </div>
           </div>

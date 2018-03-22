@@ -20,7 +20,7 @@
      render() {
        return (
          <div className="row mobile-nav" style={ {height: '52px', backgroundColor: '#fff' }}>
-           <div className="col-12">
+           <div className="col-md-12">
               <nav className="navbar navbar-dark bg-dark">
                 <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent"
                   aria-controls="navbarToggleExternalContent" aria-expanded="false" aria-label="Toggle navigation" style={{}}>

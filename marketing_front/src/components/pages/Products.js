@@ -38,35 +38,37 @@ class Products extends Component {
           <div style={{ width: '191px'}}>
             <CategoryList category={this.state.category || this.props.category} categories={this.props.categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />
           </div>
-          <div className="col-1"></div>
-          <div className="col-8">
+          <div className="col-md-1"></div>
+          <div className="col-md-8">
             <div className="row" style={{height: '150px', paddingTop: '35px'}}>
-              <div className="col-1">
+              <div className="col-md-1">
                 <img src={require('../../assets/category-logo.png')} style={{width: '45px', height: '45px'}} />
               </div>
-              <div className="col-4">
+              <div className="col-md-4">
                 <span  style={{paddingLeft: '9px'}} className="heading">{ categoryName }</span>
               </div>
-              <div className="col-7">
-                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px'}}>{ categoryDesc }</span>
+              <div className="col-md-7">
+                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px', paddingLeft: '9px', wordWrap: ''}}>
+                  { categoryDesc }
+                </span>
               </div>
               <div className="row">
-                <div className="col-12">
+                <div className="col-md-12">
                   <span className="roman-smaller grey-text-light" style={{fontSize: '11px', marginLeft: '15px'}}>
                     { products.length + ' products'}
                   </span>
                 </div>
               </div>
             </div>
-            <ProductsList category={this.state.category || this.props.category} products={products}  />
+            <div className="row">
+              <ProductsList category={this.state.category || this.props.category} products={products}  />
+            </div>
             <div className="row">
               <div style={{backgroundColor: '#0275d8', height: '1px', width: '100%', marginTop: '30px'}} />
-              <div className="col-12">
-                <div style={{position: 'absolute', right: 0}}>
-                  <span className="roman-smaller grey-text-light" style={{fontSize: '11px'}}>
-                    { products.length + ' products'}
-                  </span>
-                </div>
+              <div className="col-md-12" style={{ textAlign: 'right', marginRight: '10px'}}>
+                <span className="roman-smaller grey-text-light">
+                  { products.length + ' products'}
+                </span>
               </div>
             </div>
           </div>

@@ -12,7 +12,7 @@ class Product extends Component {
 
   renderProductDetail(text, className="product-detail", heading=null) {
     return (
-      <div className="col-12" style={{marginTop: heading ? '25px' : '5px'}}>
+      <div className="col-md-12" style={{marginTop: heading ? '25px' : '5px'}}>
         { heading &&
              <div style={{fontSize: '12px', fontWeight: 'bold'}}>
               <span className="product-name">{heading}</span>
@@ -42,9 +42,9 @@ class Product extends Component {
               history={this.props.history}
             />
           </div>
-          <div className="col-8" style={{padding: '10px 5px 10px 5px'}}>
+          <div className="col-md-8" style={{padding: '10px 5px 10px 5px'}}>
             <div className="row">
-              <div className="col-6">
+              <div className="col-md-6">
                 { this.renderProductDetail(p.name + " - " + p.brand, "product-name")}
                 { this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")}
                 { this.renderProductDetail(p.marketingDesc)}
@@ -52,7 +52,7 @@ class Product extends Component {
                 { this.renderProductDetail(p.usageType, "product-detail", "usage")}
                 { this.renderProductDetail(p.market) }
               </div>
-              <div className="col-6 cover" style={{height: '400px' }}>
+              <div className="col-md-6 cover" style={{height: '400px' }}>
                 <a href={"/product/" + p.id}><img src={p.primaryImageLink} /></a>
               </div>
             </div>

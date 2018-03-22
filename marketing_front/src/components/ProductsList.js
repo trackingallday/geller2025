@@ -4,14 +4,14 @@ export default class ProductList extends Component {
 
   renderProduct = (p, ind) => {
     return (
-      <div key={ind} className="col-3" style={{padding: '10px 5px 10px 5px'}}>
+      <div key={ind} className="col-md-3" style={{padding: '10px 5px 10px 5px'}}>
         <div className="row">
-          <div className="col-12 cover" style={{height: '200px' }}>
+          <div className="col-md-12 cover" style={{height: '200px' }}>
             <a href={"/product/" + p.id}><img src={p.primaryImageLink} /></a>
           </div>
         </div>
         <div className="row" style={{paddingTop: '15px'}}>
-          <div className="col-12">
+          <div className="col-md-12">
             <a className="product-desc" style={{textDecoration: 'none'}} href={"/product/" + p.id}>
               <span className="product-name">
                 { p.name }
@@ -20,7 +20,7 @@ export default class ProductList extends Component {
           </div>
         </div>
         <div className="row" style={{paddingTop: '5px'}}>
-          <div className="col-12">
+          <div className="col-md-12">
             <div className="block-with-text">
               <span className="product-desc" style={{display:'inline-block', lineHeight:'12px', maxHeight: '30px'}}>
                 { p.description }

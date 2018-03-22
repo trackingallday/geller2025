@@ -18,7 +18,7 @@ class PrimaryNav extends Component {
     return (
       <div style={{paddingRight: '140px'}}>
         <div className="row top-nav-row" style={{height: '100px', backgroundColor: '#fff', }}>
-          <div className="col-8 back-white top-nav-col">
+          <div className="col-md-8 back-white top-nav-col">
             <nav className="nav top-nav">
               <a className="nav-link" href="https://app.integraindustries.co.nz/app" target="_blank">
                 <img src={require('../assets/login.svg')} className="icon" />
@@ -30,10 +30,10 @@ class PrimaryNav extends Component {
               </a>
             </nav>
           </div>
-          <div className="col-3"></div>
+          <div className="col-md-3"></div>
         </div>
         <div className="row bottom-nav-row" style={{backgroundColor: '#fff'}}>
-          <div className="col-8 back-white">
+          <div className="col-md-8 back-white">
             <nav className="nav top-nav">
               <a className="nav-link bold" href="/our_products/all">Products</a>
               {/*<a className="nav-link bold" href="#" onClick={this.toggleShow}>Markets</a>*/}
@@ -43,7 +43,7 @@ class PrimaryNav extends Component {
               {/*<a className="nav-link disabled roman" href="#">Contact</a>*/}
             </nav>
           </div>
-          <div className="col-4"></div>
+          <div className="col-md-4"></div>
         </div>
         { this.state.show && <CoverNav markets={this.props.markets} /> }
       </div>
