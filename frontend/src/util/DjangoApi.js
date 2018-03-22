@@ -56,7 +56,7 @@ export function getMarkets(callback) {
 
 export function getProducts(callback) {
 
-  return getData('/products_list/',(response) => {
+  return getData('/list_products/',(response) => {
     callback(addKeys(response.data));
   });
 
