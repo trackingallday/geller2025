@@ -32,6 +32,9 @@ export default class Home extends Component {
         </div>
         <div className="row pad-top back-white pad-bottom">
             <div className="col-md-6 pad-left">
+              <div className="top-right">
+                <div className="hexagon white"></div>
+              </div>
               <h1 className="header black-text">{home_row1_col2.title}</h1>
               <p className="roman grey-text">
                 {home_row1_col2.content}
@@ -43,6 +46,9 @@ export default class Home extends Component {
         </div>
         <div className="row blue-back pad-top pad-left pad-bottom">
             <div className="col-md-6">
+              <div className="top-right">
+                <div className="hexagon blue"></div>
+              </div>
               <h1 className="header white-text">
                 { latest_news.title }
               </h1>

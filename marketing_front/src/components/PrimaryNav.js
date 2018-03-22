@@ -14,6 +14,11 @@ class PrimaryNav extends Component {
     this.setState({ show: !this.state.show})
   }
 
+  changePage = (uri) => {
+    this.setState({ show:false})
+    this.props.changePage(uri)
+  }
+
   render() {
     return (
       <div style={{paddingRight: '140px'}}>
@@ -35,17 +40,17 @@ class PrimaryNav extends Component {
         <div className="row bottom-nav-row" style={{backgroundColor: '#fff'}}>
           <div className="col-md-8 back-white">
             <nav className="nav top-nav">
-              <a className="nav-link bold" href="/our_products/all">Products</a>
-              {<a className="nav-link bold" href="#" onClick={this.toggleShow}>Markets</a>}
-              <a className="nav-link bold" href="/support">Support</a>
-              <a className="nav-link disabled roman" href="/news">News</a>
-              <a className="nav-link disabled roman" href="/about">About</a>
+              <a className="nav-link bold" onClick={() => this.changePage("/our_products/all")}>Products</a>
+              <a className="nav-link bold" onClick={this.toggleShow}>Markets</a>
+              <a className="nav-link bold" onClick={() => this.changePage("/support")}>Support</a>
+              <a className="nav-link grey-text-dark roman" onClick={() => this.changePage("/news")}>News</a>
+              <a className="nav-link  grey-text-dark roman" onClick={() => this.changePage("/about")}>About</a>
               {/*<a className="nav-link disabled roman" href="#">Contact</a>*/}
             </nav>
           </div>
           <div className="col-md-4"></div>
         </div>
-        { this.state.show && <CoverNav markets={this.props.markets} /> }
+        { this.state.show && <CoverNav markets={this.props.markets} changePage={this.props.changePage} onMouseOut={this.toggleShow}/> }
       </div>
     );
   }
