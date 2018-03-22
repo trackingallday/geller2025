@@ -19,7 +19,7 @@ class CoverNav extends Component {
             { this.props.markets.map(m =>
               <div className="col-md-3" style={{paddingBottom: '39px'}}>
                  <a className="cover" onClick={() => this.props.changePage("/our_products/all/" + m.id)}>
-                   <img className="darken" src={'http://localhost:8000'+m.image} />
+                   <img className="darken" src={URI+m.image} />
                  </a>
                  <a href="#" onClick={() => this.props.changePage("/our_products/all/" + m.id)}>
                    <span style={{color: '#fff', fontSize: '14px', textDecoration: 'none'}} className="nav-link roman">{m.name}</span>
