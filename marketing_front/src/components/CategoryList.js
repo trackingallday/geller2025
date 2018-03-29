@@ -3,7 +3,11 @@ import React, { Component } from 'react';
 export default class CategoryList extends Component {
 
   onCategoryClick = (c) => {
-    this.props.history.push('/our_products/' + c.id)
+    if(this.props.market) {
+      this.props.history.push('/our_markets/' + c.id)
+    } else {
+      this.props.history.push('/our_products/' + c.id)
+    }
   }
 
   renderCategory = (c, ind) => {

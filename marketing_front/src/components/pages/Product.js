@@ -3,7 +3,7 @@ import ProductsList from '../ProductsList';
 import CategoryList from '../CategoryList';
 import { withRouter } from 'react-router'
 
-
+const URI = "http://localhost:8000";
 class Product extends Component {
 
   onCategoryClick(c) {
@@ -53,6 +53,7 @@ class Product extends Component {
               </div>
               <div className="col-md-6 cover" style={{height: '400px' }}>
                 <a href={"/product/" + p.id}><img src={p.primaryImageLink} /></a>
+                <p><span>Download Product Sheet</span><a target="_blank" href={URI+p.infoSheet}>dl</a></p>
               </div>
             </div>
           </div>

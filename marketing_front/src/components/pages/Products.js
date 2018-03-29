@@ -16,6 +16,10 @@ class Products extends Component {
     this.setState({category: c });
   }
 
+  onMarketClick = (c) => {
+    this.setState({market: c });
+  }
+
   componentDidMount() {
   }
 
@@ -23,13 +27,14 @@ class Products extends Component {
     if(this.props.products.length === 0) {
       return <div style={{height: '1000px'}} />
     }
-    let category = this.state.category || this.props.categories.find(c => c.id == this.props.category);
+    const { markets, categories } = this.props;
+    let category = this.state.category || categories.find(c => c.id == this.props.category);
     let market = null;
     let products = this.props.products;
     if(category) {
       products = this.props.products.filter(p => p.productCategory == category.id);
     } else if (this.props.market) {
-      market = this.props.markets.find(c => c.id == this.props.market);
+      market = markets.find(c => c.id == this.props.market);
       products = this.props.products.filter(p => !!p.markets.find(m => m == this.props.market));
     }
 
@@ -43,7 +48,8 @@ class Products extends Component {
         </div>
         <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '45px', paddingTop: '15px', paddingBottom: '70px'}}>
           <div className="col-md-2" style={{ width: '191px'}}>
-            <CategoryList category={this.state.category || this.props.category} categories={this.props.categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />
+            { !!categories.length && <CategoryList category={this.state.category || this.props.category} categories={categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />}
+            { !categories.length && <CategoryList category={this.state.market || this.props.market} categories={markets} onCategoryClick={this.onMarketClick} history={this.props.history} market />}
           </div>
           <div className="col-md-1"></div>
           <div className="col-md-9">

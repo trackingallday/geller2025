@@ -1,7 +1,8 @@
 import React, { Component } from 'react';
 import '../App.css'
 import CoverNav from './CoverNav';
-import { withRouter } from 'react-router'
+import { withRouter } from 'react-router';
+import { NavLink, Link } from 'react-router-dom';
 
 
 class PrimaryNav extends Component {
@@ -20,6 +21,8 @@ class PrimaryNav extends Component {
   }
 
   render() {
+    const path = window.location.pathname;
+    const isMarketsActive = path.indexOf('markets') !== -1
     return (
       <div style={{paddingRight: '140px'}}>
         <div className="row top-nav-row" style={{height: '100px', backgroundColor: '#fff', }}>
@@ -40,12 +43,12 @@ class PrimaryNav extends Component {
         <div className="row bottom-nav-row" style={{backgroundColor: '#fff'}}>
           <div className="col-md-8 back-white">
             <nav className="nav top-nav">
-              <a className="nav-link bold" onClick={() => this.changePage("/our_products/all")}>Products</a>
-              <a className="nav-link bold" onClick={this.toggleShow}>Markets</a>
-              <a className="nav-link bold" onClick={() => this.changePage("/support")}>Support</a>
-              <a className="nav-link grey-text-dark roman" onClick={() => this.changePage("/news")}>News</a>
-              <a className="nav-link  grey-text-dark roman" onClick={() => this.changePage("/about")}>About</a>
-              {/*<a className="nav-link disabled roman" href="#">Contact</a>*/}
+              <NavLink className="nav-link bold" activeClassName="active" to="/our_products/all">Products</NavLink>
+              <NavLink className="nav-link bold" activeClassName="active" isActive={() => isMarketsActive} to={path} onClick={this.toggleShow}>Markets</NavLink>
+              <NavLink className="nav-link bold" to="/support" activeClassName="active">Support</NavLink>
+              <NavLink className="nav-link grey-text roman" activeClassName="active" to="/news">News</NavLink>
+              <NavLink className="nav-link  grey-text roman" activeClassName="active" to="/about">About</NavLink>
+              <a className="nav-link grey-text roman" href="#">Contact</a>
             </nav>
           </div>
           <div className="col-md-4"></div>

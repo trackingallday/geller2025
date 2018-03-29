@@ -32,9 +32,11 @@
                  <nav className="nav flex-column front" style={{backgroundColor: '#fff', width:'100%'}}>
                    <a className="nav-link" href="/">Home</a>
                    <a className="nav-link" href="/our_products/all">Products</a>
+                   <a className="nav-link" href="/our_markets">Markets</a>
                    <a className="nav-link" href="/support">Support</a>
                    <a className="nav-link" href="/news">News</a>
                    <a className="nav-link" href="/about">About</a>
+                   <a className="nav-link" href="/about">Contact</a>
                  </nav>
                </div>
             </div>
