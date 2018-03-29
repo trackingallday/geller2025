@@ -54,6 +54,7 @@ class App extends Component {
       category={match.match.params.category_id}
       market={match.match.params.market_id}
       markets={this.state.data.markets}
+      subCategory_id={match.match.params.subCategory_id}
     />
   }
 
@@ -101,15 +102,15 @@ class App extends Component {
         <div className="container" style={{overflow: 'hidden', paddingRight: '0px'}}>
           <img src={require('./assets/geller.svg')} className="hexagons" />
           { !isHome && inImg }
-          <PrimaryNav markets={this.state.data.markets} changePage={this.changePage} />
+          <PrimaryNav markets={this.state.data.markets} changePage={this.changePage} categories={this.state.data.categories} />
           <MobileNav />
           <Route exact={true} path="/" render={(match) => this.renderHome()} key={1} />
           <Route exact={true} path="/our_products/:category_id" render={(m) => this.renderProducts(m)} key={2} />
-          <Route exact={true} path="/our_products/:category_id/:market_id" render={(m) => this.renderProducts(m)} key={59} />
+          <Route exact={true} path="/our_products/:category_id/:subCategory_id" render={(m) => this.renderProducts(m)} key={59} />
           <Route exact={true} path="/product/:product_id" render={(m) => this.renderProduct(m)} key={3} />
-          <Route exact={true} path="/product/:product_id/:market_id" render={(m) => this.renderProduct(m)} key={300} />
+          <Route exact={true} path="/product/:product_id/:market_id" render={(m) => this.renderProduct(m)} key={3006} />
           <Route exact={true} path="/our_markets/:market_id" render={(m) => this.renderMarkets(m)} key={300} />
-          <Route exact={true} path="/our_markets" render={(m) => this.renderMarkets(m)} key={300} />
+          <Route exact={true} path="/our_markets" render={(m) => this.renderMarkets(m)} key={30009} />
           <Route exact={true} path="/about/:post" render={(m) => this.renderAbout(m)} key={4} />
           <Route exact={true} path="/about" render={(m) => this.renderAbout(m)} key={42} />
           <Route exact={true} path="/news" render={(m) => this.renderNews(m)} key={49} />
