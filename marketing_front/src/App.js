@@ -57,6 +57,16 @@ class App extends Component {
     />
   }
 
+  renderMarkets = (match) => {
+    return <Products
+      products={this.state.data.products}
+      categories={[]}
+      category={'all'}
+      market={match.match.params.market_id}
+      markets={this.state.data.markets}
+    />
+  }
+
   renderProduct = (match) => {
     const product = this.state.data.products.find(p => p.id == match.match.params.product_id);
     return product ? <Product product={product} categories={this.state.data.categories} /> : this.renderProducts(match);
@@ -98,6 +108,8 @@ class App extends Component {
           <Route exact={true} path="/our_products/:category_id/:market_id" render={(m) => this.renderProducts(m)} key={59} />
           <Route exact={true} path="/product/:product_id" render={(m) => this.renderProduct(m)} key={3} />
           <Route exact={true} path="/product/:product_id/:market_id" render={(m) => this.renderProduct(m)} key={300} />
+          <Route exact={true} path="/our_markets/:market_id" render={(m) => this.renderMarkets(m)} key={300} />
+          <Route exact={true} path="/our_markets" render={(m) => this.renderMarkets(m)} key={300} />
           <Route exact={true} path="/about/:post" render={(m) => this.renderAbout(m)} key={4} />
           <Route exact={true} path="/about" render={(m) => this.renderAbout(m)} key={42} />
           <Route exact={true} path="/news" render={(m) => this.renderNews(m)} key={49} />
