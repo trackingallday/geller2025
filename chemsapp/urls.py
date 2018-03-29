@@ -15,6 +15,7 @@ urlpatterns = [
     url(r'^news/*', marketing_site, name='marketing_site'),
     url(r'^support/*$', marketing_site, name='marketing_site'),
     url(r'^markets/*$', marketing_site, name='marketing_site'),
+    url(r'^our_markets/*$', marketing_site, name='marketing_site'),
     url(r'^customers$', index, name='index'),
     url(r'^products/$', index, name='index'),
     url(r'^distributors$', index, name='index'),
