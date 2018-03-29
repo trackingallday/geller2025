@@ -33,17 +33,6 @@
    display: none;
  }
 
-.main-message {
-  margin-top: 20px;
-  padding-right: 10px;
-}
-
-.main-message p {
-  color: #ffffff;
-  font-weight: bold;
-  font-size: 20px;
-}
-
 p {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
@@ -104,7 +93,7 @@ p {
   color: #000;
   font-size: 20px;
   font-weight: bold;
-  padding: 8px 5px 0px 0px;
+  padding: 8px 9px 0px 0px;
 }
 
 h1.header {
@@ -162,10 +151,15 @@ span.product-desc {
 
 .nav-link.roman {
   padding: 14px 4px 0px 0px;
-  margin-left: 0px;
+  margin-left: 5px;
+
 }
 
-.nav-link.roman:hover {
+.nav-link:hover {
+  color: #0275d8;
+}
+
+.nav-link.active {
   color: #0275d8;
 }
 
@@ -203,7 +197,7 @@ body {
   background-color: rgb(230,230,230) !important;
 }
 
-.grey-text {
+.grey-text, .grey-text-dark {
   color: rgb(113,113,113);
 }
 
@@ -334,7 +328,7 @@ img.footer-logo {
 	right: 0px;
 	left: 0px;
 	top: 0px;
-	height: 600px;
+	height: 625px;
 	z-index: -1;
 	filter: brightness(80%);
 }
@@ -451,6 +445,19 @@ img.footer-logo {
   border-top: 8.66px solid #fff;
 }
 
+.main-message {
+  margin-top: 20px;
+  padding-right: 10px;
+  padding-top: 20px;
+  min-height: 150px;
+}
+
+.main-message p {
+  color: #ffffff;
+  font-weight: bold;
+  font-size: 27px;
+}
+
 @media (min-width: 1200px) {
   h1.header {
     font-size: 34px;
@@ -471,8 +478,10 @@ img.footer-logo {
   }
 
   .main-message {
-    margin-top: 60px;
+    margin-top: 0px;
     margin-left: 20px;
+    padding-top: 100px;
+    min-height: 384px;
   }
 
   img.footer-logo {
