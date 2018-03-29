@@ -27,15 +27,21 @@ class Products extends Component {
     if(this.props.products.length === 0) {
       return <div style={{height: '1000px'}} />
     }
-    const { markets, categories } = this.props;
+    const { markets, categories, subCategory_id } = this.props;
     let category = this.state.category || categories.find(c => c.id == this.props.category);
     let market = null;
     let products = this.props.products;
+    let subCategories = [];
     if(category) {
       products = this.props.products.filter(p => p.productCategory == category.id);
+      subCategories = [...new Set(products.map(p => p.subCategory))];
     } else if (this.props.market) {
       market = markets.find(c => c.id == this.props.market);
-      products = this.props.products.filter(p => !!p.markets.find(m => m == this.props.market));
+      products = market ? this.props.products.filter(p => !!p.markets.find(m => m == this.props.market)) : this.props.products;
+    }
+
+    if(subCategory_id) {
+      products = products.filter(p => p.subCategory.replace(/\s+/g, '') === subCategory_id);
     }
 
     const categoryName = category ? category.name : 'All Products';
@@ -46,10 +52,10 @@ class Products extends Component {
         <div className="row" style={{ height: '80px'}}>
           <div style={{height: '80px', width: '100%'}}></div>
         </div>
-        <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '45px', paddingTop: '15px', paddingBottom: '70px'}}>
+        <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '30px', paddingTop: '15px', paddingBottom: '70px'}}>
           <div className="col-md-2" style={{ width: '191px'}}>
-            { !!categories.length && <CategoryList category={this.state.category || this.props.category} categories={categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />}
-            { !categories.length && <CategoryList category={this.state.market || this.props.market} categories={markets} onCategoryClick={this.onMarketClick} history={this.props.history} market />}
+            { !!categories.length && <CategoryList category={this.state.category || this.props.category} subCategories={subCategories} subCategory={subCategory_id} categories={categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />}
+            { !categories.length && <CategoryList category={this.state.market || this.props.market} subCategories={subCategories} categories={markets} onCategoryClick={this.onMarketClick} history={this.props.history} market />}
           </div>
           <div className="col-md-1"></div>
           <div className="col-md-9">

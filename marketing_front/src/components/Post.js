@@ -18,7 +18,7 @@ class Post extends Component {
               <h1 className="header">{post.title}</h1>
             </div>
           </div>
-          <div class = "row">
+          <div className="row">
             <div className="col-md-12" style={{paddingTop: '45px'}}>
               { post.image && <img src={URI+post.image} className="wide" /> }
             </div>

@@ -4,19 +4,42 @@ export default class CategoryList extends Component {
 
   onCategoryClick = (c) => {
     if(this.props.market) {
-      this.props.history.push('/our_markets/' + c.id)
+      this.props.history.push('/our_markets/' + c.id);
     } else {
-      this.props.history.push('/our_products/' + c.id)
+      this.props.history.push('/our_products/' + c.id);
     }
+  }
+
+  onSubCategoryClick = (c) => {
+    this.props.history.push('/our_products/' + this.props.category + '/' + c.replace(/\s+/g, ''));
+  }
+
+  renderSubCategory = (sc) => {
+    const style = sc.replace(/\s+/g, '') === this.props.subCategory ? {color: '#0275d8'} : {};
+
+    return (
+      <li key={sc} className="list-group-item roman-med" onClick={() => this.onSubCategoryClick(sc)}>
+        <span className={"blue-text-light"} style={style} >{ sc }</span>
+      </li>
+    );
   }
 
   renderCategory = (c, ind) => {
     if(c.id == this.props.category) {
       return (
-        <li className="list-group-item smaller roman-med" key={ind} onClick={() => this.onCategoryClick(c)}>
-          <span style={{color: '#0275d8'}}>
-            {c.name}
-          </span>
+        <li className="list-group-item smaller roman-med" key={ind}>
+          <div>
+            <div>
+              <span style={{color: '#0275d8'}} onClick={() => this.onCategoryClick(c)}>
+                {c.name}
+              </span>
+            </div>
+            <div>
+              <ul className="list-group list-group-flush">
+                { this.props.subCategories.map(this.renderSubCategory) }
+              </ul>
+            </div>
+          </div>
         </li>
       );
     }
@@ -30,7 +53,7 @@ export default class CategoryList extends Component {
   render() {
     return (
       <ul className="list-group list-group-flush">
-        <li className="list-group-item smaller" style={{paddingBottom: '19px'}} key={'a'} onClick={() => this.onCategoryClick({id:null})}>
+        <li className="list-group-item smaller" style={{paddingBottom: '19px'}} key={'a'} onClick={() => this.onCategoryClick({id:'all'})}>
           <span className="roman grey-text-light roman-small">Products</span>
         </li>
         { this.props.categories.map(this.renderCategory) }

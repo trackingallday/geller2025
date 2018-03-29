@@ -2,8 +2,9 @@ import React, { Component } from 'react';
 import ProductsList from '../ProductsList';
 import CategoryList from '../CategoryList';
 import { withRouter } from 'react-router'
+import URI from '../../constants/serverUrl';
 
-const URI = "http://localhost:8000";
+
 class Product extends Component {
 
   onCategoryClick(c) {
@@ -32,7 +33,7 @@ class Product extends Component {
         <div className="row" style={{ height: '80px'}}>
           <div style={{height: '80px', width: '100%'}}></div>
         </div>
-        <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '45px', paddingTop: '15px', paddingBottom: '70px'}}>
+        <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '45px', paddingTop: '15px', paddingBottom: '170px'}}>
           <div style={{ width: '191px'}}>
             <CategoryList
               categories={this.props.categories}
@@ -51,10 +52,22 @@ class Product extends Component {
                 { this.renderProductDetail(p.properties, "product-detail", "Properties")}
                 { this.renderProductDetail(p.market) }
               </div>
-              <div className="col-md-6 cover" style={{height: '400px' }}>
-                <a href={"/product/" + p.id}><img src={p.primaryImageLink} /></a>
-                <p><span>Download Product Sheet</span><a target="_blank" href={URI+p.infoSheet}>dl</a></p>
+              <div className="col-md-6" style={{height: '400px' }}>
+                <div className="row">
+                  <div className="col-md-12">
+                    <a href={"/product/" + p.id}><img src={p.primaryImageLink} /></a>
+                  </div>
+                  <div className="col-md-12">
+                    <a href={URI+p.infoSheet} target="_blank" className={"nav-link roman"}>
+                      <div className="roman grey-text">
+                        <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}}/>
+                        <span style={{position: 'absolute', top: '20px', left: '50px', fontSize: '12px'}}>Download Info Sheet</span>
+                      </div>
+                    </a>
+                  </div>
+                </div>
               </div>
+
             </div>
           </div>
         </div>

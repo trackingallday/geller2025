@@ -1,6 +1,5 @@
 import React, { Component } from 'react';
 import ProductsList from '../ProductsList';
-import CategoryList from '../CategoryList';
 import PostList from '../PostList';
 import { withRouter } from 'react-router';
 import Post from '../Post';
