@@ -88,9 +88,9 @@ class PublicProductSerializer(serializers.ModelSerializer):
     class Meta:
         model = Product
         fields = (
-            'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
-            'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet', 'productCategory',
-            'description', 'markets', 'properties', 'application'
+            'id', 'name', 'primaryImageLink', 'secondaryImageLink',
+            'productCode', 'brand', 'infoSheet', 'productCategory',
+            'description', 'markets', 'properties', 'application', 'subCategory',
 
         )
 
@@ -219,4 +219,3 @@ class MarketSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'image',
         )
-

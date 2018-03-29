@@ -85,4 +85,3 @@ admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(MarketCategory, MarketAdmin)
-

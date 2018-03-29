@@ -42,7 +42,7 @@ class ProductCategory(MyBaseModel, models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=1000)
     products = models.ManyToManyField('Product', blank=True, null=True, related_name='categories')
-
+    image = models.FileField(upload_to='documents/', blank=True, null=True)
 
     def __str__(self):
         return "{} ".format(self.name)
