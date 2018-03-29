@@ -205,6 +205,14 @@ body {
   color: rgb(200,200,200);
 }
 
+.grey-text-light {
+  color: rgb(200,200,200);
+}
+
+.blue-text-light {
+  color: rgb(115, 175, 232);
+}
+
 .white-text {
   color: #ffffff;
 }
