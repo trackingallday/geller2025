@@ -41,6 +41,7 @@ class Profile(MyBaseModel, models.Model):
 class ProductCategory(MyBaseModel, models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=1000)
+    products = models.ManyToManyField('Product', blank=True, null=True, related_name='categories')
 
 
     def __str__(self):
@@ -64,7 +65,7 @@ class Product(MyBaseModel, models.Model):
     subCategory = models.CharField(max_length=100, blank=True, null=True)
     properties = models.CharField(max_length=500, blank=True, null=True)
     public = models.BooleanField(default=False)
-    productCategory = models.ForeignKey(ProductCategory, blank=True, null=True, related_name='products')
+    productCategory = models.ManyToManyField(ProductCategory, through=ProductCategory.products.through, blank=True, null=True, related_name='categories')
     application = models.CharField(max_length=500, blank=True, null=True)
 
     def __str__(self):
@@ -130,4 +131,3 @@ class SafetyWear(MyBaseModel, models.Model):
 
     def __str__(self):
         return self.name
-
