@@ -63,12 +63,12 @@ class Products extends Component {
               <div className="col-md-1">
                 <img src={require('../../assets/category-logo.png')} style={{width: '45px', height: '45px'}} />
               </div>
-              <div className="col-md-6">
+              <div className="col-md-3">
                 <span  style={{paddingLeft: '9px'}} className="heading">{ categoryName }</span>
                 <span  style={{paddingLeft: '0px'}} className="heading">{ marketName }</span>
               </div>
-              <div className="col-md-6">
-                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px', paddingLeft: '9px', wordWrap: ''}}>
+              <div className="col-md-8">
+                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px', paddingRight: '9px', wordWrap: ''}}>
                   { categoryDesc }
                 </span>
               </div>
