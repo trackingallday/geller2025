@@ -36,7 +36,7 @@ export default class CategoryList extends Component {
             </div>
             <div>
               <ul className="list-group list-group-flush">
-                { this.props.subCategories.map(this.renderSubCategory) }
+                { this.props.subCategories && this.props.subCategories.map(this.renderSubCategory) }
               </ul>
             </div>
           </div>
