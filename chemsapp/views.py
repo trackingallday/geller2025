@@ -25,6 +25,8 @@ def getFileFromBase64(data, filename):
 
 
 def addInfoSheetToProduct(product, data):
+    if not data:
+        return product
     name = "{0}_{1}_{2}".format(product.id, product.name, 'info_sheet')
     sheet = getFileFromBase64(data, name)
     product.infoSheet = sheet
@@ -32,6 +34,8 @@ def addInfoSheetToProduct(product, data):
 
 
 def addSDSSheetToProduct(product, data):
+    if not data:
+        return product
     name = "{0}_{1}_{2}".format(product.id, product.name, 'sds_sheet')
     sheet = getFileFromBase64(data, name)
     product.sdsSheet = sheet
