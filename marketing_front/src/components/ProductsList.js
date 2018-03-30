@@ -14,13 +14,13 @@ export default class ProductList extends Component {
         </div>
         <div className="row" style={{paddingTop: '15px'}}>
           <div className="col-md-12">
-            <a className="product-desc" style={{textDecoration: 'none'}} href={"/product/" + p.id}>
+            <NavLink className="product-desc" style={{textDecoration: 'none'}} to={"/product/" + p.id}>
               <p>
                 <span className="product-name">
                   { p.name }
                 </span>
               </p>
-            </a>
+            </NavLink>
           </div>
         </div>
         <div className="row" style={{paddingTop: '5px'}}>
