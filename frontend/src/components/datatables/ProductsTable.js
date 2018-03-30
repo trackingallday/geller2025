@@ -12,9 +12,11 @@ const productDetailList = [
   [ 'Name', 'name'],
   [ 'Usage', 'usageType' ],
   ['Amount', 'amountDesc'],
-  ['application', 'application'],
-  ['properties', 'properties'],
-  ['markets', 'markets'],
+  ['Application', 'application'],
+  ['Properties', 'properties'],
+  ['Description', 'description'],
+  ['Sub Category', 'subCategory'],
+  ['Markets', 'markets'],
   [ 'Instructions','instructions'], ['Code', 'productCode'], ['Brand', 'brand'],
   [ 'Saftey Wear', 'safetyWears'],
 ];
@@ -36,10 +38,8 @@ const renderProductDetail = (record) => {
 
 
 const expandedRowRender = (record) => {
-
   const detail = renderProductDetail(record);
   const customers = record.customers.map((c,i) => (<p key={i}>{c}</p>));
-  console.log(this.props);
   return (
     <div>
       <Row type="flex" justify="start">
@@ -154,11 +154,23 @@ export default class ProductsTable extends BaseTable {
     return expandedRowRender(record, this.props.markets);
   }
 
+  onEditClick = (value, record) => {
+    this.props.onEditClick(value, record);
+  }
+
+  getLink = (value, record, attr) => {
+     if(!typeof record[attr] === "string") {
+       return <div />
+     }
+     else {
+       return <a target="blank" href={`${url}${record[attr]}`}>link</a>
+     }
+  }
+
   getColumns = () => {
     const { searchText, filterDropdownVisible, filtered, codeSearchText } = this.state;
     const filterInput = this.renderFilterInput(searchText, this.onInputChange, this.onSearch);
     const codeFilterInput = this.renderFilterInput(codeSearchText, this.onCodeInputChange, this.onCodeSearch);
-
     return [{
       title: 'Name',
       dataIndex: 'name',
@@ -194,19 +206,19 @@ export default class ProductsTable extends BaseTable {
       title: 'Info',
       key: 'infoSheet',
       dataIndex: 'infoSheet',
-      render: (value, record) => <a target="blank" href={`${url}${record.infoSheet}`}>link</a>,
+      render: (value, record) => this.getLink(value, record, "infoSheet"),
     },
     {
       title: 'SDS',
       key: 'sdsSheet',
       dataIndex: 'sdsSheet',
-      render: (value, record) => <a target="blank" href={`${url}${record.sdsSheet}`}>link</a>,
+      render:  (value, record) => this.getLink(value, record, "sdsSheet"),
     },
     {
       title: 'Edit',
       key: 'operation',
       width: 80,
-      render: (value, record) => record.editable && <a onClick={ () => this.props.onEditClick(value, record) }>edit</a>,
+      render: (value, record) => record.editable && <a onClick={ () => this.onEditClick(value, record) }>edit</a>,
     },
     ];
   }

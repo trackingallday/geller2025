@@ -18,6 +18,7 @@ class ProductForm extends Component {
     safetyWearOptions: [],
     markets: [],
     marketOptions: [],
+    categoryOptions: [],
   }
 
   getInitialValue = (key) => {
@@ -28,16 +29,19 @@ class ProductForm extends Component {
   }
 
   componentDidMount() {
-    const { products, safetyWears, markets } = this.props;
+    const { products, safetyWears, markets, categories } = this.props;
     this.setState({
       safetyWears,
       products,
       safetyWearOptions: safetyWears.map((sw, i) => (
-        <Option key={i} value={sw.id}>{ sw.name }</Option>
+        <Option key={i+"a"} value={sw.id}>{ sw.name }</Option>
       )),
       markets,
       marketOptions: markets.map((sw, i) => (
-        <Option key={i} value={sw.id}>{ sw.name }</Option>
+        <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
+      )),
+      categoryOptions: categories.map((sw, i) => (
+        <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
       )),
     });
   }
@@ -77,7 +81,6 @@ class ProductForm extends Component {
   onImageRemove = (img) => {
     const imageFiles = this.state.imageFiles.filter(
       f => f.uid !== img.originFileObj.uid);
-    debugger;
     this.setState({ imageFiles });
   }
 
@@ -96,10 +99,22 @@ class ProductForm extends Component {
     );
   }
 
+
+
   render() {
+    console.log(this.props.recordToEdit.sdsSheet);
+    console.log(this.props.recordToEdit.infoSheet);
+    if(typeof this.props.recordToEdit.infoSheet === 'object' ) {
+      return <div />
+    }
+    if(typeof this.props.recordToEdit.sdsSheet === 'object' ) {
+      return <div />
+    }
     const { getFieldDecorator } = this.props.form;
+    const { recordToEdit } = this.props;
     const req = true;
-    const uploadsRequired = !this.props.recordToEdit;
+    const uploadsRequired = !recordToEdit;
+
     return (
       <Form onSubmit={this.handleSubmit} ref="form">
         <FormItem {...formItemLayout} label="Name">
@@ -142,6 +157,16 @@ class ProductForm extends Component {
           rules: [{required: req, message: 'Required!'}]})(
             <TextArea />)}
         </FormItem>
+        <FormItem {...formItemLayout} label="Description">
+          {getFieldDecorator('description', { initialValue: this.getInitialValue('description'),
+          rules: [{required: req, message: 'Required!'}]})(
+            <TextArea />)}
+        </FormItem>
+        <FormItem {...formItemLayout} label="Sub Category">
+          {getFieldDecorator('subCategory', { initialValue: this.getInitialValue('subCategory'),
+          rules: [{required: req, message: 'Required!'}]})(
+            <TextArea />)}
+        </FormItem>
         <FormItem {...formItemLayout} label="Safety Wear">
           {getFieldDecorator('safetyWears', { initialValue: this.getInitialValue('safetyWears'),
             rules: [{required: req, message: 'Required!'}]})(
@@ -166,6 +191,17 @@ class ProductForm extends Component {
               { this.state.marketOptions }
             </Select>)}
           </FormItem>
+          <FormItem {...formItemLayout} label="Category">
+            {getFieldDecorator('productCategory', { initialValue: this.getInitialValue('productCategory'),
+              rules: [{required: req, message: 'Required!'}]})(
+              <Select
+               style={{ width: '100%' }}
+               placeholder="Please select"
+               onChange={() => {}}
+             >
+               { this.state.categoryOptions }
+             </Select>)}
+           </FormItem>
          <FormItem {...formItemLayout} label="SDSSheet .pdf">
            <div className="dropbox">
              {getFieldDecorator('sdsSheet', { valuePropName: 'sDSSheet',

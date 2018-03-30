@@ -87,7 +87,11 @@ export default class BaseTable extends Component {
   render() {
     const columns = this.getColumns();
     const data = this.getData();
-    return <Table columns={columns} dataSource={data} expandedRowRender={this.expandedRowRender} onExpand={this.onTableExpand} />;
+    if(this.state.showEdit || this.state.showNew) {
+      return  <Table columns={columns} dataSource={data} expandedRowRender={this.expandedRowRender} expandedRowKeys={[]} />;
+    } else {
+      return  <Table columns={columns} dataSource={data} expandedRowRender={this.expandedRowRender} />;
+    }
   }
 
  }

@@ -8,7 +8,7 @@ import EditDistributorForm from '../forms/EditDistributorForm';
 import ProductMap from '../maps/ProductMap';
 import DistributorsTable from '../datatables/DistributorsTable';
 import RecordAdmin from '../common/RecordAdmin';
-import { postNewDistributor, editDistributor, getDistributors, getSafetyWears, getCustomers, getMarkets, getProducts } from '../../util/DjangoApi';
+import { postNewDistributor, editDistributor, getDistributors, getSafetyWears, getCustomers, getMarkets, getProducts, getCategories } from '../../util/DjangoApi';
 
 class AdminPage extends DistributorPage {
 
@@ -24,6 +24,7 @@ class AdminPage extends DistributorPage {
         this.getRecordsData(getProducts, 'products'),
         this.getRecordsData(getDistributors, 'distributors'),
         this.getRecordsData(getMarkets, 'markets'),
+        this.getRecordsData(getCategories, 'categories'),
       ]).then(datas => {
         this.stopLoading();
       });
@@ -95,7 +96,7 @@ class AdminPage extends DistributorPage {
         <Route exact={true} path="/products" render={this.renderDistributorProducts} key={2} />
         <Route exact={true} path="/distributors" render={this.renderDistributors} key={9} />
         <Route exact={true} path="/" render={this.renderHome} key={3} />
-        <Route exact={true} path="/app" render={this.renderHome} key={3} />
+        <Route exact={true} path="/app" render={this.renderHome} key={39} />
         <Route exact={true} path="/maps" component={ProductMap} key={4} />
         <Route path="/customer_sheet/:customer_id" render={this.renderCustomerSheet} key={8} />
       </div>

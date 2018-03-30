@@ -79,7 +79,7 @@ export default class RecordAdmin extends Component {
 
     const { state, toggleNew, toggleEdit, onNewRecord, onEditRecord } = this;
     const { showNew, showEdit, recordToEdit } = state;
-    const { customers, products, safetyWears, distributors, records, markets } = this.props;
+    const { customers, products, safetyWears, distributors, records, markets, categories } = this.props;
 
     const newFormProps = {
       onNewRecord,
@@ -89,6 +89,7 @@ export default class RecordAdmin extends Component {
       products,
       safetyWears,
       distributors,
+      categories,
       markets,
     };
 
@@ -100,6 +101,7 @@ export default class RecordAdmin extends Component {
       customers,
       products,
       safetyWears,
+      categories,
       distributors,
       markets,
     }
@@ -119,7 +121,7 @@ export default class RecordAdmin extends Component {
         </Row>
         <Row>
           <Col span={24}>
-            <RecordsTable data={records} onEditClick={this.toggleEdit} />
+            <RecordsTable data={records} onEditClick={this.toggleEdit} editing={this.state.showEdit} />
           </Col>
         </Row>
         <Modal
