@@ -10,7 +10,7 @@ class CoverNav extends Component {
          <a className="cover" onClick={() => this.props.changePage("/our_markets/" + m.id)}>
            <img className="darken" src={URI+m.image} />
          </a>
-         <a href="#" onClick={() => this.props.changePage("/our_markets/all/" + m.id)}>
+         <a href="#" onClick={() => this.props.changePage("/our_markets/" + m.id)}>
            <span style={{color: '#fff', fontSize: '13px', textDecoration: 'none'}} className="nav-link roman">{m.name}</span>
          </a>
         <div style={{backgroundColor: 'rgba(255,255,255,0.4)', height: '2px', 'width': '100%'}}></div>
