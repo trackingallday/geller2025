@@ -78,7 +78,7 @@ const expandedRowRender = (record) => {
               </Col>
               <Col span={20}>
                 <Row>
-                  <p>{url}{record.infoSheet}</p>
+                  <p>{url}{record.sdsSheet}</p>
                 </Row>
                 <Row>
                   <QRCode value={`${url}${record.sdsSheet}`} />
