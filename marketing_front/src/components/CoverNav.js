@@ -9,9 +9,11 @@ class CoverNav extends Component {
   renderMarkets = () => {
     return this.props.markets.map(m =>
       <div className="col-md-3" style={{paddingBottom: '39px'}} key={m.id}>
+        <NavLink to={"/our_markets/" + m.id}>
          <div className="cover" style={{height: '80px', width: '100%'}}>
            <img className="darken" src={URI+m.image} />
          </div>
+       </NavLink>
          <NavLink to={"/our_markets/" + m.id}  style={{textDecoration: 'none'}}>
            <span style={{color: '#fff', fontSize: '13px'}} className="nav-link roman darken">{m.name}</span>
          </NavLink>
