@@ -40,8 +40,10 @@ export default class Home extends Component {
                 {home_row1_col2.content}
               </p>
             </div>
-            <div className="col-md-6" style={{padding: 0}}>
-              <img src={URI+home_row1_col2.image} className="wide" />
+            <div className="col-md-6">
+              <div className="contain" style={{minHeight: '280px'}}>
+                <img src={URI+home_row1_col2.image} className="wide" />
+              </div>
             </div>
         </div>
         <div className="row blue-back pad-top pad-left pad-bottom">
@@ -57,7 +59,9 @@ export default class Home extends Component {
               </p>
             </div>
             <div className="col-md-6">
-              <img src={URI+latest_news.image} className="wide" />
+                <div className="contain" style={{minHeight: '280px'}}>
+                  <img src={URI+latest_news.image} className="wide" />
+                </div>
             </div>
         </div>
       </div>

@@ -2,6 +2,7 @@ import React, { Component } from 'react';
 import ProductsList from '../ProductsList';
 import CategoryList from '../CategoryList';
 import { withRouter } from 'react-router'
+import { NavLink } from 'react-router-dom';
 import URI from '../../constants/serverUrl';
 
 
@@ -31,7 +32,12 @@ class Product extends Component {
     return (
       <div>
         <div className="row" style={{ height: '80px'}}>
-          <div style={{height: '80px', width: '100%'}}></div>
+            <div className="col-md-6">
+              <div className="med-right">
+                <div className="hexagon white"></div>
+              </div>
+              <div style={{height: '80px', width: '100%'}}></div>
+          </div>
         </div>
         <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '45px', paddingTop: '15px', paddingBottom: '170px'}}>
           <div style={{ width: '191px'}}>
@@ -52,16 +58,22 @@ class Product extends Component {
                 { this.renderProductDetail(p.properties, "product-detail", "Properties")}
                 { this.renderProductDetail(p.market) }
               </div>
-              <div className="col-md-6" style={{height: '400px' }}>
+              <div className="col-md-6" style={{height: '350px' }}>
                 <div className="row">
-                  <div className="col-md-12">
-                    <a href={"/product/" + p.id}><img src={p.primaryImageLink} /></a>
+                  <div className="col-md-2" />
+                  <div className="col-md-10" align="center">
+                    <div className="contain" style={{margin: 'auto'}}>
+                      <img src={p.primaryImageLink}></img>
+                    </div>
                   </div>
-                  <div className="col-md-12">
+                </div>
+                <div className="row"  style={{padding: '0px 0px 0px 0px'}}>
+                  <div className="col-md-3" />
+                  <div className="col-md-9" style={{padding: '0px 60px 0px 0px'}}>
                     <a href={URI+p.infoSheet} target="_blank" className={"nav-link roman"}>
-                      <div className="roman grey-text">
-                        <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}}/>
-                        <span style={{position: 'absolute', top: '20px', left: '50px', fontSize: '12px'}}>Download Info Sheet</span>
+                      <div className="roman grey-text" style={{paddingLeft: '15px'}}>
+                        <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}} />
+                        <span style={{position: 'absolute', top: '20px', left: '65px', fontSize: '12px'}}>Download Info Sheet</span>
                       </div>
                     </a>
                   </div>

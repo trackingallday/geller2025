@@ -18,8 +18,8 @@ export default class CategoryList extends Component {
     const style = sc.replace(/\s+/g, '') === this.props.subCategory ? {color: '#0275d8'} : {};
 
     return (
-      <li key={sc} className="list-group-item roman-med" onClick={() => this.onSubCategoryClick(sc)}>
-        <span className={"blue-text-light"} style={style} >{ sc }</span>
+      <li key={sc} className="list-group-item roman-med brighten" onClick={() => this.onSubCategoryClick(sc)}>
+        <span className={"blue-text-light "} style={style} >{ sc }</span>
       </li>
     );
   }
@@ -27,7 +27,7 @@ export default class CategoryList extends Component {
   renderCategory = (c, ind) => {
     if(c.id == this.props.category) {
       return (
-        <li className="list-group-item smaller roman-med" key={ind}>
+        <li className="list-group-item smaller roman-med brighten" key={ind}>
           <div>
             <div>
               <span style={{color: '#0275d8'}} onClick={() => this.onCategoryClick(c)}>
@@ -45,7 +45,7 @@ export default class CategoryList extends Component {
     }
     return (
       <li className="list-group-item smaller roman-med" key={ind} onClick={() => this.onCategoryClick(c)}>
-        <span className="grey-text">{c.name}</span>
+        <span className="grey-text darken">{c.name}</span>
       </li>
     );
   }
@@ -54,7 +54,7 @@ export default class CategoryList extends Component {
     return (
       <ul className="list-group list-group-flush">
         <li className="list-group-item smaller" style={{paddingBottom: '19px'}} key={'a'} onClick={() => this.onCategoryClick({id:'all'})}>
-          <span className="roman grey-text-light roman-small">Products</span>
+          <span className="roman grey-text-light darken roman-small">Products</span>
         </li>
         { this.props.categories.map(this.renderCategory) }
       </ul>

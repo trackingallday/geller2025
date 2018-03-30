@@ -44,13 +44,18 @@ class Products extends Component {
       products = products.filter(p => p.subCategory.replace(/\s+/g, '') === subCategory_id);
     }
 
-    const categoryName = category ? category.name : 'All Products';
     const categoryDesc = category ? category.description : '';
-    const marketName = market ? " - " + market.name : '';
+    let name = market ? market.name : '';
+    name = category ? category.name : name;
     return (
       <div>
         <div className="row" style={{ height: '80px'}}>
-          <div style={{height: '80px', width: '100%'}}></div>
+          <div className="col-md-6">
+            <div className="med-right">
+              <div className="hexagon white"></div>
+            </div>
+            <div style={{height: '80px', width: '100%'}}></div>
+          </div>
         </div>
         <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '30px', paddingTop: '15px', paddingBottom: '70px'}}>
           <div className="col-md-2" style={{ width: '191px'}}>
@@ -64,8 +69,7 @@ class Products extends Component {
                 <img src={require('../../assets/category-logo.png')} style={{width: '45px', height: '45px'}} />
               </div>
               <div className="col-md-3">
-                <span  style={{paddingLeft: '9px'}} className="heading">{ categoryName }</span>
-                <span  style={{paddingLeft: '0px'}} className="heading">{ marketName }</span>
+                <span  style={{paddingLeft: '0px'}} className="heading">{ name || 'All Products' }</span>
               </div>
               <div className="col-md-8">
                 <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px', paddingRight: '9px', wordWrap: ''}}>

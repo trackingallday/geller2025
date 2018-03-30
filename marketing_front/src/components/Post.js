@@ -20,7 +20,9 @@ class Post extends Component {
           </div>
           <div className="row">
             <div className="col-md-12" style={{paddingTop: '45px'}}>
-              { post.image && <img src={URI+post.image} className="wide" /> }
+              <div className="contain" style={{width: '100%', minHeight: '300px'}}>
+                  { post.image && <img src={URI+post.image} /> }
+              </div>
             </div>
           </div>
           <div className="row" style={{ marginTop: '40px', paddingBottom: '80px' }}>

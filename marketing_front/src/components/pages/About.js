@@ -12,8 +12,11 @@ class About extends Component {
   render() {
     return (
       <div>
-        <div className="row" style={{ height: '80px'}}>
-          <div style={{height: '80px', width: '100%'}}></div>
+          <div className="col-md-6">
+            <div className="med-right">
+              <div className="hexagon white"></div>
+            </div>
+            <div style={{height: '80px', width: '100%'}}></div>
         </div>
         <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '30px', paddingTop: '15px', paddingBottom: '70px'}}>
           <div className="col-md-2">
