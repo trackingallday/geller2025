@@ -264,6 +264,8 @@ def new_product(request):
         brand=data.get('brand'),
         properties=data.get('properties'),
         application=data.get('application'),
+        description=data.get('description'),
+        subCategory=data.get('subCategory'),
         uploadedBy=request.user,
     )
     product.save()
@@ -272,6 +274,7 @@ def new_product(request):
     product = addSDSSheetToProduct(product, data.get('sdsSheet'))
     product.safetyWears = SafetyWear.objects.filter(pk__in=data.get('safetyWears'))
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
+    product.productCategory = ProductCategory.objects.filter(pk=data.get('productCategory'))
     product.updated_at = datetime.datetime.now()
     product.save()
 
@@ -300,7 +303,10 @@ def edit_product(request):
     product.brand = data.get('brand')
     product.properties = data.get('properties')
     product.application = data.get('application')
+    product.description = data.get('description')
+    product.subCategory = data.get('subCategory')
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
+    product.productCategory = ProductCategory.objects.filter(pk=data.get('productCategory'))
     product.updated_at = datetime.datetime.now()
 
     if data.get('secondaryImageLink'):
@@ -409,6 +415,15 @@ def public_products(request):
 def markets_list(request):
     if request.user:
         data = MarketSerializer(MarketCategory.objects.all(), many=True).data
+        return JsonResponse(data, safe=False)
+
+    return JsonResponse({'error': 'evildoer'})
+
+@csrf_exempt
+@api_view(['GET'])
+def categories_list(request):
+    if request.user:
+        data = CategorySerializer(ProductCategory.objects.all(), many=True).data
         return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'evildoer'})
