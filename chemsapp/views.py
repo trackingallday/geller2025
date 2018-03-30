@@ -274,7 +274,8 @@ def new_product(request):
     product = addSDSSheetToProduct(product, data.get('sdsSheet'))
     product.safetyWears = SafetyWear.objects.filter(pk__in=data.get('safetyWears'))
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
-    product.productCategory = ProductCategory.objects.filter(pk=data.get('productCategory'))
+    if data.get('productCategory'):
+        product.productCategory = ProductCategory.objects.filter(pk=data.get('productCategory'))
     product.updated_at = datetime.datetime.now()
     product.save()
 
@@ -306,7 +307,8 @@ def edit_product(request):
     product.description = data.get('description')
     product.subCategory = data.get('subCategory')
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
-    product.productCategory = ProductCategory.objects.filter(pk=data.get('productCategory'))
+    if data.get('productCategory'):
+        product.productCategory = ProductCategory.objects.filter(pk=data.get('productCategory'))
     product.updated_at = datetime.datetime.now()
 
     if data.get('secondaryImageLink'):

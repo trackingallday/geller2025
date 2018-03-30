@@ -72,7 +72,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
             'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet',
-            'safetyWears', 'customers', 'editable',  'markets', 'properties', 'application'
+            'safetyWears', 'customers', 'editable',  'markets', 'properties', 'application', 'description', 'subCategory', 'productCategory',
         )
 
     def get_can_edit(self, obj):
