@@ -23,7 +23,6 @@ class Cloudinary {
       req.send(data);
       req.end((err, res) => {
         if (err) {
-          debugger;
           reject(err);
         } else {
           resolve(res.body);
