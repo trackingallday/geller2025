@@ -11,7 +11,8 @@ function getData(path, onSuccess, onFail=fail) {
     .then((response) => {
       return onSuccess(response);
     }).catch((error) => {
-      return onFail(error);
+      onFail(error);
+      onSuccess({data:[]});
     });
 }
 
@@ -46,6 +47,17 @@ export function getCustomers(callback) {
 export function getMarkets(callback) {
 
   return getData('/markets_list/', (response) => {
+    const items = response.data.map((c, i) => {
+      return Object.assign(c, c.user, { key: i });
+    });
+    callback(items);
+  });
+
+}
+
+export function getCategories(callback) {
+
+  return getData('/categories_list/', (response) => {
     const items = response.data.map((c, i) => {
       return Object.assign(c, c.user, { key: i });
     });
