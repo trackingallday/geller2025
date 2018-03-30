@@ -196,6 +196,7 @@ class ProductForm extends Component {
               rules: [{required: req, message: 'Required!'}]})(
               <Select
                style={{ width: '100%' }}
+               mode="multiple"
                placeholder="Please select"
                onChange={() => {}}
              >
