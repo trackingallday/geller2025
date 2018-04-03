@@ -76,6 +76,12 @@ class Product extends Component {
                         <span style={{position: 'absolute', top: '20px', left: '65px', fontSize: '12px'}}>Download Info Sheet</span>
                       </div>
                     </a>
+                    <a href={'/contact/' + p.name } className={"nav-link roman"}>
+                      <div className="roman grey-text" style={{paddingLeft: '15px'}}>
+                        <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}} />
+                        <span style={{position: 'absolute', top: '60px', left: '65px', fontSize: '12px'}}>Enquire for SDS Sheet</span>
+                      </div>
+                    </a>
                   </div>
                 </div>
               </div>

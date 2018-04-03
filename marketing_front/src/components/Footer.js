@@ -1,5 +1,5 @@
 import React, { Component } from 'react';
-import '../App.css'
+import '../App.css';
 
 export default class Footer extends Component {
   render() {
@@ -17,14 +17,14 @@ export default class Footer extends Component {
             <a className="nav-link white-text" href="/contact">Contact</a>
           </nav>
           <div>
-            <span className="grey-text-light">© 2018 Integra Industries | All rights reserved.</span>
+            <span className="grey-text-light">© 2018 {this.props.configs.company_name_footer} | All rights reserved.</span>
           </div>
         </div>
         <div className="col-md-7 second">
           <h2 className="header white-text">Contact us now for a free quote:</h2>
-          <h1 className="header massive-blue">0800 090 090</h1>
+          <h1 className="header massive-blue">{this.props.configs.ph_number}</h1>
           <div>
-            <span className="white-text">or email sales@geller.co.nz</span>
+            <span className="white-text">or email {this.props.configs.email_address}</span>
           </div>
           <img src={require('../assets/Geller_WHITE.svg')} className="footer-logo"/>
         </div>

@@ -70,7 +70,7 @@ class PrimaryNav extends Component {
               <NavLink className="nav-link bold" to="/support" activeClassName="active">Support</NavLink>
               <NavLink className="nav-link grey-text roman" activeClassName="active" to="/news">News</NavLink>
               <NavLink className="nav-link  grey-text roman" activeClassName="active" to="/about">About</NavLink>
-              {/*<a className="nav-link grey-text roman" href="#">Contact</a>*/}
+              <NavLink className="nav-link grey-text roman"  activeClassName="active" to="/contact">Contact</NavLink>
             </nav>
           </div>
           <div className="col-md-4"></div>
