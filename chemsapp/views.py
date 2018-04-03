@@ -17,6 +17,8 @@ import datetime
 from django.db.models import Q
 from django.core import serializers
 import json
+from django.core.mail import send_mail
+
 
 
 def getFileFromBase64(data, filename):
@@ -444,6 +446,20 @@ def create_contact(request):
         c.is_valid()
         a = c.validated_data
         c.create(a)
+        send_mail(
+            'Contact from Geller.co.nz',
+            b['nameFrom'] + ' ' + b['emailFrom'] + ' ' + b['content'],
+            'chemicaldatasheets@gmail.com',
+            ['james@integraindustries.co.nz'],
+            fail_silently=False,
+        )
+        send_mail(
+            'Contact from Geller.co.nz',
+            'Hi ' + b['nameFrom'] + ' Thanks for you contact request we will be in touch shortly.',
+            'chemicaldatasheets@gmail.com',
+            [b['emailFrom'], 'james@integraindustries.co.nz'],
+            fail_silently=False,
+        )
         return JsonResponse({'sddsfds':'sdfsefsfseffse'})
     except Exception as e:
         print("ERROR")
