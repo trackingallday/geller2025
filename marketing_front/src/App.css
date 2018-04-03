@@ -525,3 +525,30 @@ img.footer-logo {
   right: 10px;
   position: absolute;
 }
+
+.bouncing {
+  margin-top: 50px;
+  border-radius: 50%;
+  margin-top: 40px; 
+  width: 350px;
+  height: 350px;
+  animation: bounce 1s infinite alternate;
+  -webkit-animation: bounce 1s infinite alternate;
+}
+
+@keyframes bounce {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-15px);
+  }
+}
+@-webkit-keyframes bounce {
+  from {
+    transform: translateY(0px);
+  }
+  to {
+    transform: translateY(-15px);
+  }
+}
