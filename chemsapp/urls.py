@@ -3,7 +3,7 @@ from django.conf.urls import url
 from rest_framework.authtoken import views as drf_views
 from chemsapp.views import index, customers_list, products_list, new_customer, edit_customer, safety_wears_list,\
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
-    new_distributor, edit_distributor, printout, public_products, markets_list, marketing_site, categories_list
+    new_distributor, edit_distributor, printout, public_products, markets_list, marketing_site, categories_list, create_contact
 
 urlpatterns = [
     url(r'^admin$', admin.site.urls),
@@ -13,6 +13,7 @@ urlpatterns = [
     url(r'^product/*', marketing_site, name='marketing_site'),
     url(r'^about/*', marketing_site, name='marketing_site'),
     url(r'^news/*', marketing_site, name='marketing_site'),
+    url(r'^contact/*', marketing_site, name='marketing_site'),
     url(r'^support/*$', marketing_site, name='marketing_site'),
     url(r'^markets/*$', marketing_site, name='marketing_site'),
     url(r'^our_markets/*$', marketing_site, name='marketing_site'),
@@ -38,6 +39,7 @@ urlpatterns = [
     url(r'^customers_table/', customers_table, name="customers_table"),
     url(r'^printout/', printout, name="printout"),
     url(r'^public_products/', public_products, name="public_products"),
+    url(r'^create_contact/', create_contact, name="create_contact"),
     url(r'^markets_list/', markets_list, name="markets_list"),
     url(r'^categories_list/', categories_list, name="categories_list"),
     url(r'^$', marketing_site, name='marketing_site'),

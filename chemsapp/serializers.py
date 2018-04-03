@@ -1,5 +1,5 @@
 from django.contrib.auth.models import User
-from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear, ProductCategory, Post, MarketCategory
+from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear, ProductCategory, Post, MarketCategory, Config, Contact, Size
 from rest_framework import serializers
 import pyqrcode
 import base64
@@ -218,4 +218,31 @@ class MarketSerializer(serializers.ModelSerializer):
         model = MarketCategory
         fields = (
             'id', 'name', 'image',
+        )
+
+class ConfigSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Config
+        fields = (
+            'id', 'name', 'val',
+
+        )
+
+class ContactSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Contact
+        fields = (
+            'id', 'nameFrom', 'emailFrom', 'replied', 'content',
+
+        )
+
+class SizeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Size
+        fields = (
+            'id', 'name', 'desc', 'amount',
+
         )

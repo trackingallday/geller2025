@@ -5,15 +5,18 @@ from django.conf import settings
 import os
 from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
     ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
-    CategorySerializer, PostSererializer, MarketSerializer
-from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory
+    CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer
+from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view
+from rest_framework.decorators import api_view,  authentication_classes, permission_classes
+from rest_framework.permissions import AllowAny
+
 import base64
 from django.core.files.base import ContentFile
 import datetime
 from django.db.models import Q
 from django.core import serializers
+import json
 
 
 def getFileFromBase64(data, filename):
@@ -406,7 +409,9 @@ def public_products(request):
         categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
         posts = PostSererializer(Post.objects.all(), many=True).data
         markets = MarketSerializer(MarketCategory.objects.all(), many=True).data
-        return JsonResponse({'products': products, 'categories': categories, 'posts': posts, 'markets': markets}, safe=False)
+        configs = ConfigSerializer(Config.objects.all(), many=True).data
+        return JsonResponse(
+            {'products': products, 'categories': categories, 'posts': posts, 'markets': markets, 'configs': configs}, safe=False)
     except Exception as a:
         print(a)
     pass
@@ -429,3 +434,17 @@ def categories_list(request):
         return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'evildoer'})
+
+
+@csrf_exempt
+def create_contact(request):
+    try:
+        b = json.loads(request.GET['data'])
+        c = ContactSerializer(data=b)
+        c.is_valid()
+        a = c.validated_data
+        c.create(a)
+        return JsonResponse({'sddsfds':'sdfsefsfseffse'})
+    except Exception as e:
+        print("ERROR")
+        print(e)

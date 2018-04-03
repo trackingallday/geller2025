@@ -131,3 +131,29 @@ class SafetyWear(MyBaseModel, models.Model):
 
     def __str__(self):
         return self.name
+
+class Config(MyBaseModel, models.Model):
+    name = models.CharField(max_length=255)
+    val = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class Size(MyBaseModel, models.Model):
+    name = models.CharField(max_length=255)
+    desc = models.CharField(max_length=255)
+    amount = models.CharField(max_length=255)
+
+    def __str__(self):
+        return self.name
+
+
+class Contact(MyBaseModel, models.Model):
+    nameFrom = models.CharField(max_length=255)
+    emailFrom = models.CharField(max_length=255)
+    replied = models.BooleanField(default=False)
+    content = models.TextField(max_length=1500)
+
+    def __str__(self):
+        return self.nameFrom

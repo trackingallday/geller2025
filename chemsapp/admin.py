@@ -1,6 +1,6 @@
 from django.contrib import admin
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
-    Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory
+    Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 
@@ -74,13 +74,23 @@ class PostAdmin(ImportExportModelAdmin):
 class MarketAdmin(ImportExportModelAdmin):
     pass
 
+class ContactAdmin(ImportExportModelAdmin):
+    pass
+
+class ConfigAdmin(ImportExportModelAdmin):
+    read_only_fields = ('name', )
+
+class SizeAdmin(ImportExportModelAdmin):
+    pass
+
 
 admin.site.register(SafetyWear, SafetyWearAdmin)
+admin.site.register(Contact, ContactAdmin)
+admin.site.register(Size, SizeAdmin)
+admin.site.register(Config, ConfigAdmin)
 admin.site.register(Distributor, DistributorAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Product, ProductAdmin)
-#admin.site.register(ProductAdd, ProductAddAdmin)
-#admin.site.register(ProductRemove, ProductRemoveAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
