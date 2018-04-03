@@ -7,17 +7,20 @@ import URI from '../../constants/serverUrl';
 //const URI = 'http://localhost:8000';
 
 class Contact extends Component {
+
+  state = {
+    loading: false,
+  }
+
   onFormSubmit = (e) => {
     e.preventDefault();
-    console.log(e.target);
+    this.setState({loading: true})
     let data = new FormData(e.target);
-    console.log(data.values());
     var params = {};
     data.forEach(function(value, key){
         params[key] = value;
     });
     var json = JSON.stringify(params);
-    console.log(params);
     reqeust.get(URI + '/create_contact/')
       .query({data: json})
       .set('Accept', 'application/json')
@@ -36,7 +39,7 @@ class Contact extends Component {
     if(this.props.message) {
       let value = 'Inquiry regarding: ' + this.props.message;
       messageInput =  (
-        <textarea name="content" id="message" value={value} onChange={() => {}} readonly className="form-control" rows="9" cols="25" required="required"
+        <textarea name="content" id="message" value={value} onChange={() => {}} className="form-control" rows="9" cols="25" required="required"
             placeholder="Message"></textarea>
       );
     }
@@ -60,7 +63,7 @@ class Contact extends Component {
           <div className="col-md-8">
             <div className="well well-md">
 
-              <form onSubmit={(e) => this.onFormSubmit(e)}>
+              {!this.state.loading && <form onSubmit={(e) => this.onFormSubmit(e)}>
                 <div className="col-md-6">
                   <h3>Drop us a line</h3>
                   <p></p>
@@ -89,7 +92,18 @@ class Contact extends Component {
                     <button type="submit" className="btn btn-primary pull-right" id="btnContactUs">
                         Send Message</button>
                 </div>
-              </form>
+              </form>}
+              {this.state.loading && <div className="col-md-6">
+                <div className="row" style={{paddingTop: '130px'}}>
+                  <div className="col-md-2">
+                  </div>
+                  <div className="col-md-8">
+                    <div className="bouncing">
+                      <img src={require('../../assets/email.png')} />
+                    </div>
+                  </div>
+                </div>
+              </div>}
             </div>
           </div>
         </div>
