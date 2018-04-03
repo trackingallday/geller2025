@@ -7,6 +7,7 @@ import Product from './components/pages/Product';
 import About from './components/pages/About';
 import Support from './components/pages/Support';
 import News from './components/pages/News';
+import Contact from './components/pages/Contact';
 import URI from  './constants/serverUrl';
 
 import MobileNav from './components/MobileNav';
@@ -21,9 +22,12 @@ class App extends Component {
   constructor() {
     super()
     reqeust.get(URI + '/public_products/')
-      .set('accept', 'json')
       .end((err, res) => {
-        this.setState({data: JSON.parse(res.text), loaded: true});
+        let data = JSON.parse(res.text);
+        let c = {};
+        data.configs.forEach(co => c[co.name] = co.val)
+        data.configs = c;
+        this.setState({data, loaded: true});
       });
   }
 
@@ -37,6 +41,7 @@ class App extends Component {
       products: [],
       categories: [],
       markets: [],
+      configs: {},
     }
   }
 
@@ -85,6 +90,10 @@ class App extends Component {
     return <News posts={this.state.data.posts.filter(p => p.page === 'News')} post={match.match.params.post} />
   }
 
+  renderContact = (match) => {
+    return <Contact configs={ this.state.data.configs } message={match.match.params.message}/>
+  }
+
   render() {
     const isHome = window.location.pathname === '/';
     const outImg = (
@@ -117,6 +126,9 @@ class App extends Component {
           <Route exact={true} path="/news/:post" render={(m) => this.renderNews(m)} key={9} />
           <Route exact={true} path="/support/:post" render={(m) => this.renderSupport(m)} key={10} />
           <Route exact={true} path="/support" render={(m) => this.renderSupport(m)} key={11} />
+          <Route exact={true} path="/contact" render={(m) => this.renderContact(m)} key={12} />
+          <Route exact={true} path="/contact/:message" render={(m) => this.renderContact(m)} key={19} />
+
           <div className="row pad-top blue-back-dark">
             <div className="col-md-6">
               <div className="top-right">
@@ -124,10 +136,11 @@ class App extends Component {
               </div>
             </div>
           </div>
-          <Footer />
+          <Footer configs={this.state.data.configs} />
         </div>
         { !this.state.loaded && <div style={{position: 'absolute', height: '100%', width: '100%', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: '#fff', zIndex: 9999}} /> }
-      </div>);
+      </div>
+    );
   }
 }
 
