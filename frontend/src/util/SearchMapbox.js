@@ -2,7 +2,7 @@ import xhr from 'xhr';
 
 
 const accessToken = 'pk.eyJ1IjoiY2hlbXNhcHAiLCJhIjoiY2pheWdzNjd6MTJnbDMzczczbG92ZG15ayJ9.sqO7Za5EYpuhj6REKyneFA';
-const endpoint = 'http://api.mapbox.com';
+const endpoint = 'https://api.mapbox.com';
 const source = 'mapbox.places';
 
 export default function search(query='', callback) {
