@@ -26,7 +26,7 @@ export default class ProductList extends Component {
         <div className="row" style={{paddingTop: '5px'}}>
           <div className="col-md-12">
             <div className="block-with-text" style={{maxHeight: '48px'}}>
-                <pre><span className="product-desc" style={{display:'inline-block', lineHeight:'12px'}}>
+                <pre  className="product-desc"><span className="product-desc" style={{display:'inline-block', lineHeight:'12px'}}>
                   { p.description }
                 </span></pre>
             </div>

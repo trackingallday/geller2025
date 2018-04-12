@@ -36,10 +36,9 @@ export default class Home extends Component {
                 <div className="hexagon white"></div>
               </div>
               <h1 className="header black-text">{home_row1_col2.title}</h1>
-              <p className="roman grey-text"><pre>
+              <pre  className="roman grey-text">
                 {home_row1_col2.content}
               </pre>
-              </p>
             </div>
             <div className="col-md-6">
               <div className="contain" style={{minHeight: '280px'}}>
@@ -55,9 +54,7 @@ export default class Home extends Component {
               <h1 className="header white-text">
                 { latest_news.title }
               </h1>
-              <p className="roman white-text">
-                  <pre>  { latest_news.content }</pre>
-              </p>
+                  <pre className="roman white-text">  { latest_news.content }</pre>
             </div>
             <div className="col-md-6">
                 <div className="contain" style={{minHeight: '280px'}}>
