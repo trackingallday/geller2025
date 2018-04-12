@@ -66,6 +66,17 @@ export function getCategories(callback) {
 
 }
 
+export function getSizes(callback) {
+
+  return getData('/sizes_list/', (response) => {
+    const items = response.data.map((c, i) => {
+      return Object.assign(c, c.user, { key: i });
+    });
+    callback(items);
+  });
+
+}
+
 export function getProducts(callback) {
 
   return getData('/list_products/',(response) => {
