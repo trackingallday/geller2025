@@ -376,7 +376,22 @@ img.footer-logo {
   z-index: 999;
 }
 
+
+img.main-product-img {
+  height: 45%;
+  width: 45%;
+}
+
+.pdf-links {
+  padding-left: 28px;
+}
+
 @media (min-width: 800px) {
+
+  .pdf-links {
+    padding-left: 4px;
+  }
+
   .hexagons {
 	  display: block;
     right:-50px;
@@ -402,6 +417,12 @@ img.footer-logo {
   h1.header {
     font-size: 28px;
     line-height: 35px;
+  }
+
+  img.main-product-img {
+    height: 65%;
+    width: 65%;
+    margin-top: 10px;
   }
 
 
@@ -490,6 +511,7 @@ img.footer-logo {
   font-size: 27px;
 }
 
+
 @media (min-width: 1200px) {
   h1.header {
     font-size: 34px;
@@ -507,6 +529,11 @@ img.footer-logo {
   }
   .main-message pre {
     font-size: 30px;
+  }
+
+  img.main-product-img {
+    height: 65%;
+    width: 65%;
   }
 
   .main-message {
