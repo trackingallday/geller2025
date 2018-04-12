@@ -67,6 +67,7 @@ class Product(MyBaseModel, models.Model):
     public = models.BooleanField(default=False)
     productCategory = models.ManyToManyField(ProductCategory, through=ProductCategory.products.through, blank=True, null=True, related_name='categories')
     application = models.CharField(max_length=500, blank=True, null=True)
+    sizes = models.ManyToManyField("Size", related_name="products", blank=True)
 
     def __str__(self):
         return "{} ".format(self.name)
@@ -144,6 +145,8 @@ class Size(MyBaseModel, models.Model):
     name = models.CharField(max_length=255)
     desc = models.CharField(max_length=255)
     amount = models.CharField(max_length=255)
+    image = models.FileField(upload_to='documents/', blank=True, null=True)
+    imageNo = models.FileField(upload_to='documents/', blank=True, null=True)
 
     def __str__(self):
         return self.name

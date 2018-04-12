@@ -279,6 +279,8 @@ def new_product(request):
     product = addSDSSheetToProduct(product, data.get('sdsSheet'))
     product.safetyWears = SafetyWear.objects.filter(pk__in=data.get('safetyWears'))
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
+    product.sizes = Size.objects.filter(pk__in=data.get('sizes'))
+
     if data.get('productCategory'):
         product.productCategory = ProductCategory.objects.filter(pk__in=data.get('productCategory'))
     product.updated_at = datetime.datetime.now()
@@ -314,6 +316,9 @@ def edit_product(request):
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
     if data.get('productCategory'):
         product.productCategory = ProductCategory.objects.filter(pk__in=data.get('productCategory'))
+    if data.get('sizes'):
+        product.sizes = Size.objects.filter(pk__in=data.get('sizes'))
+    print(data.get('sizes'))
     product.updated_at = datetime.datetime.now()
 
     if data.get('secondaryImageLink'):
@@ -412,8 +417,10 @@ def public_products(request):
         posts = PostSererializer(Post.objects.all(), many=True).data
         markets = MarketSerializer(MarketCategory.objects.all(), many=True).data
         configs = ConfigSerializer(Config.objects.all(), many=True).data
+        sizes = SizeSerializer(Size.objects.all(), many=True).data
         return JsonResponse(
-            {'products': products, 'categories': categories, 'posts': posts, 'markets': markets, 'configs': configs}, safe=False)
+            {'products': products, 'categories': categories, 'posts': posts,
+             'markets': markets, 'configs': configs, 'sizes': sizes}, safe=False)
     except Exception as a:
         print(a)
     pass
@@ -433,6 +440,16 @@ def markets_list(request):
 def categories_list(request):
     if request.user:
         data = CategorySerializer(ProductCategory.objects.all(), many=True).data
+        return JsonResponse(data, safe=False)
+
+    return JsonResponse({'error': 'evildoer'})
+
+
+@csrf_exempt
+@api_view(['GET'])
+def sizes_list(request):
+    if request.user:
+        data = SizeSerializer(Size.objects.all(), many=True).data
         return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'evildoer'})
