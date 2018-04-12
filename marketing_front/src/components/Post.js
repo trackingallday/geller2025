@@ -27,7 +27,7 @@ class Post extends Component {
           </div>
           <div className="row" style={{ marginTop: '40px', paddingBottom: '80px' }}>
             <div className="col-md-12">
-              <p style={{whiteSpace: 'pre-wrap'}}>{post.content}</p>
+              <p style={{whiteSpace: 'pre-wrap'}}><pre>{post.content}</pre></p>
             </div>
           </div>
         </div>
