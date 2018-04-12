@@ -36,6 +36,9 @@
 p {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
+pre {
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
 
 .roman {
   font-size: 15px;
@@ -378,7 +381,7 @@ img.footer-logo {
     line-height: 25px;
   }
 
-  .main-message p {
+  .main-message pre {
     font-size: 24px;
   }
 
@@ -475,7 +478,7 @@ img.footer-logo {
   min-height: 150px;
 }
 
-.main-message p {
+.main-message pre {
   color: #ffffff;
   font-weight: bold;
   font-size: 27px;
