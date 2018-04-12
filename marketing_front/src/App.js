@@ -42,6 +42,7 @@ class App extends Component {
       categories: [],
       markets: [],
       configs: {},
+      sizes: [],
     }
   }
 
@@ -74,8 +75,9 @@ class App extends Component {
   }
 
   renderProduct = (match) => {
+    console.log(this.state.data)
     const product = this.state.data.products.find(p => p.id == match.match.params.product_id);
-    return product ? <Product product={product} categories={this.state.data.categories} /> : this.renderProducts(match);
+    return product ? <Product product={product} categories={this.state.data.categories} sizes={this.state.data.sizes} /> : this.renderProducts(match);
   }
 
   renderAbout = (match) => {
