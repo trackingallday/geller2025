@@ -31,9 +31,9 @@ class Product extends Component {
     const p = this.props.product;
     const sizes = this.props.sizes.map(s => {
       if(p.sizes.find(ps => ps === s.id)) {
-        return (<img src={"http://0.0.0.0:8000" + s.image} style={{height: '52px',  width:'33px', padding: '3px'}}></img>);
+        return (<img src={URI + s.image} style={{height: '52px',  width:'33px', padding: '3px'}}></img>);
       } else {
-        return  (<img src={"http://0.0.0.0:8000" + s.imageNo} style={{height: '52px', width:'33px', padding: '3px'}}></img>);
+        return  (<img src={URI + s.imageNo} style={{height: '52px', width:'33px', padding: '3px'}}></img>);
       }
     })
     console.log(sizes);
