@@ -110,6 +110,10 @@ span.heading {
   line-height: 22px;
 }
 
+pre {
+    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
 span.product-name {
   font-size: 14px;
   font-weight: bold;
@@ -529,7 +533,7 @@ img.footer-logo {
 .bouncing {
   margin-top: 50px;
   border-radius: 50%;
-  margin-top: 40px; 
+  margin-top: 40px;
   width: 350px;
   height: 350px;
   animation: bounce 1s infinite alternate;
