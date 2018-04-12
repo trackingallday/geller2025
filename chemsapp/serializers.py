@@ -1,5 +1,6 @@
 from django.contrib.auth.models import User
-from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear, ProductCategory, Post, MarketCategory, Config, Contact, Size
+from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear, ProductCategory,\
+    Post, MarketCategory, Config, Contact, Size
 from rest_framework import serializers
 import pyqrcode
 import base64
@@ -73,6 +74,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
             'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet',
             'safetyWears', 'customers', 'editable',  'markets', 'properties', 'application', 'description', 'subCategory', 'productCategory',
+            'sizes',
         )
 
     def get_can_edit(self, obj):
@@ -91,6 +93,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
             'id', 'name', 'primaryImageLink', 'secondaryImageLink',
             'productCode', 'brand', 'infoSheet', 'productCategory',
             'description', 'markets', 'properties', 'application', 'subCategory',
+            'sizes',
 
         )
 
@@ -243,6 +246,5 @@ class SizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Size
         fields = (
-            'id', 'name', 'desc', 'amount',
-
+            'id', 'name', 'desc', 'amount', 'image', 'imageNo',
         )
