@@ -19,6 +19,7 @@ class ProductForm extends Component {
     markets: [],
     marketOptions: [],
     categoryOptions: [],
+    sizeOptions: [],
   }
 
   getInitialValue = (key) => {
@@ -29,7 +30,7 @@ class ProductForm extends Component {
   }
 
   componentDidMount() {
-    const { products, safetyWears, markets, categories } = this.props;
+    const { products, safetyWears, markets, categories, sizes } = this.props;
     this.setState({
       safetyWears,
       products,
@@ -41,6 +42,9 @@ class ProductForm extends Component {
         <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
       )),
       categoryOptions: categories.map((sw, i) => (
+        <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
+      )),
+      sizeOptions: sizes.map((sw, i) => (
         <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
       )),
     });
@@ -203,6 +207,18 @@ class ProductForm extends Component {
                { this.state.categoryOptions }
              </Select>)}
            </FormItem>
+           <FormItem {...formItemLayout} label="Sizes">
+             {getFieldDecorator('sizes', { initialValue: this.getInitialValue('sizes'),
+               rules: [{required: req, message: 'Required!'}]})(
+               <Select
+                style={{ width: '100%' }}
+                mode="multiple"
+                placeholder="Please select"
+                onChange={() => {}}
+              >
+                { this.state.sizeOptions }
+              </Select>)}
+            </FormItem>
          <FormItem {...formItemLayout} label="SDSSheet .pdf">
            <div className="dropbox">
              {getFieldDecorator('sdsSheet', { valuePropName: 'sDSSheet',

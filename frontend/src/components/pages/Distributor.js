@@ -6,7 +6,7 @@ import EditProductForm from '../forms/EditProductForm';
 import RecordAdmin from '../common/RecordAdmin';
 import ProductsTable from '../datatables/ProductsTable';
 import CustomersTable from '../datatables/CustomersTable';
-import { getProducts, getCustomers, getSafetyWears, getCategories } from '../../util/DjangoApi';
+import { getProducts, getCustomers, getSafetyWears, getCategories, getSizes, getMarkets } from '../../util/DjangoApi';
 import { Route, NavLink } from 'react-router-dom';
 import { Menu, Row, Col, Icon, Card, Button } from 'antd';
 import BasePage from './BasePage';
@@ -23,6 +23,7 @@ class DistributorPage extends BasePage {
     distributors: [],
     markets: [],
     categories: [],
+    sizes: [],
   }
 
   renderMenu() {
@@ -83,6 +84,7 @@ class DistributorPage extends BasePage {
         customers={this.state.customers}
         markets={this.state.markets}
         categories={this.state.categories}
+        sizes={this.state.sizes}
         records={this.state.products}
         safetyWears={this.state.safetyWears}
         recordType="Product"
@@ -122,6 +124,8 @@ class DistributorPage extends BasePage {
       this.getRecordsData(getCustomers, 'customers'),
       this.getRecordsData(getProducts, 'products'),
       this.getRecordsData(getCategories, 'categories'),
+      this.getRecordsData(getMarkets, 'markets'),
+      this.getRecordsData(getSizes, 'sizes'),
     ]).then(datas => {
       this.stopLoading();
     });
