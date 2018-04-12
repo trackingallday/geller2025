@@ -70,7 +70,7 @@ class Product extends Component {
                 <div className="row">
                   <div className="col-md-10" align="center">
                     <div className="contain" style={{margin: 'auto'}}>
-                      <img src={p.primaryImageLink}></img>
+                      <img className="main-product-img" src={p.primaryImageLink}></img>
                     </div>
                   </div>
                 </div>
@@ -79,25 +79,29 @@ class Product extends Component {
                     <span className="nav-link bold" style={{fontSize: '15px'}}>Available Sizes (Litres)</span>
                   </div>
                 </div>
-                <div className="row" style={{height: '50px'}}>
-                  <div className="col-md-6">
+                <div className="row" style={{minHeight: '50px'}}>
+                  <div className="col-md-6 col-xs-12 col-sm-12">
                     { sizes }
                   </div>
-                  <div className="col-md-3" style={{padding: '5px 0px 0px 0px'}}>
-                    <a href={URI+p.infoSheet} target="_blank" className={"nav-link roman"}>
-                      <div className="roman grey-text">
-                        <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}} />
-                        <span style={{position: 'absolute', top: '15px', left: '36px', fontSize: '12px'}}>Info (download)</span>
+                  <div className="col-md-6 col-xs-12 col-sm-12 pdf-links">
+                    <div className="row justify-content-center">
+                      <div className="col-lg-6  col-md-auto" style={{padding: '0px 0px 0px 0px'}}>
+                        <a href={URI+p.infoSheet} target="_blank" className={"nav-link roman"}>
+                          <div className="roman grey-text">
+                            <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}} />
+                            <span style={{position: 'absolute', top: '15px', left: '36px', fontSize: '12px'}}>Info (download)</span>
+                          </div>
+                        </a>
                       </div>
-                    </a>
-                  </div>
-                  <div className="col-md-3" style={{padding: '5px 0px 0px 0px'}}>
-                    <a href={'/contact/' + p.name } className={"nav-link roman"}>
-                      <div className="roman grey-text" style={{paddingLeft: '1px'}}>
-                        <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}} />
-                        <span style={{position: 'absolute', top: '15px', left: '36px', fontSize: '12px'}}>SDS (enquire)</span>
+                      <div className="col-lg-6 col-md-auto" style={{padding: '0px 0px 0px 0px'}}>
+                        <a href={'/contact/' + p.name } className={"nav-link roman"}>
+                          <div className="roman grey-text" style={{paddingLeft: '1px'}}>
+                            <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}} />
+                            <span style={{position: 'absolute', top: '15px', left: '36px', fontSize: '12px'}}>SDS (enquire)</span>
+                          </div>
+                        </a>
                       </div>
-                    </a>
+                    </div>
                   </div>
                 </div>
               </div>
