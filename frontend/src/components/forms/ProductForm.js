@@ -56,10 +56,10 @@ class ProductForm extends Component {
 
     const primaryImage = await uploader.upload(imageFiles[0]);
     const secondaryImage = await uploader.upload(imageFiles[1]);
-    debugger;
+
     const sdsSheetB64 = await base64File(values.sdsSheet.originFileObj);
     const infoSheetB64 = await base64File(values.infoSheet.originFileObj);
-    debugger;
+
     const newProduct = Object.assign({}, values, {
       primaryImageLink: primaryImage.url,
       secondaryImageLink: secondaryImage.url,

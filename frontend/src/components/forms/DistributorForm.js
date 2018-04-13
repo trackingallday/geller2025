@@ -52,7 +52,7 @@ class DistributorForm extends CustomerForm {
   onImageRemove = (img) => {
     const imageFiles = this.state.imageFiles.filter(
       f => f.uid !== img.originFileObj.uid);
-    debugger;
+
     this.setState({ imageFiles });
   }
 
