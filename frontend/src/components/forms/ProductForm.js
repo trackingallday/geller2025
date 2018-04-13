@@ -56,10 +56,10 @@ class ProductForm extends Component {
 
     const primaryImage = await uploader.upload(imageFiles[0]);
     const secondaryImage = await uploader.upload(imageFiles[1]);
-
-    const sdsSheetB64 = await base64File(values.sdsSheet.file.originFileObj);
-    const infoSheetB64 = await base64File(values.infoSheet.file.originFileObj);
-
+    debugger;
+    const sdsSheetB64 = await base64File(values.sdsSheet.originFileObj);
+    const infoSheetB64 = await base64File(values.infoSheet.originFileObj);
+    debugger;
     const newProduct = Object.assign({}, values, {
       primaryImageLink: primaryImage.url,
       secondaryImageLink: secondaryImage.url,
@@ -103,11 +103,14 @@ class ProductForm extends Component {
     );
   }
 
-
+  normFile = (e) => {
+    return e.file;
+  }
 
   render() {
-    console.log(this.props.recordToEdit.sdsSheet);
-    console.log(this.props.recordToEdit.infoSheet);
+    if(!this.props.recordToEdit) {
+      return <div />
+    }
     if(typeof this.props.recordToEdit.infoSheet === 'object' ) {
       return <div />
     }

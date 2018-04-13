@@ -20,7 +20,7 @@ export default class RecordAdmin extends Component {
       recordsData: [],
       searchText: '',
       filtered: false,
-      recordToEdit: null,
+      recordToEdit: {},
       showNew: null,
       showEdit: null,
     };
@@ -92,6 +92,7 @@ export default class RecordAdmin extends Component {
       categories,
       markets,
       sizes,
+      recordToEdit,
     };
 
     const editFormProps = {

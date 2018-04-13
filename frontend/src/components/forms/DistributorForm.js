@@ -43,7 +43,10 @@ class DistributorForm extends CustomerForm {
       return newDistributor;
     }
     return values;
+  }
 
+  normFile = (e) => {
+    return e.file;
   }
 
   onImageRemove = (img) => {

@@ -31,13 +31,13 @@ class EditProductForm extends ProductForm {
       secondaryImageLink,
     });
 
-    if(values.sdsSheet && values.sdsSheet.file.originFileObj) {
-      sdsSheet = await base64File(values.sdsSheet.file.originFileObj);
+    if(values.sdsSheet && values.sdsSheet.originFileObj) {
+      sdsSheet = await base64File(values.sdsSheet.originFileObj);
       newProduct.sdsSheet = sdsSheet;
     }
 
-    if(values.infoSheet && values.infoSheet.file.originFileObj) {
-      infoSheet = await base64File(values.infoSheet.file.originFileObj);
+    if(values.infoSheet && values.infoSheet.originFileObj) {
+      infoSheet = await base64File(values.infoSheet.originFileObj);
       newProduct.infoSheet = infoSheet;
     }
 
