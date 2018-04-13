@@ -3,7 +3,7 @@ import request from 'superagent';
 
 const config = {
  cloud_name:"chemical-data-app",
- upload_preset: "dgyx0k9k",
+ upload_preset: "normal",
 };
 
 
