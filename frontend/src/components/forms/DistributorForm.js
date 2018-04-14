@@ -34,10 +34,8 @@ class DistributorForm extends CustomerForm {
     const { imageFiles } = this.state;
 
     if(imageFiles[0]) {
-      const primaryImage = await uploader.upload(imageFiles[0]);
-
       let newDistributor = Object.assign({}, values, {
-        primaryImageLink: primaryImage.url,
+        primaryImageLink: imageFiles[0],
       });
 
       return newDistributor;
@@ -46,7 +44,7 @@ class DistributorForm extends CustomerForm {
   }
 
   normFile = (e) => {
-    return e.file;
+    return [ ...e.target.files ]
   }
 
   onImageRemove = (img) => {
@@ -76,7 +74,7 @@ class DistributorForm extends CustomerForm {
 
   renderCommonFormFields() {
     const { getFieldDecorator } = this.props.form;
-    const uploadsRequired = !this.props.recordToEdit;
+    const uploadsRequired = false;
 
     return [
       (<FormItem {...formItemLayout} label="Contact First Name" key={1}>
@@ -130,7 +128,7 @@ class DistributorForm extends CustomerForm {
       (<FormItem key={7} {...formItemLayout} extra="Upload Distributor Logo" label="Images .png .jpg">
           <div className="dropbox">
             {getFieldDecorator('primaryImageLink', {
-              getValueFromEvent: this.normFile, rules: [{required: uploadsRequired, message: '1 Images Required!'}],
+              getValueFromEvent: this.normFile, rules: [],
             })(<div>{ this.renderImageUpload() }</div>)}
           </div>
       </FormItem>),
