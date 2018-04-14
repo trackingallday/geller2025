@@ -18,7 +18,7 @@ from django.db.models import Q
 from django.core import serializers
 import json
 from django.core.mail import send_mail
-
+import time
 
 
 def getFileFromBase64(data, filename):
@@ -45,6 +45,12 @@ def addSDSSheetToProduct(product, data):
     sheet = getFileFromBase64(data, name)
     product.sdsSheet = sheet
     return product
+
+def createImage(img_data):
+    if not img_data:
+	return None
+    name = str(time.time())
+    return getFileFromBase64(img_data, name)
 
 
 def create_user(data):
@@ -184,8 +190,10 @@ def new_distributor(request):
     try:
         user = create_user(data)
     except Exception as e:
+        print(e)
         return JsonResponse({'error': str(e)})
 
+    print(data.get('primaryImageLink'))
     distributor = Distributor.objects.create(
         user=user,
         phoneNumber=data.get('phoneNumber'),
