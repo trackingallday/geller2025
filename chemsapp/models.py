@@ -50,8 +50,8 @@ class ProductCategory(MyBaseModel, models.Model):
 
 class Product(MyBaseModel, models.Model):
     name = models.CharField(max_length=255, unique=True)
-    primaryImageLink = models.CharField(max_length=500)
-    secondaryImageLink = models.CharField(max_length=500)
+    secondaryImageLink = models.FileField(upload_to='documents/', blank=True, null=True)
+    primaryImageLink  = models.FileField(upload_to='documents/', blank=True, null=True)
     usageType = models.CharField(max_length=455)
     amountDesc = models.CharField(max_length=455)
     instructions = models.TextField(max_length=2000)
@@ -105,7 +105,7 @@ class Customer(Profile):
 class Distributor(Profile):
     customers = models.ManyToManyField(Customer, related_name="distributors", blank=True, null=True)
     geocodingDetail = models.TextField(max_length=1500, blank=True, null=True)
-    primaryImageLink = models.CharField(max_length=500, blank=True, null=True)
+    primaryImageLink  = models.FileField(upload_to='documents/', blank=True, null=True)
 
 
 class ProductAdd(MyBaseModel, models.Model):
