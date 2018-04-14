@@ -133,7 +133,7 @@ export function getUserDetails(onSuccess, onFail=fail) {
 }
 
 export function getProductsMap(onSuccess, onFail=fail) {
-  return getData('/products_map/', (res) => onSuccess(res.data), (err) => onFail(err));
+  return getData('/list_products_map/', (res) => onSuccess(res.data), (err) => onFail(err));
 }
 
 export function getCustomersTable(onSuccess) {
