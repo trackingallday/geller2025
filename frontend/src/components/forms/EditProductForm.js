@@ -22,8 +22,8 @@ class EditProductForm extends ProductForm {
     if(imageFiles.length) {
       const primaryImage = await uploader.upload(imageFiles[0]);
       const secondaryImage = await uploader.upload(imageFiles[1]);
-      primaryImageLink = primaryImage.url;
-      secondaryImageLink = secondaryImage.url;
+      primaryImageLink = imageFiles[0] && primaryImage;
+      secondaryImageLink = imageFiles[1] && secondaryImage;
     }
 
     let newProduct = Object.assign(recordToEdit, values, {

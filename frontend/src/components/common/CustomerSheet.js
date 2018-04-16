@@ -3,7 +3,7 @@ import { Row, Col } from 'antd';
 import { getCustomerSheet, postCustomerSheet } from '../../util/DjangoApi';
 import moment from 'moment';
 import styles from '../../styles';
-
+import URI from '../../constants/serverUrl';
 
  export default class CustomerSheet extends Component {
 
@@ -81,11 +81,11 @@ import styles from '../../styles';
           <Col span={3} align="middle">
             <img crossOrigin='anonymous' alt=""
               style={{ width: '100%' }}
-              src={primaryImageLink}
+              src={URI + primaryImageLink}
             />
           </Col>
           <Col span={4} align="middle">
-            <img crossOrigin='anonymous' alt="" style={{ width: '100%', borderLeft: '4px solid #fff', borderRight: '5px solid #fff'}} src={secondaryImageLink} />
+            <img crossOrigin='anonymous' alt="" style={{ width: '100%', borderLeft: '4px solid #fff', borderRight: '5px solid #fff'}} src={URI + secondaryImageLink} />
           </Col>
           <Col span={13}>
             <Row style={titleRowStyle}>
@@ -142,7 +142,7 @@ import styles from '../../styles';
         </Col>
         <Col span="9">
           <Row style={{paddingBottom: '10px'}}>
-            <img alt="" crossOrigin='anonymous' style={{ width: '100%' }} src={distributor.primaryImageLink} />
+            <img alt="" crossOrigin='anonymous' style={{ width: '100%' }} src={URI + distributor.primaryImageLink} />
           </Row>
         </Col>
       </Row>

@@ -47,7 +47,7 @@ const expandedRowRender = (record) => {
             <Card
               hoverable
               style={{ width: 180 }}
-              cover={<img alt="" src={record.primaryImageLink} />}
+              cover={<img alt="" src={url + record.primaryImageLink} />}
             >
               <Meta
                 title={record.name}
@@ -57,7 +57,7 @@ const expandedRowRender = (record) => {
             <Card
               hoverable
               style={{ width: 180 }}
-              cover={<img alt="" src={record.secondaryImageLink} />}
+              cover={<img alt="" src={url + record.secondaryImageLink} />}
             >
             </Card>
         </Col>

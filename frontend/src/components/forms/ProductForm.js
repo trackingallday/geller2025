@@ -10,6 +10,16 @@ const { TextArea } = Input;
 const FormItem = Form.Item;
 const Option = Select.Option;
 
+async function readFiles(file) {
+  return new Promise(resolve => {
+    var FR= new FileReader();
+    FR.addEventListener("load", function(e) {
+      resolve(e.target.result);
+    });
+    FR.readAsDataURL(file);
+  });
+}
+
 class ProductForm extends Component {
 
   state = {
@@ -53,16 +63,18 @@ class ProductForm extends Component {
   prepareValues = async (values) => {
 
     const { imageFiles } = this.state;
+    let primaryImage = null;
+    let secondaryImage = null;
 
-    const primaryImage = await uploader.upload(imageFiles[0]);
-    const secondaryImage = await uploader.upload(imageFiles[1]);
+    if(imageFiles[0]) primaryImage = await readFiles(imageFiles[0]);
+    if(imageFiles[1]) secondaryImage = await readFiles(imageFiles[1]);
 
     const sdsSheetB64 = await base64File(values.sdsSheet.originFileObj);
     const infoSheetB64 = await base64File(values.infoSheet.originFileObj);
 
     const newProduct = Object.assign({}, values, {
-      primaryImageLink: primaryImage.url,
-      secondaryImageLink: secondaryImage.url,
+      primaryImageLink: primaryImage,
+      secondaryImageLink: secondaryImage,
       sdsSheet: sdsSheetB64,
       infoSheet: infoSheetB64,
     });

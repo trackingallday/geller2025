@@ -11,6 +11,15 @@ const FormItem = Form.Item;
 const Option = Select.Option;
 const uploader = new Cloudinary();
 
+async function readFile(file) {
+  return new Promise(resolve => {
+    var FR= new FileReader();
+    FR.addEventListener("load", function(e) {
+      resolve(e.target.result);
+    });
+    FR.readAsDataURL(file);
+  });
+}
 
 class DistributorForm extends CustomerForm {
 
@@ -34,10 +43,10 @@ class DistributorForm extends CustomerForm {
     const { imageFiles } = this.state;
 
     if(imageFiles[0]) {
+      const base64Img = await readFile(imageFiles[0]);
       let newDistributor = Object.assign({}, values, {
-        primaryImageLink: imageFiles[0],
+        primaryImageLink: base64Img,
       });
-
       return newDistributor;
     }
     return values;
