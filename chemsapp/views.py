@@ -48,7 +48,7 @@ def addSDSSheetToProduct(product, data):
 
 def createImage(img_data):
     if not img_data:
-	return None
+	    return None
     name = str(time.time())
     return getFileFromBase64(img_data, name)
 
@@ -202,7 +202,7 @@ def new_distributor(request):
         profileType=data.get('customer'),
         geocodingDetail=data.get('geocodingDetail'),
         address=data.get('address'),
-        primaryImageLink=data.get('primaryImageLink'),
+        primaryImageLink=createImage(data.get('primaryImageLink')),
     )
 
     user.save()
@@ -243,7 +243,7 @@ def edit_distributor(request):
         distributor.geocodingDetail = data.get('geocodingDetail')
 
     if data.get('primaryImageLink'):
-        distributor.primaryImageLink = data.get('primaryImageLink')
+        distributor.primaryImageLink = createImage(data.get('primaryImageLink'))
 
     distributor.save()
 
@@ -268,8 +268,6 @@ def new_product(request):
     data = request.data['data']
     product = Product.objects.create(
         name=data.get('name'),
-        primaryImageLink=data.get('primaryImageLink'),
-        secondaryImageLink=data.get('secondaryImageLink'),
         usageType=data.get('usageType'),
         amountDesc=data.get('amountDesc'),
         instructions=data.get('instructions'),
@@ -282,6 +280,8 @@ def new_product(request):
         uploadedBy=request.user,
     )
     product.save()
+    product.primaryImageLink=createImage(data.get('primaryImageLink'))
+    product.secondaryImageLink=createImage(data.get('secondaryImageLink'))
 
     product = addInfoSheetToProduct(product, data.get('infoSheet'))
     product = addSDSSheetToProduct(product, data.get('sdsSheet'))
@@ -330,10 +330,10 @@ def edit_product(request):
     product.updated_at = datetime.datetime.now()
 
     if data.get('secondaryImageLink'):
-        product.secondaryImageLink = data.get('secondaryImageLink')
+        product.secondaryImageLink=createImage(data.get('secondaryImageLink'))
 
     if data.get('primaryImageLink'):
-        product.primaryImageLink = data.get('primaryImageLink')
+        product.primaryImageLink=createImage(data.get('primaryImageLink'))
 
     if data.get('sdsSheet'):
         product = addSDSSheetToProduct(product, data.get('sdsSheet'))
