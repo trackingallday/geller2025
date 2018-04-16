@@ -1,5 +1,8 @@
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
+import serverUrl from '../constants/serverUrl';
+
+
 export default class ProductList extends Component {
 
   renderProduct = (p, ind) => {
@@ -8,7 +11,7 @@ export default class ProductList extends Component {
         <div className="row" style={{padding: '0px 20px 0px 0px'}}>
           <NavLink to={"/product/" + p.id}>
             <div className="col-md-12 contain" style={{height: '220px'}}>
-              <img className="brighten" src={p.primaryImageLink} />
+              <img className="brighten" src={serverUrl + p.primaryImageLink} />
             </div>
           </NavLink>
         </div>

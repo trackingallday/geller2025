@@ -70,7 +70,7 @@ class Product extends Component {
                 <div className="row">
                   <div className="col-md-10" align="center">
                     <div className="contain" style={{margin: 'auto'}}>
-                      <img className="main-product-img" src={p.primaryImageLink}></img>
+                      <img className="main-product-img" src={URI + p.primaryImageLink}></img>
                     </div>
                   </div>
                 </div>
