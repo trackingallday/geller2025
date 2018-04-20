@@ -70,7 +70,7 @@ class Products extends Component {
           <div className="col-md-9">
             <div className="row" style={{height: '150px', paddingTop: '35px'}}>
               <div className="col-md-1">
-
+                { img }
               </div>
               <div className="col-md-3">
                 <span  style={{paddingLeft: '0px'}} className="heading">{ name || 'All Products' }</span>
