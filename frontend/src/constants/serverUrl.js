@@ -1,6 +1,6 @@
 const dev = false;
 const DEV_URL = 'http://0.0.0.0:8000';
-const PRODUCTION_URL = 'https://app.integraindustries.co.nz';
+const PRODUCTION_URL = 'https:/geller.co.nz';
 let url = PRODUCTION_URL;
 
 if(dev) {
