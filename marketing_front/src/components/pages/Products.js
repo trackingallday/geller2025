@@ -47,6 +47,10 @@ class Products extends Component {
     const categoryDesc = category ? category.description : '';
     let name = market ? market.name : '';
     name = category ? category.name : name;
+    let img =   <img src={require('../../assets/category-logo.png')} style={{width: '45px', height: '45px'}} />;
+    if(category) {
+      img = <img src={category.image} style={{width: '45px', height: '45px'}} />
+    }
     return (
       <div>
         <div className="row" style={{ height: '80px'}}>
@@ -66,7 +70,7 @@ class Products extends Component {
           <div className="col-md-9">
             <div className="row" style={{height: '150px', paddingTop: '35px'}}>
               <div className="col-md-1">
-                <img src={require('../../assets/category-logo.png')} style={{width: '45px', height: '45px'}} />
+
               </div>
               <div className="col-md-3">
                 <span  style={{paddingLeft: '0px'}} className="heading">{ name || 'All Products' }</span>
