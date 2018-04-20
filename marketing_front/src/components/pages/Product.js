@@ -12,7 +12,7 @@ class Product extends Component {
     this.props.router.push('/our_products/' + c.id)
   }
 
-  renderProductDetail(text, className="product-detail", heading=null) {
+  renderProductDetail(text, className="product-detail", heading=null, size=null) {
     return (
       <div className="col-md-12" style={{marginTop: heading ? '25px' : '5px'}}>
         { heading &&
@@ -59,7 +59,7 @@ class Product extends Component {
           <div className="col-md-8" style={{padding: '10px 5px 10px 5px'}}>
             <div className="row">
               <div className="col-md-6">
-                { this.renderProductDetail(p.name + " - " + p.brand, "product-name")}
+                { this.renderProductDetail(p.name + " - " + p.brand, "product-name-detail", null, "20px")}
                 { this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")}
                 { this.renderProductDetail(p.description)}
                 { this.renderProductDetail(p.application, "product-detail", "Applications")}

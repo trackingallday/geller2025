@@ -130,6 +130,13 @@ pre {
   font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+.product-name-detail {
+  font-size: 18px;
+  font-weight: bold;
+  color: #000;
+  font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+}
+
 .product-detail {
   font-size: 13px;
   font-weight: 400;
