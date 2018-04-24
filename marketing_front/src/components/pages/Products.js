@@ -33,7 +33,7 @@ class Products extends Component {
     let products = this.props.products;
     let subCategories = [];
     if(category) {
-      products = this.props.products.filter(p => p.productCategory == category.id);
+      products = this.props.products.filter(p => p.productCategory.find(e => e == category.id));
       subCategories = [...new Set(products.map(p => p.subCategory))];
     } else if (this.props.market) {
       market = markets.find(c => c.id == this.props.market);
@@ -41,7 +41,7 @@ class Products extends Component {
     }
 
     if(subCategory_id) {
-      products = products.filter(p => p.subCategory.replace(/\s+/g, '') === subCategory_id);
+      products = products.filter(p => p.subCategory && p.subCategory.replace(/\s+/g, '') === subCategory_id);
     }
 
     const categoryDesc = category ? category.description : '';
