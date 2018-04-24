@@ -15,7 +15,7 @@ export default class CategoryList extends Component {
   }
 
   renderSubCategory = (sc) => {
-    const style = sc.replace(/\s+/g, '') === this.props.subCategory ? {color: '#0275d8'} : {};
+    const style = sc && sc.replace(/\s+/g, '') === this.props.subCategory ? {color: '#0275d8'} : {};
 
     return (
       <li key={sc} className="list-group-item roman-med brighten" onClick={() => this.onSubCategoryClick(sc)}>
