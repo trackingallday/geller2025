@@ -55,7 +55,7 @@ class ProductForm extends Component {
         <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
       )),
       subCategoryOptions: categories.map((sw, i) => (
-        <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
+        <Option key={i+"34"} value={sw.id}>{ sw.name }</Option>
       )),
       sizeOptions: sizes.map((sw, i) => (
         <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
@@ -181,11 +181,6 @@ class ProductForm extends Component {
         </FormItem>
         <FormItem {...formItemLayout} label="Description">
           {getFieldDecorator('description', { initialValue: this.getInitialValue('description'),
-          rules: [{required: req, message: 'Required!'}]})(
-            <TextArea />)}
-        </FormItem>
-        <FormItem {...formItemLayout} label="Sub Category">
-          {getFieldDecorator('subCategory', { initialValue: this.getInitialValue('subCategory'),
           rules: [{required: req, message: 'Required!'}]})(
             <TextArea />)}
         </FormItem>
