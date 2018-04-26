@@ -47,7 +47,7 @@ def addSDSSheetToProduct(product, data):
     return product
 
 def createImage(img_data):
-    if not img_data:
+    if not img_data or not ';base64,' in img_data:
 	    return None
     name = str(time.time())
     return getFileFromBase64(img_data, name)
