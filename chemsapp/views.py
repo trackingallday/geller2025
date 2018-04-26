@@ -242,7 +242,7 @@ def edit_distributor(request):
     if data.get('geocodingDetail'):
         distributor.geocodingDetail = data.get('geocodingDetail')
 
-    if data.get('primaryImageLink'):
+    if data.get('primaryImageLink') and not distributor.primaryImageLink == data.get('primaryImageLink'):
         distributor.primaryImageLink = createImage(data.get('primaryImageLink'))
 
     distributor.save()
@@ -334,11 +334,9 @@ def edit_product(request):
     print(data.get('sizes'))
     product.updated_at = datetime.datetime.now()
 
-    if data.get('secondaryImageLink'):
-        product.secondaryImageLink=createImage(data.get('secondaryImageLink'))
-
-    if data.get('primaryImageLink'):
-        product.primaryImageLink=createImage(data.get('primaryImageLink'))
+    for key in ['primaryImageLink', 'secondaryImageLink']
+        if data.get(key) and not product.secondaryImageLink == data.get(key):
+            setattr(product[key],key,createImage(data.get(key))
 
     if data.get('sdsSheet'):
         product = addSDSSheetToProduct(product, data.get('sdsSheet'))
