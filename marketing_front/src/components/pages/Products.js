@@ -34,14 +34,21 @@ class Products extends Component {
     let subCategories = [];
     if(category) {
       products = this.props.products.filter(p => p.productCategory.find(e => e == category.id));
-      subCategories = [...new Set(products.map(p => p.subCategory))];
+      products.forEach(p => p.subCategory.forEach(id => {
+        subCategories.push(id);
+      }));
+      let subCategoriesSet = new Set(subCategories);
+      subCategories = [...subCategories];
+      const ids = [].concat.apply([ ...subCategoriesSet]);
+      console.log(ids);
+      subCategories = categories.filter(sc => ids.indexOf(sc.id) !== -1);
     } else if (this.props.market) {
       market = markets.find(c => c.id == this.props.market);
       products = market ? this.props.products.filter(p => !!p.markets.find(m => m == this.props.market)) : this.props.products;
     }
 
     if(subCategory_id) {
-      products = products.filter(p => p.subCategory && p.subCategory.replace(/\s+/g, '') === subCategory_id);
+      products = products.filter(p => p.subCategory.indexOf(subCategory_id) !== -1);
     }
 
     const categoryDesc = category ? category.description : '';

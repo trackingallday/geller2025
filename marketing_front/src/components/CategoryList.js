@@ -11,15 +11,17 @@ export default class CategoryList extends Component {
   }
 
   onSubCategoryClick = (c) => {
-    this.props.history.push('/our_products/' + this.props.category + '/' + c.replace(/\s+/g, ''));
+    this.props.history.push('/our_products/' + this.props.category + '/' + c.name.replace(/\s+/g, ''));
   }
 
   renderSubCategory = (sc) => {
-    const style = sc && sc.replace(/\s+/g, '') === this.props.subCategory ? {color: '#0275d8'} : {};
-
+    if(!sc.isSubCategory){
+      return null;
+    }
+    const style = sc.name && sc.name.replace(/\s+/g, '') === this.props.subCategory ? {color: '#0275d8'} : {};
     return (
-      <li key={sc} className="list-group-item roman-med brighten" onClick={() => this.onSubCategoryClick(sc)}>
-        <span className={"blue-text-light "} style={style} >{ sc }</span>
+      <li key={sc.name+"subCategory"} className="list-group-item roman-med brighten" onClick={() => this.onSubCategoryClick(sc)}>
+        <span className={"blue-text-light "} style={style} >{ sc.name }</span>
       </li>
     );
   }
@@ -56,7 +58,7 @@ export default class CategoryList extends Component {
         <li className="list-group-item smaller" style={{paddingBottom: '19px'}} key={'a'} onClick={() => this.onCategoryClick({id:'all'})}>
           <span className="roman grey-text-light darken roman-small" style={{fontSize: '14px'}}>All Products</span>
         </li>
-        { this.props.categories.map(this.renderCategory) }
+        { this.props.categories.filter(c => !c.isSubCategory).map(this.renderCategory) }
       </ul>
     );
   }
