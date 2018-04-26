@@ -52,10 +52,10 @@ class ProductForm extends Component {
       marketOptions: markets.map((sw, i) => (
         <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
       )),
-      categoryOptions: categories.map((sw, i) => (
+      categoryOptions: categories.filter(cs => !cs.isSubCategory).map((sw, i) => (
         <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
       )),
-      subCategoryOptions: categories.map((sw, i) => (
+      subCategoryOptions: categories.filter(cs => !!cs.isSubCategory).map((sw, i) => (
         <Option key={i+"34"} value={sw.id}>{ sw.name }</Option>
       )),
       sizeOptions: sizes.map((sw, i) => (
