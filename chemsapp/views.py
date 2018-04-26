@@ -289,8 +289,10 @@ def new_product(request):
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
     product.sizes = Size.objects.filter(pk__in=data.get('sizes'))
 
-    if data.get('productCategory'):
-        product.productCategory = ProductCategory.objects.filter(pk__in=data.get('productCategory'))
+    for key in ['productCategory', 'subCategory']:
+        if data.get(key):
+            product.productCategory = ProductCategory.objects.filter(pk__in=data.get(key))
+
     product.updated_at = datetime.datetime.now()
     product.save()
 
@@ -322,8 +324,11 @@ def edit_product(request):
     product.description = data.get('description')
     product.subCategory = data.get('subCategory')
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
-    if data.get('productCategory'):
-        product.productCategory = ProductCategory.objects.filter(pk__in=data.get('productCategory'))
+
+    for key in ['productCategory', 'subCategory']:
+        if data.get(key):
+            product.productCategory = ProductCategory.objects.filter(pk__in=data.get(key))
+
     if data.get('sizes'):
         product.sizes = Size.objects.filter(pk__in=data.get('sizes'))
     print(data.get('sizes'))
