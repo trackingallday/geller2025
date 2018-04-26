@@ -19,7 +19,7 @@
 
  @media(min-width: 840px) {
    .top-nav {
-     margin-left: 40px;
+     margin-left: 20px;
    }
  }
 
@@ -223,6 +223,7 @@ pre {
 
 body {
   background-color: rgb(230,230,230) !important;
+  letter-spacing: 1px;
 }
 
 .grey-text, .grey-text-dark {
@@ -374,6 +375,10 @@ img.footer-logo {
 	backround-color: white;
 }
 
+.news-home {
+  margin-left: -18px;
+}
+
 .hexagons {
 	height: 160px;
 	z-index: 99;
@@ -382,7 +387,6 @@ img.footer-logo {
   display: none;
   z-index: 999;
 }
-
 
 img.main-product-img {
   height: 45%;
@@ -535,7 +539,7 @@ img.main-product-img {
     right: 0px;
   }
   .main-message pre {
-    font-size: 30px;
+    font-size: 18pt;
   }
 
   img.main-product-img {
@@ -546,7 +550,7 @@ img.main-product-img {
   .main-message {
     margin-top: 0px;
     margin-left: 20px;
-    padding-top: 100px;
+    padding-top: 140px;
     min-height: 384px;
   }
 
