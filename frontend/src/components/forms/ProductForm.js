@@ -54,6 +54,9 @@ class ProductForm extends Component {
       categoryOptions: categories.map((sw, i) => (
         <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
       )),
+      subCategoryOptions: categories.map((sw, i) => (
+        <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
+      )),
       sizeOptions: sizes.map((sw, i) => (
         <Option key={i+"b"} value={sw.id}>{ sw.name }</Option>
       )),
@@ -231,7 +234,7 @@ class ProductForm extends Component {
                   placeholder="Please select"
                   onChange={() => {}}
                 >
-                  { this.state.categoryOptions }}
+                  { this.state.subCategoryOptions }}
                 </Select>)}
            </FormItem>
            <FormItem {...formItemLayout} label="Sizes">
