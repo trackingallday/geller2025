@@ -22,9 +22,7 @@ export default class Home extends Component {
         <div className="row">
           <div className="col-md-6 col-lg-6 col-xs-12">
             <div className="main-message">
-              <p>
-                <pre>{ mainBanner && mainBanner.content}</pre>
-              </p>
+              <pre>{ mainBanner && mainBanner.content}</pre>
             </div>
           </div>
           <div className="col-md-7">
@@ -35,10 +33,12 @@ export default class Home extends Component {
               <div className="top-right">
                 <div className="hexagon white"></div>
               </div>
-              <h1 className="header black-text">{home_row1_col2.title}</h1>
-              <pre  className="roman grey-text">
-                {home_row1_col2.content}
-              </pre>
+              <h1 className="header black-text news-home">{home_row1_col2.title}</h1>
+              <div className="news-home">
+                <pre  className="roman grey-text">
+                  {home_row1_col2.content}
+                </pre>
+              </div>
             </div>
             <div className="col-md-6">
               <div className="contain" style={{minHeight: '280px'}}>
@@ -51,10 +51,12 @@ export default class Home extends Component {
               <div className="top-right">
                 <div className="hexagon blue"></div>
               </div>
-              <h1 className="header white-text">
+              <h1 className="news-home header white-text">
                 { latest_news.title }
               </h1>
-                  <pre className="roman white-text">  { latest_news.content }</pre>
+              <div className="news-home">
+                <pre className="roman white-text">{latest_news.content}</pre>
+              </div>
             </div>
             <div className="col-md-6">
                 <div className="contain" style={{minHeight: '280px'}}>

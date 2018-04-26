@@ -45,11 +45,11 @@ class Products extends Component {
     }
 
     const categoryDesc = category ? category.description : '';
-    let name = market ? market.name : '';
+    let name = market ? market.name : 'All Products';
     name = category ? category.name : name;
     let img = null;
-    if(category) {
-      img = <img src={URI + category.image} style={{width: '45px', height: '45px'}} />
+    if(category && category.image) {
+      img = <div className="col-md-1"><img src={URI + category.image} style={{width: '45px', height: '45px'}} /></div>
     }
     return (
       <div>
@@ -69,11 +69,9 @@ class Products extends Component {
           <div className="col-md-1"></div>
           <div className="col-md-9">
             <div className="row" style={{height: '150px', paddingTop: '35px'}}>
-              <div className="col-md-1">
-                { img }
-              </div>
+              { img }
               <div className="col-md-3">
-                <span  style={{paddingLeft: '0px'}} className="heading">{ name || 'All Products' }</span>
+                <span  style={{paddingLeft: '0px', fontSize: '24px'}} className="heading">{ name || 'All Products' }</span>
               </div>
               <div className="col-md-8">
                 <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px', paddingRight: '9px', wordWrap: ''}}>

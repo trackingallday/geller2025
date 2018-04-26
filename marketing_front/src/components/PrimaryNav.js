@@ -46,10 +46,10 @@ class PrimaryNav extends Component {
       coverNav = <CoverNav markets={this.props.markets} changePage={this.changePage} onMouseOut={this.toggleShowMarkets} />
     }
     return (
-      <div style={{paddingRight: '140px'}}>
+      <div style={{paddingRight: '150px'}}>
         <div className="row top-nav-row" style={{height: '100px', backgroundColor: '#fff', }}>
           <div className="col-md-8 back-white top-nav-col">
-            <nav className="nav top-nav">
+            <nav className="nav top-nav" style={{marginLeft: '0px'}}>
               <a className="nav-link" href="https://geller.co.nz/app" target="_blank">
                 <img src={require('../assets/login.svg')} className="icon" />
                 <span>Login</span>

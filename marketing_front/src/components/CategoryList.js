@@ -54,7 +54,7 @@ export default class CategoryList extends Component {
     return (
       <ul className="list-group list-group-flush">
         <li className="list-group-item smaller" style={{paddingBottom: '19px'}} key={'a'} onClick={() => this.onCategoryClick({id:'all'})}>
-          <span className="roman grey-text-light darken roman-small">Products</span>
+          <span className="roman grey-text-light darken roman-small" style={{fontSize: '14px'}}>All Products</span>
         </li>
         { this.props.categories.map(this.renderCategory) }
       </ul>
