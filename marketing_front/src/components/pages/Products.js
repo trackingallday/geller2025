@@ -47,7 +47,7 @@ class Products extends Component {
     const categoryDesc = category ? category.description : '';
     let name = market ? market.name : '';
     name = category ? category.name : name;
-    let img =   <img src={require('../../assets/category-logo.png')} style={{width: '45px', height: '45px'}} />;
+    let img = null;
     if(category) {
       img = <img src={URI + category.image} style={{width: '45px', height: '45px'}} />
     }
