@@ -222,6 +222,18 @@ class ProductForm extends Component {
                { this.state.categoryOptions }
              </Select>)}
            </FormItem>
+           <FormItem {...formItemLayout} label="Sub Category">
+             {getFieldDecorator('subCategory', { initialValue: this.getInitialValue('subCategory'),
+             rules: [{required: req, message: 'Required!'}]})(
+                 <Select
+                  style={{ width: '100%' }}
+                  mode="multiple"
+                  placeholder="Please select"
+                  onChange={() => {}}
+                >
+                  { this.state.categoryOptions }}
+                </Select>)}
+           </FormItem>
            <FormItem {...formItemLayout} label="Sizes">
              {getFieldDecorator('sizes', { initialValue: this.getInitialValue('sizes'),
                rules: [{required: req, message: 'Required!'}]})(
