@@ -30,6 +30,7 @@ class ProductForm extends Component {
     marketOptions: [],
     categoryOptions: [],
     sizeOptions: [],
+    subCategoryOptions: [],
   }
 
   getInitialValue = (key) => {
@@ -229,7 +230,7 @@ class ProductForm extends Component {
                   placeholder="Please select"
                   onChange={() => {}}
                 >
-                  { this.state.subCategoryOptions }}
+                  { this.state.subCategoryOptions }
                 </Select>)}
            </FormItem>
            <FormItem {...formItemLayout} label="Sizes">
