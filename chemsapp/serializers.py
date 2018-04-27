@@ -246,5 +246,5 @@ class SizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Size
         fields = (
-            'id', 'name', 'desc', 'amount', 'image', 'imageNo',
+            'id', 'name', 'desc', 'amount', 'image', 'imageNo', 'isBag',
         )
