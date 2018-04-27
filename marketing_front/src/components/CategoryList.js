@@ -11,14 +11,14 @@ export default class CategoryList extends Component {
   }
 
   onSubCategoryClick = (c) => {
-    this.props.history.push('/our_products/' + this.props.category + '/' + c.name.replace(/\s+/g, ''));
+    this.props.history.push('/our_products/' + this.props.category + '/' + c.id);
   }
 
   renderSubCategory = (sc) => {
     if(!sc.isSubCategory){
       return null;
     }
-    const style = sc.name && sc.name.replace(/\s+/g, '') === this.props.subCategory ? {color: '#0275d8'} : {};
+    const style = sc.name && sc.id == this.props.subCategory ? {color: '#0275d8'} : {};
     return (
       <li key={sc.name+"subCategory"} className="list-group-item roman-med brighten" onClick={() => this.onSubCategoryClick(sc)}>
         <span className={"blue-text-light "} style={style} >{ sc.name }</span>

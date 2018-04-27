@@ -30,7 +30,7 @@ class Products extends Component {
     const { markets, categories, subCategory_id } = this.props;
     let category = this.state.category || categories.find(c => c.id == this.props.category);
     let market = null;
-    let products = this.props.products;
+    let products = [...this.props.products];
     let subCategories = [];
     if(category) {
       products = this.props.products.filter(p => p.productCategory.find(e => e == category.id));
@@ -47,8 +47,11 @@ class Products extends Component {
       products = market ? this.props.products.filter(p => !!p.markets.find(m => m == this.props.market)) : this.props.products;
     }
 
+
     if(subCategory_id) {
-      products = this.props.products.filter(p => p.subCategory.indexOf(subCategory_id) !== -1);
+      console.log("sbcatid", subCategory_id)
+      products = this.props.products.filter(p => p.subCategory.indexOf(parseInt(subCategory_id)) !== -1);
+      console.log("producst ", products)
     }
 
     const categoryDesc = category ? category.description : '';
@@ -58,6 +61,7 @@ class Products extends Component {
     if(category && category.image) {
       img = <div className="col-md-1"><img src={URI + category.image} style={{width: '45px', height: '45px'}} /></div>
     }
+
     return (
       <div>
         <div className="row" style={{ height: '80px'}}>
@@ -93,7 +97,9 @@ class Products extends Component {
                   </span>
                 </div>
             </div>
-            <ProductsList category={this.state.category || this.props.category} products={products} market={this.props.market} />
+
+            <ProductsList category={this.state.category || this.props.category} subCategory={categories.find(c => c.id == subCategory_id)} products={products} market={this.props.market} />
+
             <div className="row" style={{paddingRight: '20px'}}>
               <div className="col-md-12" style={{ textAlign: 'right'}}>
                 <div style={{backgroundColor: '#0275d8', height: '1px', width: '100%', marginTop: '30px'}} />
