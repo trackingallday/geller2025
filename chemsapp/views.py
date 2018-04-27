@@ -327,16 +327,16 @@ def edit_product(request):
 
     for key in ['productCategory', 'subCategory']:
         if data.get(key):
-            product.productCategory = ProductCategory.objects.filter(pk__in=data.get(key))
+            setattr(product, key, ProductCategory.objects.filter(pk__in=data.get(key)))
 
     if data.get('sizes'):
         product.sizes = Size.objects.filter(pk__in=data.get('sizes'))
     print(data.get('sizes'))
     product.updated_at = datetime.datetime.now()
 
-    for key in ['primaryImageLink', 'secondaryImageLink']
-        if data.get(key) and not product.secondaryImageLink == data.get(key):
-            setattr(product[key],key,createImage(data.get(key))
+    for key in ['primaryImageLink', 'secondaryImageLink']:
+        if data.get(key) and not getattr(product, key) == data.get(key):
+            setattr(product,key,createImage(data.get(key)))
 
     if data.get('sdsSheet'):
         product = addSDSSheetToProduct(product, data.get('sdsSheet'))
