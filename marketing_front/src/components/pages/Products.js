@@ -48,7 +48,7 @@ class Products extends Component {
     }
 
     if(subCategory_id) {
-      products = products.filter(p => p.subCategory.indexOf(subCategory_id) !== -1);
+      products = this.props.products.filter(p => p.subCategory.indexOf(subCategory_id) !== -1);
     }
 
     const categoryDesc = category ? category.description : '';
@@ -82,7 +82,7 @@ class Products extends Component {
               </div>
               <div className="col-md-8">
                 <pre>
-                  <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px', paddingRight: '9px', wordWrap: ''}}>
+                  <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px', paddingRight: '9px'}}>
                     { categoryDesc }
                   </span>
                 </pre>
