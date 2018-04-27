@@ -36,7 +36,7 @@ class CoverNav extends Component {
   render() {
     const label = this.props.markets ? 'Markets' : 'Categories';
     return (
-      <div onClick={() => {this.props.onMouseOut()}} style={{ width: '100%',  zIndex: '99', position: 'absolute', minHeight: '400px', backgroundColor: 'rgba(0, 123, 255, 0.9)' }} className="row cover-nav">
+      <div onClick={() => {this.props.onMouseOut()}} style={{ width: '100%',  zIndex: 5, position: 'absolute', minHeight: '400px', backgroundColor: 'rgba(0, 123, 255, 0.9)' }} className="row cover-nav">
         <div className="col-md-12"  onMouseLeave={this.props.onMouseOut}>
           <div className="row">
             <div className="col-md-12 ">

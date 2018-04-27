@@ -12,7 +12,7 @@ import URI from  './constants/serverUrl';
 
 import MobileNav from './components/MobileNav';
 import { Route, NavLink } from 'react-router-dom';
-import { withRouter } from 'react-router'
+import { withRouter } from 'react-router';
 import reqeust from 'superagent';
 import './App.css'
 
@@ -47,6 +47,27 @@ class App extends Component {
   }
 
   componentDidMount() {
+  }
+
+  search = (value) => {
+    const { products, markets, categories } = this.state.data;
+    const product = products.find(p => p.name === value)
+    if(product) {
+      return this.changePage('/product/' + product.id);
+    }
+    const category = categories.find(p => p.name === value)
+    if(category) {
+      return this.changePage('/our_products/' + category.id);
+    }
+    const market = markets.find(p => p.name === value)
+    if(market) {
+      return this.changePage('/our_markets/' + market.id);
+    }
+  }
+
+  autoCompleteChoices() {
+    const { products, categories, markets } = this.state.data;
+    return [...products.map(p=>p.name), ...categories.map(p => p.name), ...markets.map(m => m.name)];
   }
 
   renderHome() {
@@ -113,7 +134,7 @@ class App extends Component {
         <div className="container" style={{overflow: 'hidden', paddingRight: '0px'}}>
           <img src={require('./assets/geller.svg')} className="hexagons" />
           { !isHome && inImg }
-          <PrimaryNav markets={this.state.data.markets} changePage={this.changePage} categories={this.state.data.categories} />
+          <PrimaryNav markets={this.state.data.markets} changePage={this.changePage} categories={this.state.data.categories} search={this.search} choices={this.autoCompleteChoices()} />
           <MobileNav />
           <Route exact={true} path="/" render={(match) => this.renderHome()} key={1} />
           <Route exact={true} path="/our_products/:category_id" render={(m) => this.renderProducts(m)} key={2} />

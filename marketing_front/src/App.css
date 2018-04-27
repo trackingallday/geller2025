@@ -83,8 +83,16 @@ pre {
 }
 
 .icon {
-  width: 28px;
-  height: 28px;
+  width: 30px;
+  height: 30px;
+}
+
+.auto-input input {
+  border-width: 0px 0px 1px 0px;
+  border-color: #777;
+}
+.auto-input input:hover {
+  border-color: rgb(20, 177, 255);
 }
 
 .nav span {
@@ -381,11 +389,11 @@ img.footer-logo {
 
 .hexagons {
 	height: 160px;
-	z-index: 99;
+	z-index: 5;
 	position: absolute;
 	top: 0px;
   display: none;
-  z-index: 999;
+  z-index: 5;
 }
 
 img.main-product-img {

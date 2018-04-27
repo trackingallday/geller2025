@@ -27,7 +27,7 @@
                   <img src={require('../assets/hamburger-icon.png')} style={{width: '28px'}}/>
                 </button>
               </nav>
-              <div className="pos-f-t" style={{backgroundColor: '#fff', zIndex: '9999'}}>
+              <div className="pos-f-t" style={{backgroundColor: '#fff', zIndex: 5}}>
                <div className="collapse row" id="navbarToggleExternalContent">
                  <nav className="nav flex-column front" style={{backgroundColor: '#fff', width:'100%'}}>
                    <a className="nav-link" href="/">Home</a>
