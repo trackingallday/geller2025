@@ -132,7 +132,9 @@ class App extends Component {
       <div>
         { isHome && outImg }
         <div className="container" style={{overflow: 'hidden', paddingRight: '0px'}}>
-          <img src={require('./assets/geller.svg')} className="hexagons" />
+          <a href="/">
+            <img src={require('./assets/geller.svg')} className="hexagons" href="/" />
+          </a>
           { !isHome && inImg }
           <PrimaryNav markets={this.state.data.markets} changePage={this.changePage} categories={this.state.data.categories} search={this.search} choices={this.autoCompleteChoices()} />
           <MobileNav />

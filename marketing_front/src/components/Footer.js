@@ -26,7 +26,9 @@ export default class Footer extends Component {
           <div>
             <span className="white-text">or email {this.props.configs.email_address}</span>
           </div>
-          <img src={require('../assets/Geller_WHITE.svg')} className="footer-logo"/>
+          <a href="/">
+            <img src={require('../assets/Geller_WHITE.svg')} className="footer-logo"/>
+          </a>
         </div>
       </div>
     );
