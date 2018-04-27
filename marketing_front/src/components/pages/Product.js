@@ -29,14 +29,32 @@ class Product extends Component {
 
   render() {
     const p = this.props.product;
-    const sizes = this.props.sizes.map(s => {
-      if(p.sizes.find(ps => ps === s.id)) {
-        return (<img src={URI + s.image} style={{height: '52px',  width:'33px', padding: '3px'}}></img>);
-      } else {
-        return  (<img src={URI + s.imageNo} style={{height: '52px', width:'33px', padding: '3px'}}></img>);
-      }
-    })
-    console.log(sizes);
+
+    const aSizes = this.props.sizes.filter(a => !!a.isBag);
+    const bSizes = this.props.sizes.filter(a => !a.isBag);
+
+    const sizes = [];
+
+    if(bSizes.filter(siz => !!p.sizes.find(ps => ps === siz.id)).length){
+      bSizes.forEach(aS => {
+        if(p.sizes.find(ps => ps === aS.id)) {
+          sizes.push(<img key={"a"+aS.id} src={URI + aS.image} style={{height: '52px',  width:'33px', padding: '3px'}}></img>);
+        } else {
+          sizes.push(<img key={"a"+aS.id} src={URI + aS.imageNo} style={{height: '52px', width:'33px', padding: '3px'}}></img>);
+        }
+      });
+    }
+
+    if(aSizes.filter(siz => !!p.sizes.find(ps => ps === siz.id)).length){
+      aSizes.forEach(aS => {
+        if(p.sizes.find(ps => ps === aS.id)) {
+          sizes.push(<img key={"b"+aS.id}  src={URI + aS.image} style={{height: '52px',  width:'33px', padding: '3px'}}></img>);
+        } else {
+          sizes.push(<img key={"b"+aS.id}  src={URI + aS.imageNo} style={{height: '52px', width:'33px', padding: '3px'}}></img>);
+        }
+      });
+    }
+
     return (
       <div>
         <div className="row" style={{ height: '80px'}}>
@@ -79,25 +97,27 @@ class Product extends Component {
                     <span className="nav-link bold" style={{fontSize: '15px'}}>Available Sizes (Litres)</span>
                   </div>
                 </div>
-                <div className="row" style={{minHeight: '50px'}}>
-                  <div className="col-md-6 col-xs-12 col-sm-12">
+                <div className="row" style={{minHeight: '100px'}}>
+                  <div className="col-md-8 col-xs-12 col-sm-12">
                     { sizes }
                   </div>
-                  <div className="col-md-6 col-xs-12 col-sm-12 pdf-links">
+                  <div className="col-md-4 col-xs-12 col-sm-12 pdf-links">
                     <div className="row justify-content-center">
                       <div className="col-lg-6  col-md-auto" style={{padding: '0px 0px 0px 0px'}}>
                         <a href={URI+p.infoSheet} target="_blank" className={"nav-link roman"}>
                           <div className="roman grey-text">
-                            <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}} />
-                            <span style={{position: 'absolute', top: '15px', left: '36px', fontSize: '12px'}}>Info (download)</span>
+                            <img src={require('../../assets/pdf-icoin.png')} style={{width: '24px'}} />
+                            <span style={{position: 'absolute', top: '15px', left: '32px', fontSize: '12px'}}>Info</span>
+                            <span style={{position: 'absolute', top: '28px', left: '32px', fontSize: '8px'}}>(download)</span>
                           </div>
                         </a>
                       </div>
                       <div className="col-lg-6 col-md-auto" style={{padding: '0px 0px 0px 0px'}}>
                         <a href={'/contact/' + p.name } className={"nav-link roman"}>
-                          <div className="roman grey-text" style={{paddingLeft: '1px'}}>
-                            <img src={require('../../assets/pdf-icoin.png')} style={{width: '26px'}} />
-                            <span style={{position: 'absolute', top: '15px', left: '36px', fontSize: '12px'}}>SDS (enquire)</span>
+                          <div className="roman grey-text" style={{paddingLeft: '20px'}}>
+                            <img src={require('../../assets/pdf-icoin.png')} style={{width: '24px'}} />
+                            <span style={{position: 'absolute', top: '15px', left: '50px', fontSize: '12px'}}>SDS</span>
+                            <span style={{position: 'absolute', top: '28px', left: '50px', fontSize: '8px'}}>(enquire)</span>
                           </div>
                         </a>
                       </div>
