@@ -148,6 +148,7 @@ class Size(MyBaseModel, models.Model):
     amount = models.CharField(max_length=255)
     image = models.FileField(upload_to='documents/', blank=True, null=True)
     imageNo = models.FileField(upload_to='documents/', blank=True, null=True)
+    isBag = models.BooleanField(default=False)
 
     def __str__(self):
         return self.name
