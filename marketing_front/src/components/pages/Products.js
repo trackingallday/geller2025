@@ -32,6 +32,7 @@ class Products extends Component {
     let market = null;
     let products = [...this.props.products];
     let subCategories = [];
+
     if(category) {
       products = this.props.products.filter(p => p.productCategory.find(e => e == category.id));
       products.forEach(p => p.subCategory.forEach(id => {
@@ -40,7 +41,6 @@ class Products extends Component {
       let subCategoriesSet = new Set(subCategories);
       subCategories = [...subCategories];
       const ids = [].concat.apply([ ...subCategoriesSet]);
-      console.log(ids);
       subCategories = categories.filter(sc => ids.indexOf(sc.id) !== -1);
     } else if (this.props.market) {
       market = markets.find(c => c.id == this.props.market);
