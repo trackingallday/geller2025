@@ -31,17 +31,11 @@ class Products extends Component {
     let category = this.state.category || categories.find(c => c.id == this.props.category);
     let market = null;
     let products = [...this.props.products];
-    let subCategories = [];
+    let subCategories = [...categories.filter(c => c.isSubCategory)];
 
     if(category) {
       products = this.props.products.filter(p => p.productCategory.find(e => e == category.id));
-      products.forEach(p => p.subCategory.forEach(id => {
-        subCategories.push(id);
-      }));
-      let subCategoriesSet = new Set(subCategories);
-      subCategories = [...subCategories];
-      const ids = [].concat.apply([ ...subCategoriesSet]);
-      subCategories = categories.filter(sc => ids.indexOf(sc.id) !== -1);
+      subCategories = subCategories.filter(sc => sc.relatedCategory.indexOf(category.id) !== -1) ;
     } else if (this.props.market) {
       market = markets.find(c => c.id == this.props.market);
       products = market ? this.props.products.filter(p => !!p.markets.find(m => m == this.props.market)) : this.props.products;
