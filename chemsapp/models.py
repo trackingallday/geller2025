@@ -44,6 +44,7 @@ class ProductCategory(MyBaseModel, models.Model):
     products = models.ManyToManyField('Product', blank=True, null=True, related_name='categories')
     image = models.FileField(upload_to='documents/', blank=True, null=True)
     isSubCategory = models.BooleanField(default=False)
+    relatedCategory = models.ManyToManyField('ProductCategory')
 
     def __str__(self):
         return "{} ".format(self.name)
