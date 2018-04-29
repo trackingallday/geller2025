@@ -43,7 +43,9 @@ class Products extends Component {
 
 
     if(subCategory_id) {
-      products = products.filter(p => p.subCategory.indexOf(parseInt(subCategory_id)) !== -1);
+      const subCategory = categories.find(c => c.id == subCategory_id);
+      products = this.props.products.filter(
+        p => !!( p.productCategory.indexOf(parseInt(subCategory_id)) !== -1));
     }
 
     const categoryDesc = category ? category.description : '';
