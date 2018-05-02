@@ -35,7 +35,15 @@ class Products extends Component {
 
     if(category) {
       products = this.props.products.filter(p => p.productCategory.find(e => e == category.id));
-      subCategories = subCategories.filter(sc => sc.relatedCategory.indexOf(category.id) !== -1) ;
+      subCategories = subCategories.filter(sc => sc.relatedCategory.indexOf(category.id) !== -1);
+      subCategories.forEach(sc => {
+        const prods = this.props.products.filter(p => p.subCategory.find(e => e == sc.id));
+        prods.forEach(p => {
+          if(!products.find(pp => pp.id === p.id)){
+            products.push(p);
+          }
+        })
+      })
     } else if (this.props.market) {
       market = markets.find(c => c.id == this.props.market);
       products = market ? this.props.products.filter(p => !!p.markets.find(m => m == this.props.market)) : this.props.products;
