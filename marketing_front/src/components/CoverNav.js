@@ -22,7 +22,7 @@ class CoverNav extends Component {
   }
 
   renderCategories = () => {
-    return this.props.categories.map(m =>
+    return this.props.categories.filter(c => !c.isSubCategory).map(m =>
       <div className="col-md-3" style={{paddingBottom: '10px'}} key={m.id}>
         <div style={{minHeight: '45px'}}>
           <NavLink to={"/our_products/" + m.id} style={{textDecoration: 'none'}}>
