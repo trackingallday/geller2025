@@ -1,0 +1,11 @@
+#!/bin/bash
+set -e # Fail fast
+[ "$DEBUG" == 'true' ] && set -x # Print all commands
+
+echo "Installing dependencies"
+( cd marketing_front && npm i --no-package-lock)
+( cd frontend && npm i --no-package-lock)
+
+echo "Building React apps"
+yarn --cwd marketing_front build
+yarn --cwd frontend build

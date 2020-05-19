@@ -1,27 +1,23 @@
 #!/bin/bash
-# My first script
+set -e # Fail fast
+[ "$DEBUG" == 'true' ] && set -x # Print all commands
 
-echo "Building Javascripts"
-
-
-./deploy_marketing.sh &&
-./deploy_bakend.sh &&
-
-echo "Activating Venv"
-
-source ./.venv/bin/activate &&
+./build.sh
 
 echo "Collecting Static Files"
-
-python manage.py collectstatic --noinput &&
+$(
+    source ./.venv/bin/activate &&
+    python manage.py collectstatic --noinput
+)
 
 echo "Migrating"
-
-python manage.py makemigrations &&
-python manage.py migrate &&
+$(
+    source ./.venv/bin/activate &&
+    python manage.py makemigrations &&
+    python manage.py migrate
+)
 
 echo "Restarting Apache"
-
-# service Apache2 restart &&
+service apache2 restart
 
 echo "Done"
