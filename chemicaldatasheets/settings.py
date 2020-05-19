@@ -178,7 +178,7 @@ LOGGING = {
         # Log to a text file that can be rotated by logrotate
         'logfile': {
             'class': 'logging.handlers.WatchedFileHandler',
-            'filename': '/var/log/django/alllogs.log'
+            'filename': 'alllogs.log' if DEBUG else '/var/log/django/alllogs.log'
         },
     },
     'loggers': {
