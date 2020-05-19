@@ -134,7 +134,6 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 
-
 #react app files config
 REACT_APP_DIR = os.path.join(BASE_DIR, 'frontend')
 MARKETING_APP_DIR = os.path.join(BASE_DIR, 'marketing_front')
@@ -151,7 +150,7 @@ STATICFILES_DIRS = [
 MEDIA_ROOT = os.path.join(CHEMS_APP_DIR, 'media')
 
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = os.path.join(PROJECT_DIR, 'static')
+STATIC_ROOT = os.path.join(BASE_DIR, 'dist_static')
 
 #email settings
 EMAIL_HOST = 'smtp.gmail.com'
@@ -172,7 +171,7 @@ LOGGING = {
         'mail_admins': {
             'class': 'django.utils.log.AdminEmailHandler',
             'level': 'ERROR',
-             # But the emails are plain text by default - HTML is nicer
+            # But the emails are plain text by default - HTML is nicer
             'include_html': True,
         },
         # Log to a text file that can be rotated by logrotate

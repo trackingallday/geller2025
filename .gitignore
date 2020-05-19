@@ -38,3 +38,6 @@ __pycache__/
 
 # Django log file
 alllogs.log
+
+# Collected statics output
+dist_static/
