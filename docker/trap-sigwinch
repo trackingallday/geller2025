@@ -1,0 +1,10 @@
+#!/bin/sh
+set -e
+
+# Apache gets grumpy about PID files pre-existing
+rm -f /usr/local/apache2/logs/httpd.pid
+
+trap " " 28
+
+echo "Starting apache"
+exec httpd -DFOREGROUND "$@"
