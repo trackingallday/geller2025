@@ -11,6 +11,7 @@ https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
 import os
+from platform import node as platform_hostname
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -28,6 +29,9 @@ DEBUG = False
 ALLOWED_HOSTS = ['www.geller.co.nz','104.236.249.246', 'localhost', '127.0.0.1', '0.0.0.0', 'chemicaldataapp',
                  'app.integraindustries.co.nz', 'geller.co.nz', 'app.geller.co.nz', '192.168.0.100']
 
+DEBUG_HOSTS = ('josh-ubuntu',)
+if platform_hostname() in DEBUG_HOSTS:
+    DEBUG = True
 
 # Application definition
 
