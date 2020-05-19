@@ -7,5 +7,7 @@ echo "Installing dependencies"
 ( cd frontend && npm i --no-package-lock)
 
 echo "Building React apps"
+rm -rf marketing_front/build
 yarn --cwd marketing_front build
+rm -rf frontend/build
 yarn --cwd frontend build

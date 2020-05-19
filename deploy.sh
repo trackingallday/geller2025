@@ -5,13 +5,14 @@ set -e # Fail fast
 ./build.sh
 
 echo "Collecting Static Files"
-$(
+(
     source ./.venv/bin/activate &&
+    rm -rf dist_static/ &&
     python manage.py collectstatic --noinput
 )
 
 echo "Migrating"
-$(
+(
     source ./.venv/bin/activate &&
     python manage.py makemigrations &&
     python manage.py migrate
