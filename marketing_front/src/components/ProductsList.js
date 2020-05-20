@@ -7,10 +7,10 @@ export default class ProductList extends Component {
 
   renderProduct = (p, ind) => {
     return (
-      <div key={ind} className="col-md-3" style={{padding: '10px 0px 10px 0px'}}>
-        <div className="row" style={{padding: '0px 20px 0px 0px'}}>
-          <NavLink to={"/product/" + p.id}>
-            <div className="col-md-12 contain" style={{height: '220px'}}>
+      <div key={ind} className="col-md-3" style={{padding: '10px 15px'}}>
+        <div className="row">
+          <NavLink to={"/product/" + p.id} style={{margin: '0 auto'}}>
+            <div className="contain" style={{height: '220px'}}>
               <img className="brighten" src={serverUrl + p.primaryImageLink} />
             </div>
           </NavLink>
@@ -28,10 +28,8 @@ export default class ProductList extends Component {
         </div>
         <div className="row" style={{paddingTop: '5px'}}>
           <div className="col-md-12">
-            <div className="block-with-text" style={{maxHeight: '48px'}}>
-                <pre  className="product-desc"><span className="product-desc" style={{display:'inline-block', lineHeight:'12px'}}>
-                  { p.description }
-                </span></pre>
+            <div className="block-with-text product-desc" style={{maxHeight: '60px', lineHeight:'12px'}}>
+              { p.description }
             </div>
           </div>
         </div>

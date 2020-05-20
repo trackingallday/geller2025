@@ -187,6 +187,16 @@ pre {
     overflow: hidden;
 }
 
+.block-with-text.product-desc::after {
+    content: " ";
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 2em;
+    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 50%);
+}
+
 .description-text {
     font-size: 12pt;
     font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
@@ -362,6 +372,7 @@ img.footer-logo {
 
 .list-group-item.smaller {
     padding: .25rem 0rem;
+    cursor: pointer;
 }
 
 @keyframes pulse_animation {

@@ -81,15 +81,15 @@ class Products extends Component {
           </div>
           <div className="col-md-1"></div>
           <div className="col-md-9">
-            <div className="row" style={{height: '215px', paddingTop: '35px'}}>
+            <div className="row" style={{minHeight: '215px', paddingTop: '35px'}}>
               { img }
               <div className="col-md-3">
                 <span  style={{paddingLeft: '0px', fontSize: '24px'}} className="heading">{ name || 'All Products' }</span>
               </div>
               <div className="col-md-8">
                 <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '17px', paddingRight: '9px'}}>
-                    { categoryDesc }
-                  </span>
+                  { categoryDesc }
+                </span>
               </div>
                 <div className="col-md-12">
                   <span className="roman-smaller grey-text-light" style={{fontSize: '14px', textAlign: 'left'}}>
