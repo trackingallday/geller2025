@@ -66,7 +66,7 @@ class Product extends Component {
           </div>
         </div>
         <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '45px', paddingTop: '15px', paddingBottom: '270px'}}>
-          <div style={{ width: '191px'}}>
+          <div className="col-md-2" style={{ minWidth: '191px'}}>
             <CategoryList
               categories={this.props.categories}
               onCategoryClick={this.onCategoryClick}
@@ -74,7 +74,7 @@ class Product extends Component {
               history={this.props.history}
             />
           </div>
-          <div className="col-md-8" style={{padding: '10px 5px 10px 5px'}}>
+          <div className="col-md-9" style={{padding: '10px 5px 10px 5px'}}>
             <div className="row">
               <div className="col-md-6">
                 { this.renderProductDetail(p.name + " - " + p.brand, "product-name-detail", null, "20px")}
@@ -86,7 +86,7 @@ class Product extends Component {
               </div>
               <div className="col-md-6" style={{height: '350px' }}>
                 <div className="row">
-                  <div className="col-md-10" align="center">
+                  <div className="col-md-12" align="center">
                     <div className="contain" style={{margin: 'auto'}}>
                       <img className="main-product-img" src={URI + p.primaryImageLink}></img>
                     </div>
