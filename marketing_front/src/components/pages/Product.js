@@ -80,8 +80,8 @@ class Product extends Component {
                 { this.renderProductDetail(p.name + " - " + p.brand, "product-name-detail", null, "20px")}
                 { this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")}
                 { this.renderProductDetail(p.description)}
-                { this.renderProductDetail(p.application, "product-detail", "Applications")}
-                { this.renderProductDetail(p.properties, "product-detail", "Properties")}
+                { this.renderProductDetail(p.application, "product-detail", "Description")}
+                { this.renderProductDetail(p.properties, "product-detail", "Directions")}
                 { this.renderProductDetail(p.market) }
               </div>
               <div className="col-md-6" style={{height: '350px' }}>
