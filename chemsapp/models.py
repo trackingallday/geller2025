@@ -63,7 +63,7 @@ class Product(MyBaseModel, models.Model):
     sdsSheet = models.FileField(upload_to='documents/', blank=True, null=True)
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
     uploadedBy = models.ForeignKey(User, on_delete=None, related_name="products_added")
-    description = models.CharField(max_length=455, blank=True, null=True)
+    description = models.TextField(max_length=1000, blank=True, null=True)
     subCategory = models.ManyToManyField(ProductCategory, blank=True, null=True, related_name='subcategories')
     properties = models.CharField(max_length=500, blank=True, null=True)
     public = models.BooleanField(default=False)
