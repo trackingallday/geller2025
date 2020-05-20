@@ -1,4 +1,4 @@
-const dev = false;
+const dev = true;
 const DEV_URL = 'http://0.0.0.0:8000';
 const PRODUCTION_URL = 'https://geller.co.nz';
 let url = PRODUCTION_URL;
