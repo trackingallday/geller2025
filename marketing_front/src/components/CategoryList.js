@@ -32,7 +32,7 @@ export default class CategoryList extends Component {
         <li className="list-group-item smaller roman-med brighten" key={ind}>
           <div>
             <div>
-              <span style={{color: '#0275d8'}} onClick={() => this.onCategoryClick(c)}>
+              <span style={{color: '#41b649'}} onClick={() => this.onCategoryClick(c)}>
                 {c.name}
               </span>
             </div>
@@ -47,7 +47,7 @@ export default class CategoryList extends Component {
     }
     return (
       <li className="list-group-item smaller roman-med" key={ind} onClick={() => this.onCategoryClick(c)}>
-        <span className="grey-text darken">{c.name}</span>
+        <span className="grey-text brighten-blue">{c.name}</span>
       </li>
     );
   }
