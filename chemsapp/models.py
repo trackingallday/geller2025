@@ -79,9 +79,11 @@ class Product(MyBaseModel, models.Model):
 class Post(MyBaseModel, models.Model):
     name = models.CharField(max_length=500, blank=True, null=True)
     page = models.CharField(max_length=100)
+    title = models.CharField(max_length=255, blank=True, null=True)
     content = models.TextField(max_length=2000, blank=True, null=True)
     image = models.FileField(upload_to='documents/', blank=True, null=True)
-    title = models.CharField(max_length=255, blank=True, null=True)
+    linkURL = models.CharField(max_length=1000, blank=True, null=True)
+    linkText = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return "{} {} {}".format(self.page, self.title, self.name)

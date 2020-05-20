@@ -1,4 +1,5 @@
 import React, { Component } from 'react';
+import { NavLink } from 'react-router-dom';
 import '../../App.css'
 import URI, { IMG_DEV_URL} from '../../constants/serverUrl';
 
@@ -16,6 +17,11 @@ export default class Home extends Component {
 
     if(!mainBanner) {
       return <div/>
+    }
+
+    let home_row1_link = null;
+    if (home_row1_col2.linkText && home_row1_col2.linkURL) {
+      home_row1_link = <NavLink to={home_row1_col2.linkURL}>{home_row1_col2.linkText}</NavLink>
     }
     return (
       <div>
@@ -38,6 +44,7 @@ export default class Home extends Component {
                 <pre  className="roman grey-text">
                   {home_row1_col2.content}
                 </pre>
+                {home_row1_link}
               </div>
             </div>
             <div className="col-md-6">

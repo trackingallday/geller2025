@@ -10,6 +10,16 @@ class Post extends Component {
     if(!post) {
       return <div />
     }
+    let postLinkDOM = null;
+    if (post.linkURL && post.linkText) {
+      postLinkDOM = <div className="row">
+                    <div className="col-md-12">
+                      <p style={{whiteSpace: 'pre-wrap'}}>
+                        <a href={post.linkURL}>{post.linkText}</a>
+                      </p>
+                    </div>
+                  </div>
+    }
     return (
       <div className="row" style={{padding: '20px 40px 70px 20px'}}>
         <div className="col-md-12">
@@ -30,6 +40,7 @@ class Post extends Component {
               <p style={{whiteSpace: 'pre-wrap'}}><pre>{post.content}</pre></p>
             </div>
           </div>
+          { postLinkDOM }
         </div>
       </div>
     )
