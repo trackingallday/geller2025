@@ -58,6 +58,7 @@ class Product(MyBaseModel, models.Model):
     amountDesc = models.CharField(max_length=455)
     instructions = models.TextField(max_length=2000)
     productCode = models.CharField(max_length=255, unique=True)
+    productCodes = models.TextField(max_length=1000, blank=True, null=True)
     brand = models.CharField(max_length=255)
     infoSheet = models.FileField(upload_to='documents/', blank=True, null=True)
     sdsSheet = models.FileField(upload_to='documents/', blank=True, null=True)
