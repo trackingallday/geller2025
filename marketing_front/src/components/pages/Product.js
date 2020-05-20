@@ -74,7 +74,7 @@ class Product extends Component {
               history={this.props.history}
             />
           </div>
-          <div className="col-md-9" style={{padding: '10px 5px 10px 5px'}}>
+          <div className="col-md-8 col-lg-9" style={{padding: '10px 5px 10px 5px'}}>
             <div className="row">
               <div className="col-md-6">
                 { this.renderProductDetail(p.name + " - " + p.brand, "product-name-detail", null, "20px")}
@@ -102,22 +102,28 @@ class Product extends Component {
                     { sizes }
                   </div>
                   <div className="col-md-4 col-xs-12 col-sm-12 pdf-links">
-                    <div className="row justify-content-center">
-                      <div className="col-lg-6  col-md-auto" style={{padding: '0px 0px 0px 0px'}}>
-                        <a href={URI+p.infoSheet} target="_blank" className={"nav-link roman"}>
+                  <div className="row justify-content-center">
+                      <div className="col-lg-6  col-md-auto" style={{padding: '0'}}>
+                        <a href={URI+p.infoSheet} target="_blank">
                           <div className="roman grey-text">
-                            <img src={require('../../assets/pdf-icoin.png')} style={{width: '24px'}} />
-                            <span style={{position: 'absolute', top: '15px', left: '32px', fontSize: '12px'}}>Info</span>
-                            <span style={{position: 'absolute', top: '28px', left: '32px', fontSize: '8px'}}>(download)</span>
+                            <div style={{margin: '0 auto', maxWidth: '50px'}}>
+                              <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px', marginLeft: '-3px'}} />
+                            </div>
+                            <div style={{fontSize: '12px', textAlign: 'center'}}>
+                              Info<br />(download)
+                            </div>
                           </div>
                         </a>
                       </div>
-                      <div className="col-lg-6 col-md-auto" style={{padding: '0px 0px 0px 0px'}}>
-                        <a href={'/contact/' + p.name } className={"nav-link roman"}>
-                          <div className="roman grey-text" style={{paddingLeft: '20px'}}>
-                            <img src={require('../../assets/pdf-icoin.png')} style={{width: '24px'}} />
-                            <span style={{position: 'absolute', top: '15px', left: '50px', fontSize: '12px'}}>SDS</span>
-                            <span style={{position: 'absolute', top: '28px', left: '50px', fontSize: '8px'}}>(enquire)</span>
+                      <div className="col-lg-6 col-md-auto" style={{padding: '0'}}>
+                        <a href={'/contact/' + p.name }>
+                          <div className="roman grey-text">
+                            <div style={{margin: '0 auto', maxWidth: '50px'}}>
+                              <img src={require('../../assets/email.png')} style={{ width: '50px'}} />
+                            </div>
+                            <div style={{fontSize: '12px', textAlign: 'center'}}>
+                              SDS<br />(enquire)
+                            </div>
                           </div>
                         </a>
                       </div>
