@@ -11,3 +11,10 @@ rm -rf marketing_front/build
 yarn --cwd marketing_front build
 rm -rf frontend/build
 yarn --cwd frontend build
+
+echo "Collecting Static Files"
+(
+    source ./.venv/bin/activate &&
+    rm -rf dist_static/ &&
+    python manage.py collectstatic --noinput
+)
