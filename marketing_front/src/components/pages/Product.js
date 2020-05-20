@@ -94,7 +94,7 @@ class Product extends Component {
                 </div>
                 <div className="row" style={{height: '50px'}}>
                   <div className="col-md-12" style={{paddingTop: '12px'}}>
-                    <span className="nav-link bold" style={{fontSize: '15px'}}>Available Sizes (Litres)</span>
+                    <span className="nav-link bold" style={{fontSize: '15px'}}>Available Sizes</span>
                   </div>
                 </div>
                 <div className="row" style={{minHeight: '100px'}}>
