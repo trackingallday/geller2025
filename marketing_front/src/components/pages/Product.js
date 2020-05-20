@@ -13,16 +13,25 @@ class Product extends Component {
     this.props.router.push('/our_products/' + c.id)
   }
 
-  renderProductDetail(text, className="product-detail", heading=null, size=null, markdown=false) {
+  /* Only render the output if the condition is met */
+  renderConditionally(condition, renderOutput) {
+    if (condition) {
+      return renderOutput;
+    } else {
+      return false;
+    }
+  }
+
+  renderProductDetail(text, className="product-detail", heading=null, size=null, markdown /*:Boolean|ReactMarkdown.NodeType[]*/ =false) {
     let detailBody;
     if (markdown) {
+      let defaultMarkdownTypes = ['text', 'list', 'listItem', 'paragraph'];
+      let markdownPermittedTypes = (markdown === true) ? defaultMarkdownTypes : markdown;
       detailBody = <ReactMarkdown
                     source={text}
                     escapeHtml={false}
                     allowedTypes={
-                      [
-                        'text', 'list', 'listItem', 'paragraph'
-                      ]
+                      markdownPermittedTypes
                     }
                     />
     } else {
@@ -94,7 +103,13 @@ class Product extends Component {
             <div className="row">
               <div className="col-md-6">
                 { this.renderProductDetail(p.name + " - " + p.brand, "product-name-detail", null, "20px")}
-                { this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")}
+                {
+                  // Optionally render the old SKU if the new field is not being used.
+                  this.renderConditionally(
+                    !p.productCodes,
+                    this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")
+                  )
+                }
                 { this.renderProductDetail(p.description, undefined, undefined, undefined, true)}
                 { this.renderProductDetail(p.application, "product-detail", "Description")}
                 { this.renderProductDetail(p.properties, "product-detail", "Directions")}
@@ -145,6 +160,17 @@ class Product extends Component {
                       </div>
                     </div>
                   </div>
+                </div>
+                <div className="row">
+                  {
+                    // Optionally render the new SKUs if they are present.
+                    this.renderConditionally(
+                      p.productCodes,
+                      this.renderProductDetail('| | |\n|-|-|\n' + p.productCodes, "product-sku-list", undefined, undefined, [
+                        'text', 'table', 'tableBody', 'tableRow', 'tableCell'
+                      ])
+                    )
+                  }
                 </div>
               </div>
             </div>

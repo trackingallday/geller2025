@@ -204,6 +204,14 @@ pre {
     font-stretch: normal;
 }
 
+.product-sku-list {
+    font-size: 14px;
+}
+
+.product-sku-list td {
+    padding-right: 15px;
+}
+
 .nav-link.roman {
     padding: 14px 4px 0px 0px;
     margin-left: 5px;
