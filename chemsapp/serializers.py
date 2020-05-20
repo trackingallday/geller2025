@@ -72,7 +72,7 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ('editable', 'customers')
         fields = (
             'id', 'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
-            'instructions', 'productCode', 'brand', 'infoSheet', 'sdsSheet',
+            'instructions', 'productCode', 'productCodes', 'brand', 'infoSheet', 'sdsSheet',
             'safetyWears', 'customers', 'editable',  'markets', 'properties', 'application', 'description', 'subCategory', 'productCategory',
             'sizes',
         )
@@ -91,7 +91,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
         model = Product
         fields = (
             'id', 'name', 'primaryImageLink', 'secondaryImageLink',
-            'productCode', 'brand', 'infoSheet', 'productCategory',
+            'productCode', 'productCodes', 'brand', 'infoSheet', 'productCategory',
             'description', 'markets', 'properties', 'application', 'subCategory',
             'sizes',
 
@@ -108,7 +108,7 @@ class ProductSheetSerializer(serializers.ModelSerializer):
         read_only_fields = ('editable', 'customers')
         fields = (
             'name', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
-            'instructions', 'productCode', 'brand', 'sdsSheet',
+            'instructions', 'productCode', 'productCodes', 'brand', 'sdsSheet',
             'safetyWears', 'sdsQrcode',
         )
 
