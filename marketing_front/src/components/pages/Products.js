@@ -87,14 +87,12 @@ class Products extends Component {
                 <span  style={{paddingLeft: '0px', fontSize: '24px'}} className="heading">{ name || 'All Products' }</span>
               </div>
               <div className="col-md-8">
-                <pre>
-                  <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '14px', paddingRight: '9px'}}>
+                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '17px', paddingRight: '9px'}}>
                     { categoryDesc }
                   </span>
-                </pre>
               </div>
                 <div className="col-md-12">
-                  <span className="roman-smaller grey-text-light" style={{fontSize: '11px', textAlign: 'left'}}>
+                  <span className="roman-smaller grey-text-light" style={{fontSize: '14px', textAlign: 'left'}}>
                     { products.length + ' products'}
                   </span>
                 </div>
