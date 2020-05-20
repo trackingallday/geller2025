@@ -4,6 +4,7 @@ import CategoryList from '../CategoryList';
 import { withRouter } from 'react-router'
 import { NavLink } from 'react-router-dom';
 import URI from '../../constants/serverUrl';
+import ReactMarkdown from 'react-markdown'
 
 
 class Product extends Component {
@@ -12,7 +13,22 @@ class Product extends Component {
     this.props.router.push('/our_products/' + c.id)
   }
 
-  renderProductDetail(text, className="product-detail", heading=null, size=null) {
+  renderProductDetail(text, className="product-detail", heading=null, size=null, markdown=false) {
+    let detailBody;
+    if (markdown) {
+      detailBody = <ReactMarkdown
+                    source={text}
+                    escapeHtml={false}
+                    allowedTypes={
+                      [
+                        'text', 'list', 'listItem', 'paragraph'
+                      ]
+                    }
+                    />
+    } else {
+      detailBody = text;
+    }
+
     return (
       <div className="col-md-12" style={{marginTop: heading ? '25px' : '5px'}}>
         { heading &&
@@ -21,7 +37,7 @@ class Product extends Component {
             </div>
         }
         <span className={className}>
-          { text }
+          { detailBody }
         </span>
       </div>
     )
@@ -79,7 +95,7 @@ class Product extends Component {
               <div className="col-md-6">
                 { this.renderProductDetail(p.name + " - " + p.brand, "product-name-detail", null, "20px")}
                 { this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")}
-                { this.renderProductDetail(p.description)}
+                { this.renderProductDetail(p.description, undefined, undefined, undefined, true)}
                 { this.renderProductDetail(p.application, "product-detail", "Description")}
                 { this.renderProductDetail(p.properties, "product-detail", "Directions")}
                 { this.renderProductDetail(p.market) }
