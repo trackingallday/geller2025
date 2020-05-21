@@ -7,7 +7,6 @@ from chemsapp.views import index, customers_list, products_list, new_customer, e
     sizes_list
 
 urlpatterns = [
-    url(r'^admin$', admin.site.urls),
     url(r'^auth$', drf_views.obtain_auth_token, name='auth'),
     url(r'^app$', index, name='index'),
     url(r'^our_products/*', marketing_site, name='marketing_site'),

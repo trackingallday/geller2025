@@ -19,10 +19,12 @@ from django.conf.urls import url, include
 from rest_framework.authtoken import views as rest_framework_views
 from django.conf.urls.static import static
 from django.conf import settings
+from django.views.generic.base import RedirectView
 
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls),
+    url(r'^admin/', admin.site.urls, name='admin'),
+    url(r'^admin$', RedirectView.as_view(url='/admin/', permanent=False)),
     url(r'^get_auth_token/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
     url(r'^accounts/', include('django.contrib.auth.urls')),
     url(r'^', include('chemsapp.urls', namespace='chemsapp', app_name='chemsapp')),
