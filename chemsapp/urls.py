@@ -45,3 +45,11 @@ urlpatterns = [
     url(r'^sizes_list/', sizes_list, name="sizes_list"),
     url(r'^$', marketing_site, name='marketing_site'),
 ]
+
+def handler404(request):
+    # Render the marketing site app (React) but change the status code.
+    # This lets us handle the 404 client side, but without breaking
+    # HTTP protocol.
+    response = marketing_site(request)
+    response.status_code = 404
+    return response
