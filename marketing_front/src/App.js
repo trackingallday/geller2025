@@ -8,10 +8,11 @@ import About from './components/pages/About';
 import Support from './components/pages/Support';
 import News from './components/pages/News';
 import Contact from './components/pages/Contact';
+import NotFound from './components/pages/NotFound';
 import URI from  './constants/serverUrl';
 
 import MobileNav from './components/MobileNav';
-import { Route, NavLink } from 'react-router-dom';
+import { Route, NavLink, Switch } from 'react-router-dom';
 import { withRouter } from 'react-router';
 import reqeust from 'superagent';
 import './App.css'
@@ -29,6 +30,12 @@ class App extends Component {
         data.configs = c;
         this.setState({data, loaded: true});
       });
+  }
+
+  withConfigs(Component) {
+    return (matchProps) => {
+      return <Component configs={ this.state.data.configs } {...matchProps} />
+    }
   }
 
   changePage = (url) => {
@@ -138,22 +145,24 @@ class App extends Component {
           { !isHome && inImg }
           <PrimaryNav markets={this.state.data.markets} changePage={this.changePage} categories={this.state.data.categories} search={this.search} choices={this.autoCompleteChoices()} />
           <MobileNav />
-          <Route exact={true} path="/" render={(match) => this.renderHome()} key={1} />
-          <Route exact={true} path="/our_products/:category_id" render={(m) => this.renderProducts(m)} key={2} />
-          <Route exact={true} path="/our_products/:category_id/:subCategory_id" render={(m) => this.renderProducts(m)} key={59} />
-          <Route exact={true} path="/product/:product_id" render={(m) => this.renderProduct(m)} key={3} />
-          <Route exact={true} path="/product/:product_id/:market_id" render={(m) => this.renderProduct(m)} key={3006} />
-          <Route exact={true} path="/our_markets/:market_id" render={(m) => this.renderMarkets(m)} key={300} />
-          <Route exact={true} path="/our_markets" render={(m) => this.renderMarkets(m)} key={30009} />
-          <Route exact={true} path="/about/:post" render={(m) => this.renderAbout(m)} key={4} />
-          <Route exact={true} path="/about" render={(m) => this.renderAbout(m)} key={42} />
-          <Route exact={true} path="/news" render={(m) => this.renderNews(m)} key={49} />
-          <Route exact={true} path="/news/:post" render={(m) => this.renderNews(m)} key={9} />
-          <Route exact={true} path="/support/:post" render={(m) => this.renderSupport(m)} key={10} />
-          <Route exact={true} path="/support" render={(m) => this.renderSupport(m)} key={11} />
-          <Route exact={true} path="/contact" render={(m) => this.renderContact(m)} key={12} />
-          <Route exact={true} path="/contact/:message" render={(m) => this.renderContact(m)} key={19} />
-
+          <Switch>
+            <Route exact={true} path="/" render={(match) => this.renderHome()} key={1} />
+            <Route exact={true} path="/our_products/:category_id" render={(m) => this.renderProducts(m)} key={2} />
+            <Route exact={true} path="/our_products/:category_id/:subCategory_id" render={(m) => this.renderProducts(m)} key={59} />
+            <Route exact={true} path="/product/:product_id" render={(m) => this.renderProduct(m)} key={3} />
+            <Route exact={true} path="/product/:product_id/:market_id" render={(m) => this.renderProduct(m)} key={3006} />
+            <Route exact={true} path="/our_markets/:market_id" render={(m) => this.renderMarkets(m)} key={300} />
+            <Route exact={true} path="/our_markets" render={(m) => this.renderMarkets(m)} key={30009} />
+            <Route exact={true} path="/about/:post" render={(m) => this.renderAbout(m)} key={4} />
+            <Route exact={true} path="/about" render={(m) => this.renderAbout(m)} key={42} />
+            <Route exact={true} path="/news" render={(m) => this.renderNews(m)} key={49} />
+            <Route exact={true} path="/news/:post" render={(m) => this.renderNews(m)} key={9} />
+            <Route exact={true} path="/support/:post" render={(m) => this.renderSupport(m)} key={10} />
+            <Route exact={true} path="/support" render={(m) => this.renderSupport(m)} key={11} />
+            <Route exact={true} path="/contact" render={(m) => this.renderContact(m)} key={12} />
+            <Route exact={true} path="/contact/:message" render={(m) => this.renderContact(m)} key={19} />
+            <Route component={this.withConfigs(NotFound)} />
+          </Switch>
           <div className="row pad-top blue-back-dark">
             <div className="col-md-6">
               <div className="top-right">
