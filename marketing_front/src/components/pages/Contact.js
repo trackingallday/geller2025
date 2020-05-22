@@ -30,6 +30,7 @@ class Contact extends Component {
           this.setState({loading: false, result: 'failure'})
         } else {
           this.setState({loading: false, result: 'success'})
+          window.location.replace(URI + '/product_download/' + this.props.product + '/sds/');
         }
       });
   }

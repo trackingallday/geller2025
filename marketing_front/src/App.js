@@ -122,7 +122,8 @@ class App extends Component {
   renderContact = (match) => {
     const product = this.state.data.products.find(p => p.id == match.match.params.product_id);
     let contactMessage = product && product.name || '';
-    return <Contact configs={ this.state.data.configs } message={ contactMessage }/>
+    let productId = product && product.id || undefined;
+    return <Contact configs={ this.state.data.configs } message={ contactMessage } product={productId} />
   }
 
   render() {
