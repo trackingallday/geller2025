@@ -10,6 +10,7 @@ class Contact extends Component {
 
   state = {
     loading: false,
+    result: 'unset'
   }
 
   onFormSubmit(e) {
@@ -25,8 +26,11 @@ class Contact extends Component {
       .query({data: json})
       .set('Accept', 'application/json')
       .end((err, res) => {
-        console.log(err, res);
-        window.location.replace('/');
+        if (err) {
+          this.setState({loading: false, result: 'failure'})
+        } else {
+          this.setState({loading: false, result: 'success'})
+        }
       });
   }
 
