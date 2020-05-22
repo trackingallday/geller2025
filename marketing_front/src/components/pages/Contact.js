@@ -1,6 +1,6 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router';
-import reqeust from 'superagent';
+import superagent from 'superagent';
 
 
 import URI from '../../constants/serverUrl';
@@ -21,7 +21,7 @@ class Contact extends Component {
         params[key] = value;
     });
     var json = JSON.stringify(params);
-    reqeust.get(URI + '/create_contact/')
+    superagent.get(URI + '/create_contact/')
       .query({data: json})
       .set('Accept', 'application/json')
       .end((err, res) => {
@@ -89,7 +89,7 @@ class Contact extends Component {
                     </div>
                 </div>
                 <div className="col-md-12">
-                    <button type="submit" className="btn btn-primary pull-right" id="btnContactUs">
+                    <button type="submit" className="btn btn-primary pull-right" id="btnContactUs" style={{cursor:'pointer'}}>
                         Send Message</button>
                 </div>
               </form>}

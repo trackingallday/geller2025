@@ -103,7 +103,6 @@ class App extends Component {
   }
 
   renderProduct = (match) => {
-    console.log(this.state.data)
     const product = this.state.data.products.find(p => p.id == match.match.params.product_id);
     return product ? <Product product={product} categories={this.state.data.categories} sizes={this.state.data.sizes} /> : this.renderProducts(match);
   }
@@ -121,7 +120,9 @@ class App extends Component {
   }
 
   renderContact = (match) => {
-    return <Contact configs={ this.state.data.configs } message={match.match.params.message}/>
+    const product = this.state.data.products.find(p => p.id == match.match.params.product_id);
+    let contactMessage = product && product.name || '';
+    return <Contact configs={ this.state.data.configs } message={ contactMessage }/>
   }
 
   render() {
@@ -160,7 +161,7 @@ class App extends Component {
             <Route exact={true} path="/support/:post" render={(m) => this.renderSupport(m)} key={10} />
             <Route exact={true} path="/support" render={(m) => this.renderSupport(m)} key={11} />
             <Route exact={true} path="/contact" render={(m) => this.renderContact(m)} key={12} />
-            <Route exact={true} path="/contact/:message" render={(m) => this.renderContact(m)} key={19} />
+            <Route exact={true} path="/contact/:product_id" render={(m) => this.renderContact(m)} key={19} />
             <Route component={this.withConfigs(NotFound)} />
           </Switch>
           <div className="row pad-top blue-back-dark">

@@ -64,7 +64,7 @@ urlpatterns = [
     url(r'^support/\d+/$', marketing_site, name='marketing_site_support_post'),
     # Contact page and inquiry
     url(r'^contact/$', marketing_site, name='marketing_site_contact'),
-    url(r'^contact/.+$', marketing_site, name='marketing_site_contact_message'),
+    url(r'^contact/\d+/$', marketing_site, name='marketing_site_contact_product_id'),
     # Any unmatched route will 404 and it'll drop down to handler404 below.
 ]
 
