@@ -135,7 +135,7 @@ class Product extends Component {
                   <div className="col-md-4 col-xs-12 col-sm-12 pdf-links">
                   <div className="row justify-content-center">
                       <div className="col-lg-6  col-md-auto" style={{padding: '0'}}>
-                        <a href={URI+p.infoSheet} target="_blank">
+                        <a href={URI + '/product_download/' + p.id + '/info/'} target="_blank">
                           <div className="roman grey-text">
                             <div style={{margin: '0 auto', maxWidth: '50px'}}>
                               <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px', marginLeft: '-3px'}} />
