@@ -4,21 +4,12 @@ from rest_framework.authtoken import views as drf_views
 from chemsapp.views import index, customers_list, products_list, new_customer, edit_customer, safety_wears_list,\
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
     new_distributor, edit_distributor, printout, public_products, markets_list, marketing_site, categories_list, create_contact,\
-    sizes_list
+    sizes_list, download_product_document
 
 urlpatterns = [
     url(r'^auth$', drf_views.obtain_auth_token, name='auth'),
-    url(r'^app$', index, name='index'),
-    url(r'^our_products/*', marketing_site, name='marketing_site'),
-    url(r'^product/*', marketing_site, name='marketing_site'),
-    url(r'^about/*', marketing_site, name='marketing_site'),
-    url(r'^news/*', marketing_site, name='marketing_site'),
-    url(r'^contact/*', marketing_site, name='marketing_site'),
-    url(r'^support/*$', marketing_site, name='marketing_site'),
-    url(r'^markets/*$', marketing_site, name='marketing_site'),
-    url(r'^our_markets/*$', marketing_site, name='marketing_site'),
-    url(r'^our_markets/$', marketing_site, name='marketing_site'),
-    url(r'^customers$', index, name='index'),
+    # Marketing utility routes
+    url(r'^product_download/(?P<product_id>\d+)/(?P<document_type>[a-z]{3,4})/$', download_product_document, name="product_download"),
     url(r'^products/$', index, name='index'),
     url(r'^distributors$', index, name='index'),
     url(r'^maps$', index, name='index'),

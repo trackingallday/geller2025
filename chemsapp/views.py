@@ -1,4 +1,4 @@
-from django.http import HttpResponse, JsonResponse
+from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
@@ -492,3 +492,37 @@ def create_contact(request):
     except Exception as e:
         print("ERROR")
         print(e)
+
+def _download_pdf_document(file_path, preferred_name=None):
+    if preferred_name is None:
+        preferred_name = os.path.basename(file_path)
+    try:
+        with open(file_path, 'rb') as document:
+            response = HttpResponse(document.read(), content_type='application/pdf')
+            response['Content-Disposition'] = 'attachment; filename="{}"'.format(preferred_name)
+            return response
+    except Exception as e:
+        print("ERROR")
+        print(e)
+        raise Http404("Document was not found.")
+
+
+@csrf_exempt
+def download_product_document(request, product_id, document_type):
+    try:
+        if document_type not in ['sds', 'info']:
+            raise Http404("Document was not found.")
+        product = Product.objects.get(id=product_id)
+        if not product:
+            raise Http404("Product was not found.")
+        if 'sds' == document_type and product.sdsSheet and product.sdsSheet.path.strip():
+            return _download_pdf_document(product.sdsSheet.path)
+        if 'info' == document_type and product.infoSheet and product.infoSheet.path.strip():
+            return _download_pdf_document(product.infoSheet.path)
+        raise Http404("Document was not found.")
+    except Http404:
+        raise
+    except Exception as e:
+        print("ERROR")
+        print(e)
+        raise Http404("Document was not found.")
