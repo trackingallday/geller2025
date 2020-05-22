@@ -12,7 +12,7 @@ class Contact extends Component {
     loading: false,
   }
 
-  onFormSubmit = (e) => {
+  onFormSubmit(e) {
     e.preventDefault();
     this.setState({loading: true})
     let data = new FormData(e.target);
