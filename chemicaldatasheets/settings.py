@@ -27,7 +27,7 @@ SECRET_KEY = '<{42.hA5@_Pg\Q,Bw[*9e<)sfw+bmMVtA3HFV,8?a8?y6urXB_'
 DEBUG = False
 
 ALLOWED_HOSTS = ['www.geller.co.nz','104.236.249.246', 'localhost', '127.0.0.1', '0.0.0.0', 'chemicaldataapp',
-                 'app.integraindustries.co.nz', 'geller.co.nz', 'app.geller.co.nz', '192.168.0.100']
+                 'app.integraindustries.co.nz', 'geller.co.nz', 'app.geller.co.nz', '192.168.0.100', '157.245.125.77']
 
 DEBUG_HOSTS = ('josh-ubuntu',)
 if platform_hostname() in DEBUG_HOSTS:
