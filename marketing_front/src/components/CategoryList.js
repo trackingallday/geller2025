@@ -29,10 +29,10 @@ export default class CategoryList extends Component {
   renderCategory = (c, ind) => {
     if(c.id == this.props.category) {
       return (
-        <li className="list-group-item smaller roman-med brighten" key={ind}>
+        <li className="list-group-item smaller roman-med brighten" key={ind} style={{backgroundColor: '#41b649'}}>
           <div>
-            <div>
-              <span style={{color: '#41b649'}} onClick={() => this.onCategoryClick(c)}>
+            <div style={{marginLeft: '1em' }}>
+              <span style={{color: 'white'}} onClick={() => this.onCategoryClick(c)}>
                 {c.name}
               </span>
             </div>
