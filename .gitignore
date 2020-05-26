@@ -44,3 +44,6 @@ dist_static/
 
 # Published output
 dist/
+
+# Published archives
+geller_*.tgz
