@@ -41,3 +41,6 @@ alllogs.log
 
 # Collected statics output
 dist_static/
+
+# Published output
+dist/
