@@ -18,6 +18,9 @@ echo "Adding scripts..."
 cp deploy.sh requirements.txt manage.py ./dist
 echo "Adding directories..."
 cp -r chemicaldatasheets chemsapp dist_static apache ./dist
+echo "Adding frontends..."
+cp --parents marketing_front/build/*.* ./dist
+cp --parents frontend/build/*.* ./dist
 echo "Cleaning output..."
 # Remove pycache/pyo/pyc files.
 find ./dist | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
