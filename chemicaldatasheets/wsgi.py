@@ -9,9 +9,9 @@ https://docs.djangoproject.com/en/1.11/howto/deployment/wsgi/
 
 import os, sys
 
-sys.path.append('/home/rimu/chemicaldatatapp')
+sys.path.append('/home/rimu/geller_brush')
 
-sys.path.append('/home/rimu/chemicaldataapp/venv/lib/python3.6/site-packages')
+sys.path.append('/home/rimu/geller_brush/.venv/lib/python3.6/site-packages')
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "chemicaldatasheets.settings")
 
