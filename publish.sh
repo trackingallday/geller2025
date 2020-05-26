@@ -24,3 +24,8 @@ cp --parents frontend/build/*.* ./dist
 echo "Cleaning output..."
 # Remove pycache/pyo/pyc files.
 find ./dist | grep -E "(__pycache__|\.pyc|\.pyo$)" | xargs rm -rf
+echo "Creating archive..."
+COMMIT_HASH=`git rev-parse --short HEAD`
+TIME=`date --rfc-3339=date | sed 's/-//g'`
+HOST=`hostname --short`
+tar czf "geller_"$COMMIT_HASH"_"$TIME"_"$HOST".tgz" -C dist .

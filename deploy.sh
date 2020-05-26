@@ -14,6 +14,7 @@ echo "Installing python dependencies"
 echo "Migrating"
 (
     source ./.venv/bin/activate &&
+    # We make migrations server side because we don't ship the database.
     python manage.py makemigrations &&
     python manage.py migrate
 )
