@@ -29,7 +29,7 @@ export default class ProductList extends Component {
         <div className="row" style={{paddingTop: '5px'}}>
           <div className="col-md-12">
             <div className="block-with-text product-desc" style={{maxHeight: '60px', lineHeight:'12px'}}>
-              { p.description }
+              { p.subheading ? p.subheading : p.description }
             </div>
           </div>
         </div>
