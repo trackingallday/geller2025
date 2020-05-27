@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.conf import settings
 from django.db.models.signals import post_save
 from django.dispatch import receiver
+from django.utils.safestring import mark_safe
 from rest_framework.authtoken.models import Token
 from django.core.files.storage import FileSystemStorage
 import cloudinary
@@ -43,6 +44,7 @@ class ProductCategory(MyBaseModel, models.Model):
     description = models.TextField(max_length=1000)
     products = models.ManyToManyField('Product', blank=True, null=True, related_name='categories')
     image = models.FileField(upload_to='documents/', blank=True, null=True)
+    menu_color = models.CharField(max_length=7, blank=True, null=True, help_text=mark_safe('Choose a color for the category menu. See <a href="https://www.w3schools.com/colors/colors_picker.asp">W3Schools Color Picker</a> for help choosing a color. If black (#000000) is chosen, a default color will be used.'))
     isSubCategory = models.BooleanField(default=False)
     relatedCategory = models.ManyToManyField('ProductCategory')
 
