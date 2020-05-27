@@ -46,7 +46,7 @@ class ProductCategory(MyBaseModel, models.Model):
     image = models.FileField(upload_to='documents/', blank=True, null=True)
     menu_color = models.CharField(max_length=7, blank=True, null=True, help_text=mark_safe('Choose a color for the category menu. See <a href="https://www.w3schools.com/colors/colors_picker.asp">W3Schools Color Picker</a> for help choosing a color. If black (#000000) is chosen, a default color will be used.'))
     isSubCategory = models.BooleanField(default=False)
-    relatedCategory = models.ManyToManyField('ProductCategory')
+    relatedCategory = models.ManyToManyField('ProductCategory', blank=True)
 
     def __str__(self):
         return "{} ".format(self.name)
