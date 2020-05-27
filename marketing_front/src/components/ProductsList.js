@@ -7,7 +7,7 @@ export default class ProductList extends Component {
 
   renderProduct = (p, ind) => {
     return (
-      <div key={ind} className="col-md-3" style={{padding: '10px 15px'}}>
+      <div key={ind} className="col-md-3" style={{padding: '10px 15px', textAlign: 'center' }}>
         <div className="row">
           <NavLink to={"/product/" + p.id} style={{margin: '0 auto'}}>
             <div className="contain" style={{height: '220px'}}>
@@ -26,10 +26,10 @@ export default class ProductList extends Component {
             </NavLink>
           </div>
         </div>
-        <div className="row" style={{paddingTop: '5px'}}>
+        <div className="row">
           <div className="col-md-12">
             <div className="block-with-text product-desc" style={{maxHeight: '60px', lineHeight:'12px'}}>
-              { p.description }
+              { p.subheading ? p.subheading : p.description }
             </div>
           </div>
         </div>
