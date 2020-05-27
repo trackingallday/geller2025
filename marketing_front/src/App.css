@@ -180,7 +180,6 @@ pre {
 }
 
 .block-with-text {
-    width: 90%;
     max-height: 50px;
     text-overflow: ellipsis;
     white-space: pre-wrap;
