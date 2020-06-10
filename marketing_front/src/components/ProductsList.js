@@ -28,7 +28,7 @@ export default class ProductList extends Component {
         </div>
         <div className="row">
           <div className="col-md-12">
-            <div className="block-with-text product-desc grey-text" style={{maxHeight: '60px', lineHeight:'12px'}}>
+            <div className="block-with-text product-desc grey-text" style={{maxHeight: 'unset', lineHeight:'16px', fontSize: '14px'}}>
               { p.subheading ? p.subheading : p.description }
             </div>
           </div>

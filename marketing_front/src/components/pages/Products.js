@@ -95,7 +95,7 @@ class Products extends Component {
                 <span  style={{paddingLeft: '0px', fontSize: '24px', color: this.categoryMenuColor(category) }} className="heading">{ name || 'All Products' }</span>
               </div>
               <div className="col-md-6 col-lg-8">
-                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '17px', paddingRight: '9px'}}>
+                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '17px', paddingRight: '9px', fontSize: '11pt'}}>
                   { categoryDesc }
                 </span>
               </div>
