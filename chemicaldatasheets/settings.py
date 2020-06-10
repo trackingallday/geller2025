@@ -85,7 +85,7 @@ TEMPLATES = [
 LOGIN_REDIRECT_URL = '/'
 
 WSGI_APPLICATION = 'chemicaldatasheets.wsgi.application'
-APPEND_SLASH=False
+APPEND_SLASH=True
 
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
@@ -156,10 +156,17 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'dist_static')
 
 #email settings
 EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'chemicaldataapp@gmail.com'
-EMAIL_HOST_PASSWORD = 'cbr400rr'
+EMAIL_HOST_USER = 'geller.co.nz@gmail.com'
+EMAIL_HOST_PASSWORD = 'yPI6BL83'
 EMAIL_PORT = 587
 EMAIL_USE_TLS = True
+
+EMAIL_FROM = 'geller.co.nz@gmail.com'
+EMAIL_ADMIN = 'sales.support@integraindustries.co.nz'
+if DEBUG:
+    # Email ourselves so we can check when debugging.
+    EMAIL_ADMIN = EMAIL_FROM
+    print('Admin Debug Email:', EMAIL_ADMIN)
 
 #import export settings
 IMPORT_EXPORT_USE_TRANSACTIONS = True
