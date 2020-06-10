@@ -9,6 +9,7 @@ import Support from './components/pages/Support';
 import News from './components/pages/News';
 import Contact from './components/pages/Contact';
 import NotFound from './components/pages/NotFound';
+import GetSDS from './components/pages/GetSDS';
 import URI from  './constants/serverUrl';
 
 import MobileNav from './components/MobileNav';
@@ -126,6 +127,13 @@ class App extends Component {
     return <Contact configs={ this.state.data.configs } message={ contactMessage } product={productId} />
   }
 
+  renderSDS = (match) => {
+    const productId = match.match.params.product_id;
+    const product = this.state.data.products.find(p => p.id == productId);
+    const productName = product && product.name || undefined;
+    return <GetSDS configs={ this.state.data.configs } productName={ productName } productId={ productId } />
+  }
+
   render() {
     const isHome = window.location.pathname === '/';
     const outImg = (
@@ -163,6 +171,7 @@ class App extends Component {
             <Route exact={true} path="/support" render={(m) => this.renderSupport(m)} key={11} />
             <Route exact={true} path="/contact" render={(m) => this.renderContact(m)} key={12} />
             <Route exact={true} path="/contact/:product_id" render={(m) => this.renderContact(m)} key={19} />
+            <Route exact={true} path="/getsds/:product_id" render={(m) => this.renderSDS(m)} key={501} />
             <Route component={this.withConfigs(NotFound)} />
           </Switch>
           <div className="row pad-top blue-back-dark">

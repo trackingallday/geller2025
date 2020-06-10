@@ -64,6 +64,26 @@ def create_user(data):
     user.save()
     return user
 
+def mail_admin(subject, content, html_content=None):
+    return send_mail(
+        subject,
+        content,
+        settings.EMAIL_FROM,
+        [settings.EMAIL_ADMIN],
+        fail_silently=False,
+        html_message=html_content,
+    )
+
+def mail_customer(subject, content, customer_email, html_content=None):
+    return send_mail(
+        subject,
+        content,
+        settings.EMAIL_FROM,
+        [customer_email, settings.EMAIL_ADMIN],
+        fail_silently=False,
+        html_message=html_content,
+    )
+
 
 @csrf_exempt
 def index(request):
@@ -474,19 +494,46 @@ def create_contact(request):
         c.is_valid()
         a = c.validated_data
         c.create(a)
-        send_mail(
-            'Contact from Geller.co.nz',
-            b['nameFrom'] + ' ' + b['emailFrom'] + ' ' + b['content'],
-            'chemicaldatasheets@gmail.com',
-            ['james@integraindustries.co.nz'],
+        mail_admin('Contact from Geller.co.nz',
+            b['nameFrom'] + ' ' + b['emailFrom'] + ' ' + b['content']
+        )
+        mail_customer('Contact from Geller.co.nz',
+            'Hi ' + b['nameFrom'] + ' Thanks for you contact request we will be in touch shortly.',
+            b['emailFrom'],
             fail_silently=False,
         )
-        send_mail(
+        return JsonResponse({'sddsfds':'sdfsefsfseffse'})
+    except Exception as e:
+        print("ERROR")
+        print(e)
+
+@csrf_exempt
+def sds_enquire(request):
+    try:
+        b = json.loads(request.GET['data'])
+        b['isSDSDownload'] = True
+
+        # Resolve product name
+        product = Product.objects.get(id=b['productId'])
+        productName = "Error: Unknown Product ({})".format(b['productId'])
+        if product:
+            productName = product.name
+        b['productName'] = productName
+        b['content'] = 'Downloaded SDS for product:' + productName
+
+        c = ContactSerializer(data=b)
+        c.is_valid()
+
+        a = c.validated_data
+        c.create(a)
+
+        mail_admin(
             'Contact from Geller.co.nz',
-            'Hi ' + b['nameFrom'] + ' Thanks for you contact request we will be in touch shortly.',
-            'chemicaldatasheets@gmail.com',
-            [b['emailFrom'], 'james@integraindustries.co.nz'],
-            fail_silently=False,
+            """A customer has downloaded an SDS for a product.
+Name: {nameFrom}
+Company: {companyName}
+Email: {emailFrom}
+Product: {productName}""".format(**b),
         )
         return JsonResponse({'sddsfds':'sdfsefsfseffse'})
     except Exception as e:

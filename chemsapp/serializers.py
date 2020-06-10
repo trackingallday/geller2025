@@ -237,8 +237,7 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = (
-            'id', 'nameFrom', 'emailFrom', 'replied', 'content',
-
+            'id', 'nameFrom', 'emailFrom', 'replied', 'content', 'isSDSDownload', 'companyName'
         )
 
 class SizeSerializer(serializers.ModelSerializer):

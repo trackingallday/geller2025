@@ -4,7 +4,7 @@ from rest_framework.authtoken import views as drf_views
 from chemsapp.views import index, customers_list, products_list, new_customer, edit_customer, safety_wears_list,\
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
     new_distributor, edit_distributor, printout, public_products, markets_list, marketing_site, categories_list, create_contact,\
-    sizes_list, download_product_document
+    sizes_list, download_product_document, sds_enquire
 
 urlpatterns = [
     url(r'^auth$', drf_views.obtain_auth_token, name='auth'),
@@ -41,6 +41,7 @@ urlpatterns = [
     url(r'^markets_list/', markets_list, name="markets_list"),
     url(r'^categories_list/', categories_list, name="categories_list"),
     url(r'^sizes_list/', sizes_list, name="sizes_list"),
+    url(r'^sds_enquire/', sds_enquire, name="sds_enquire"),
 
     # Marketing frontend
     url(r'^$', marketing_site, name='marketing_site'),
@@ -65,6 +66,8 @@ urlpatterns = [
     # Contact page and inquiry
     url(r'^contact/$', marketing_site, name='marketing_site_contact'),
     url(r'^contact/\d+/$', marketing_site, name='marketing_site_contact_product_id'),
+    # SDS Download page
+    url(r'^getsds/\d+/$', marketing_site, name='marketing_site_getsds_product_id'),
     # Any unmatched route will 404 and it'll drop down to handler404 below.
 ]
 

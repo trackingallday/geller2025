@@ -166,6 +166,9 @@ class Contact(MyBaseModel, models.Model):
     emailFrom = models.CharField(max_length=255)
     replied = models.BooleanField(default=False)
     content = models.TextField(max_length=1500)
+    # New SDS Enquiry stuff
+    isSDSDownload = models.BooleanField(default=False)
+    companyName = models.TextField(max_length=1000, null=True, blank=True)
 
     def __str__(self):
         return self.nameFrom

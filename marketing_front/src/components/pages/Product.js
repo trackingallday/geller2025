@@ -147,7 +147,7 @@ class Product extends Component {
                         </a>
                       </div>
                       <div className="col-lg-6 col-md-auto" style={{padding: '0'}}>
-                        <a href={'/contact/' + p.id }>
+                        <a href={'/getsds/' + p.id }>
                           <div className="roman grey-text">
                             <div style={{margin: '0 auto', maxWidth: '50px'}}>
                               <img src={require('../../assets/email.png')} style={{ width: '50px'}} />
