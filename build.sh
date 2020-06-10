@@ -2,9 +2,11 @@
 set -e # Fail fast
 [ "$DEBUG" == 'true' ] && set -x # Print all commands
 
-echo "Installing dependencies"
-( cd marketing_front && npm i --no-package-lock)
-( cd frontend && npm i --no-package-lock)
+if [ "$INSTALL" == 'force' ] || [ ! -d "marketing_front/node_modules" ] || [ ! -d "frontend/node_modules" ]; then
+    echo "Installing dependencies"
+    ( cd marketing_front && npm i --no-package-lock)
+    ( cd frontend && npm i --no-package-lock)
+fi
 
 echo "Building React apps"
 rm -rf marketing_front/build
