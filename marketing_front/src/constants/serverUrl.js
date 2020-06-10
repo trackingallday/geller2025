@@ -1,4 +1,4 @@
-const dev = false;
+const dev = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
 const DEV_URL = 'http://0.0.0.0:8000';
 const PRODUCTION_URL = 'https://157.245.125.77';
 let url = PRODUCTION_URL;
