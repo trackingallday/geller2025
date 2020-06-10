@@ -499,8 +499,7 @@ def create_contact(request):
         )
         mail_customer('Contact from Geller.co.nz',
             'Hi ' + b['nameFrom'] + ' Thanks for you contact request we will be in touch shortly.',
-            b['emailFrom'],
-            fail_silently=False,
+            b['emailFrom']
         )
         return JsonResponse({'sddsfds':'sdfsefsfseffse'})
     except Exception as e:
