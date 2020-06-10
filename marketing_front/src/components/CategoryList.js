@@ -2,6 +2,14 @@ import React, { Component } from 'react';
 
 export default class CategoryList extends Component {
 
+  categoryMenuColor = (c) => {
+    let category_menu_color = '#00c7c5';
+    if (c && c.menu_color && c.menu_color != '#000000' && c.menu_color != '#000') {
+      category_menu_color = c.menu_color;
+    }
+    return category_menu_color;
+  }
+
   onCategoryClick = (c) => {
     if(this.props.market) {
       this.props.history.push('/our_markets/' + c.id);
@@ -18,9 +26,9 @@ export default class CategoryList extends Component {
     if(!sc.isSubCategory){
       return null;
     }
-    const style = sc.name && sc.id == this.props.subCategory ? {color: '#0275d8'} : {};
+    const style = sc.name && sc.id == this.props.subCategory ? {color: 'white', textDecoration: 'underline'} : { color: 'white' };
     return (
-      <li key={sc.name+"subCategory"} className="list-group-item roman-med brighten" onClick={() => this.onSubCategoryClick(sc)}>
+      <li key={sc.name+"subCategory"} style={{backgroundColor: 'inherit'}} className="list-group-item roman-med brighten" onClick={() => this.onSubCategoryClick(sc)}>
         <span className={"blue-text-light "} style={style} >{ sc.name }</span>
       </li>
     );
@@ -29,10 +37,10 @@ export default class CategoryList extends Component {
   renderCategory = (c, ind) => {
     if(c.id == this.props.category) {
       return (
-        <li className="list-group-item smaller roman-med brighten" key={ind}>
+        <li className="list-group-item smaller roman-med brighten" key={ind} style={{backgroundColor: this.categoryMenuColor(c), marginLeft: '-1em'}}>
           <div>
-            <div>
-              <span style={{color: '#41b649'}} onClick={() => this.onCategoryClick(c)}>
+            <div style={{marginLeft: '1em' }}>
+              <span style={{color: 'white'}} onClick={() => this.onCategoryClick(c)}>
                 {c.name}
               </span>
             </div>

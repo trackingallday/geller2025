@@ -147,7 +147,7 @@ pre {
 }
 
 .product-name {
-    font-size: 16px;
+    font-size: 18px;
     font-weight: bold;
     color: #000;
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
@@ -167,6 +167,11 @@ pre {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
 }
 
+.product-subtitle-detail {
+    font-size: 15px;
+    font-weight: 600;
+}
+
 .product-name:hover {
     color: #0275d8;
 }
@@ -176,25 +181,13 @@ pre {
     font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
     font-weight: 400;
     font-stretch: condensed;
-    color: #0275d8;
 }
 
 .block-with-text {
-    width: 90%;
     max-height: 50px;
     text-overflow: ellipsis;
     white-space: pre-wrap;
     overflow: hidden;
-}
-
-.block-with-text.product-desc::after {
-    content: " ";
-    position: absolute;
-    left: 0;
-    right: 0;
-    bottom: 0;
-    height: 2em;
-    background: linear-gradient(to bottom, rgba(255, 255, 255, 0), rgba(255, 255, 255, 1) 50%);
 }
 
 .description-text {
@@ -625,10 +618,11 @@ img.main-product-img {
 }
 
 .bouncing {
+    text-align: center;
     margin-top: 50px;
     border-radius: 50%;
     margin-top: 40px;
-    width: 350px;
+    /* width: 350px; */
     height: 350px;
     animation: bounce 1s infinite alternate;
     -webkit-animation: bounce 1s infinite alternate;

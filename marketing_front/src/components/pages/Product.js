@@ -102,7 +102,14 @@ class Product extends Component {
           <div className="col-md-8 col-lg-9" style={{padding: '10px 5px 10px 5px'}}>
             <div className="row">
               <div className="col-md-6">
-                { this.renderProductDetail(p.name + " - " + p.brand, "product-name-detail", null, "20px")}
+                { this.renderProductDetail(p.name, "product-name-detail", null, "20px")}
+                {
+                  // Optionally render the subheading if its not empty
+                  this.renderConditionally(
+                    p.subheading,
+                    this.renderProductDetail(p.subheading, "product-detail product-subtitle-detail")
+                  )
+                }
                 {
                   // Optionally render the old SKU if the new field is not being used.
                   this.renderConditionally(
@@ -147,7 +154,7 @@ class Product extends Component {
                         </a>
                       </div>
                       <div className="col-lg-6 col-md-auto" style={{padding: '0'}}>
-                        <a href={'/contact/' + p.id }>
+                        <a href={'/getsds/' + p.id }>
                           <div className="roman grey-text">
                             <div style={{margin: '0 auto', maxWidth: '50px'}}>
                               <img src={require('../../assets/email.png')} style={{ width: '50px'}} />

@@ -27,7 +27,7 @@ urlpatterns = [
     url(r'^admin$', RedirectView.as_view(url='/admin/', permanent=True)),
     url(r'^get_auth_token/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
     url(r'^accounts/', include('django.contrib.auth.urls')),
-    url(r'^', include('chemsapp.urls', namespace='chemsapp', app_name='chemsapp')),
+    url(r'', include('chemsapp.urls', namespace='chemsapp', app_name='chemsapp')),
 ]
 
 # Pass on any 404 errors to the marketing frontend handler.

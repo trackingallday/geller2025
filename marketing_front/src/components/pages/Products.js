@@ -12,6 +12,14 @@ class Products extends Component {
     market: null,
   }
 
+  categoryMenuColor = (c) => {
+    let category_menu_color = '#00c7c5';
+    if (c && c.menu_color && c.menu_color != '#000000' && c.menu_color != '#000') {
+      category_menu_color = c.menu_color;
+    }
+    return category_menu_color;
+  }
+
   onCategoryClick = (c) => {
     this.setState({category: c });
   }
@@ -83,11 +91,11 @@ class Products extends Component {
           <div className="col-md-9">
             <div className="row" style={{minHeight: '215px', paddingTop: '35px'}}>
               { img }
-              <div className="col-md-3">
-                <span  style={{paddingLeft: '0px', fontSize: '24px'}} className="heading">{ name || 'All Products' }</span>
+              <div className="col-md-4 col-lg-3">
+                <span  style={{paddingLeft: '0px', fontSize: '24px', color: this.categoryMenuColor(category) }} className="heading">{ name || 'All Products' }</span>
               </div>
-              <div className="col-md-8">
-                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '17px', paddingRight: '9px'}}>
+              <div className="col-md-6 col-lg-8">
+                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '17px', paddingRight: '9px', fontSize: '11pt'}}>
                   { categoryDesc }
                 </span>
               </div>
