@@ -156,7 +156,7 @@ class Product extends Component {
                         <a href={'/getsds/' + p.id }>
                           <div className="roman grey-text">
                             <div style={{margin: '0 auto', maxWidth: '50px'}}>
-                              <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px'}} />
+                              <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px', marginLeft: '-3px'}} />
                             </div>
                             <div style={{fontSize: '12px', textAlign: 'center'}}>
                               SDS<br />(download)
