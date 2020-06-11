@@ -69,11 +69,13 @@ class Product(MyBaseModel, models.Model):
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
     uploadedBy = models.ForeignKey(User, on_delete=None, related_name="products_added")
     subCategory = models.ManyToManyField(ProductCategory, blank=True, null=True, related_name='subcategories')
-    properties = models.CharField(max_length=500, blank=True, null=True)
     public = models.BooleanField(default=False)
     productCategory = models.ManyToManyField(ProductCategory, through=ProductCategory.products.through, blank=True, null=True, related_name='categories')
-    application = models.CharField(max_length=500, blank=True, null=True)
     sizes = models.ManyToManyField("Size", related_name="products", blank=True)
+
+    # Old fields that are now read-only in the admin.
+    properties = models.CharField(max_length=500, blank=True, null=True, help_text='Read only: Legacy field is no longer used. Exists only for reference.')
+    application = models.CharField(max_length=500, blank=True, null=True, help_text='Read only: Legacy field is no longer used. Exists only for reference.')
 
     def __str__(self):
         return "{} ".format(self.name)

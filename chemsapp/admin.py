@@ -50,7 +50,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class ProductAdmin(ImportExportModelAdmin):
-
+    readonly_fields = ["properties", "application"]
     resource_class = ProductResource
 
 
