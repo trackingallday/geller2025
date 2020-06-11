@@ -59,7 +59,7 @@ class Product(MyBaseModel, models.Model):
     primaryImageLink  = models.FileField(upload_to='documents/', blank=True, null=True)
     usageType = models.CharField(max_length=455)
     amountDesc = models.CharField(max_length=455)
-    description = models.TextField(max_length=1000, blank=True, null=True)
+    description = models.TextField(max_length=1000)
     directions = models.TextField(max_length=2000)
     productCode = models.CharField(max_length=255, unique=True)
     productCodes = models.TextField(max_length=1000, blank=True, null=True)
