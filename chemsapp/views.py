@@ -290,7 +290,7 @@ def new_product(request):
         name=data.get('name'),
         usageType=data.get('usageType'),
         amountDesc=data.get('amountDesc'),
-        instructions=data.get('instructions'),
+        directions=data.get('directions'),
         productCode=data.get('productCode'),
         brand=data.get('brand'),
         properties=data.get('properties'),
@@ -336,7 +336,7 @@ def edit_product(request):
     product.name = data.get('name')
     product.usageType = data.get('usageType')
     product.amountDesc = data.get('amountDesc')
-    product.instructions = data.get('instructions')
+    product.directions = data.get('directions')
     product.productCode = data.get('productCode')
     product.brand = data.get('brand')
     product.properties = data.get('properties')

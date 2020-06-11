@@ -117,9 +117,8 @@ class Product extends Component {
                     this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")
                   )
                 }
-                { this.renderProductDetail(p.description, undefined, undefined, undefined, true)}
-                { this.renderProductDetail(p.application, "product-detail", "Description")}
-                { this.renderProductDetail(p.properties, "product-detail", "Directions")}
+                { this.renderProductDetail(p.description, "product-detail", "Description")}
+                { this.renderProductDetail(p.directions, "product-detail", "Directions")}
                 { this.renderProductDetail(p.market) }
               </div>
               <div className="col-md-6" style={{height: '350px' }}>
@@ -157,10 +156,10 @@ class Product extends Component {
                         <a href={'/getsds/' + p.id }>
                           <div className="roman grey-text">
                             <div style={{margin: '0 auto', maxWidth: '50px'}}>
-                              <img src={require('../../assets/email.png')} style={{ width: '50px'}} />
+                              <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px'}} />
                             </div>
                             <div style={{fontSize: '12px', textAlign: 'center'}}>
-                              SDS<br />(enquire)
+                              SDS<br />(download)
                             </div>
                           </div>
                         </a>

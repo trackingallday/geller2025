@@ -17,7 +17,7 @@ const productDetailList = [
   ['Description', 'description'],
   ['Sub Category', 'subCategory'],
   ['Markets', 'markets'],
-  [ 'Instructions','instructions'], ['Code', 'productCode'], ['Brand', 'brand'],
+  [ 'Directions','directions'], ['Code', 'productCode'], ['Brand', 'brand'],
   [ 'Saftey Wear', 'safetyWears'],
 ];
 

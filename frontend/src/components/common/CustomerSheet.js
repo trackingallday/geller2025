@@ -54,7 +54,7 @@ import URI from '../../constants/serverUrl';
       primaryImageLink,
       secondaryImageLink,
       name, brand, usageType, amountDesc,
-      instructions,
+      directions,
     } = product
     const textStyle = {
       fontFamily: 'Helvetica',
@@ -98,7 +98,7 @@ import URI from '../../constants/serverUrl';
               <span style={midStyle}>{amountDesc}</span>
             </Row>
             <Row style={bottomRowStyle}>
-              <span style={bottomStyle}>{ instructions }</span>
+              <span style={bottomStyle}>{ directions }</span>
             </Row>
           </Col>
           <Col span={4}>

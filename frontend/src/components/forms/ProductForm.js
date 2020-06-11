@@ -165,8 +165,8 @@ class ProductForm extends Component {
           rules: [{required: req, message: 'Required!'}]})(
             <TextArea placeholder="ie: Use as required"  />)}
         </FormItem>
-        <FormItem {...formItemLayout} label="Instructions">
-          {getFieldDecorator('instructions', { initialValue: this.getInitialValue('instructions'),
+        <FormItem {...formItemLayout} label="Directions">
+          {getFieldDecorator('directions', { initialValue: this.getInitialValue('directions'),
           rules: [{required: req, message: 'Required!'}]})(
             <TextArea />)}
         </FormItem>
