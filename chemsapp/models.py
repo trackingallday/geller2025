@@ -57,8 +57,6 @@ class Product(MyBaseModel, models.Model):
     subheading = models.CharField(max_length=255, blank=True, null=True)
     secondaryImageLink = models.FileField(upload_to='documents/', blank=True, null=True)
     primaryImageLink  = models.FileField(upload_to='documents/', blank=True, null=True)
-    usageType = models.CharField(max_length=455)
-    amountDesc = models.CharField(max_length=455)
     description = models.TextField(max_length=1000)
     directions = models.TextField(max_length=2000)
     productCode = models.CharField(max_length=255, unique=True)
@@ -72,6 +70,10 @@ class Product(MyBaseModel, models.Model):
     public = models.BooleanField(default=False)
     productCategory = models.ManyToManyField(ProductCategory, through=ProductCategory.products.through, blank=True, null=True, related_name='categories')
     sizes = models.ManyToManyField("Size", related_name="products", blank=True)
+
+    # Unused for marketing frontend
+    usageType = models.CharField(max_length=455, blank=True)
+    amountDesc = models.CharField(max_length=455, blank=True)
 
     # Old fields that are now read-only in the admin.
     properties = models.CharField(max_length=500, blank=True, null=True, help_text='Read only: Legacy field is no longer used. Exists only for reference.')
