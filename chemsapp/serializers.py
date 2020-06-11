@@ -73,7 +73,7 @@ class ProductSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'subheading', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
             'directions', 'productCode', 'productCodes', 'brand', 'infoSheet', 'sdsSheet',
-            'safetyWears', 'customers', 'editable',  'markets', 'properties', 'application', 'description', 'subCategory', 'productCategory',
+            'safetyWears', 'customers', 'editable',  'markets', 'description', 'subCategory', 'productCategory',
             'sizes',
         )
 
@@ -92,7 +92,7 @@ class PublicProductSerializer(serializers.ModelSerializer):
         fields = (
             'id', 'name', 'subheading', 'primaryImageLink', 'secondaryImageLink',
             'productCode', 'productCodes', 'brand', 'infoSheet', 'productCategory',
-            'description', 'markets', 'properties', 'application', 'subCategory',
+            'description', 'markets', 'directions', 'subCategory',
             'sizes',
 
         )
