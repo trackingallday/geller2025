@@ -23,6 +23,12 @@ export default class Home extends Component {
     if (home_row1_col2.linkText && home_row1_col2.linkURL) {
       home_row1_link = <NavLink to={home_row1_col2.linkURL}>{home_row1_col2.linkText}</NavLink>
     }
+
+    let latest_news_link = null;
+    if (latest_news.linkText && latest_news.linkURL) {
+      latest_news_link = <NavLink to={latest_news.linkURL}>{latest_news.linkText}</NavLink>
+    }
+
     return (
       <div>
         <div className="row">
@@ -63,6 +69,7 @@ export default class Home extends Component {
               </h1>
               <div className="news-home">
                 <pre className="roman white-text">{latest_news.content}</pre>
+                {latest_news_link}
               </div>
             </div>
             <div className="col-md-6">
