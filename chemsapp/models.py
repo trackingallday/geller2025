@@ -91,6 +91,7 @@ class Post(MyBaseModel, models.Model):
     image = models.FileField(upload_to='documents/', blank=True, null=True)
     linkURL = models.CharField(max_length=1000, blank=True, null=True)
     linkText = models.CharField(max_length=255, blank=True, null=True)
+    linkColor = models.CharField(max_length=7, blank=True, null=True, help_text=mark_safe('Choose a color for the category menu. See <a href="https://www.w3schools.com/colors/colors_picker.asp">W3Schools Color Picker</a> for help choosing a color. If black (#000000) is chosen, a default color will be used.'))
 
     def __str__(self):
         return "{} {} {}".format(self.page, self.title, self.name)

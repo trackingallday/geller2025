@@ -12,10 +12,14 @@ class Post extends Component {
     }
     let postLinkDOM = null;
     if (post.linkURL && post.linkText) {
+      let style = {};
+      if (post.linkColor && post.linkColor !== '#000000') {
+        style.color = post.linkColor;
+      }
       postLinkDOM = <div className="row">
                     <div className="col-md-12">
                       <p style={{whiteSpace: 'pre-wrap'}}>
-                        <a href={post.linkURL}>{post.linkText}</a>
+                        <a style={style} href={post.linkURL}>{post.linkText}</a>
                       </p>
                     </div>
                   </div>

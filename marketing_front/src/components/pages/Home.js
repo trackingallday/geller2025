@@ -21,12 +21,20 @@ export default class Home extends Component {
 
     let home_row1_link = null;
     if (home_row1_col2.linkText && home_row1_col2.linkURL) {
-      home_row1_link = <NavLink to={home_row1_col2.linkURL}>{home_row1_col2.linkText}</NavLink>
+      let style = {};
+      if (home_row1_col2.linkColor && home_row1_col2.linkColor !== '#000000') {
+        style.color = home_row1_col2.linkColor;
+      }
+      home_row1_link = <NavLink style={style} to={home_row1_col2.linkURL}>{home_row1_col2.linkText}</NavLink>
     }
 
     let latest_news_link = null;
     if (latest_news.linkText && latest_news.linkURL) {
-      latest_news_link = <NavLink to={latest_news.linkURL}>{latest_news.linkText}</NavLink>
+      let style = {};
+      if (latest_news.linkColor && latest_news.linkColor !== '#000000') {
+        style.color = latest_news.linkColor;
+      }
+      latest_news_link = <NavLink style={style} to={latest_news.linkURL}>{latest_news.linkText}</NavLink>
     }
 
     return (

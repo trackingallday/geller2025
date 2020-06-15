@@ -3,7 +3,7 @@ from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
-from .forms import ProductCategoryForm
+from .forms import ProductCategoryForm, PostForm
 
 
 class SafetyWearResource(resources.ModelResource):
@@ -71,6 +71,7 @@ class CategoryAdmin(ImportExportModelAdmin):
     pass
 
 class PostAdmin(ImportExportModelAdmin):
+    form = PostForm
     pass
 
 class MarketAdmin(ImportExportModelAdmin):

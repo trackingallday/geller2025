@@ -211,7 +211,7 @@ class PostSererializer(serializers.ModelSerializer):
     class Meta:
         model = Post
         fields = (
-            'id', 'title', 'name', 'content', 'image', 'page', 'linkURL', 'linkText',
+            'id', 'title', 'name', 'content', 'image', 'page', 'linkURL', 'linkText', 'linkColor'
         )
 
 
