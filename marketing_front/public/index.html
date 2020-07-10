@@ -23,6 +23,17 @@
       Learn how to configure a non-root public URL by running `npm run build`.
     -->
     <title>Geller</title>
+
+    <script async src="https://www.googletagmanager.com/gtag/js?id=UA-170765710-1"></script>
+    <script>
+      var dev = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
+      if (!dev) {
+        window.dataLayer = window.dataLayer || [];
+        function gtag(){dataLayer.push(arguments);}
+        gtag('js', new Date());
+        gtag('config', 'UA-170765710-1');
+      }
+    </script>
   </head>
   <body>
     <noscript>
