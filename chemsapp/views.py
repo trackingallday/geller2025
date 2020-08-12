@@ -1,3 +1,4 @@
+import logging
 from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
@@ -534,10 +535,14 @@ Company: {companyName}
 Email: {emailFrom}
 Product: {productName}""".format(**b),
         )
-        return JsonResponse({'sddsfds':'sdfsefsfseffse'})
     except Exception as e:
-        print("ERROR")
-        print(e)
+        # Use django logger to see what the issue is on the live server.
+        # I'm getting an SMTP credetials error locally. Probably the same thing.
+        logging.error(e)
+
+    # Return response even if there is an error. 
+    return JsonResponse({'sddsfds':'sdfsefsfseffse'})
+
 
 def _download_pdf_document(file_path, preferred_name=None):
     if preferred_name is None:
