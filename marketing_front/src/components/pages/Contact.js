@@ -30,7 +30,6 @@ class Contact extends Component {
           this.setState({loading: false, result: 'failure'})
         } else {
           this.setState({loading: false, result: 'success'})
-          window.location.replace(URI + '/product_download/' + this.props.product + '/sds/');
         }
       });
   }
@@ -68,7 +67,7 @@ class Contact extends Component {
           <div className="col-md-8">
             <div className="well well-md">
 
-              {!this.state.loading && <form onSubmit={(e) => this.onFormSubmit(e)}>
+              {!this.state.loading && this.state.result == 'unset' && <form onSubmit={(e) => this.onFormSubmit(e)}>
                 <div className="col-md-6">
                   <h3>Drop us a line</h3>
                   <p></p>
@@ -108,6 +107,11 @@ class Contact extends Component {
                     </div>
                   </div>
                 </div>
+              </div>}
+              {this.state.result == 'success' && <div className="col-md-6">
+                  <h3>Thank you for the message!</h3>
+                  <p></p>
+                  <p>We will be in touch soon.</p>
               </div>}
             </div>
           </div>
