@@ -109,9 +109,14 @@ class Contact extends Component {
                 </div>
               </div>}
               {this.state.result == 'success' && <div className="col-md-6">
-                  <h3>Thank you for the message!</h3>
-                  <p></p>
-                  <p>We will be in touch soon.</p>
+                <h3>Thank you for the message!</h3>
+                <p></p>
+                <p>We will be in touch soon.</p>
+              </div>}
+              {this.state.result == 'failure' && <div className="col-md-6">
+                <h3>There was an issue with sending the email</h3>
+                <p></p>
+                <p>Please get in touch via phone on 0800 667 843.</p>
               </div>}
             </div>
           </div>

@@ -490,23 +490,21 @@ def sizes_list(request):
 
 @csrf_exempt
 def create_contact(request):
-    try:
-        b = json.loads(request.GET['data'])
-        c = ContactSerializer(data=b)
-        c.is_valid()
-        a = c.validated_data
-        c.create(a)
-        mail_admin('Contact from Geller.co.nz',
-            b['nameFrom'] + ' ' + b['emailFrom'] + ' ' + b['content']
-        )
-        mail_customer('Contact from Geller.co.nz',
-            'Hi ' + b['nameFrom'] + ' Thanks for you contact request we will be in touch shortly.',
-            b['emailFrom']
-        )
-        return JsonResponse({'sddsfds':'sdfsefsfseffse'})
-    except Exception as e:
-        print("ERROR")
-        print(e)
+    b = json.loads(request.GET['data'])
+    c = ContactSerializer(data=b)
+    c.is_valid()
+    a = c.validated_data
+    c.create(a)
+    mail_admin('Contact from Geller.co.nz',
+        b['nameFrom'] + ' ' + b['emailFrom'] + ' ' + b['content']
+    )
+    mail_customer('Contact from Geller.co.nz',
+        'Hi ' + b['nameFrom'] + ' Thanks for you contact request we will be in touch shortly.',
+        b['emailFrom']
+    )
+
+    # Return response even if there is an error. 
+    return JsonResponse({'sddsfds':'sdfsefsfseffse'})
 
 @csrf_exempt
 def sds_enquire(request):
@@ -537,8 +535,7 @@ Email: {emailFrom}
 Product: {productName}""".format(**b),
         )
     except Exception as e:
-        # Use django logger to see what the issue is on the live server.
-        # I'm getting an SMTP credetials error locally. Probably the same thing.
+        # Dump the error into alllogs.log
         logger.error(e)
 
     # Return response even if there is an error. 
@@ -575,6 +572,6 @@ def download_product_document(request, product_id, document_type):
     except Http404:
         raise
     except Exception as e:
-        print("ERROR")
-        print(e)
+        # Dump the error into alllogs.log
+        logger.error(e)
         raise Http404("Document was not found.")
