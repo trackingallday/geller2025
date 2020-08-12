@@ -21,6 +21,7 @@ import json
 from django.core.mail import send_mail
 import time
 
+logger = logging.getLogger('django')
 
 def getFileFromBase64(data, filename):
     format, imgstr = data.split(';base64,')
@@ -538,7 +539,7 @@ Product: {productName}""".format(**b),
     except Exception as e:
         # Use django logger to see what the issue is on the live server.
         # I'm getting an SMTP credetials error locally. Probably the same thing.
-        logging.error(e)
+        logger.error(e)
 
     # Return response even if there is an error. 
     return JsonResponse({'sddsfds':'sdfsefsfseffse'})
