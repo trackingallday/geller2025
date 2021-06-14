@@ -298,7 +298,6 @@ def new_product(request):
         properties=data.get('properties'),
         application=data.get('application'),
         description=data.get('description'),
-        subCategory=data.get('subCategory'),
         uploadedBy=request.user,
     )
     product.save()
@@ -308,6 +307,7 @@ def new_product(request):
     product = addInfoSheetToProduct(product, data.get('infoSheet'))
     product = addSDSSheetToProduct(product, data.get('sdsSheet'))
     product.safetyWears = SafetyWear.objects.filter(pk__in=data.get('safetyWears'))
+    product.subCategory = ProductCategory.objects.filter(pk__in=data.get('subCategory'))
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))
     product.sizes = Size.objects.filter(pk__in=data.get('sizes'))
 

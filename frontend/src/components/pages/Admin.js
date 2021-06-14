@@ -8,7 +8,7 @@ import EditDistributorForm from '../forms/EditDistributorForm';
 import ProductMap from '../maps/ProductMap';
 import DistributorsTable from '../datatables/DistributorsTable';
 import RecordAdmin from '../common/RecordAdmin';
-import { postNewDistributor, editDistributor, getDistributors, getSafetyWears,
+import { getDistributors, getSafetyWears,
   getCustomers, getMarkets, getSizes, getProducts, getCategories } from '../../util/DjangoApi';
 
 class AdminPage extends DistributorPage {

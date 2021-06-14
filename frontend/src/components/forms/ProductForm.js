@@ -67,21 +67,28 @@ class ProductForm extends Component {
   prepareValues = async (values) => {
 
     const { imageFiles } = this.state;
-    let primaryImage = null;
-    let secondaryImage = null;
+    let primaryImageLink = null;
+    let secondaryImageLink = null;
+    let infoSheet = null;
+    let sdsSheet = null;
 
-    if(imageFiles[0]) primaryImage = await readFiles(imageFiles[0]);
-    if(imageFiles[1]) secondaryImage = await readFiles(imageFiles[1]);
+    if(imageFiles[0]) primaryImageLink = await readFiles(imageFiles[0]);
+    if(imageFiles[1]) secondaryImageLink = await readFiles(imageFiles[1]);
 
-    const sdsSheetB64 = await base64File(values.sdsSheet.originFileObj);
-    const infoSheetB64 = await base64File(values.infoSheet.originFileObj);
-
-    const newProduct = Object.assign({}, values, {
-      primaryImageLink: primaryImage,
-      secondaryImageLink: secondaryImage,
-      sdsSheet: sdsSheetB64,
-      infoSheet: infoSheetB64,
+    let newProduct = Object.assign({}, values, {
+      primaryImageLink: primaryImageLink,
+      secondaryImageLink: secondaryImageLink
     });
+
+    if(values.sdsSheet && values.sdsSheet.originFileObj) {
+      sdsSheet = await base64File(values.sdsSheet.originFileObj);
+      newProduct.sdsSheet = sdsSheet;
+    }
+
+    if(values.infoSheet && values.infoSheet.originFileObj) {
+      infoSheet = await base64File(values.infoSheet.originFileObj);
+      newProduct.infoSheet = infoSheet;
+    }
 
     return newProduct;
   }
@@ -124,13 +131,9 @@ class ProductForm extends Component {
   }
 
   render() {
+    console.log("HERE")
+    console.log(this.props.recordToEdit)
     if(!this.props.recordToEdit) {
-      return <div />
-    }
-    if(typeof this.props.recordToEdit.infoSheet === 'object' ) {
-      return <div />
-    }
-    if(typeof this.props.recordToEdit.sdsSheet === 'object' ) {
       return <div />
     }
     const { getFieldDecorator } = this.props.form;

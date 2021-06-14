@@ -36,10 +36,12 @@ export default class RecordAdmin extends Component {
     }
     this.setState({
       showNew: this.state.showNew ? null : true,
+      recordToEdit: {},
     });
   }
 
   toggleEdit = (value, record) => {
+    console.log(record)
     if(!this.state.showEdit) {
       this.MyEditRecordForm = Form.create(record)(this.props.editForm);
     }

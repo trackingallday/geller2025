@@ -1,5 +1,5 @@
-import React, { Component } from 'react';
-import { Table, Input, Button, Icon, Row, Col, Card } from 'antd';
+import React from 'react';
+import { Icon, Row, Col, Card } from 'antd';
 import BaseTable from './BaseTable';
 import QRCode from 'qrcode.react';
 import { alphabetSort } from '../../util/Sorter';
@@ -123,7 +123,6 @@ export default class ProductsTable extends BaseTable {
 
   onSearch = () => {
     const { searchText } = this.state;
-    const reg = new RegExp(searchText, 'gi');
     this.setState({
       filterDropdownVisible: true,
       filtered: !!searchText,
@@ -137,7 +136,6 @@ export default class ProductsTable extends BaseTable {
 
   onCodeSearch = () => {
     const { codeSearchText } = this.state;
-    const reg = new RegExp(codeSearchText, 'gi');
     this.setState({
       codeFilterDropdownVisible: true,
       filtered: !!codeSearchText,
@@ -168,7 +166,7 @@ export default class ProductsTable extends BaseTable {
   }
 
   getColumns = () => {
-    const { searchText, filterDropdownVisible, filtered, codeSearchText } = this.state;
+    const { searchText, filtered, codeSearchText } = this.state;
     const filterInput = this.renderFilterInput(searchText, this.onInputChange, this.onSearch);
     const codeFilterInput = this.renderFilterInput(codeSearchText, this.onCodeInputChange, this.onCodeSearch);
     return [{
