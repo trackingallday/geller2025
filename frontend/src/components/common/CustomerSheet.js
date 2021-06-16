@@ -31,6 +31,14 @@ import URI from '../../constants/serverUrl';
     }
   }
 
+  getSafetyIcon(imageLink) {
+    if (imageLink.slice(0, 1) == '/') {
+      return URI + imageLink
+    }
+
+    return imageLink
+  }
+
   renderSafetyWears = (product) => {
     if(!product.safetyWears){
       return null;
@@ -41,7 +49,7 @@ import URI from '../../constants/serverUrl';
           <img
             crossOrigin='anonymous'
             width='18px'
-            src={sf.imageLink}
+            src={this.getSafetyIcon(sf.imageLink)}
             key={`${sf.id}-${product.id}`}
           />
         </Col>
@@ -59,21 +67,18 @@ import URI from '../../constants/serverUrl';
     const textStyle = {
       fontFamily: 'Helvetica',
       fontSize: '11px',
-      wordWrap: 'elipsis',
-      lineHeight: 1,
-      whiteSpace: 'nowrap',
-      textOverflow: 'ellipsis',
+      lineHeight: 1.2,
       width: '100%',
       display: 'inline-block',
-      margin: '0 0 0 0',
+      margin: '0',
     }
-    const titleStyle = Object.assign({}, textStyle, { fontWeight: '800', fontSize: '11px', overflow: 'hidden' });
-    const midStyle = Object.assign({}, textStyle, { fontWeight: '500', fontSize: '11px' });
-    const bottomStyle = Object.assign({}, textStyle, { fontWeight: '400', fontSize: '11px', height: '40px', whiteSpace:'wrap-word'});
+    const titleStyle = Object.assign(textStyle, { fontWeight: '800', fontSize: '11px' });
+    const midStyle = Object.assign(textStyle, { fontWeight: '500', fontSize: '11px', width: '100%', textOverflow: 'ellipsis', overflow: 'hidden' });
+    const bottomStyle = Object.assign(textStyle, { fontWeight: '400', fontSize: '11px', whiteSpace:'wrap-word'});
 
-    const titleRowStyle = { height: '20px'}
-    const midRowStyle = { height: '20px', top: '-10px', overflow: 'ellipsis' };
-    const bottomRowStyle = { minHeight: '50px', top: '-7px', overflow: 'ellipsis' }
+    const titleRowStyle = {}
+    const midRowStyle = { width: '100%', whiteSpace: 'nowrap' };
+    const bottomRowStyle = { minHeight: '50px', paddingBottom: '10px' }
 
     return (
       <div key={index} style={{'minHeight': '130px', borderWidth: '0px 0px 0.5px 0px', borderStyle: 'solid', margin: '6px 0px 3px 0px'}}>
@@ -87,28 +92,44 @@ import URI from '../../constants/serverUrl';
           <Col span={4} align="middle">
             <img crossOrigin='anonymous' alt="" style={{ width: '100%', borderLeft: '4px solid #fff', borderRight: '5px solid #fff'}} src={URI + secondaryImageLink} />
           </Col>
-          <Col span={13}>
+          <Col span={13} style={{ paddingRight: '10px' }}>
             <Row style={titleRowStyle}>
               <span style={titleStyle}>{ `${brand} ${name}`}</span>
             </Row>
             <Row style={midRowStyle}>
-              <span style={midStyle}>{usageType.substr(0, 50)}</span>
+              <span style={midStyle}>{usageType}</span>
             </Row>
             <Row style={midRowStyle}>
-              <span style={midStyle}>{amountDesc}</span>
+              <p style={midStyle}>{amountDesc}</p>
             </Row>
             <Row style={bottomRowStyle}>
               <span style={bottomStyle}>{ directions }</span>
             </Row>
           </Col>
           <Col span={4}>
+            {product.sdsQrcode &&
+              <Row>
+                <Col span={24}>
+                <span style={{ fontSize: '11px' }}>Download SDS</span>
+                </Col>
+              </Row>
+            }
+            {product.sdsQrcode &&
+              <Row>
+                <Col span={24}>
+                  <img width={100} src={product.sdsQrcode} />
+                </Col>
+              </Row>
+            }
+            {product.safetyWears.length > 0 &&
+              <Row>
+                <Col span={24}>
+                  <span style={{ fontSize: '11px' }}>required PPE</span>
+                </Col>
+              </Row>
+            }
             <Row>
-              <Col span={24}>
-                <img width={100} src={product.sdsQrcode} />
-              </Col>
-            </Row>
-            <Row>
-              <Col span={24}>
+              <Col span={24} style={{ marginBottom: '10px' }}>
                 { this.renderSafetyWears(product)}
               </Col>
             </Row>

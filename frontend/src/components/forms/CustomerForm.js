@@ -116,6 +116,7 @@ class CustomerForm extends Component {
       (<FormItem
         {...formItemLayout}
         label="Email"
+        key={3}
       >
         {getFieldDecorator('email', {
           initialValue: this.getInitialValue('email'),
@@ -125,33 +126,33 @@ class CustomerForm extends Component {
           ],
         })(<Input />)}
       </FormItem>),
-      (<FormItem {...formItemLayout} label="Address" help="Try typing the name of the business" key={3}>
+      (<FormItem {...formItemLayout} label="Address" help="Try typing the name of the business" key={4}>
         {getFieldDecorator('address', {
           initialValue: this.getInitialValue('address'),
           rules: [{ required: true, message: 'Please choose an address' }]})(
             <MapboxSearchInput onSelect={this.onAddressSelect} initialValue={this.getInitialValue('address')} />)}
       </FormItem>),
-      (<FormItem {...formItemLayout} label="Business Name" key={4}>
+      (<FormItem {...formItemLayout} label="Business Name" key={5}>
         {getFieldDecorator('businessName', {
           initialValue: this.getInitialValue('businessName'),
           rules: [{ required: true, message: 'Please input your username!' }]})(
             <Input name="businessName" />)}
       </FormItem>),
-      (<FormItem {...formItemLayout} label="Phone Number" key={5}>
+      (<FormItem {...formItemLayout} label="Phone Number" key={6}>
         {getFieldDecorator('phoneNumber', {
           initialValue: this.getInitialValue('phoneNumber'),
           rules: [{ required: true, message: 'Please input a phone number!' }],})(
             <Input style={{ width: '100%' }} />
         )}
       </FormItem>),
-      (<FormItem {...formItemLayout} label="Cell Phone Number" key={6}>
+      (<FormItem {...formItemLayout} label="Cell Phone Number" key={7}>
         {getFieldDecorator('cellPhoneNumber', {
           initialValue: this.getInitialValue('cellPhoneNumber'),
           rules: [{ required: true, message: 'Please input a cell phone number!' }]})(
           <Input style={{ width: '100%' }} />
         )}
       </FormItem>),
-      (<FormItem {...formItemLayout} label="Products" key={7}>
+      (<FormItem {...formItemLayout} label="Products" key={8}>
         {getFieldDecorator('products',{
           initialValue: this.getInitialValue('products'),
           rules:[{required: true, message: 'Required!'}]})(

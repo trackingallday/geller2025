@@ -9,12 +9,14 @@ import chemicaldatasheets.settings
 
 
 def path_to_qr_code(path):
-    base_url = 'http://104.236.249.246'
-    base_data_url = 'data:image/png;base64,'
+    if not path:
+        return ""
+    base_url = 'http://geller.co.nz'
+    base_data_url = 'data:image/svg+xml;base64,'
     link = base_url + path.url
     url = pyqrcode.create(link.upper())
     buffer = io.BytesIO()
-    url.png(buffer)
+    url.svg(buffer)
     encoded_string = base64.b64encode(buffer.getvalue()).decode()
     return base_data_url + encoded_string
 
@@ -165,7 +167,6 @@ class CustomerSerializer(serializers.ModelSerializer):
 
     def distributor_parent(self, obj):
         if not obj.distributorParent:
-            print('NOOOOO', obj.user.email)
             return "None"
         return obj.distributorParent.businessName
 

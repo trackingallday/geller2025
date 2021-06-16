@@ -192,8 +192,8 @@ def edit_customer(request):
     ids = [b for b in data.get('products') if isinstance(b, int)]
     names = [b.strip() for b in data.get('products') if isinstance(b, str)]
 
-    my_filter = {'name__in': names}
-    products = Product.objects.filter(Q(pk__in=ids) | Q(**my_filter))
+    products = Product.objects.filter(Q(pk__in=ids) | Q(name__in=names))
+
     customer.products = products
     customer.updated_at = datetime.datetime.now()
     customer.save()

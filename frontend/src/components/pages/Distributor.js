@@ -143,7 +143,7 @@ class DistributorPage extends BasePage {
   renderCustomerSheet = ({ match }) => {
     const { customers } = this.state;
     const customer_id = match.params.customer_id;
-    const customer = customers.find(c => c.id === customer_id);
+    const customer = customers.find(c => c.id == customer_id);
     if(!customer) {
       return (<div />);
     }
