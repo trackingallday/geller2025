@@ -14,7 +14,7 @@ def path_to_qr_code(path):
     base_url = 'http://geller.co.nz'
     base_data_url = 'data:image/svg+xml;base64,'
     link = base_url + path.url
-    url = pyqrcode.create(link.upper())
+    url = pyqrcode.create(link)
     buffer = io.BytesIO()
     url.svg(buffer)
     encoded_string = base64.b64encode(buffer.getvalue()).decode()
