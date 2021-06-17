@@ -72,11 +72,11 @@ import URI from '../../constants/serverUrl';
       display: 'inline-block',
       margin: '0',
     }
-    const titleStyle = Object.assign(textStyle, { fontWeight: '800', fontSize: '11px' });
+    const titleStyle = Object.assign({}, { display: 'inline-block', fontFamily: 'Helvetica', fontWeight: '700', fontSize: '13px', lineHeight: 1.8, });
     const midStyle = Object.assign(textStyle, { fontWeight: '500', fontSize: '11px', width: '100%', textOverflow: 'ellipsis', overflow: 'hidden' });
     const bottomStyle = Object.assign(textStyle, { fontWeight: '400', fontSize: '11px', whiteSpace:'wrap-word'});
 
-    const titleRowStyle = {}
+    const titleRowStyle = { }
     const midRowStyle = { width: '100%', whiteSpace: 'nowrap' };
     const bottomRowStyle = { minHeight: '50px', paddingBottom: '10px' }
 
@@ -124,7 +124,7 @@ import URI from '../../constants/serverUrl';
             {product.safetyWears.length > 0 &&
               <Row>
                 <Col span={24}>
-                  <span style={{ fontSize: '11px' }}>required PPE</span>
+                  <span style={{ fontSize: '11px' }}>Required PPE</span>
                 </Col>
               </Row>
             }
