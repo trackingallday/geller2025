@@ -19,27 +19,28 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
-class MyBaseModel:
+class MyBaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
-    archived = models.BooleanField(default=False)
+    class Meta:
+        abstract = True
 
 
-class Profile(MyBaseModel, models.Model):
+class Profile(MyBaseModel):
     user = models.OneToOneField(User, unique=True)
     phoneNumber = models.CharField(max_length=100)
     cellPhoneNumber = models.CharField(max_length=100)
     businessName = models.CharField(max_length=255)
     address = models.CharField(max_length=500)
     profileType = models.CharField(choices=typeChoices, default="customer",
-                                   max_length=255, blank=True, null=True)
+                                    max_length=255, blank=True, null=True)
     hasSetPassword = models.BooleanField(default=False)
 
     def __str__(self):
         return "{} {} {} {} {}".format(self.businessName, self.user.first_name, self.user.last_name, self.user.email, self.user.username)
 
 
-class ProductCategory(MyBaseModel, models.Model):
+class ProductCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=1000)
     products = models.ManyToManyField('Product', blank=True, null=True, related_name='categories')
@@ -52,7 +53,7 @@ class ProductCategory(MyBaseModel, models.Model):
         return "{} ".format(self.name)
 
 
-class Product(MyBaseModel, models.Model):
+class Product(models.Model):
     name = models.CharField(max_length=255, unique=True)
     subheading = models.CharField(max_length=255, blank=True, null=True)
     secondaryImageLink = models.FileField(upload_to='documents/', blank=True, null=True)
@@ -83,7 +84,7 @@ class Product(MyBaseModel, models.Model):
         return "{} ".format(self.name)
 
 
-class Post(MyBaseModel, models.Model):
+class Post(MyBaseModel):
     name = models.CharField(max_length=500, blank=True, null=True)
     page = models.CharField(max_length=100)
     title = models.CharField(max_length=255, blank=True, null=True)
@@ -97,7 +98,7 @@ class Post(MyBaseModel, models.Model):
         return "{} {} {}".format(self.page, self.title, self.name)
 
 
-class MarketCategory(MyBaseModel, models.Model):
+class MarketCategory(models.Model):
     name = models.CharField(max_length=500, blank=True, null=True)
     image = models.FileField(upload_to='documents/', blank=True, null=True)
     products = models.ManyToManyField(Product, related_name="markets", blank=True, null=True)
@@ -121,7 +122,7 @@ class Distributor(Profile):
     primaryImageLink  = models.FileField(upload_to='documents/', blank=True, null=True)
 
 
-class ProductAdd(MyBaseModel, models.Model):
+class ProductAdd(models.Model):
     productAdded = models.ForeignKey(Product, related_name="productsAdds", on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, related_name="productAdds", on_delete=models.CASCADE)
     distributor = models.ForeignKey(Distributor, related_name="productAdds", on_delete=models.CASCADE)
@@ -130,7 +131,7 @@ class ProductAdd(MyBaseModel, models.Model):
         return "{} {} {}".format(self.distributor.businessName, self.customer.businessName, self.productAdded.name)
 
 
-class ProductRemove(MyBaseModel, models.Model):
+class ProductRemove(models.Model):
     productRemoved = models.ForeignKey(Product, related_name="productsRemoves", on_delete=models.CASCADE)
     customer = models.ForeignKey(Customer, related_name="productRemoves", on_delete=models.CASCADE)
     distributor = models.ForeignKey(Distributor, related_name="productRemoves", on_delete=models.CASCADE)
@@ -139,14 +140,14 @@ class ProductRemove(MyBaseModel, models.Model):
         return "{} {} {}".format(self.distributor.business_name, self.customer.business_name, self.productRemoved.name)
 
 
-class SafetyWear(MyBaseModel, models.Model):
+class SafetyWear(models.Model):
     name = models.CharField(max_length=255)
     imageLink = models.CharField(max_length=455)
 
     def __str__(self):
         return self.name
 
-class Config(MyBaseModel, models.Model):
+class Config(models.Model):
     name = models.CharField(max_length=255)
     val = models.CharField(max_length=255)
 
@@ -154,7 +155,7 @@ class Config(MyBaseModel, models.Model):
         return self.name
 
 
-class Size(MyBaseModel, models.Model):
+class Size(models.Model):
     name = models.CharField(max_length=255)
     desc = models.CharField(max_length=255)
     amount = models.CharField(max_length=255)
@@ -166,7 +167,7 @@ class Size(MyBaseModel, models.Model):
         return self.name
 
 
-class Contact(MyBaseModel, models.Model):
+class Contact(MyBaseModel):
     nameFrom = models.CharField(max_length=255)
     emailFrom = models.CharField(max_length=255)
     replied = models.BooleanField(default=False)

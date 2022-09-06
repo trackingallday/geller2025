@@ -31,7 +31,7 @@ ALLOWED_HOSTS = [
                     'www.geller.co.nz', 'geller.co.nz', '157.245.125.77', '104.236.249.246',
                 ]
 
-DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP',)
+DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
 if platform_hostname() in DEBUG_HOSTS:
     DEBUG = True
 

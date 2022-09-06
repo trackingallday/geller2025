@@ -81,7 +81,7 @@ import URI from '../../constants/serverUrl';
     const bottomRowStyle = { minHeight: '50px', paddingBottom: '10px' }
 
     return (
-      <div key={index} style={{'minHeight': '130px', borderWidth: '0px 0px 0.5px 0px', borderStyle: 'solid', margin: '6px 0px 3px 0px'}}>
+      <div className="toprint-item" key={index} style={{'minHeight': '130px', borderWidth: '0px 0px 0.5px 0px', borderStyle: 'solid', margin: '6px 0px 3px 0px'}}>
         <Row type="flex" justify="start">
           <Col span={3} align="middle">
             <img crossOrigin='anonymous' alt=""
@@ -179,7 +179,7 @@ import URI from '../../constants/serverUrl';
 
     return (
       <div style={styles.a4Page} id={"toprint"}>
-        <div>
+        <div id="toprint-header">
           { this.renderHeader()}
         </div>
         <div>

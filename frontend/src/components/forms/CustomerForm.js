@@ -1,7 +1,6 @@
 import React, { Component } from 'react';
 import { Form, Input, Select } from 'antd';
 import MapboxSearchInput from '../common/MapboxSearchInput';
-import { getProducts } from '../../util/DjangoApi';
 import { formItemLayout } from '../../constants/tableLayout';
 
 const FormItem = Form.Item;
@@ -14,35 +13,13 @@ class CustomerForm extends Component {
     confirmPasswordValue: false,
     autoCompleteResult: [],
     products: [],
-    productOptions: [],
     addressResult: null,
     submitting: false,
   };
 
   componentDidMount() {
     const { products } = this.props;
-    const productOptions = products.map((p, i) => {
-      return (<Option key={`p${i}`} value={p.id}>{ p.name }</Option>);
-    });
-    this.setState({ products, productOptions });
-  }
-
-  handleConfirmBlur = (e) => {
-    const value = e.target.value;
-    this.setState({ confirmPasswordValue: this.state.confirmPasswordValue || !!value });
-  }
-
-  checkPassword = (rule, value, callback) => {
-    const form = this.props.form;
-    if (value && value !== form.getFieldValue('password')) {
-      callback('Two passwords that you entered are not the same!');
-    } else {
-      if(value && value.length > 7) {
-        callback();
-        return;
-      }
-      callback("Password must be 8 characters or longer");
-    }
+    this.setState({ products });
   }
 
   checkEmail = (rule, value, callback) => {
@@ -52,14 +29,6 @@ class CustomerForm extends Component {
     const { recordsData, recordToEdit } = this.props;
     if(recordsData.find(c => c.email === value) &! (recordToEdit && recordToEdit.email === value)) {
       return callback(`${value} has already been taken already`);
-    }
-    callback();
-  }
-
-  checkConfirm = (rule, value, callback) => {
-    const form = this.props.form;
-    if (value && this.state.confirmPasswordValue) {
-      form.validateFields(['confirm'], { force: true });
     }
     callback();
   }
@@ -110,8 +79,7 @@ class CustomerForm extends Component {
       </FormItem>),
       (<FormItem {...formItemLayout} label="Contact Last Name" key={2}>
         {getFieldDecorator('last_name', {
-          initialValue: this.getInitialValue('last_name'),
-          rules: [{ required: true, message: 'Please enter last name', }]})(<Input />)}
+          initialValue: this.getInitialValue('last_name')})(<Input />)}
       </FormItem>),
       (<FormItem
         {...formItemLayout}
@@ -147,8 +115,7 @@ class CustomerForm extends Component {
       </FormItem>),
       (<FormItem {...formItemLayout} label="Cell Phone Number" key={7}>
         {getFieldDecorator('cellPhoneNumber', {
-          initialValue: this.getInitialValue('cellPhoneNumber'),
-          rules: [{ required: true, message: 'Please input a cell phone number!' }]})(
+          initialValue: this.getInitialValue('cellPhoneNumber')})(
           <Input style={{ width: '100%' }} />
         )}
       </FormItem>),
@@ -157,10 +124,19 @@ class CustomerForm extends Component {
           initialValue: this.getInitialValue('products'),
           rules:[{required: true, message: 'Required!'}]})(
           <Select
-           mode="multiple"
-           placeholder="Please select"
+            size="large"
+            mode="multiple"
+            placeholder="Please select"
+            filterOption={(value, option) => {
+              const { children: name } = option.props
+              value = value.trim().replace(/[\\\.\+\*\?\^\$\[\]\(\)\{\}\/\'\#\:\!\=\|]/ig, "\\$&");
+              const re = new RegExp(value.split(' ').join('.*'), 'i');
+              return name.toLowerCase().search(re) >= 0;
+            }}
          >
-           { this.state.productOptions }
+           { this.state.products.map((p, i) => {
+              return (<Option key={`p${i}`} value={p.id}>{ p.name }</Option>);
+            }) }
          </Select>)}
       </FormItem>),
     ];

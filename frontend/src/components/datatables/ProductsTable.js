@@ -54,12 +54,14 @@ const expandedRowRender = (record) => {
                 description={ record.brand }
               />
             </Card>
+            {record.secondaryImageLink && (
             <Card
               hoverable
               style={{ width: 180 }}
               cover={<img alt="" src={url + record.secondaryImageLink} />}
             >
             </Card>
+            )}
         </Col>
         <Col span={18}>
             { detail }

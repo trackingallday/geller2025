@@ -1,8 +1,11 @@
 import logging
+import random
+import string
 from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.contrib.auth.decorators import login_required
 from django.conf import settings
+from django.db import transaction
 import os
 from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
     ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
@@ -62,7 +65,7 @@ def create_user(data):
         email=data['email'],
         username=data['email'],
     )
-    user.set_password(data['password'])
+    user.set_password(''.join(random.choice(string.ascii_letters) for i in range(10)))
     user.save()
     return user
 
@@ -115,7 +118,7 @@ def customers_list(request):
 @api_view(['GET'])
 def products_list(request):
     if not request.user.profile.profileType == 'customer':
-        products = Product.objects.all()
+        products = Product.objects.filter(public=True)
     else:
         products = request.user.profile.customer.products
 
@@ -123,6 +126,7 @@ def products_list(request):
     return JsonResponse(serializer.data, safe=False)
 
 
+@transaction.atomic
 @csrf_exempt
 @api_view(['POST'])
 def new_customer(request):
@@ -387,7 +391,7 @@ def products_map(request):
     if not request.user.profile.profileType == "admin":
         return JsonResponse({"error": "evildoer"})
 
-    products = Product.objects.all()
+    products = Product.objects.all(public=True)
     return JsonResponse(ProductMapSerializer(products, many=True).data, safe=False)
 
 
@@ -445,7 +449,7 @@ def distributors_list(request):
 @csrf_exempt
 def public_products(request):
     try:
-        products = PublicProductSerializer(Product.objects.all(), many=True).data
+        products = PublicProductSerializer(Product.objects.filter(public=True), many=True).data
         categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
         posts = PostSererializer(Post.objects.all(), many=True).data
         markets = MarketSerializer(MarketCategory.objects.all(), many=True).data
