@@ -16,7 +16,10 @@ function getData(path, onSuccess, onFail=fail) {
     });
 }
 
-function postData(path, data, onSuccess, onFail=fail) {
+function postData(path, data, onSuccess, onFail=null) {
+  if (!onFail) {
+    onFail = fail
+  }
   const token = localStorage.getItem('token');
   axios.defaults.headers.common['Authorization'] = token;
   return axios.post(serverUrl + path, { data })
@@ -104,28 +107,28 @@ export function getSafetyWears(callback) {
 
 }
 
-export function postNewDistributor(data, callback) {
-  return postData('/new_distributor/', data, callback);
+export function postNewDistributor(data, callback, onFail=null) {
+  return postData('/new_distributor/', data, callback, onFail);
 }
 
 export function postEditDistributor(data, callback) {
   return postData('/edit_distributor/', data, callback);
 }
 
-export function postNewCustomer(data, callback) {
-  return postData('/new_customer/', data, callback);
+export function postNewCustomer(data, callback, onFail=null) {
+  return postData('/new_customer/', data, callback, onFail);
 }
 
-export function postEditCustomer(data, callback) {
-  return postData('/edit_customer/', data, callback);
+export function postEditCustomer(data, callback, onFail=null) {
+  return postData('/edit_customer/', data, callback, onFail);
 }
 
-export function postNewProduct(data, callback) {
-  return postData('/new_product/', data, callback);
+export function postNewProduct(data, callback, onFail=null) {
+  return postData('/new_product/', data, callback, onFail);
 }
 
-export function postEditProduct(data, callback) {
-  return postData('/edit_product/', data, callback);
+export function postEditProduct(data, callback, onFail=null) {
+  return postData('/edit_product/', data, callback, onFail);
 }
 
 export function getUserDetails(onSuccess, onFail=fail) {

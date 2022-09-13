@@ -2,6 +2,7 @@ import { postEditProduct } from '../../util/DjangoApi';
 import ProductForm from './ProductForm';
 import base64File from '../../util/Base64File';
 import Cloudinary from '../../util/Cloudinary';
+import { openNotification } from './../common/RecordAdmin'
 
 
 const uploader = new Cloudinary();
@@ -54,9 +55,12 @@ class EditProductForm extends ProductForm {
         this.setState({ submitting: true });
         this.props.startLoading();
         const newProduct = await this.prepareValues(values);
-        postEditProduct(newProduct, this.props.onEditRecord);
-      } else {
-        console.log(err)
+        postEditProduct(newProduct, this.props.onEditRecord, (err) => {
+          openNotification({ message: 'There was a problem adding the record',
+            description: err.response.data.error});
+          this.setState({ submitting: false })
+          this.props.stopLoading();
+        });
       }
     });
   }

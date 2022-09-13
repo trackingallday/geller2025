@@ -1,5 +1,6 @@
 import { postNewProduct } from '../../util/DjangoApi';
 import ProductForm from './ProductForm';
+import { openNotification } from './../common/RecordAdmin'
 
 
 class NewProductForm extends ProductForm {
@@ -14,7 +15,12 @@ class NewProductForm extends ProductForm {
         this.setState({ submitting: true })
         this.props.startLoading();
         const newProduct = await this.prepareValues(values);
-        postNewProduct(newProduct, this.props.onNewRecord);
+        postNewProduct(newProduct, this.props.onNewRecord, (err) => {
+          openNotification({ message: 'There was a problem adding the record',
+            description: err.response.data.error});
+          this.setState({ submitting: false })
+          this.props.stopLoading();
+        });
       }
     });
   }

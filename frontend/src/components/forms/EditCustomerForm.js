@@ -3,6 +3,7 @@ import { Form, Button } from 'antd';
 import { postEditCustomer } from '../../util/DjangoApi';
 import CustomerForm from './CustomerForm';
 import { tailFormItemLayout } from '../../constants/tableLayout';
+import { openNotification } from './../common/RecordAdmin'
 
 const FormItem = Form.Item;
 
@@ -22,6 +23,11 @@ class EditCustomerForm extends CustomerForm {
         }
         postEditCustomer(data, (response) => {
           onEditRecord(response);
+        }, (err) => {
+          openNotification({ message: 'There was a problem adding the record',
+            description: err.response.data.error});
+          this.setState({ submitting: false })
+          this.props.stopLoading();
         });
       }
     });

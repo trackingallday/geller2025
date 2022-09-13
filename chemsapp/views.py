@@ -3,7 +3,6 @@ import random
 import string
 from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
-from django.contrib.auth.decorators import login_required
 from django.conf import settings
 from django.db import transaction
 import os
@@ -12,8 +11,7 @@ from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWe
     CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer
 from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size
 from django.contrib.auth.models import User
-from rest_framework.decorators import api_view,  authentication_classes, permission_classes
-from rest_framework.permissions import AllowAny
+from rest_framework.decorators import api_view
 
 import base64
 from django.core.files.base import ContentFile
@@ -53,17 +51,17 @@ def addSDSSheetToProduct(product, data):
 
 def createImage(img_data):
     if not img_data or not ';base64,' in img_data:
-	    return None
+        return None
     name = str(time.time())
     return getFileFromBase64(img_data, name)
 
 
 def create_user(data):
     user = User.objects.create_user(
-        first_name=data['first_name'],
-        last_name=data['last_name'],
-        email=data['email'],
-        username=data['email'],
+        first_name=data.get('first_name'),
+        last_name=data.get('last_name', ''),
+        email=data.get('email'),
+        username=data.get('email'),
     )
     user.set_password(''.join(random.choice(string.ascii_letters) for i in range(10)))
     user.save()
@@ -138,19 +136,21 @@ def new_customer(request):
     try:
         user = create_user(data)
     except Exception as e:
-        return JsonResponse({'error': str(e)})
+        return JsonResponse({'error': str(e)}, status=422)
 
-    customer = Customer.objects.create(
-        user=user,
-        phoneNumber=data.get('phoneNumber'),
-        cellPhoneNumber=data.get('cellPhoneNumber'),
-        businessName=data.get('businessName'),
-        profileType=data.get('customer'),
-        geocodingDetail=data.get('geocodingDetail'),
-        address=data.get('address'),
-    )
-
-    customer.save()
+    try:
+        customer = Customer.objects.create(
+            user=user,
+            phoneNumber=data.get('phoneNumber'),
+            cellPhoneNumber=data.get('cellPhoneNumber'),
+            businessName=data.get('businessName'),
+            profileType=data.get('customer'),
+            geocodingDetail=data.get('geocodingDetail'),
+            address=data.get('address'),
+        )
+        customer.save()
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=422)
 
     products = Product.objects.filter(pk__in=data.get('products'))
     customer.products = products
@@ -163,6 +163,7 @@ def new_customer(request):
     return JsonResponse({"message": "customer saved"})
 
 
+@transaction.atomic
 @csrf_exempt
 @api_view(['POST'])
 def edit_customer(request):
@@ -205,6 +206,7 @@ def edit_customer(request):
     return JsonResponse({"message": "customer edited"})
 
 
+@transaction.atomic
 @csrf_exempt
 @api_view(['POST'])
 def new_distributor(request):
@@ -216,20 +218,22 @@ def new_distributor(request):
     try:
         user = create_user(data)
     except Exception as e:
-        print(e)
-        return JsonResponse({'error': str(e)})
+        return JsonResponse({'error': str(e)}, status=422)
 
-    print(data.get('primaryImageLink'))
-    distributor = Distributor.objects.create(
-        user=user,
-        phoneNumber=data.get('phoneNumber'),
-        cellPhoneNumber=data.get('cellPhoneNumber'),
-        businessName=data.get('businessName'),
-        profileType=data.get('customer'),
-        geocodingDetail=data.get('geocodingDetail'),
-        address=data.get('address'),
-        primaryImageLink=createImage(data.get('primaryImageLink')),
-    )
+    try:
+        distributor = Distributor.objects.create(
+            user=user,
+            phoneNumber=data.get('phoneNumber'),
+            cellPhoneNumber=data.get('cellPhoneNumber'),
+            businessName=data.get('businessName'),
+            profileType=data.get('customer'),
+            geocodingDetail=data.get('geocodingDetail'),
+            address=data.get('address'),
+            primaryImageLink=createImage(data.get('primaryImageLink')),
+        )
+        distributor.save()
+    except Exception as e:
+        return JsonResponse({'error': str(e)}, status=422)
 
     user.save()
     distributor.user = user
@@ -241,6 +245,7 @@ def new_distributor(request):
     return JsonResponse({"message": "distributor saved"})
 
 
+@transaction.atomic
 @csrf_exempt
 @api_view(['POST'])
 def edit_distributor(request):
@@ -284,6 +289,7 @@ def safety_wears_list(request):
     return JsonResponse(serializer.data, safe=False)
 
 
+@transaction.atomic
 @csrf_exempt
 @api_view(['POST'])
 def new_product(request):
@@ -292,19 +298,23 @@ def new_product(request):
         return JsonResponse({"error": "evildoer"})
 
     data = request.data['data']
-    product = Product.objects.create(
-        name=data.get('name'),
-        usageType=data.get('usageType'),
-        amountDesc=data.get('amountDesc'),
-        directions=data.get('directions'),
-        productCode=data.get('productCode'),
-        brand=data.get('brand'),
-        properties=data.get('properties'),
-        application=data.get('application'),
-        description=data.get('description'),
-        uploadedBy=request.user,
-    )
-    product.save()
+    try:
+        product = Product.objects.create(
+            name=data.get('name'),
+            usageType=data.get('usageType'),
+            amountDesc=data.get('amountDesc'),
+            directions=data.get('directions'),
+            productCode=data.get('productCode'),
+            brand=data.get('brand'),
+            properties=data.get('properties'),
+            application=data.get('application'),
+            description=data.get('description'),
+            uploadedBy=request.user,
+        )
+        product.save()
+    except Exception as e:
+        return JsonResponse({"error": str(e)}, status=422)
+
     product.primaryImageLink=createImage(data.get('primaryImageLink'))
     product.secondaryImageLink=createImage(data.get('secondaryImageLink'))
 
@@ -325,6 +335,7 @@ def new_product(request):
     return JsonResponse({"message": "product saved"})
 
 
+@transaction.atomic
 @csrf_exempt
 @api_view(['POST'])
 def edit_product(request):

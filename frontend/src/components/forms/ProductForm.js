@@ -131,8 +131,6 @@ class ProductForm extends Component {
   }
 
   render() {
-    console.log("HERE")
-    console.log(this.props.recordToEdit)
     if(!this.props.recordToEdit) {
       return <div />
     }

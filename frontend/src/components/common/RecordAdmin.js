@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { Modal, Button, notification, Row, Col, Form  } from 'antd';
 
-const openNotification = ({ message, description }, type='info') => {
+export const openNotification = ({ message, description }, type='info') => {
   const args = {
     message,
     description,
@@ -92,6 +92,7 @@ export default class RecordAdmin extends Component {
       onNewRecord,
       recordsData: records,
       startLoading: this.props.startLoading,
+      stopLoading: this.props.stopLoading,
       customers,
       products,
       safetyWears,
@@ -107,6 +108,7 @@ export default class RecordAdmin extends Component {
       recordToEdit,
       recordsData: records,
       startLoading: this.props.startLoading,
+      stopLoading: this.props.stopLoading,
       customers,
       products,
       safetyWears,

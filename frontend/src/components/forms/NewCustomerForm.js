@@ -3,7 +3,7 @@ import { Form, Button } from 'antd';
 import { postNewCustomer } from '../../util/DjangoApi';
 import CustomerForm from './CustomerForm';
 import { tailFormItemLayout } from '../../constants/tableLayout';
-
+import { openNotification } from './../common/RecordAdmin'
 
 const FormItem = Form.Item;
 
@@ -15,15 +15,18 @@ class NewCustomerForm extends CustomerForm {
       return;
     }
     this.props.form.validateFieldsAndScroll((err, values) => {
-      this.setState({ submitting: true })
       if (!err) {
+        this.setState({ submitting: true })
         this.props.startLoading();
         const data = Object.assign(values, { geocodingDetail: this.state.addressResult });
         postNewCustomer(data, (response) => {
           this.props.onNewRecord(response);
+        }, (err) => {
+          openNotification({ message: 'There was a problem adding the record',
+            description: err.response.data.error});
+          this.setState({ submitting: false })
+          this.props.stopLoading();
         });
-      } else {
-        this.setState({ submitting: false })
       }
     });
   }
