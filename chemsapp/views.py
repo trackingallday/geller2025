@@ -402,7 +402,7 @@ def products_map(request):
     if not request.user.profile.profileType == "admin":
         return JsonResponse({"error": "evildoer"})
 
-    products = Product.objects.all(public=True)
+    products = Product.objects.all()
     return JsonResponse(ProductMapSerializer(products, many=True).data, safe=False)
 
 
