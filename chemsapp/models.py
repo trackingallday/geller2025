@@ -29,7 +29,7 @@ class MyBaseModel(models.Model):
 class Profile(MyBaseModel):
     user = models.OneToOneField(User, unique=True)
     phoneNumber = models.CharField(max_length=100)
-    cellPhoneNumber = models.CharField(max_length=100)
+    cellPhoneNumber = models.CharField(max_length=100, blank=True, null=True)
     businessName = models.CharField(max_length=255)
     address = models.CharField(max_length=500)
     profileType = models.CharField(choices=typeChoices, default="customer",
