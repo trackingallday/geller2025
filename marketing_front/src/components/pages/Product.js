@@ -64,8 +64,6 @@ class Product extends Component {
       bSizes.forEach(aS => {
         if(p.sizes.find(ps => ps === aS.id)) {
           sizes.push(<img key={"a"+aS.id} src={URI + aS.image} style={{height: '52px',  width:'33px', padding: '3px'}}></img>);
-        } else {
-          sizes.push(<img key={"a"+aS.id} src={URI + aS.imageNo} style={{height: '52px', width:'33px', padding: '3px'}}></img>);
         }
       });
     }
@@ -74,8 +72,6 @@ class Product extends Component {
       aSizes.forEach(aS => {
         if(p.sizes.find(ps => ps === aS.id)) {
           sizes.push(<img key={"b"+aS.id}  src={URI + aS.image} style={{height: '52px',  width:'33px', padding: '3px'}}></img>);
-        } else {
-          sizes.push(<img key={"b"+aS.id}  src={URI + aS.imageNo} style={{height: '52px', width:'33px', padding: '3px'}}></img>);
         }
       });
     }

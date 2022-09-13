@@ -21,14 +21,47 @@ class BasePage extends Component {
   }
 
   download = () => {
-    html2canvas(document.getElementById('toprint'), { useCORS: true, scale: 3.0 }).then((canvas) => {
-      const dataUrl = canvas.toDataURL("image/png", 1.0);
-      const heightMM = canvas.height * 0.264583333;
-      const widthMM = canvas.width * 0.264583333;
-      var doc = new jsPDF('p', 'mm', [heightMM, widthMM]);
-      doc.addImage(dataUrl, 'PNG', 0, 0, widthMM, heightMM);
-      doc.save();
-    });
+    this.setState({ loading: true })
+    setTimeout(() => {
+      const pageToRender = document.getElementById('toprint')
+      const header = pageToRender.querySelector('#toprint-header')
+      const items = pageToRender.querySelectorAll('.toprint-item')
+      const itemsToRender = [header]
+      items.forEach(el => itemsToRender.push(el))
+      var promises = [];
+  
+      itemsToRender.forEach((item) => {
+        promises.push(html2canvas(item, { useCORS: true, scale: 3.0 })
+        .then((canvas) => {
+          const dataUrl = canvas.toDataURL("image/png", 1.0);
+          return {image: dataUrl, canvas};
+        }))
+      })
+  
+      Promise.all(promises).then((images) => {
+        console.log(images)
+
+        var doc = new jsPDF();
+        var pos = 10;
+
+        images.forEach(image => {
+          const { image: dataUrl, canvas } = image;
+
+          const heightMM = (canvas.height * 0.264583333) / 3;
+          const widthMM = (canvas.width * 0.264583333) / 3;
+
+          if (pos + heightMM > (297 - 20)) {
+            doc.addPage();
+            pos = 10;
+          }
+
+          doc.addImage(dataUrl, 'PNG', 10, pos, widthMM, heightMM);
+          pos += heightMM;
+        })
+        doc.save();
+        this.setState({ loading: false })
+      });
+    }, 50)
   }
 
   logout() {

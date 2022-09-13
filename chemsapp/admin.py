@@ -1,4 +1,5 @@
 from django.contrib import admin
+import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size
 from import_export.admin import ImportExportModelAdmin
@@ -27,17 +28,15 @@ class ProductResource(resources.ModelResource):
 
 
 class SafetyWearAdmin(ImportExportModelAdmin):
-
     resource_class = SafetyWearResource
 
 
 class DistributorAdmin(ImportExportModelAdmin):
-
     resource_class = DistributorResource
 
 
 class CustomerAdmin(ImportExportModelAdmin):
-
+    search_fields = ['address', 'businessName',]
     resource_class = CustomerResource
 
 
@@ -50,6 +49,7 @@ class UserAdmin(admin.ModelAdmin):
 
 
 class ProductAdmin(ImportExportModelAdmin):
+    search_fields = ['name',]
     readonly_fields = ["properties", "application"]
     resource_class = ProductResource
 
@@ -78,7 +78,11 @@ class MarketAdmin(ImportExportModelAdmin):
     pass
 
 class ContactAdmin(ImportExportModelAdmin):
-    pass
+    def _created_at(self, obj):
+        return obj.created_at.astimezone(pytz.timezone('Pacific/Auckland')).strftime('%c')
+    list_display = ['nameFrom', 'emailFrom', '_created_at']
+    search_fields = ['nameFrom', 'emailFrom', 'companyName',]
+
 
 class ConfigAdmin(ImportExportModelAdmin):
     read_only_fields = ('name', )

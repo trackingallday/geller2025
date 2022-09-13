@@ -1,8 +1,8 @@
 import React from 'react';
-import { Form, Input, Button } from 'antd';
+import { Form, Button } from 'antd';
 import { postNewCustomer } from '../../util/DjangoApi';
 import CustomerForm from './CustomerForm';
-import { tailFormItemLayout, formItemLayout } from '../../constants/tableLayout';
+import { tailFormItemLayout } from '../../constants/tableLayout';
 
 
 const FormItem = Form.Item;
@@ -22,6 +22,8 @@ class NewCustomerForm extends CustomerForm {
         postNewCustomer(data, (response) => {
           this.props.onNewRecord(response);
         });
+      } else {
+        this.setState({ submitting: false })
       }
     });
   }
@@ -31,35 +33,7 @@ class NewCustomerForm extends CustomerForm {
 
     return (
       <Form onSubmit={this.handleSubmit} ref="form">
-        <FormItem {...formItemLayout}
-          label="Password"
-          help="Please set a temporary password for the customer"
-        >
-          {getFieldDecorator('password', {
-            rules: [{
-              required: true, message: 'Please input your password!',
-            }, {
-              validator: this.checkConfirm,
-            }],
-          })(
-            <Input type="password" />
-          )}
-        </FormItem>
-        <FormItem
-          {...formItemLayout}
-          label="Confirm Password"
-        >
-          {getFieldDecorator('confirm', {
-            rules: [{
-              required: true, message: 'Please confirm your password!',
-            }, {
-              validator: this.checkPassword,
-            }],
-          })(
-            <Input type="password" onBlur={this.handleConfirmBlur} />
-          )}
-        </FormItem>
-          { this.renderCommonFormFields() }
+        { this.renderCommonFormFields() }
         <FormItem {...tailFormItemLayout}>
           <Button type="primary" htmlType="submit" onClick={this.handleSubmit}>Register</Button>
         </FormItem>

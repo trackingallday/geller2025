@@ -3,8 +3,9 @@ import { Table, Input, Button, Row, Col } from 'antd';
 
 
 const FilterInput = ({ value, onChange, onSearch }) => (
-  <div className="custom-filter-dropdown">
+  <div className="custom-filter-dropdown" style={{ padding: 5 }}>
     <Input
+    style={{ marginBottom: 5 }}
       ref={ele => this.searchInput = ele}
       placeholder="Search"
       value={value}

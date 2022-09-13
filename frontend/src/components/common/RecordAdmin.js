@@ -30,7 +30,10 @@ export default class RecordAdmin extends Component {
     console.log(this.props)
   }
 
-  toggleNew = () => {
+  toggleNew = (value) => {
+    if (value && value.currentTarget && value.currentTarget.classList.contains('ant-modal-wrap')) {
+      return;
+    }
     if(!this.state.showNew) {
       this.MyNewRecordForm = Form.create()(this.props.newForm);
     }
@@ -41,7 +44,9 @@ export default class RecordAdmin extends Component {
   }
 
   toggleEdit = (value, record) => {
-    console.log(record)
+    if (value && value.currentTarget && value.currentTarget.classList.contains('ant-modal-wrap')) {
+      return;
+    }
     if(!this.state.showEdit) {
       this.MyEditRecordForm = Form.create(record)(this.props.editForm);
     }
