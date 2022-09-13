@@ -118,7 +118,7 @@ def customers_list(request):
 @api_view(['GET'])
 def products_list(request):
     if not request.user.profile.profileType == 'customer':
-        products = Product.objects.filter(public=True)
+        products = Product.objects.all()
     else:
         products = request.user.profile.customer.products
 
