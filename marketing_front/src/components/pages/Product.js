@@ -121,7 +121,11 @@ class Product extends Component {
                 <div className="row">
                   <div className="col-md-12" align="center">
                     <div className="contain" style={{margin: 'auto'}}>
-                      <img className="main-product-img" src={URI + p.primaryImageLink}></img>
+                      {p.primaryImageLink ? (
+                        <img className="brighten" src={URI + p.primaryImageLink} alt={p.name + '-image'} />
+                      ) : (
+                        <span>No Image</span>
+                      )}
                     </div>
                   </div>
                 </div>

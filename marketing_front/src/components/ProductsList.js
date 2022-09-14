@@ -11,7 +11,11 @@ export default class ProductList extends Component {
         <div className="row">
           <NavLink to={"/product/" + p.id} style={{margin: '0 auto'}}>
             <div className="contain" style={{height: '220px'}}>
-              <img className="brighten" src={serverUrl + p.primaryImageLink} />
+              {p.primaryImageLink ? (
+                <img className="brighten" src={serverUrl + p.primaryImageLink} alt={p.name + '-image'} />
+              ) : (
+                <span>No Image</span>
+              )}
             </div>
           </NavLink>
         </div>
