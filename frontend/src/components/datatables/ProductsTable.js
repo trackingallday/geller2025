@@ -39,7 +39,6 @@ const renderProductDetail = (record) => {
 
 const expandedRowRender = (record) => {
   const detail = renderProductDetail(record);
-  const customers = record.customers.map((c,i) => (<p key={i}>{c}</p>));
   return (
     <div>
       <Row type="flex" justify="start">
@@ -65,15 +64,6 @@ const expandedRowRender = (record) => {
         </Col>
         <Col span={18}>
             { detail }
-            <Row>
-              <Col span={4}>
-                Customers
-              </Col>
-              <Col span={20}>
-                { customers }
-              </Col>
-
-            </Row>
             <Row>
               <Col span={4}>
                 SDS Link
