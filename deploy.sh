@@ -19,6 +19,9 @@ echo "Migrating"
     python manage.py migrate
 )
 
+chown -R rimu:www-data .
+chmod -R 755 ./chemsapp/media
+
 echo "Restarting Apache"
 service apache2 restart
 
