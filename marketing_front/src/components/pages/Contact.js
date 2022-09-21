@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
 import { withRouter } from 'react-router';
 import superagent from 'superagent';
+import { GoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 
 import URI from '../../constants/serverUrl';
@@ -10,7 +11,9 @@ class Contact extends Component {
 
   state = {
     loading: false,
-    result: 'unset'
+    result: 'unset',
+    captcha_token: null,
+    refreshReCaptcha: null
   }
 
   onFormSubmit(e) {
@@ -21,7 +24,10 @@ class Contact extends Component {
     data.forEach(function(value, key){
         params[key] = value;
     });
+    params["captcha_token"] = this.state.captcha_token
+    console.log(params)
     var json = JSON.stringify(params);
+    this.setState({refreshReCaptcha: Date.now()})
     superagent.get(URI + '/create_contact/')
       .query({data: json})
       .set('Accept', 'application/json')
@@ -32,6 +38,11 @@ class Contact extends Component {
           this.setState({loading: false, result: 'success'})
         }
       });
+  }
+
+  handleVerify = (e) => {
+    console.log(e)
+    this.setState({captcha_token: e})
   }
 
   render() {
@@ -93,6 +104,7 @@ class Contact extends Component {
                     </div>
                 </div>
                 <div className="col-md-12">
+                    <GoogleReCaptcha onVerify={this.handleVerify} refreshReCaptcha={this.state.refreshReCaptcha} />
                     <button type="submit" className="btn btn-primary pull-right" id="btnContactUs" style={{cursor:'pointer'}}>
                         Send Message</button>
                 </div>

@@ -1,11 +1,14 @@
 import logging
 import random
 import string
+from django.forms import ValidationError
 from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.db import transaction
 import os
+
+import requests
 from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
     ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
     CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer
@@ -19,7 +22,7 @@ import datetime
 from django.db.models import Q
 from django.core import serializers
 import json
-from django.core.mail import send_mail
+from django.core.mail import EmailMessage
 import time
 
 logger = logging.getLogger('django')
@@ -67,25 +70,25 @@ def create_user(data):
     user.save()
     return user
 
-def mail_admin(subject, content, html_content=None):
-    return send_mail(
-        subject,
-        content,
-        settings.EMAIL_FROM,
-        [settings.EMAIL_ADMIN],
-        fail_silently=False,
-        html_message=html_content,
+def mail_admin(subject, content, reply_to=None):
+    msg = EmailMessage(
+        subject=subject,
+        body=content,
+        from_email=settings.EMAIL_FROM,
+        to=[settings.EMAIL_ADMIN],
+        reply_to=[reply_to or settings.EMAIL_ADMIN]
     )
+    return msg.send()
 
-def mail_customer(subject, content, customer_email, html_content=None):
-    return send_mail(
-        subject,
-        content,
-        settings.EMAIL_FROM,
-        [customer_email, settings.EMAIL_ADMIN],
-        fail_silently=False,
-        html_message=html_content,
+def mail_customer(subject, content, customer_email, reply_to=None):
+    msg = EmailMessage(
+        subject=subject,
+        body=content,
+        from_email=settings.EMAIL_FROM,
+        to=[customer_email],
+        reply_to=[reply_to or settings.EMAIL_ADMIN]
     )
+    return msg.send()
 
 
 @csrf_exempt
@@ -506,15 +509,24 @@ def sizes_list(request):
 @csrf_exempt
 def create_contact(request):
     b = json.loads(request.GET['data'])
+
+    cap_value = b.pop("captcha_token")
+    r = requests.post('https://www.google.com/recaptcha/api/siteverify',
+                        { 'secret': settings.RECAPTCHA_PRIVATE_KEY, 'response': cap_value })
+    res = r.json()
+    if not res.get('success') or res.get('score', 0) < 0.7:
+        raise ValidationError('There was a problem with your request, please try again', code="recaptcha")
+
     c = ContactSerializer(data=b)
     c.is_valid()
     a = c.validated_data
     c.create(a)
     mail_admin('Contact from Geller.co.nz',
-        b['nameFrom'] + ' ' + b['emailFrom'] + ' ' + b['content']
+        b['nameFrom'] + '\n' + b['emailFrom'] + '\nMessage:\n' + b['content'],
+        reply_to=b['emailFrom']
     )
     mail_customer('Contact from Geller.co.nz',
-        'Hi ' + b['nameFrom'] + ' Thanks for you contact request we will be in touch shortly.',
+        'Hi ' + b['nameFrom'] + ',\n\nThanks for you contact request we will be in touch shortly.',
         b['emailFrom']
     )
 

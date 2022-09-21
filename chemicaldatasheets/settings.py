@@ -155,18 +155,25 @@ PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(BASE_DIR, 'dist_static')
 
 #email settings
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_HOST_USER = 'geller.co.nz@gmail.com'
-EMAIL_HOST_PASSWORD = 'yPI6BL83'
-EMAIL_PORT = 587
+EMAIL_HOST = 'mail.smtp2go.com'
+EMAIL_HOST_USER = 'integra-505853'
+EMAIL_HOST_PASSWORD = 'lGypy7pWbMVntlVE'
+EMAIL_PORT = 2525
 EMAIL_USE_TLS = True
 
-EMAIL_FROM = 'geller.co.nz@gmail.com'
+EMAIL_FROM = 'Geller <info@geller.brush.co.nz>'
 EMAIL_ADMIN = 'sales.support@integraindustries.co.nz'
+
+RECAPTCHA_SITE_KEY = "6LcimBYiAAAAAGfPVreKgk5Ieg71YhFbvkJAt1MZ"
+RECAPTCHA_PRIVATE_KEY = "6LcimBYiAAAAAILz6MHMNiMAOpe_B323MMMKJBsw"
+
 if DEBUG:
     # Email ourselves so we can check when debugging.
-    EMAIL_ADMIN = EMAIL_FROM
-    print('Admin Debug Email:', EMAIL_ADMIN)
+    EMAIL_HOST = 'smtp.mailtrap.io'
+    EMAIL_HOST_USER = '88f09b9a19d424'
+    EMAIL_HOST_PASSWORD = '42fdd93b4636c1'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
 
 #import export settings
 IMPORT_EXPORT_USE_TRANSACTIONS = True

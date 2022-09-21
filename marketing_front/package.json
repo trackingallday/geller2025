@@ -9,6 +9,7 @@
     "react": "^16.2.0",
     "react-autocomplete": "^1.8.1",
     "react-dom": "^16.2.0",
+    "react-google-recaptcha-v3": "^1.10.0",
     "react-loading-overlay": "^0.2.8",
     "react-mapbox-gl": "^3.4.0",
     "react-markdown": "^4.3.1",
