@@ -2,6 +2,11 @@ import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
 import '../../App.css'
 import URI, { IMG_DEV_URL} from '../../constants/serverUrl';
+import Hero from '../Hero/Hero';
+import Hero2 from '../Hero2/Hero2';
+import ArticleCard from '../AritcleCard/ArticalCard';
+import ArticleCol from '../AritcleCol/ArticleCol';
+import ArticleRow from '../ArticleRow/ArticleRow';
 
 //const URI = 'http://localhost:8000';
 
@@ -36,55 +41,71 @@ export default class Home extends Component {
       }
       latest_news_link = <NavLink style={style} to={latest_news.linkURL}>{latest_news.linkText}</NavLink>
     }
-
+    const postHome1 = posts.find(p => p.name === 'home_1');
+    const postHome2 = posts.find(p => p.name === 'home2');
+    const postHome3 = posts.find(p => p.name === 'home3');
+    const postHome4 = posts.find(p => p.name === 'home4');
+    const cards = [
+      { title: "Ultimo System", image: "http://localhost:8000" + postHome1.image, body: postHome1.content },
+      { title: "Online Training", image: "http://localhost:8000" + postHome2.image, body: postHome2.content },
+      { title: "Sustainability", image: "http://localhost:8000" + postHome3.image, body: postHome3.content },
+      { title: "NZ Made", image: "http://localhost:8000" + postHome4.image, body: postHome4.content }
+    ];
+    const cards2 = [
+      { title: "Ultimo System", image: "http://localhost:8000" + postHome1.image, body: postHome1.content },
+      { title: "Online Training", image: "http://localhost:8000" + postHome2.image, body: postHome2.content },
+    ];
+    const cards3 = [
+      { title: "Sustainability", image: "http://localhost:8000" + postHome3.image, body: postHome3.content },
+    ];
+    const postmiddle = posts.find(p => p.name === 'homemiddle');
+    const postbottom1 = posts.find(p => p.name === 'homebottom1');
+    const postbottom2 = posts.find(p => p.name === 'homebottom2');
+    const title = "Dedicated to supporting you every day, in every way, with every care in the world.";
+    const subtitle = "We are";
+    const btnText = "Search our range";
     return (
       <div>
-        <div className="row">
-          <div className="col-md-6 col-lg-6 col-xs-12">
-            <div className="main-message">
-              <pre>{ mainBanner && mainBanner.content}</pre>
-            </div>
-          </div>
-          <div className="col-md-7">
+        <Hero title={title} subtitle={subtitle} btnText={btnText} />
+        <div className="container py-4">
+          <div className="row g-4">
+            {cards.map((card, index) => (
+              <div className="col col-md-6 col-lg-3 col-xs-12 pt-2" key={index}>
+                <ArticleCard title={card.title} image={card.image} body={card.body} />
+              </div>
+            ))}
           </div>
         </div>
-        <div className="row pad-top back-white pad-bottom">
-            <div className="col-md-6 pad-left">
-              <div className="top-right">
-                <div className="hexagon white"></div>
+        <Hero2 />
+        
+        <div className="container py-4">
+          <div className="row g-4">
+              <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">
+                <img src={'http://localhost:8000' + postmiddle.image} 
+                  alt={postmiddle.title} className="middleimg"
+                  style={{width: '100%', height: 'auto'}}
+                />
               </div>
-              <h1 className="header black-text news-home">{home_row1_col2.title}</h1>
-              <div className="news-home">
-                <pre  className="roman grey-text">
-                  {home_row1_col2.content}
-                </pre>
-                {home_row1_link}
+              <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">
+                <ArticleCol title={postmiddle.title} body={postmiddle.content} />
               </div>
-            </div>
-            <div className="col-md-6">
-              <div className="contain" style={{minHeight: '280px'}}>
-                <img src={URI+home_row1_col2.image} className="wide" />
-              </div>
-            </div>
+          </div>
         </div>
-        <div className="row blue-back pad-top pad-left pad-bottom">
-            <div className="col-md-6">
-              <div className="top-right">
-                <div className="hexagon blue"></div>
+        <div className="bg-gray-100">
+          <div className="container py-4">
+            <div className="row g-4">
+              <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">
+                <ArticleRow title={postbottom1.title} image={postbottom1.image}
+                  body={postbottom1.content} titleColor={'#FFFFFF'} bgColor={'#7ED4E3'} pColor={'#000000'} linkColor={'#FFFFFF'}
+                />
               </div>
-              <h1 className="news-home header white-text">
-                { latest_news.title }
-              </h1>
-              <div className="news-home">
-                <pre className="roman white-text">{latest_news.content}</pre>
-                {latest_news_link}
+              <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">
+                <ArticleRow title={postbottom2.title} image={postbottom2.image} body={postbottom2.content}
+                  titleColor={'#7ED4E3'} bgColor={'#4B2E83'} pColor={'#FFFFFF'} linkColor={'#7ED4E3'}
+                />
               </div>
             </div>
-            <div className="col-md-6">
-                <div className="contain" style={{minHeight: '280px'}}>
-                  <img src={URI+latest_news.image} className="wide" />
-                </div>
-            </div>
+          </div>
         </div>
       </div>
     );

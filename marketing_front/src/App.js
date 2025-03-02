@@ -1,6 +1,7 @@
 import React, { Component } from 'react';
-import PrimaryNav from './components/PrimaryNav';
-import Footer from './components/Footer';
+import MainNav from './components/Navigation/MainNav';
+import Hero from './components/Hero/Hero';
+import Footer from './components/Footer/Footer';
 import Home from './components/pages/Home';
 import Products from './components/pages/Products';
 import Product from './components/pages/Product';
@@ -29,6 +30,7 @@ class App extends Component {
         let c = {};
         data.configs.forEach(co => c[co.name] = co.val)
         data.configs = c;
+        console.log(data);
         this.setState({data, loaded: true});
       });
   }
@@ -109,7 +111,7 @@ class App extends Component {
   }
 
   renderAbout = (match) => {
-    return <About posts={this.state.data.posts.filter(p => p.page === 'About')} post={match.match.params.post}  />
+    return <About posts={this.state.data.posts} products={this.state.data.products} />
   }
 
   renderSupport = (match) => {
@@ -136,55 +138,43 @@ class App extends Component {
 
   render() {
     const isHome = window.location.pathname === '/';
-    const outImg = (
-      <div style={{height: '560px', width:'100%', position: 'absolute', overflow:'hidden'}}>
-        <div className="pulse circle"></div>
-      </div>
-    );
-    const inImg = (
-      <div className="pulse circle"></div>
-    );
 
     return (
-      <div>
-        { isHome && outImg }
-        <div className="container" style={{overflow: 'hidden', paddingRight: '0px'}}>
-          <a href="/">
-            <img src={require('./assets/geller.svg')} className="hexagons" href="/" />
-          </a>
-          { !isHome && inImg }
-          <PrimaryNav markets={this.state.data.markets} changePage={this.changePage} categories={this.state.data.categories} search={this.search} choices={this.autoCompleteChoices()} />
-          <MobileNav />
-          <Switch>
-            <Route exact={true} path="/" render={(match) => this.renderHome()} key={1} />
-            <Route exact={true} path="/our_products/:category_id" render={(m) => this.renderProducts(m)} key={2} />
-            <Route exact={true} path="/our_products/:category_id/:subCategory_id" render={(m) => this.renderProducts(m)} key={59} />
-            <Route exact={true} path="/product/:product_id" render={(m) => this.renderProduct(m)} key={3} />
-            <Route exact={true} path="/product/:product_id/:market_id" render={(m) => this.renderProduct(m)} key={3006} />
-            <Route exact={true} path="/our_markets/:market_id" render={(m) => this.renderMarkets(m)} key={300} />
-            <Route exact={true} path="/our_markets" render={(m) => this.renderMarkets(m)} key={30009} />
-            <Route exact={true} path="/about/:post" render={(m) => this.renderAbout(m)} key={4} />
-            <Route exact={true} path="/about" render={(m) => this.renderAbout(m)} key={42} />
-            <Route exact={true} path="/news" render={(m) => this.renderNews(m)} key={49} />
-            <Route exact={true} path="/news/:post" render={(m) => this.renderNews(m)} key={9} />
-            <Route exact={true} path="/support/:post" render={(m) => this.renderSupport(m)} key={10} />
-            <Route exact={true} path="/support" render={(m) => this.renderSupport(m)} key={11} />
-            <Route exact={true} path="/contact" render={(m) => this.renderContact(m)} key={12} />
-            <Route exact={true} path="/contact/:product_id" render={(m) => this.renderContact(m)} key={19} />
-            <Route exact={true} path="/getsds/:product_id" render={(m) => this.renderSDS(m)} key={501} />
-            <Route component={this.withConfigs(NotFound)} />
-          </Switch>
-          <div className="row pad-top blue-back-dark">
-            <div className="col-md-6">
-              <div className="top-right">
-                <div className="hexagon blue-dark"></div>
-              </div>
-            </div>
-          </div>
+      <React.Fragment>
+        <MainNav 
+          markets={this.state.data.markets} 
+          changePage={this.changePage} 
+          categories={this.state.data.categories} 
+          search={this.search} 
+          choices={this.autoCompleteChoices()} 
+        />
+        <Switch>
+          <Route exact={true} path="/" render={(match) => this.renderHome()} key={1} />
+          <Route exact={true} path="/our_products/:category_id" render={(m) => this.renderProducts(m)} key={2} />
+          <Route exact={true} path="/our_products/:category_id/:subCategory_id" render={(m) => this.renderProducts(m)} key={59} />
+          <Route exact={true} path="/product/:product_id" render={(m) => this.renderProduct(m)} key={3} />
+          <Route exact={true} path="/product/:product_id/:market_id" render={(m) => this.renderProduct(m)} key={3006} />
+          <Route exact={true} path="/our_markets/:market_id" render={(m) => this.renderMarkets(m)} key={300} />
+          <Route exact={true} path="/our_markets" render={(m) => this.renderMarkets(m)} key={30009} />
+          <Route exact={true} path="/about/:post" render={(m) => this.renderAbout(m)} key={4} />
+          <Route exact={true} path="/about" render={(m) => this.renderAbout(m)} key={42} />
+          <Route exact={true} path="/news" render={(m) => this.renderNews(m)} key={49} />
+          <Route exact={true} path="/news/:post" render={(m) => this.renderNews(m)} key={9} />
+          <Route exact={true} path="/support/:post" render={(m) => this.renderSupport(m)} key={10} />
+          <Route exact={true} path="/support" render={(m) => this.renderSupport(m)} key={11} />
+          <Route exact={true} path="/contact" render={(m) => this.renderContact(m)} key={12} />
+          <Route exact={true} path="/contact/:product_id" render={(m) => this.renderContact(m)} key={19} />
+          <Route exact={true} path="/getsds/:product_id" render={(m) => this.renderSDS(m)} key={501} />
+          <Route component={this.withConfigs(NotFound)} />
+        </Switch>
+        <div className="container">
           <Footer configs={this.state.data.configs} />
         </div>
-        { !this.state.loaded && <div style={{position: 'absolute', height: '100%', width: '100%', top: 0, bottom: 0, left: 0, right: 0, backgroundColor: '#fff', zIndex: 9999}} /> }
-      </div>
+        
+        {!this.state.loaded && (
+          <div className="loading-overlay" />
+        )}
+      </React.Fragment>
     );
   }
 }

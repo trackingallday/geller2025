@@ -4,8 +4,8 @@ import superagent from 'superagent';
 import { GoogleReCaptcha } from 'react-google-recaptcha-v3';
 
 
-import URI from '../../constants/serverUrl';
-//const URI = 'http://localhost:8000';
+//import URI from '../../constants/serverUrls';
+const URI = 'http://localhost:8000';
 
 class Contact extends Component {
 
@@ -19,6 +19,7 @@ class Contact extends Component {
   onFormSubmit(e) {
     e.preventDefault();
     this.setState({loading: true})
+
     let data = new FormData(e.target);
     var params = {};
     data.forEach(function(value, key){
