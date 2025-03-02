@@ -1,6 +1,6 @@
 const dev = ['127.0.0.1', 'localhost'].includes(window.location.hostname);
 const DEV_URL = 'http://0.0.0.0:8000';
-const PRODUCTION_URL = 'http://157.245.125.77';
+const PRODUCTION_URL = 'https://geller.work.gd';
 let url = PRODUCTION_URL;
 
 if(dev) {

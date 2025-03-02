@@ -29,6 +29,7 @@ DEBUG = True
 ALLOWED_HOSTS = [
                     'localhost', '127.0.0.1', '0.0.0.0',
                     'www.geller.co.nz', 'geller.co.nz', '157.245.125.77', '104.236.249.246',
+                    'geller.work.gd', 'www.geller.work.gd',
                 ]
 
 DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
