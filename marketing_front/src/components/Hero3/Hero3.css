@@ -1,0 +1,144 @@
+/* Update these styles */
+.hero-3 {
+    position: relative;
+    height: 500px;
+    overflow: hidden;
+}
+
+.hero-3::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 65%;
+    height: 100%;
+    background: #4B2E83;
+    clip-path: polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%);
+    z-index: 0;
+}
+
+.hero-3-content {
+    position: relative;
+    height: 100%;
+    max-width: 60%;
+    padding: 0 60px;
+    z-index: 1;
+    clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%);
+}
+
+.hero-3-subtitle {
+    color: #7ED4E3;
+    font-weight:  800;
+    font-size: 3rem;
+    margin-bottom: 20px;
+}
+
+.hero-3-title {
+    color: #7ED4E3;
+    line-height: 1.2;
+    max-width: 400px;
+    font-weight: 900;
+    font-size: 2rem;
+    line-height: 1.1;
+    padding-top: 60px;
+}
+.hero-3 p {
+    font-size: 1.2rem;
+    color: white;
+    font-weight: 300;
+    margin-top: 20px;
+    line-height: 1.3;
+}
+.hero-3-button {
+    margin-top: 2rem;
+    background: #7ED4E3;
+    color: white;
+    border: none;
+    padding: 10px 40px 10px 20px;
+    border-radius: 5px;
+    font-size: 18px;
+    cursor: pointer;
+    clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%);
+}
+
+.hero-3-button:hover {
+    background: #6bc0cf;
+}
+
+/* Rest of the styles remain the same */
+.hero-3-text {
+    padding-top: 150px;
+}
+
+.hero-3link {
+    color: #7ED4E3;
+    text-decoration: underline;
+}
+
+/* Add new footer bar */
+.hero-3-footer {
+    position: absolute;
+    bottom: 0;
+    left: 0;
+    right: 0;
+    background: #0072CE;
+    color: white;
+    padding: 20px 80px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.hero-3-footer-links {
+    display: flex;
+    gap: 20px;
+}
+
+.hero-3-footer-links a {
+    color: white;
+    text-decoration: none;
+}
+
+.hero-3-footer-links span {
+    color: white;
+    margin: 0 10px;
+}
+
+
+.hero-3-text {
+    position: relative;
+    max-width: 600px;
+    padding-top: 40px;
+}
+
+.hero-3-image {
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 50%;
+    height: 100%;
+    background-image: url('/leaf.png');
+    background-size: cover;
+    background-position: center;
+}
+
+@media (max-width: 768px) {
+    .hero-3 {
+        height: 500px;
+    }
+
+    .hero-3-text {
+        padding-top: 60px;
+        max-width: 100%;
+    }
+
+
+    .hero-3-subtitle {
+        transform: translateY(40px);
+        font-size: 1.4rem;
+    }
+
+    .hero-3-title {
+        font-size: 28px;
+    }
+}
