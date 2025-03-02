@@ -8,7 +8,7 @@ const Hero = ({subtitle, btnText, title, titleClass, subtitleClass, imgClass}) =
   return (
     <div className="hero">
       <div className="hero-content">
-        <img className='new-hero-logo' src='/new_geller_white.svg'></img>
+        <img className='new-hero-logo' src={require('../../assets/new_geller_white.svg')}></img>
         <div className="hero-text">
           <h2 className={subTClass}>{subtitle}</h2>
           <h2 className={tClass}>

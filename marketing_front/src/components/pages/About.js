@@ -41,7 +41,7 @@ class About extends Component {
                 <h1 className='hero-subtitle'>Our Products</h1>
               </div>
               <div class="col-12 pt-4 d-flex justify-content-center">
-                <img src="/some-products.png" style={{width: '95%'}} />
+                <img src="/media/documents/some-products.png" style={{width: '95%'}} />
               </div>
           </div>
           <div className="row g-4 py-4"></div>

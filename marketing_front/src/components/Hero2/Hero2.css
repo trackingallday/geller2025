@@ -118,7 +118,7 @@
     right: 0;
     width: 50%;
     height: 100%;
-    background-image: url('http://localhost:3000/hero2.jpg');
+    background-image: url('/media/documents/hero2.jpg');
     background-size: cover;
     background-position: center;
 }
