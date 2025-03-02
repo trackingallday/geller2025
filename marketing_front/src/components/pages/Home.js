@@ -1,7 +1,7 @@
 import React, { Component } from 'react';
 import { NavLink } from 'react-router-dom';
 import '../../App.css'
-import URI, { IMG_DEV_URL} from '../../constants/serverUrl';
+import serverUrl, { IMG_DEV_URL} from '../../constants/serverUrl';
 import Hero from '../Hero/Hero';
 import Hero2 from '../Hero2/Hero2';
 import ArticleCard from '../AritcleCard/ArticalCard';
@@ -46,17 +46,17 @@ export default class Home extends Component {
     const postHome3 = posts.find(p => p.name === 'home3');
     const postHome4 = posts.find(p => p.name === 'home4');
     const cards = [
-      { title: "Ultimo System", image: "http://localhost:8000" + postHome1.image, body: postHome1.content },
-      { title: "Online Training", image: "http://localhost:8000" + postHome2.image, body: postHome2.content },
-      { title: "Sustainability", image: "http://localhost:8000" + postHome3.image, body: postHome3.content },
-      { title: "NZ Made", image: "http://localhost:8000" + postHome4.image, body: postHome4.content }
+      { title: "Ultimo System", image: serverUrl + postHome1.image, body: postHome1.content },
+      { title: "Online Training", image: serverUrl + postHome2.image, body: postHome2.content },
+      { title: "Sustainability", image: serverUrl + postHome3.image, body: postHome3.content },
+      { title: "NZ Made", image: serverUrl + postHome4.image, body: postHome4.content }
     ];
     const cards2 = [
-      { title: "Ultimo System", image: "http://localhost:8000" + postHome1.image, body: postHome1.content },
-      { title: "Online Training", image: "http://localhost:8000" + postHome2.image, body: postHome2.content },
+      { title: "Ultimo System", image: serverUrl + postHome1.image, body: postHome1.content },
+      { title: "Online Training", image: serverUrl + postHome2.image, body: postHome2.content },
     ];
     const cards3 = [
-      { title: "Sustainability", image: "http://localhost:8000" + postHome3.image, body: postHome3.content },
+      { title: "Sustainability", image: serverUrl + postHome3.image, body: postHome3.content },
     ];
     const postmiddle = posts.find(p => p.name === 'homemiddle');
     const postbottom1 = posts.find(p => p.name === 'homebottom1');
@@ -81,7 +81,7 @@ export default class Home extends Component {
         <div className="container py-4">
           <div className="row g-4">
               <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">
-                <img src={'http://localhost:8000' + postmiddle.image} 
+                <img src={serverUrl + postmiddle.image} 
                   alt={postmiddle.title} className="middleimg"
                   style={{width: '100%', height: 'auto'}}
                 />

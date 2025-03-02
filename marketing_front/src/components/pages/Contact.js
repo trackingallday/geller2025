@@ -2,10 +2,10 @@ import React, { Component } from 'react';
 import { withRouter } from 'react-router';
 import superagent from 'superagent';
 import { GoogleReCaptcha } from 'react-google-recaptcha-v3';
-
+import serverUrl from '../../constants/serverUrl';
 
 //import URI from '../../constants/serverUrls';
-const URI = 'http://localhost:8000';
+const URI = serverUrl;//'http://localhost:8000';
 
 class Contact extends Component {
 

@@ -1,11 +1,12 @@
 import React from "react";
 import "./ArticleRow.css";
+import serverUrl from "../../constants/serverUrl";
 
 const ArticleRow = ({ image, title, body, linkColor, bgColor, pColor, titleColor }) => {
   
   return (
 <div className="card border-0 rounded" style={{ color: titleColor, backgroundColor: bgColor }}>
-  { image && <img src={"http://localhost:8000" + image} alt={title} className="card-img-top myimg" /> }
+  { image && <img src={serverUrl + image} alt={title} className="card-img-top myimg" /> }
   <div className="card-body p-4" style={{ color: titleColor, backgroundColor: bgColor }}>
     <h1 className="card-title">{title}</h1>
     <div className="card-text small text-truncate-multiline">

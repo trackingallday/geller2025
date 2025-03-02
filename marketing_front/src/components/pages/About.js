@@ -5,7 +5,7 @@ import Hero3 from '../Hero3/Hero3';
 import Hero2 from '../Hero2/Hero2';
 import ArticleCol from '../AritcleCol/ArticleCol.js';
 import ArticleRow from '../ArticleRow/ArticleRow.js';
-//const URI = 'http://localhost:8000';
+import serverUrl from '../../constants/serverUrl';
 
 const blurb = `
 We are the hygiene solution specialists, dedicated to creating a world
@@ -57,7 +57,7 @@ class About extends Component {
         <div className="container py-4">
           <div className="row g-4">
               <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">
-                <img src={'http://localhost:8000' + aboutus1.image} 
+                <img src={serverUrl + aboutus1.image} 
                   alt={aboutus1.title} className="middleimg"
                   style={{width: '100%', height: 'auto'}}
                 />
