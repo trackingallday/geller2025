@@ -1,0 +1,35 @@
+.myheader {
+  padding-top: 50px !important;
+  padding-bottom: 20px !important;
+  padding-right: 5rem !important;
+}
+
+.myheader a {
+  color: #fff !important;
+  font-weight: 100 !important;
+}
+
+.myheader button.btn span {
+  color: #fff !important;
+  font-weight: 100 !important;
+  /* move the text up a little */
+  position: relative;
+  top: -1px;
+}
+
+.myheader button.btn {
+  /* make the corners rounded */
+  border-radius: 20px !important;
+  /* make the button a bit shorter */
+  padding: 5px 15px !important;
+  /* move the button up a little */
+  position: relative;
+  top: -1px;
+}
+
+.small-header-logo {
+  width: 200px;
+  position: absolute;
+  top: 40px;
+  left: calc(6rem);
+}

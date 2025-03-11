@@ -347,18 +347,6 @@ body {
     height: 120px;
 }
 
-h2.header {
-    font-size: 18px;
-    font-weight: bold;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    line-height: 20px;
-}
-
-h1.massive-blue {
-    font-size: 50px;
-    line-height: 58px;
-    color: rgb(20, 177, 255);
-}
 
 .bottom {
     bottom: 0px;
