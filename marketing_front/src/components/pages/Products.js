@@ -76,7 +76,7 @@ class Products extends Component {
     return (
       <div>
         <HeaderSmall title={name} />
-        <div className="container">
+        <div className="container p-0">
           <div className="row" style={{backgroundColor: '#FFF', paddingTop: '15px', paddingBottom: '70px'}}>
             <div className="col-md-3" style={{ width: '300px'}}>
               { !!categories.length && <CategoryList category={this.state.category || this.props.category} subCategories={subCategories} subCategory={subCategory_id} categories={categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />}
