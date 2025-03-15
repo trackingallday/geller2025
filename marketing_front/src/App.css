@@ -34,11 +34,11 @@
 }
 
 p {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }
 
 pre {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     white-space: pre-wrap;
     /* css-3 */
     white-space: -moz-pre-wrap;
@@ -53,28 +53,28 @@ pre {
 
 .roman {
     font-size: 15px;
-    font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     font-weight: 400;
     font-stretch: normal;
 }
 
 .roman-small {
     font-size: 11px;
-    font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     font-weight: 400;
     font-stretch: normal;
 }
 
 .roman-smallest {
     font-size: 10px;
-    font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     font-weight: 400;
     font-stretch: normal;
 }
 
 .roman-med {
     font-size: 12px;
-    font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     font-weight: 700;
     font-stretch: normal;
     color: white;
@@ -115,7 +115,7 @@ pre {
 
 .nav span {
     line-height: 40px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     position: relative;
     top: 5px;
 }
@@ -134,41 +134,41 @@ pre {
 .header {
     font-size: 28px;
     font-weight: bold;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     line-height: 25px;
 }
 
 .heading {
     font-size: 22px;
     font-weight: bold;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     line-height: 22px;
     color: #41b649
 }
 
 pre {
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }
 
 .product-name {
     font-size: 18px;
     font-weight: bold;
     color: #000;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }
 
 .product-name-detail {
     font-size: 18px;
     font-weight: bold;
     color: #000;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }
 
 .product-detail {
     font-size: 13px;
     font-weight: 400;
     color: rgb(113, 113, 113);
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }
 
 .product-subtitle-detail {
@@ -181,10 +181,11 @@ pre {
 }
 
 .product-desc {
-    font-size: 11px;
-    font-family: "Helvetica Neue", Helvetica, Arial, sans-serif;
-    font-weight: 400;
-    font-stretch: condensed;
+    font-size: 12px;
+    font-family: "Aktiv Grotesk", sans-serif !important;
+    font-weight: 300;
+    font-stretch: normal;
+    color: rgb(113, 113, 113);
 }
 
 .block-with-text {
@@ -196,7 +197,7 @@ pre {
 
 .description-text {
     font-size: 12pt;
-    font-family: "HelveticaNeue", "Helvetica Neue", "HelveticaNeueRoman", "HelveticaNeue-Roman", "Helvetica Neue Roman", 'TeXGyreHerosRegular', "Helvetica", "Tahoma", "Geneva", "Arial", sans-serif;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
     font-weight: 400;
     font-stretch: normal;
 }
@@ -274,11 +275,7 @@ body {
 }
 
 .grey-text-light {
-    color: rgb(200, 200, 200);
-}
-
-.grey-text-light {
-    color: rgb(200, 200, 200);
+    color: rgb(140, 140, 140);
 }
 
 .blue-text-light {
@@ -644,17 +641,16 @@ img.main-product-img {
     }
 }
 
-/* Large Heading Font: Neue Haas Grotesk Display Pro Bold */
+/* Headers use Aktiv Grotesk Medium */
 .header,
 .heading,
 h1.massive-blue,
 h1.header,
 h2.header {
-    font-family: "Neue Haas Grotesk Display Pro Bold", sans-serif !important;
-    font-weight: bold;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }
 
-/* General Site Font: Aktiv Grotesk Medium */
+/* All other elements use Aktiv Grotesk */
 body,
 p,
 pre,
@@ -670,7 +666,11 @@ pre,
 .product-desc,
 .description-text,
 .product-sku-list,
-.nav.foot-nav .nav-link {
-    font-family: "Aktiv Grotesk Medium", sans-serif !important;
-    font-weight: 500;
+.nav.foot-nav .nav-link,
+*, 
+input, 
+textarea, 
+select, 
+button {
+    font-family: "Aktiv Grotesk", sans-serif !important;
 }

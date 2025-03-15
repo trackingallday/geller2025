@@ -3,6 +3,7 @@ import ProductsList from '../ProductsList';
 import CategoryList from '../CategoryList';
 import { withRouter } from 'react-router'
 import URI, { IMG_DEV_URL} from '../../constants/serverUrl';
+import HeaderSmall from '../HeaderSmall/HeaderSmall';
 //const URI = 'http://localhost:8000';
 
 class Products extends Component {
@@ -74,49 +75,44 @@ class Products extends Component {
 
     return (
       <div>
-        <div className="row" style={{ height: '80px'}}>
-          <div className="col-md-6">
-            <div className="med-right">
-              <div className="hexagon white"></div>
+        <HeaderSmall title={name} />
+        <div className="container">
+          <div className="row" style={{backgroundColor: '#FFF', paddingTop: '15px', paddingBottom: '70px'}}>
+            <div className="col-md-3" style={{ width: '300px'}}>
+              { !!categories.length && <CategoryList category={this.state.category || this.props.category} subCategories={subCategories} subCategory={subCategory_id} categories={categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />}
+              { !categories.length && <CategoryList category={this.state.market || this.props.market} subCategories={subCategories} categories={markets} onCategoryClick={this.onMarketClick} history={this.props.history} market />}
             </div>
-            <div style={{height: '80px', width: '100%'}}></div>
-          </div>
-        </div>
-        <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '30px', paddingTop: '15px', paddingBottom: '70px'}}>
-          <div className="col-md-2" style={{ width: '191px'}}>
-            { !!categories.length && <CategoryList category={this.state.category || this.props.category} subCategories={subCategories} subCategory={subCategory_id} categories={categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />}
-            { !categories.length && <CategoryList category={this.state.market || this.props.market} subCategories={subCategories} categories={markets} onCategoryClick={this.onMarketClick} history={this.props.history} market />}
-          </div>
-          <div className="col-md-1"></div>
-          <div className="col-md-9">
-            <div className="row" style={{minHeight: '215px', paddingTop: '35px'}}>
-              { img }
-              <div className="col-md-4 col-lg-3">
-                <span  style={{paddingLeft: '0px', fontSize: '24px', color: this.categoryMenuColor(category) }} className="heading">{ name || 'All Products' }</span>
-              </div>
-              <div className="col-md-6 col-lg-8">
-                <span className="description-text grey-text" style={{display: 'inline-block', lineHeight: '17px', paddingRight: '9px', fontSize: '11pt'}}>
-                  { categoryDesc }
-                </span>
-              </div>
-                <div className="col-md-12">
-                  <span className="roman-smaller grey-text-light" style={{fontSize: '14px', textAlign: 'left'}}>
-                    { products.length + ' products'}
+            <div className="col-md-1"></div>
+            <div className="col-md-8">
+              <div className="row" style={{minHeight: '215px', paddingTop: '35px'}}>
+                { img }
+                <div className="col-8">
+                  <span  style={{paddingLeft: '0px', fontSize: '24px', color: '#4B2E83' }} className="heading">{ name || 'All Products' }</span>
+                </div>
+                <div className="col-8">
+                  <span className="description-text grey-text" style={{padding: '20px 0px 10px 0px', display: 'inline-block', lineHeight: '17px', paddingRight: '9px', fontSize: '11pt', fontWeight: 100}}>
+                    { categoryDesc }
                   </span>
                 </div>
-            </div>
+                  <div className="col-md-12">
+                    <span className="roman-smaller grey-text-light" style={{fontSize: '14px', textAlign: 'left'}}>
+                      { products.length + ' products'}
+                    </span>
+                  </div>
+              </div>
 
-            <ProductsList category={this.state.category || this.props.category} subCategory={categories.find(c => c.id == subCategory_id)} products={products} market={this.props.market} />
+              <ProductsList category={this.state.category || this.props.category} subCategory={categories.find(c => c.id == subCategory_id)} products={products} market={this.props.market} />
 
-            <div className="row" style={{paddingRight: '20px'}}>
-              <div className="col-md-12" style={{ textAlign: 'right'}}>
-                <div style={{backgroundColor: '#0275d8', height: '1px', width: '100%', marginTop: '30px'}} />
-                <div style={{marginTop: '9px'}}>
-                  <span className="roman-smaller grey-text-light">
-                    { products.length + ' products'}
-                  </span>
+              <div className="row" style={{paddingRight: '20px'}}>
+                <div className="col-md-12" style={{ textAlign: 'right'}}>
+                  <div style={{backgroundColor: '#0275d8', height: '1px', width: '100%', marginTop: '30px'}} />
+                  <div style={{marginTop: '9px'}}>
+                    <span className="roman-smaller grey-text-light">
+                      { products.length + ' products'}
+                    </span>
+                  </div>
+
                 </div>
-
               </div>
             </div>
           </div>

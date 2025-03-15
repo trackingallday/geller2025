@@ -11,16 +11,16 @@ class PostList extends Component {
   renderPost = (c, ind) => {
     if(c.id == this.props.post) {
       return (
-        <li className="list-group-item smaller roman-med" key={ind} onClick={() => this.onPostClick(c)}>
-          <span style={{color: '#0275d8'}}>
+        <li className="list-group-item smaller roman-med category-item" key={ind} onClick={() => this.onPostClick(c)}>
+          <span className="category-text" style={{color: '#0275d8', fontWeight: 100}}>
             {c.name}
           </span>
         </li>
       );
     }
     return (
-      <li className="list-group-item smaller roman-med" key={ind} onClick={() => this.onPostClick(c)}>
-        <span className="grey-text">{c.name}</span>
+      <li className="list-group-item smaller roman-med category-item" key={ind} onClick={() => this.onPostClick(c)}>
+        <span className="grey-text category-text">{c.name}</span>
       </li>
     );
   }
@@ -28,8 +28,8 @@ class PostList extends Component {
   render() {
     return (
       <ul className="list-group list-group-flush">
-        <li className="list-group-item smaller" style={{paddingBottom: '19px'}} key={'a'} onClick={() => this.onPostClick({id:null})}>
-          <span className="roman grey-text-light roman-small">{this.props.title}</span>
+        <li className="list-group-item smaller category-item" style={{paddingBottom: '10px'}} key={'a'} onClick={() => this.onPostClick({id:null})}>
+          <span className="roman grey-text-light roman-small category-text">{this.props.title}</span>
         </li>
         { this.props.posts.map(this.renderPost) }
       </ul>

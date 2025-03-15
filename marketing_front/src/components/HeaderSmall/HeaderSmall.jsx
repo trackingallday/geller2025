@@ -4,7 +4,7 @@ import './HeaderSmall.css';
 const HeaderSmall = () => {
   return (
     <nav className="navbar navbar-expand-lg d-flex justify-content-end myheader"
-      style={{ backgroundColor: "#5F259F"}}>
+      style={{ backgroundColor: "#4B2E83"}}>
         {/* Brand Name */}
         <img class="small-header-logo" src="/static/media/new_geller_white.afc828d5.svg"></img>
 

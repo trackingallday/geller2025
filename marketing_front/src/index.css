@@ -1,5 +1,35 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: "Aktiv Grotesk", sans-serif !important;
+}
+
+* {
+  font-family: "Aktiv Grotesk", sans-serif !important;
+}
+
+/* Headers should still use Medium */
+h1, h2, h3, h4, h5, h6, .header, .heading {
+  font-family: "Aktiv Grotesk Medium", sans-serif !important;
+}
+
+/* Category List and list item styling */
+.category-item {
+  padding: 0.25rem 1.5rem !important;
+  border: none !important;
+  width: 100% !important;
+}
+
+.category-text {
+  font-size: 11px !important;
+  font-weight: 100 !important;
+}
+
+li {
+  font-weight: 100 !important;
+  font-size: 11px !important;
+}
+
+.list-group-item {
+  padding: 0.25rem 1.5rem !important;
 }

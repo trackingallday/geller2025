@@ -1,5 +1,14 @@
 body {
   margin: 0;
   padding: 0;
-  font-family: sans-serif;
+  font-family: "Aktiv Grotesk", sans-serif !important;
+}
+
+* {
+  font-family: "Aktiv Grotesk", sans-serif !important;
+}
+
+/* Headers should still use Medium */
+h1, h2, h3, h4, h5, h6, .header, .heading {
+  font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }

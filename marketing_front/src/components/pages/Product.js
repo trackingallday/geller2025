@@ -4,7 +4,8 @@ import CategoryList from '../CategoryList';
 import { withRouter } from 'react-router'
 import { NavLink } from 'react-router-dom';
 import URI from '../../constants/serverUrl';
-import ReactMarkdown from 'react-markdown'
+import ReactMarkdown from 'react-markdown';
+import HeaderSmall from '../HeaderSmall/HeaderSmall';
 
 
 class Product extends Component {
@@ -78,6 +79,7 @@ class Product extends Component {
 
     return (
       <div>
+        <HeaderSmall title={p.name} />
         <div className="row" style={{ height: '80px'}}>
             <div className="col-md-6">
               <div className="med-right">

@@ -31,6 +31,7 @@
     font-weight:  800;
     font-size: 3rem;
     margin-bottom: 20px;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }
 
 .hero-title-1 {
@@ -40,6 +41,7 @@
     font-weight: 900;
     font-size: 2rem;
     line-height: 1.1;
+    font-family: "Aktiv Grotesk Medium", sans-serif !important;
 }
 
 .hero-button {
@@ -67,20 +69,6 @@
     color: #7ED4E3;
     font-size: 1.4rem;
     margin-top: 20px;
-}
-
-/* Add new footer bar */
-.hero-footer {
-    position: absolute;
-    bottom: 0;
-    left: 0;
-    right: 0;
-    background: #0072CE;
-    color: white;
-    padding: 20px 80px;
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
 }
 
 .hero-footer-links {

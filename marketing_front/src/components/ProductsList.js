@@ -21,7 +21,7 @@ export default class ProductList extends Component {
         </div>
         <div className="row" style={{paddingTop: '15px'}}>
           <div className="col-md-12">
-            <NavLink className="product-desc" style={{textDecoration: 'none'}} to={"/product/" + p.id}>
+            <NavLink style={{textDecoration: 'none'}} to={"/product/" + p.id}>
               <p>
                 <span className="product-name">
                   { p.name }
@@ -32,7 +32,7 @@ export default class ProductList extends Component {
         </div>
         <div className="row">
           <div className="col-md-12">
-            <div className="block-with-text product-desc grey-text" style={{maxHeight: 'unset', lineHeight:'16px', fontSize: '14px'}}>
+            <div className="block-with-text grey-text" style={{maxHeight: 'unset', lineHeight:'16px', fontSize: '12px', fontWeight: 300}}>
               { p.subheading ? p.subheading : p.description }
             </div>
           </div>

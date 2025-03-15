@@ -65,14 +65,14 @@ import URI from '../../constants/serverUrl';
       directions,
     } = product
     const textStyle = {
-      fontFamily: 'Helvetica',
+      fontFamily: 'Aktiv Grotesk, sans-serif',
       fontSize: '11px',
       lineHeight: 1.2,
       width: '100%',
       display: 'inline-block',
       margin: '0',
     }
-    const titleStyle = Object.assign({}, { display: 'inline-block', fontFamily: 'Helvetica', fontWeight: '700', fontSize: '13px', lineHeight: 1.8, });
+    const titleStyle = Object.assign({}, { display: 'inline-block', fontFamily: 'Aktiv Grotesk Medium, sans-serif', fontWeight: '700', fontSize: '13px', lineHeight: 1.8, });
     const midStyle = Object.assign(textStyle, { fontWeight: '500', fontSize: '11px', width: '100%', textOverflow: 'ellipsis', overflow: 'hidden' });
     const bottomStyle = Object.assign(textStyle, { fontWeight: '400', fontSize: '11px', whiteSpace:'wrap-word'});
 

@@ -6,6 +6,8 @@ import Hero2 from '../Hero2/Hero2';
 import ArticleCol from '../AritcleCol/ArticleCol.js';
 import ArticleRow from '../ArticleRow/ArticleRow.js';
 import serverUrl from '../../constants/serverUrl';
+import HeaderSmall from '../HeaderSmall/HeaderSmall';
+
 
 const blurb = `
 We are the hygiene solution specialists, dedicated to creating a world
@@ -28,6 +30,9 @@ class About extends Component {
     }
     return (
       <div>
+        <div style={{position: 'absolute', top: '0px', zIndex: '1000', width: '100%'}}>
+          <HeaderSmall title="Our Products" />
+        </div>
         <Hero 
           subtitle="About Us"
           titleClass={'smaller-title'}

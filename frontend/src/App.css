@@ -1,5 +1,15 @@
 @import '~antd/dist/antd.css';
 
+/* Apply Aktiv Grotesk to all elements */
+* {
+  font-family: "Aktiv Grotesk", sans-serif !important;
+}
+
+/* Headers use Aktiv Grotesk Medium */
+h1, h2, h3, h4, h5, h6, .header, .heading {
+  font-family: "Aktiv Grotesk Medium", sans-serif !important;
+}
+
 .App {
   text-align: center;
 }

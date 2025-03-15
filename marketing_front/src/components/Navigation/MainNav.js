@@ -12,7 +12,7 @@ class MainNav extends Component {
 
   render() {
     return (
-      <div className="primary-nav">
+      <div className="primary-nav" style={{zIndex: 99999 }}>
         <div className="top-bar">
           <div className="nav-link-wrap"><span>Call 0800 667 843</span></div>
           <div className="nav-link-wrap"><NavLink to="/about">About us</NavLink></div>
