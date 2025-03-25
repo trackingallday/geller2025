@@ -7,7 +7,7 @@ export default class ProductList extends Component {
 
   renderProduct = (p, ind) => {
     return (
-      <div key={ind} className="col-md-3" style={{padding: '10px 15px', textAlign: 'center' }}>
+      <div key={ind} className="col-md-4" style={{padding: '10px 15px' }}>
         <div className="row">
           <NavLink to={"/product/" + p.id} style={{margin: '0 auto'}}>
             <div className="contain" style={{height: '220px'}}>
@@ -22,19 +22,23 @@ export default class ProductList extends Component {
         <div className="row" style={{paddingTop: '15px'}}>
           <div className="col-md-12">
             <NavLink style={{textDecoration: 'none'}} to={"/product/" + p.id}>
-              <p>
-                <span className="product-name">
-                  { p.name }
-                </span>
-              </p>
+              <span className="product-name grey-text">
+                { p.name }
+              </span>
             </NavLink>
-          </div>
-        </div>
-        <div className="row">
-          <div className="col-md-12">
             <div className="block-with-text grey-text" style={{maxHeight: 'unset', lineHeight:'16px', fontSize: '12px', fontWeight: 300}}>
               { p.subheading ? p.subheading : p.description }
             </div>
+          </div>
+        </div>
+        <div className="row">
+          <div className="col-md-6">
+            <NavLink to={"/product/" + p.id} style={{margin: '0 auto', color: 'turquoise', fontSize: '10px'}}>
+              find out more
+            </NavLink>
+          </div>
+          <div className="col-md-6">
+            <a className='sds-btn' href={'/getsds/' + p.id }>Download SDS</a>
           </div>
         </div>
       </div>

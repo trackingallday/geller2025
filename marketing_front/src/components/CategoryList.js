@@ -47,12 +47,11 @@ export default class CategoryList extends Component {
             style={{
               marginLeft: '-1em', 
               border: 'none',
-              padding: '0.25rem 1.5rem',
               width: '100%'
             }}>
           <div>
             <div style={{marginLeft: '1em' }}>
-              <span style={{color: '#4B2E83', fontSize: '11px'} }
+              <span style={{color: '#4B2E83'} }
                     className="category-text"
                     onClick={() => this.onCategoryClick(c)}>
                 <b>{'>'} {c.name}</b>
@@ -85,10 +84,10 @@ export default class CategoryList extends Component {
     return (
       <ul className="list-group list-group-flush" style={{border: 'none', width: '100%'}}>
         <li className="list-group-item smaller category-item" 
-            style={{padding: '0.25rem 1.5rem', border: 'none', width: '100%'}} 
+            style={{border: 'none', width: '100%'}} 
             key={'a'} 
             onClick={() => this.onCategoryClick({id:'all'})}>
-          <span className="category-text" style={{color: '#8C8C8C', fontSize: '11px', fontWeight: 100}}>All Products</span>
+          <span className="category-text" style={{color: '#8C8C8C', fontWeight: 100}}>All Products</span>
         </li>
         { this.props.categories.filter(c => !c.isSubCategory).map(this.renderCategory) }
       </ul>

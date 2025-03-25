@@ -65,40 +65,45 @@ class Products extends Component {
         p => !!( p.productCategory.indexOf(parseInt(subCategory_id)) !== -1) || p.subCategory.indexOf(parseInt(subCategory_id)) !== -1);
     }
 
-    const categoryDesc = category ? category.description : '';
+    const categoryDesc = category && (category.description && category.description.length > 2) ? category.description : null;
     let name = market ? market.name : 'All Products';
     name = category ? category.name : name;
     let img = null;
     if(category && category.image) {
       img = <div className="col-md-1"><img src={URI + category.image} style={{width: '45px', height: '45px'}} /></div>
     }
-
+    const first2ProductImages = categoryDesc && categoryDesc.length > 1 ? products.slice(0, 2).map(p => p.primaryImageLink) : [];
     return (
       <div>
         <HeaderSmall title={name} />
         <div className="container p-0">
           <div className="row" style={{backgroundColor: '#FFF', paddingTop: '15px', paddingBottom: '70px'}}>
-            <div className="col-md-3" style={{ width: '300px'}}>
+            <div className="col-3" style={{ width: '300px'}}>
               { !!categories.length && <CategoryList category={this.state.category || this.props.category} subCategories={subCategories} subCategory={subCategory_id} categories={categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />}
               { !categories.length && <CategoryList category={this.state.market || this.props.market} subCategories={subCategories} categories={markets} onCategoryClick={this.onMarketClick} history={this.props.history} market />}
             </div>
-            <div className="col-md-1"></div>
-            <div className="col-md-8">
+            <div className="col-9">
               <div className="row" style={{minHeight: '215px', paddingTop: '35px'}}>
                 { img }
                 <div className="col-8">
-                  <span  style={{paddingLeft: '0px', fontSize: '24px', color: '#4B2E83' }} className="heading">{ name || 'All Products' }</span>
+                  <span style={{paddingLeft: '0px', fontSize: '24px', color: '#4B2E83' }} className="heading">{ name || 'All Products' }</span>
                 </div>
-                <div className="col-8">
-                  <span className="description-text grey-text" style={{padding: '20px 0px 10px 0px', display: 'inline-block', lineHeight: '17px', paddingRight: '9px', fontSize: '11pt', fontWeight: 100}}>
+                { categoryDesc && <div className="col-8">
+                  <span className="description-text" style={{padding: '4px 0px 10px 0px', display: 'inline-block', paddingRight: '9px'}}>
                     { categoryDesc }
                   </span>
-                </div>
-                  <div className="col-md-12">
-                    <span className="roman-smaller grey-text-light" style={{fontSize: '14px', textAlign: 'left'}}>
-                      { products.length + ' products'}
-                    </span>
+                </div> }
+                { categoryDesc && <div className="col-4">
+                  <div className='row'>
+                  { first2ProductImages.map(
+                    (img, i) => <div className='col-6'><img key={i} src={URI + img} style={{ height: '100%', width: '100%'}} /></div>) }
                   </div>
+                </div> }
+                <div className="col-12">
+                  <span className="roman-smaller grey-text-light" style={{fontSize: '14px', textAlign: 'left'}}>
+                    { products.length + ' products'}
+                  </span>
+                </div>
               </div>
 
               <ProductsList category={this.state.category || this.props.category} subCategory={categories.find(c => c.id == subCategory_id)} products={products} market={this.props.market} />
@@ -111,7 +116,6 @@ class Products extends Component {
                       { products.length + ' products'}
                     </span>
                   </div>
-
                 </div>
               </div>
             </div>
