@@ -44,8 +44,13 @@ li {
 a.sds-btn {
   border-radius: 6px;
   padding: 0.3rem 0.4rem !important;
-  background-color: rgb(53, 207, 192) !important;
+  background-color: rgb(145, 151, 150) !important;
   color: white !important;
   font-size: 10px !important;
   font-weight: 100 !important;
+  text-decoration: none !important;
+}
+
+a.sds-btn:hover {
+  background-color: rgb(53, 207, 192) !important;
 }
