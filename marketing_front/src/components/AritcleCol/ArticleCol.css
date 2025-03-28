@@ -5,11 +5,3 @@ h1.title {
 div.content {
   padding: 60px 40px;
 }
-
-p {
-  font-size: 1.2rem;
-  color: #4B2E83;
-  font-weight: 500;
-  margin-top: 20px;
-  line-height: 1.5rem;
-}

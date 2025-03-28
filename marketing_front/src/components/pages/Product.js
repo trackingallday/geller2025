@@ -40,10 +40,10 @@ class Product extends Component {
     }
 
     return (
-      <div className="col-md-12" style={{marginTop: heading ? '25px' : '5px'}}>
+      <div className="row" style={{marginTop: heading ? '25px' : '5px'}}>
         { heading &&
-             <div style={{fontSize: '12px', fontWeight: 'bold'}}>
-              <span className="product-name">{heading}</span>
+             <div style={{fontSize: '12px'}}>
+              <span className="">{heading}</span>
             </div>
         }
         <span className={className}>
@@ -80,110 +80,105 @@ class Product extends Component {
     return (
       <div>
         <HeaderSmall title={p.name} />
-        <div className="row" style={{ height: '80px'}}>
-            <div className="col-md-6">
-              <div className="med-right">
-                <div className="hexagon white"></div>
-              </div>
-              <div style={{height: '80px', width: '100%'}}></div>
-          </div>
-        </div>
-        <div className="row" style={{backgroundColor: '#FFF', paddingLeft: '45px', paddingTop: '15px', paddingBottom: '270px'}}>
-          <div className="col-md-2" style={{ minWidth: '191px'}}>
-            <CategoryList
-              categories={this.props.categories}
-              onCategoryClick={this.onCategoryClick}
-              category={p.productCategory}
-              history={this.props.history}
-            />
-          </div>
-          <div className="col-md-8 col-lg-9" style={{padding: '10px 5px 10px 5px'}}>
-            <div className="row">
-              <div className="col-md-6">
-                { this.renderProductDetail(p.name, "product-name-detail", null, "20px")}
-                {
-                  // Optionally render the subheading if its not empty
-                  this.renderConditionally(
-                    p.subheading,
-                    this.renderProductDetail(p.subheading, "product-detail product-subtitle-detail")
-                  )
-                }
-                {
-                  // Optionally render the old SKU if the new field is not being used.
-                  this.renderConditionally(
-                    !p.productCodes,
-                    this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")
-                  )
-                }
-                { this.renderProductDetail(p.description, "product-detail", "Description", undefined, true)}
-                { this.renderProductDetail(p.directions, "product-detail", "Directions", undefined, true)}
-                { this.renderProductDetail(p.market) }
-              </div>
-              <div className="col-md-6" style={{height: '350px' }}>
-                <div className="row">
-                  <div className="col-md-12" align="center">
-                    <div className="contain" style={{margin: 'auto'}}>
-                      {p.primaryImageLink ? (
-                        <img className="brighten" src={URI + p.primaryImageLink} alt={p.name + '-image'} />
-                      ) : (
-                        <span>No Image</span>
-                      )}
-                    </div>
-                  </div>
-                </div>
-                <div className="row" style={{height: '50px'}}>
-                  <div className="col-md-12" style={{paddingTop: '12px'}}>
-                    <span className="nav-link bold" style={{fontSize: '15px'}}>Available Sizes</span>
-                  </div>
-                </div>
-                <div className="row" style={{minHeight: '100px'}}>
-                  <div className="col-md-8 col-xs-12 col-sm-12">
-                    { sizes }
-                  </div>
-                  <div className="col-md-4 col-xs-12 col-sm-12 pdf-links">
-                  <div className="row justify-content-center">
-                      <div className="col-lg-6  col-md-auto" style={{padding: '0'}}>
-                        <a href={URI + '/product_download/' + p.id + '/info/'} target="_blank">
-                          <div className="roman grey-text">
-                            <div style={{margin: '0 auto', maxWidth: '50px'}}>
-                              <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px', marginLeft: '-3px'}} />
-                            </div>
-                            <div style={{fontSize: '12px', textAlign: 'center'}}>
-                              Info<br />(download)
-                            </div>
-                          </div>
-                        </a>
-                      </div>
-                      <div className="col-lg-6 col-md-auto" style={{padding: '0'}}>
-                        <a href={'/getsds/' + p.id }>
-                          <div className="roman grey-text">
-                            <div style={{margin: '0 auto', maxWidth: '50px'}}>
-                              <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px', marginLeft: '-3px'}} />
-                            </div>
-                            <div style={{fontSize: '12px', textAlign: 'center'}}>
-                              SDS<br />(download)
-                            </div>
-                          </div>
-                        </a>
+        <div className="container p-0">
+          <div className='row px-0 py-4'>
+            <div className="col-md-2" style={{ minWidth: '191px'}}>
+              <CategoryList
+                categories={this.props.categories}
+                onCategoryClick={this.onCategoryClick}
+                category={p.productCategory}
+                history={this.props.history}
+              />
+            </div>
+            <div className="col-md-8 col-lg-9" style={{padding: '10px 5px 10px 5px'}}>
+              <div className="row">
+                <div className="col-md-6" style={{height: '350px' }}>
+                  <div className="row">
+                    <div className="col-md-12" align="center">
+                      <div className="contain p-4" style={{margin: 'auto'}}>
+                        {p.primaryImageLink ? (
+                          <img className="brighten main-product-detail" src={URI + p.primaryImageLink} alt={p.name + '-image'} />
+                        ) : (
+                          <span>No Image</span>
+                        )}
                       </div>
                     </div>
                   </div>
+                  
                 </div>
-                <div className="row">
+                <div className="col-md-6 p-0">
+
+                  <div className="row py-2" style={{borderBottom: '1px solid #e0e0e0'}}>
+                    <span className="heading products-heading">{ p.name }</span>
+                  </div>
+                  {p.subheading  && <div className="row pt-2">
+                    <span className="product-detail product-subheading">
+                      { p.subheading }
+                    </span>
+                  </div>
+                  }
                   {
-                    // Optionally render the new SKUs if they are present.
+                    // Optionally render the old SKU if the new field is not being used.
                     this.renderConditionally(
-                      p.productCodes,
-                      this.renderProductDetail('| | |\n|-|-|\n' + p.productCodes, "product-sku-list", undefined, undefined, [
-                        'text', 'table', 'tableBody', 'tableRow', 'tableCell'
-                      ])
+                      !p.productCodes,
+                      this.renderProductDetail("SKU: " + p.productCode, "product-detail tiny-text")
                     )
                   }
+                  { this.renderProductDetail(p.description, "description-text", "Description", undefined, true)}
+                  { this.renderProductDetail(p.directions, "description-text", "Directions", undefined, true)}
+                  { this.renderProductDetail(p.market) }
+                  <div className="row pt-2" style={{borderTop: '1px solid #e0e0e0'}}>
+                    <span className="product-detail product-size-subheading" >Available Sizes</span>
+                  </div>
+                  <div className="row pt-2" style={{minHeight: '100px'}}>
+                    <div className="col-md-8 col-xs-12 col-sm-12">
+                      { sizes }
+                    </div>
+                    <div className="col-md-4 col-xs-12 col-sm-12 pdf-links">
+                    <div className="row justify-content-center">
+                        <div className="col-lg-6  col-md-auto" style={{padding: '0'}}>
+                          <a href={URI + '/product_download/' + p.id + '/info/'} target="_blank">
+                            <div className="roman grey-text">
+                              <div style={{margin: '0 auto', maxWidth: '50px'}}>
+                                <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px', marginLeft: '-3px'}} />
+                              </div>
+                              <div style={{fontSize: '12px', textAlign: 'center'}}>
+                                Info<br />(download)
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                        <div className="col-lg-6 col-md-auto" style={{padding: '0'}}>
+                          <a href={'/getsds/' + p.id }>
+                            <div className="roman grey-text">
+                              <div style={{margin: '0 auto', maxWidth: '50px'}}>
+                                <img src={require('../../assets/pdf-icoin.png')} style={{ width: '50px', marginLeft: '-3px'}} />
+                              </div>
+                              <div style={{fontSize: '12px', textAlign: 'center'}}>
+                                SDS<br />(download)
+                              </div>
+                            </div>
+                          </a>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                  <div className="row">
+                    {
+                      // Optionally render the new SKUs if they are present.
+                      this.renderConditionally(
+                        p.productCodes,
+                        this.renderProductDetail('| | |\n|-|-|\n' + p.productCodes, "product-sku-list", undefined, undefined, [
+                          'text', 'table', 'tableBody', 'tableRow', 'tableCell'
+                        ])
+                      )
+                    }
+                  </div>
                 </div>
               </div>
             </div>
           </div>
-        </div>
+        </div>  
       </div>
     );
   }

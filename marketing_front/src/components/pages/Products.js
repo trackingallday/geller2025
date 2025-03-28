@@ -86,7 +86,7 @@ class Products extends Component {
               <div className="row" style={{minHeight: '215px', paddingTop: '35px'}}>
                 { img }
                 <div className="col-8">
-                  <span style={{paddingLeft: '0px', fontSize: '24px', color: '#4B2E83' }} className="heading">{ name || 'All Products' }</span>
+                  <span className="heading products-heading">{ name || 'All Products' }</span>
                 </div>
                 { categoryDesc && <div className="col-8">
                   <span className="description-text" style={{padding: '4px 0px 10px 0px', display: 'inline-block', paddingRight: '9px'}}>
