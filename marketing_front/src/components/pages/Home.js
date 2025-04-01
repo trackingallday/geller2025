@@ -62,7 +62,7 @@ export default class Home extends Component {
     const postbottom1 = posts.find(p => p.name === 'homebottom1');
     const postbottom2 = posts.find(p => p.name === 'homebottom2');
     const title = "Dedicated to supporting you every day, in every way, with every care in the world.";
-    const subtitle = "We are";
+    const subtitle = "We are.";
     const btnText = "Search our range";
     return (
       <div>

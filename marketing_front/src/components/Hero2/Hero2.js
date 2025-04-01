@@ -3,11 +3,11 @@ import './Hero2.css';
 
 const Hero2 = () => {
   return (
-    <div className="hero">
-      <div className="hero-content">
-        <div className="hero-text">
-          <h2 className="hero-subtitle"></h2>
-          <h2 className="hero-title">
+    <div className="hero2">
+      <div className="hero2-content">
+        <div className="hero2-text">
+          <h2 className="hero2-subtitle"></h2>
+          <h2 className="hero2-title">
             Our Story
           </h2>
           <p>

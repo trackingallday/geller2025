@@ -1,7 +1,7 @@
 /* Update these styles */
 .hero {
     position: relative;
-    height: 500px;
+    height: 430px;
     overflow: hidden;
 }
 
@@ -28,20 +28,18 @@
 
 .hero-subtitle {
     color: #7ED4E3;
-    font-weight:  800;
-    font-size: 3rem;
-    margin-bottom: 20px;
-    font-family: "Aktiv Grotesk Medium", sans-serif !important;
+    font-weight:  700;
+    font-family: "Aktiv Grotesk", sans-serif !important;
+    margin-bottom: 0 !important;
 }
 
 .hero-title-1 {
     color: #ffffff;
-    line-height: 1.2;
     max-width: 400px;
-    font-weight: 900;
-    font-size: 2rem;
+    font-weight: 700;
     line-height: 1.1;
-    font-family: "Aktiv Grotesk Medium", sans-serif !important;
+    font-size: 1.6rem;;
+    font-family: "Aktiv Grotesk", sans-serif !important;
 }
 
 .hero-button {
@@ -62,13 +60,8 @@
 
 /* Rest of the styles remain the same */
 .hero-text {
-    padding-top: 150px;
-}
-
-.hero-subtitle {
-    color: #7ED4E3;
-    font-size: 1.4rem;
-    margin-top: 20px;
+    padding-top: 90px;
+    font-size: 1.6rem;
 }
 
 .hero-footer-links {
@@ -90,7 +83,8 @@
 .hero-text {
     position: relative;
     max-width: 600px;
-    padding-top: 100px;
+    margin-top: 10px;
+    padding-top: 150px;
 }
 
 .hero-image {
@@ -133,7 +127,7 @@
     width: 250px;
     z-index: 10;
     position: absolute;
-    top: 40px;
+    top: 30px;
     /* move it left a bit */
     transform: translateX(-45px);
 }

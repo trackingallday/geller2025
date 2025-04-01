@@ -1,12 +1,12 @@
 /* Update these styles */
-.hero {
+.hero2 {
     position: relative;
-    height: 500px;
+    height: 450px;
     overflow: hidden;
     background: #E6E6E6;
 }
 
-.hero::after {
+.hero2::after {
     content: '';
     position: absolute;
     top: 0;
@@ -17,7 +17,7 @@
     clip-path: polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%);
 }
 
-.hero-content {
+.hero2-content {
     position: relative;
     padding-top: 80px;
     height: 100%;
@@ -27,30 +27,28 @@
     clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%);
 }
 
-.hero-subtitle {
+.hero2-subtitle {
     color: #7ED4E3;
     font-weight:  800;
-    font-size: 3rem;
-    margin-bottom: 20px;
+    font-size: 1.8rem;
 }
 
-.hero-title {
-    color: #ffffff;
-    line-height: 1.2;
+.hero2-title {
+    color: #7ED4E3;
     max-width: 400px;
     font-weight: 900;
-    font-size: 2rem;
+    font-size: 1.6rem;
     line-height: 1.1;
     padding-top: 60px;
 }
-.hero p {
+.hero2 p {
     font-size: 1.2rem;
     color: white;
-    font-weight: 500;
-    margin-top: 20px;
-    line-height: 1.5;
+    font-weight: 200;
+    margin-top: 10px;
+    line-height: 1.1;
 }
-.hero-button {
+.hero2-button {
     margin-top: 2rem;
     background: #7ED4E3;
     color: white;
@@ -62,12 +60,12 @@
     clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%);
 }
 
-.hero-button:hover {
+.hero2-button:hover {
     background: #6bc0cf;
 }
 
 /* Rest of the styles remain the same */
-.hero-text {
+.hero2-text {
     padding-top: 150px;
 }
 
@@ -77,7 +75,7 @@
 }
 
 /* Add new footer bar */
-.hero-footer {
+.hero2-footer {
     position: absolute;
     bottom: 0;
     left: 0;
@@ -90,23 +88,23 @@
     align-items: center;
 }
 
-.hero-footer-links {
+.hero2-footer-links {
     display: flex;
     gap: 20px;
 }
 
-.hero-footer-links a {
+.hero2-footer-links a {
     color: white;
     text-decoration: none;
 }
 
-.hero-footer-links span {
+.hero2-footer-links span {
     color: white;
     margin: 0 10px;
 }
 
 
-.hero-text {
+.hero2-text {
     position: relative;
     max-width: 600px;
     padding-top: 100px;
@@ -124,22 +122,22 @@
 }
 
 @media (max-width: 768px) {
-    .hero {
+    .hero2 {
         height: 500px;
     }
 
-    .hero-text {
+    .hero2-text {
         padding-top: 60px;
         max-width: 100%;
     }
 
 
-    .hero-subtitle {
+    .hero2-subtitle {
         transform: translateY(40px);
         font-size: 1.4rem;
     }
 
-    .hero-title {
+    .hero2-title {
         font-size: 28px;
     }
 }
