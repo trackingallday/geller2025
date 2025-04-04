@@ -135,7 +135,7 @@ gelleradminrimu -- new prod password
     position: absolute;
     top: 0;
     right: 0;
-    background-image: url('http://localhost:8000/media/documents/hero1.jpeg');
+    background-image: url('/media/documents/hero1.jpeg');
     background-size: cover;
     background-position: center;
 }
