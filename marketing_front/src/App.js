@@ -57,6 +57,18 @@ class App extends Component {
   }
 
   componentDidMount() {
+    window.addEventListener('scroll', () => {
+      console.log('scrolling');
+        // Parallax effect
+        const layers = document.querySelectorAll('.parallax-layer');
+        const scrollY = window.scrollY;
+    
+        layers.forEach((layer, index) => {
+          const depth = (index + 1) * 5; // You can tweak this for subtlety
+          const movement = scrollY * (depth / 100); // Very gentle
+          layer.style.transform = `translateY(${movement}px)`;
+        });
+      });
   }
 
   search = (value) => {

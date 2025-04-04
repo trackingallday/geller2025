@@ -29,7 +29,14 @@
 
 .small-header-logo {
   width: 200px;
+  left: 2.5%;
   position: absolute;
-  top: 40px;
-  left: calc(6rem);
+  top: -10px;
+  display: inline-flexbox;
+}
+
+@media screen and (min-width: 768px) {
+  .small-header-logo {
+    left: 1.5%;
+  }
 }

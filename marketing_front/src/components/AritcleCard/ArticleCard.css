@@ -16,9 +16,39 @@
   box-shadow: 0 .125rem .25rem rgba(0, 0, 0, 0.075);
 }
 
+.card-title.my-title {
+  font-family: 'Aktiv Grotesk Bold';
+  color: #5a2684;
+}
+
 .myimg {
   width: 100%;
-  height: 100%;
-  min-height: 240px;
+  aspect-ratio: 5 / 4;
   object-fit: cover;
+}
+
+.myimg:hover {
+  transform: scale(1.025);
+  transition: all 0.3s ease-in-out;
+  /* fuzzy  border */
+
+  /* Create a 2px fade on each edge */
+  -webkit-mask-image: 
+    linear-gradient(to right, transparent 0px, black 1px),  /* left edge */
+    linear-gradient(to left, transparent 0px, black 1px),   /* right edge */
+    linear-gradient(to bottom, transparent 0px, black 1px), /* top edge */
+    linear-gradient(to top, transparent 0px, black 1px);    /* bottom edge */
+
+  -webkit-mask-composite: intersect;
+  mask-composite: intersect;
+
+  -webkit-mask-size: 100% 100%;
+  mask-size: 100% 100%;
+  -webkit-mask-repeat: no-repeat;
+  mask-repeat: no-repeat;
+}
+
+.btn.btn-link.text-primary {
+  color: #32c8d4 !important;
+  text-decoration: none;
 }

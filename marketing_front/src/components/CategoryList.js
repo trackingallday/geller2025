@@ -27,7 +27,7 @@ export default class CategoryList extends Component {
       return null;
     }
     const style = sc.name && sc.id == this.props.subCategory ? 
-      {color: '#4B2E83', textDecoration: 'underline', fontSize: '11px', fontWeight: 100} : 
+      {color: '#5a2684', textDecoration: 'underline', fontSize: '11px', fontWeight: 100} : 
       {color: 'white', fontSize: '11px', fontWeight: 100};
     return (
       <li key={sc.name+"subCategory"} 
@@ -51,10 +51,10 @@ export default class CategoryList extends Component {
             }}>
           <div>
             <div style={{marginLeft: '1em' }}>
-              <span style={{color: '#4B2E83'} }
+              <span style={{color: '#5a2684'} }
                     className="category-text"
                     onClick={() => this.onCategoryClick(c)}>
-                <b>{'>'} {c.name}</b>
+                <span className='bumpup'>{'> '}</span>{c.name}
               </span>
             </div>
             <div>

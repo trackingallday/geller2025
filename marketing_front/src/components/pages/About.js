@@ -77,12 +77,12 @@ class About extends Component {
             <div className="row g-4">
               <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">
                 <ArticleRow title={postbottom1.title} image={postbottom1.image}
-                  body={postbottom1.content} titleColor={'#FFFFFF'} bgColor={'#7ED4E3'} pColor={'#000000'} linkColor={'#FFFFFF'}
+                  body={postbottom1.content} titleColor={'#FFFFFF'} bgColor={'#32c8d4'} pColor={'#000000'} linkColor={'#FFFFFF'}
                 />
               </div>
               <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">
                 <ArticleRow title={postbottom2.title} image={postbottom2.image} body={postbottom2.content}
-                  titleColor={'#7ED4E3'} bgColor={'#4B2E83'} pColor={'#FFFFFF'} linkColor={'#7ED4E3'}
+                  titleColor={'#32c8d4'} bgColor={'#5a2684'} pColor={'#FFFFFF'} linkColor={'#32c8d4'}
                 />
               </div>
             </div>

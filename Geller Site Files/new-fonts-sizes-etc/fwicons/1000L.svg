@@ -1,0 +1,22 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<svg id="Layer_1" xmlns="http://www.w3.org/2000/svg" version="1.1" viewBox="0 0 200 200">
+  <!-- Generator: Adobe Illustrator 29.4.0, SVG Export Plug-In . SVG Version: 2.1.0 Build 152)  -->
+  <defs>
+    <style>
+      .st0 {
+        fill: #5a2684;
+      }
+
+      .st1 {
+        fill: #fff;
+        font-family: NeusaNextStdTrial-CompactRegular, 'Neusa Next Std Trial';
+        font-size: 15px;
+      }
+    </style>
+  </defs>
+  <g>
+    <path class="st0" d="M108.2,20.1c0-2-1.6-3.6-3.6-3.6h-9.2c-2,0-3.6,1.6-3.6,3.6v4h16.4v-4Z"/>
+    <path class="st0" d="M160.7,27.3H39.3s-15,0-15,15v117.9s0,15,15,15h2.2v8.1s0,3.8,3.8,3.8h4.4s3.8,0,3.8-3.8v-8.1h36.7c2,3.5,5.6,5.9,9.9,5.9s7.9-2.4,9.9-5.9h36.7v8.1s0,3.8,3.8,3.8h4.4s3.8,0,3.8-3.8v-8.1h2.2s15,0,15-15V42.3s0-15-15-15ZM100,175.3c-3.2,0-5.8-2.6-5.8-5.8s2.6-5.8,5.8-5.8,5.8,2.6,5.8,5.8-2.6,5.8-5.8,5.8Z"/>
+  </g>
+  <text class="st1" transform="translate(87.8 143.4)"><tspan x="0" y="0">1000</tspan></text>
+</svg>

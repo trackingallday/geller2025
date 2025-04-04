@@ -4,9 +4,9 @@ import "./ArticleCard.css";
 const ArticleCard = ({ image, title, body }) => {
   return (
 <div className="card shadow-sm border-0 rounded">
-  { image && <img src={image} alt={title} className="card-img-top myimg" /> }
-  <div className="card-body p-4">
-    <h5 className="card-title">{title}</h5>
+  { image && <img src={image} alt={title} className="myimg" /> }
+  <div className="card-body p-3">
+    <h5 className="card-title my-title">{title}</h5>
     <div className="card-text small text-truncate-multiline">
       <p className="small">
         {body}

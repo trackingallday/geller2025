@@ -4,21 +4,23 @@ import './HeaderSmall.css';
 const HeaderSmall = () => {
   return (
     <nav className="navbar navbar-expand-lg d-flex justify-content-end myheader"
-      style={{ backgroundColor: "#4B2E83"}}>
-        {/* Brand Name */}
-        <img class="small-header-logo" src="/static/media/new_geller_white.afc828d5.svg"></img>
+      style={{ backgroundColor: "#5a2684"}}>
+        <div className="container p-0">
+          {/* Brand Name */}
+          <img class="small-header-logo" src="/static/media/new_geller_white.afc828d5.svg"></img>
 
-        {/* Navbar Items */}
-        <div className="d-flex ms-auto justify-content-end w-100">
-          <a className="nav-link text-white small" href="#">Products</a>
-          <a className="nav-link text-white small" href="#">Solutions</a>
-          <a className="nav-link text-white small" href="#">Systems</a>
-          <a className="nav-link text-white small" href="#">Support</a>
+          {/* Navbar Items */}
+          <div className="d-flex ms-auto justify-content-end w-100">
+            <a className="nav-link text-white small" href="#">Products</a>
+            <a className="nav-link text-white small" href="#">Solutions</a>
+            <a className="nav-link text-white small" href="#">Systems</a>
+            <a className="nav-link text-white small" href="#">Support</a>
 
-          {/* Button */}
-          <button className="btn btn-info text-white-50 small rounded-pill">
-            <span className="small">Search for SDS</span>
-          </button>
+            {/* Button */}
+            <button className="btn btn-info text-white-50 small rounded-pill">
+              <span className="small">Search for SDS</span>
+            </button>
+          </div>
         </div>
     </nav>
   );

@@ -10,7 +10,7 @@ body {
 
 /* Headers should still use Medium */
 h1, h2, h3, h4, h5, h6, .header, .heading {
-  font-family: "Aktiv Grotesk Medium", sans-serif !important;
+  font-family: "Aktiv Grotesk Regular", sans-serif !important;
 }
 
 /* Category List and list item styling */
@@ -21,9 +21,16 @@ h1, h2, h3, h4, h5, h6, .header, .heading {
 }
 
 .category-text {
-  font-size: 10px !important;
-  font-weight: 100 !important;
+  font-size: 0.8rem !important;
+  font-family: "Aktiv Grotesk Medium", sans-serif !important;
   line-height: 1;
+}
+
+.category-text span.bumpup {
+  /* move it up 2px */
+  position: relative;
+  top: -1px;
+  font-weight: 500;
 }
 
 li {

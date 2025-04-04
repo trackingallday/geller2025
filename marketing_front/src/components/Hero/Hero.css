@@ -12,7 +12,7 @@
     left: 0;
     width: 70%;
     height: 100%;
-    background: #4B2E83;
+    background: #5a2684;
     clip-path: polygon(0 0, 85% 0, 100% 50%, 85% 100%, 0 100%);
 }
 
@@ -21,16 +21,17 @@
     padding-top: 180px;
     height: 100%;
     max-width: 60%;
-    padding: 0 60px;
+    padding: 0 20px;
     z-index: 1;
     clip-path: polygon(0 0, 90% 0, 100% 50%, 90% 100%, 0 100%);
 }
 
 .hero-subtitle {
-    color: #7ED4E3;
+    color: #32c8d4;
     font-weight:  700;
-    font-family: "Aktiv Grotesk", sans-serif !important;
+    font-family: "Neue Haas Grotesk Display Pro Bold", sans-serif !important;
     margin-bottom: 0 !important;
+    font-size: 1.8rem;
 }
 
 .hero-title-1 {
@@ -38,13 +39,56 @@
     max-width: 400px;
     font-weight: 700;
     line-height: 1.1;
-    font-size: 1.6rem;;
-    font-family: "Aktiv Grotesk", sans-serif !important;
+    font-size: 1.8rem;
+    font-family: "Neue Haas Grotesk Display Pro Bold", sans-serif !important;
 }
+/*
+urple for geller #5a2684 -- done
+green for geller #32c8d4 -- done
+make the hero text align center like the posts below -- done
+same with the second hero --done
+Squish up the photos on the posts --done
+post link color top be the right green --done
+font-sizes to come from designer for every page --doing
+
+for the nav header make sure the width bounds are the same as homepage etc for posts --done
+
+replace systems with news -- link
+solutions -- new page!!
+news will link to a basic looking page iwthe post and the image
+make the posts content be a rich textfield
+
+way to search but the results are SDS files
+
+the most interesting thing to users if finding SDS sheets
+
+make it so we know when we need to update the SDS sheets
+and email the new one when they need it
+
+contacts are people who download an SDS
+add the date they date they downloaded it
+
+new record for contact who download it
+
+and then we can save the expiry of the SDS the down and the product
+
+every day checks to see if they need need then and checks to make sure that all products have the latest one
+
+maybe make new fonrt that only does SDS download - to catpture the peoplke downloading
+
+
+gelleradminrimu -- new prod password
+
+*/
+
+/*
+
+
+*/
 
 .hero-button {
     margin-top: 2rem;
-    background: #7ED4E3;
+    background: #32c8d4;
     color: white;
     border: none;
     padding: 10px 40px 10px 20px;
@@ -91,11 +135,23 @@
     position: absolute;
     top: 0;
     right: 0;
-    width: 50%;
-    height: 100%;
-    background-image: url('/media/documents/hero1.jpeg');
+    background-image: url('http://localhost:8000/media/documents/hero1.jpeg');
     background-size: cover;
     background-position: center;
+}
+
+.parallax-container {
+    position: relative;
+    overflow: hidden;
+    perspective: 1000px;
+}
+  
+.parallax-layer {
+    width: 110%;
+    height: 110%;
+    top: -5%;
+    left: -5%;
+    will-change: transform;
 }
 
 .hero-image-about {
@@ -141,7 +197,7 @@
 }
 
 .smaller-subtitle {
-    color: #7ED4E3;
+    color: #32c8d4;
     font-weight:  800;
     font-size: 1.6rem !important;
     margin-top: 45px;

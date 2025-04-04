@@ -5,6 +5,7 @@
     right: 0;
     z-index: 1000;
     background: transparent;
+    background: rgb(20 4 46 / 55%);
 }
 
 .nav-link-wrap {
@@ -24,21 +25,16 @@
 /* make the last nav link without border */
 .nav-link-wrap:last-child {
     border-right: none;
+    padding-right: 0px;
+    margin-right: 20px;
 }
 svg.nav-icon {
     /* user transform to move it down a bit and right a bit */
     transform: translateY(5px) translateX(5px);
 }
 .top-bar {
-    background: rgb(20 4 46 / 55%);
-    padding: 4px 80px;
+    padding: 4px 0px;
     text-align: right;
-}
-
-.main-nav {
-    background: rgba(75, 46, 131, 0.2);
-    padding: 20px 80px;
-    backdrop-filter: blur(5px);
 }
 
 .nav-links {
@@ -57,17 +53,6 @@ svg.nav-icon {
     position: relative;
 }
 
-.nav-links a:not(:last-child)::after {
-    content: '';
-    position: absolute;
-    right: 0;
-    top: 50%;
-    transform: translateY(-50%);
-    height: 12px;
-    width: 1px;
-    background: rgba(255, 255, 255, 0.3);
-}
-
 .sds-button {
     margin-left: 15px;
 }
@@ -79,7 +64,7 @@ svg.nav-icon {
     font-size: 13px;
     font-weight: 300;
     letter-spacing: 0.3px;
-    font-family: "Aktiv Grotesk Medium", sans-serif !important;
+    font-family: "Aktiv Grotesk Regular", sans-serif !important;
 }
 
 .nav-links a {
@@ -88,7 +73,7 @@ svg.nav-icon {
     text-decoration: none;
     font-size: 14px;
     letter-spacing: 0.3px;
-    font-family: "Aktiv Grotesk Medium", sans-serif !important;
+    font-family: "Aktiv Grotesk Regular", sans-serif !important;
 }
 
 .sds-button {
@@ -103,11 +88,11 @@ svg.nav-icon {
 }
 
 .main-nav {
-    padding: 20px 80px;
+    padding: 20px 0px;
 }
 
 .sds-button {
-    background: #7ED4E3;
+    background: #32c8d4;
     padding: 12px 28px;
     border-radius: 30px;
 }
@@ -127,7 +112,7 @@ svg.nav-icon {
 }
 
 .sds-button {
-    background: #7ED4E3;
+    background: #32c8d4;
     color: white;
     border: none;
     padding: 10px 24px;
@@ -161,5 +146,5 @@ svg.nav-icon {
 
 .search-container input:focus {
     outline: none;
-    border-color: #7ED4E3;
+    border-color: #32c8d4;
 }
