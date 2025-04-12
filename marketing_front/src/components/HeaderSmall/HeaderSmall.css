@@ -40,3 +40,15 @@
     left: 1.5%;
   }
 }
+
+@media (max-width: 430px) {
+  .navbar.myheader .nav-link {
+    display: none;
+  }
+  .navbar.myheader button {
+    display: none;
+  }
+  .small-header-logo {
+    display: none;
+  }
+}

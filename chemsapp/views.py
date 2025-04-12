@@ -11,8 +11,9 @@ import os
 import requests
 from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
     ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
-    CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer
-from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size
+    CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer, \
+    SectorSerializer, NewsPostSerializer
+from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, Sector, NewsPost
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 
@@ -469,9 +470,10 @@ def public_products(request):
         markets = MarketSerializer(MarketCategory.objects.all(), many=True).data
         configs = ConfigSerializer(Config.objects.all(), many=True).data
         sizes = SizeSerializer(Size.objects.all(), many=True).data
+        sectors = SectorSerializer(Sector.objects.all(), many=True).data
         return JsonResponse(
             {'products': products, 'categories': categories, 'posts': posts,
-             'markets': markets, 'configs': configs, 'sizes': sizes}, safe=False)
+             'markets': markets, 'configs': configs, 'sizes': sizes, 'sectors': sectors}, safe=False)
     except Exception as a:
         print(a)
     pass

@@ -1,3 +1,4 @@
+# -*- coding: utf-8 -*-
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -6,9 +7,8 @@ from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from rest_framework.authtoken.models import Token
 from django.core.files.storage import FileSystemStorage
-import cloudinary
-import cloudinary.uploader
-import cloudinary.api
+from ckeditor.fields import RichTextField
+
 
 typeChoices = [("customer", "customer"), ("distributor", "distributor"), ("admin", "admin")]
 
@@ -80,15 +80,19 @@ class Product(models.Model):
     properties = models.CharField(max_length=500, blank=True, null=True, help_text='Read only: Legacy field is no longer used. Exists only for reference.')
     application = models.CharField(max_length=500, blank=True, null=True, help_text='Read only: Legacy field is no longer used. Exists only for reference.')
 
+
+    def __unicode__(self):
+        return self.name  # ensure this returns Unicode, not str
+
     def __str__(self):
-        return "{} ".format(self.name)
+        return unicode(self).encode('utf-8')  # for compatibility with admin
 
 
 class Post(MyBaseModel):
     name = models.CharField(max_length=500, blank=True, null=True)
     page = models.CharField(max_length=100)
     title = models.CharField(max_length=255, blank=True, null=True)
-    content = models.TextField(max_length=2000, blank=True, null=True)
+    content = RichTextField()
     image = models.FileField(upload_to='documents/', blank=True, null=True)
     linkURL = models.CharField(max_length=1000, blank=True, null=True)
     linkText = models.CharField(max_length=255, blank=True, null=True)
@@ -96,6 +100,30 @@ class Post(MyBaseModel):
 
     def __str__(self):
         return "{} {} {}".format(self.page, self.title, self.name)
+    
+class NewsPost(Post):
+    postType = models.CharField(max_length=100, blank=True, null=True)
+    postDate = models.DateTimeField(auto_now_add=True)
+    isFeatured = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=False)
+
+    def __str__(self):
+        return "{} {} {}".format(self.page, self.title, self.name)
+
+class Sector(MyBaseModel):
+    name = models.CharField(max_length=500, blank=True, null=True)
+    description = RichTextField()
+    image = models.FileField(upload_to='documents/', blank=True, null=True)
+    product_feature = models.ForeignKey(Product, related_name="sectors", blank=True, null=True)
+    product_feature_title = models.CharField(max_length=100, blank=True, null=True)
+    product_feature_desccription = models.CharField(max_length=1000, blank=True, null=True)
+    product_feature_image = models.FileField(upload_to='documents/', blank=True, null=True)
+    news_post_1 = models.ForeignKey(NewsPost, related_name="sectors", blank=True, null=True)
+    news_post_2 = models.ForeignKey(NewsPost, related_name="sectors_2", blank=True, null=True)
+
+
+    def __str__(self):
+        return "{}".format(self.name).encode('utf-8')
 
 
 class MarketCategory(models.Model):

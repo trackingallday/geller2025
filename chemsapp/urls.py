@@ -68,6 +68,9 @@ urlpatterns = [
     url(r'^contact/\d+/$', marketing_site, name='marketing_site_contact_product_id'),
     # SDS Download page
     url(r'^getsds/\d+/$', marketing_site, name='marketing_site_getsds_product_id'),
+    # Sectors page and sector detail
+    url(r'^sectors/$', marketing_site, name='marketing_site_sectors'),
+    url(r'^sectors/\d+/$', marketing_site, name='marketing_site_sector_detail'),
     # Any unmatched route will 404 and it'll drop down to handler404 below.
 ]
 

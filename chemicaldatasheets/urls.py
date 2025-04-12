@@ -22,6 +22,7 @@ from django.conf import settings
 from django.views.generic.base import RedirectView
 
 
+
 urlpatterns = [
     url(r'^admin/', admin.site.urls, name='admin'),
     url(r'^admin$', RedirectView.as_view(url='/admin/', permanent=True)),

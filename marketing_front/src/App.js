@@ -11,13 +11,15 @@ import News from './components/pages/News';
 import Contact from './components/pages/Contact';
 import NotFound from './components/pages/NotFound';
 import GetSDS from './components/pages/GetSDS';
+import Sectors from './components/pages/Sectors';
 import URI from  './constants/serverUrl';
 
 import MobileNav from './components/MobileNav';
 import { Route, NavLink, Switch } from 'react-router-dom';
 import { withRouter } from 'react-router';
 import reqeust from 'superagent';
-import './App.css'
+import './App.css';
+import './Main.css';
 
 
 class App extends Component {
@@ -53,6 +55,7 @@ class App extends Component {
       markets: [],
       configs: {},
       sizes: [],
+      sectors: [],
     }
   }
 
@@ -148,11 +151,19 @@ class App extends Component {
     return <GetSDS configs={ this.state.data.configs } productName={ productName } productId={ productId } />
   }
 
+  renderSector = (match) => {
+    const sectorId = match.match.params.sector_id;
+    // You'll need to add sectors to your state.data and fetch them from the API
+    const sector = this.state.data.sectors && this.state.data.sectors.find(s => s.id == sectorId);
+    return <Sectors sector={sector} />
+  }
+
   render() {
     const isHome = window.location.pathname === '/';
 
     return (
       <React.Fragment>
+        <MobileNav />
         <MainNav 
           markets={this.state.data.markets} 
           changePage={this.changePage} 
@@ -168,6 +179,8 @@ class App extends Component {
           <Route exact={true} path="/product/:product_id/:market_id" render={(m) => this.renderProduct(m)} key={3006} />
           <Route exact={true} path="/our_markets/:market_id" render={(m) => this.renderMarkets(m)} key={300} />
           <Route exact={true} path="/our_markets" render={(m) => this.renderMarkets(m)} key={30009} />
+          <Route exact={true} path="/sectors/:sector_id" render={(m) => this.renderSector(m)} key={600} />
+          <Route exact={true} path="/sectors" render={(m) => this.renderSector(m)} key={601} />
           <Route exact={true} path="/about/:post" render={(m) => this.renderAbout(m)} key={4} />
           <Route exact={true} path="/about" render={(m) => this.renderAbout(m)} key={42} />
           <Route exact={true} path="/news" render={(m) => this.renderNews(m)} key={49} />

@@ -51,6 +51,7 @@ INSTALLED_APPS = [
     'chemsapp',
     'corsheaders',
     'import_export',
+    'ckeditor',
 ]
 
 MIDDLEWARE = [
@@ -149,6 +150,19 @@ STATICFILES_DIRS = [
     os.path.join(MARKETING_APP_DIR, 'build', 'static'),
     os.path.join(CHEMS_APP_DIR, 'static', 'chemsapp'),
 ]
+
+CKEDITOR_CONFIGS = {
+    'default': {
+        'toolbar': 'Custom',
+        'toolbar_Custom': [
+            ['Bold', 'Italic', 'Underline'],
+            ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
+            ['Link', 'Unlink'],
+            ['RemoveFormat', 'Source']
+        ]
+    }
+}
+
 
 #media files where uploaded files go to
 MEDIA_ROOT = os.path.join(CHEMS_APP_DIR, 'media')

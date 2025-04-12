@@ -1,7 +1,9 @@
+# -*- coding: utf-8 -*-
 from django.contrib import admin
 import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
-    Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size
+    Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
+    Sector, NewsPost
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm
@@ -90,6 +92,14 @@ class ConfigAdmin(ImportExportModelAdmin):
 class SizeAdmin(ImportExportModelAdmin):
     pass
 
+class SectorAdmin(admin.ModelAdmin):
+    fields = ['name', 'description', 'product_feature', 'image']
+
+class NewsPostAdmin(ImportExportModelAdmin):
+    pass
+
+
+
 
 admin.site.register(SafetyWear, SafetyWearAdmin)
 admin.site.register(Contact, ContactAdmin)
@@ -102,3 +112,5 @@ admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(MarketCategory, MarketAdmin)
+admin.site.register(Sector, SectorAdmin)
+admin.site.register(NewsPost, NewsPostAdmin)

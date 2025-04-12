@@ -148,3 +148,9 @@ svg.nav-icon {
     outline: none;
     border-color: #32c8d4;
 }
+
+@media (max-width: 430px) {
+    .primary-nav {
+        display: none;
+    }
+}

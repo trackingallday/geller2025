@@ -78,28 +78,28 @@ class Products extends Component {
         <HeaderSmall title={name} />
         <div className="container p-0">
           <div className="row" style={{backgroundColor: '#FFF', paddingTop: '15px', paddingBottom: '70px'}}>
-            <div className="col-3" style={{ width: '300px'}}>
+            <div className="col-3 d-none d-sm-block" style={{ width: '300px'}}>
               { !!categories.length && <CategoryList category={this.state.category || this.props.category} subCategories={subCategories} subCategory={subCategory_id} categories={categories} onCategoryClick={this.onCategoryClick} history={this.props.history} />}
               { !categories.length && <CategoryList category={this.state.market || this.props.market} subCategories={subCategories} categories={markets} onCategoryClick={this.onMarketClick} history={this.props.history} market />}
             </div>
-            <div className="col-9">
+            <div className="col-12 col-sm-9">
               <div className="row" style={{minHeight: '215px', paddingTop: '35px'}}>
                 { img }
-                <div className="col-8">
+                <div className="col-12 col-sm-8 px-4 px-sm-0">
                   <span className="heading products-heading">{ name || 'All Products' }</span>
                 </div>
-                { categoryDesc && <div className="col-8">
+                { categoryDesc && <div className="col-12 col-sm-8 px-4 px-sm-0">
                   <span className="description-text" style={{padding: '4px 0px 10px 0px', display: 'inline-block', paddingRight: '9px'}}>
                     { categoryDesc }
                   </span>
                 </div> }
-                { categoryDesc && <div className="col-4">
+                { categoryDesc && <div className="col-4 d-none d-sm-block">
                   <div className='row'>
                   { first2ProductImages.map(
                     (img, i) => <div className='col-6'><img key={i} src={URI + img} style={{ height: '100%', width: '100%'}} /></div>) }
                   </div>
                 </div> }
-                <div className="col-12">
+                <div className="col-12 d-none d-sm-block">
                   <span className="roman-smaller grey-text-light" style={{fontSize: '14px', textAlign: 'left'}}>
                     { products.length + ' products'}
                   </span>
@@ -108,7 +108,7 @@ class Products extends Component {
 
               <ProductsList category={this.state.category || this.props.category} subCategory={categories.find(c => c.id == subCategory_id)} products={products} market={this.props.market} />
 
-              <div className="row" style={{paddingRight: '20px'}}>
+              <div className="row d-none d-sm-block">
                 <div className="col-md-12" style={{ textAlign: 'right'}}>
                   <div style={{backgroundColor: '#0275d8', height: '1px', width: '100%', marginTop: '30px'}} />
                   <div style={{marginTop: '9px'}}>

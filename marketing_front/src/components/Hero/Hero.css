@@ -188,19 +188,12 @@ gelleradminrimu -- new prod password
     transform: translateX(-45px);
 }
 
-.smaller-title{
+.smaller-title {
     color: #ffffff;
     line-height: 1.15;
     max-width: 400px;
     font-weight: 400;
     font-size: 1.2rem;
-}
-
-.smaller-subtitle {
-    color: #32c8d4;
-    font-weight:  800;
-    font-size: 1.6rem !important;
-    margin-top: 45px;
 }
 
 @media (max-width: 768px) {
@@ -214,6 +207,37 @@ gelleradminrimu -- new prod password
     }
     .hero-title-1 {
         margin-top: 50px;
-        font-size: 28px;
+        font-size: 24px;
+    }
+
+    .hero-subtitle {
+        color: #32c8d4;
+        padding-top: 60px;
+        font-size: 1.4rem;
+    }
+}
+
+@media (max-width: 430px) {
+    .primary-nav {
+        display: none;
+    }
+
+    .hero-image {
+        display: none;
+    }
+
+    .hero-content {
+        max-width: 100%;
+    }
+
+    .hero::after {
+        content: '';
+        position: absolute;
+        top: 0;
+        left: 0;
+        width: 100%;
+        height: 100%;
+        background: #5a2684;
+        clip-path: none;
     }
 }

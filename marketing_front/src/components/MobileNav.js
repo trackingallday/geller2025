@@ -19,7 +19,7 @@
 
      render() {
        return (
-         <div className="row mobile-nav" style={ {height: '52px', backgroundColor: '#fff' }}>
+         <div className="row mobile-nav d-block d-sm-none " style={ {height: '52px', backgroundColor: '#fff', color: '#fff' }}>
            <div className="col-md-12">
               <nav className="navbar navbar-dark bg-dark">
                 <button className="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarToggleExternalContent"
@@ -29,7 +29,7 @@
               </nav>
               <div className="pos-f-t" style={{backgroundColor: '#fff', zIndex: 5}}>
                <div className="collapse row" id="navbarToggleExternalContent">
-                 <nav className="nav flex-column front" style={{backgroundColor: '#fff', width:'100%'}}>
+                 <nav className="nav flex-column front" style={{backgroundColor: '#fff', width:'100%', padding: '15px'}}>
                    <a className="nav-link" href="/">Home</a>
                    <a className="nav-link" href="/our_products/all">Products</a>
                    <a className="nav-link" href="/our_markets">Markets</a>
