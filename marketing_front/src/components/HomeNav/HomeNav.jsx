@@ -5,7 +5,7 @@ import searchIcon from '../../assets/search.svg';
 import SectorsNav from './SectorsNav';
 
 const HomeNav = () => {
-  const [showSolutions, setShowSolutions] = useState(true);
+  const [showSolutions, setShowSolutions] = useState(false);
   const [showSystems, setShowSystems] = useState(false);
 
 
@@ -15,9 +15,13 @@ const HomeNav = () => {
   function handleSystemsClick() {
     setShowSystems(true);
   }
+  function handleClickOutside() {
+    setShowSolutions(false);
+    setShowSystems(false);
+  }
   const extraNav = showSolutions ? (
     <div className="hero-nav-extra">
-      <SectorsNav />
+      <SectorsNav handleClickOutside={handleClickOutside} />
     </div>
   ) : null;
   return <React.Fragment>

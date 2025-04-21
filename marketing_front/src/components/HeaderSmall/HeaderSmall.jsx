@@ -4,12 +4,16 @@ import SectorNav from "../HomeNav/SectorsNav";
 
 
 const HeaderSmall = ({ }) => {
-  const [showSectors, setShowSectors] = useState(true);
+  const [showSectors, setShowSectors] = useState(false);
   const [showSystems, setShowSystems] = useState(false);
+  function handleClickOutside() {
+    setShowSectors(false);
+    setShowSystems(false);
+  }
   return (
     <nav className="navbar navbar-expand-lg d-flex justify-content-end myheader"
       style={{ backgroundColor: "#5a2684"}}>
-        { showSectors && <SectorNav /> }
+        { showSectors && <SectorNav handleClickOutside={handleClickOutside} /> }
         <div className="container p-0">
           {/* Brand Name */}
           <img class="small-header-logo" src="/static/media/new_geller_white.afc828d5.svg"></img>

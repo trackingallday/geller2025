@@ -4,11 +4,20 @@ import sectorStore from '../../stores/sectorsStore';
 import './HomeNav.css';
 import hostUrl from '../../constants/serverUrl';
 
-const SectorsNav = () => {
+const SectorsNav = ({ handleClickOutside }) => {
+  const [mouseIn, setMouseIn] = useState(false);
   const sectors = sectorStore.getState().sectors.sectors;
   function handleClick(s) {
     window.location.href = '/sectors/' + s.id;
   }
+  function myhandleClickOutside() {
+    if (mouseIn) {
+      handleClickOutside();
+    }
+  }
+  /*
+   make a full overlay behind the sectors and make it clickable
+  */
   return (
     <div className="full-width-overlay py-4">
   <div className="container">
