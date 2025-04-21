@@ -1,5 +1,6 @@
 import React from 'react';
 import './Hero.css';
+import HomeNav from '../HomeNav/HomeNav';
 
 const Hero = ({subtitle, btnText, title, titleClass, subtitleClass, imgClass}) => {
   const tClass = titleClass ? titleClass : 'hero-title-1';
@@ -8,6 +9,7 @@ const Hero = ({subtitle, btnText, title, titleClass, subtitleClass, imgClass}) =
   return (
     <div className="hero parallax-container">
       <div className='container p-0'>
+        <HomeNav />
         <div className="hero-content">
           <img className='new-hero-logo' src={require('../../assets/new_geller_white.svg')}></img>
           <div className="hero-text">

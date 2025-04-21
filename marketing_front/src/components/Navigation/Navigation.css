@@ -102,15 +102,6 @@ svg.nav-icon {
     margin-right: 20px;
 }
 
-.search-icon {
-    width: 20px;
-    height: 20px;
-    position: absolute;
-    left: 10px;
-    top: 50%;
-    transform: translateY(-50%);
-}
-
 .sds-button {
     background: #32c8d4;
     color: white;

@@ -121,6 +121,34 @@ class Sector(MyBaseModel):
     news_post_1 = models.ForeignKey(NewsPost, related_name="sectors", blank=True, null=True)
     news_post_2 = models.ForeignKey(NewsPost, related_name="sectors_2", blank=True, null=True)
 
+    def __str__(self):
+        return "{}".format(self.name).encode('utf-8')
+
+class SectorSection(MyBaseModel):
+    title = models.CharField(max_length=255, blank=True, null=True)
+    description = models.TextField(max_length=1000, blank=True, null=True)
+    image = models.FileField(upload_to='documents/', blank=True, null=True)
+    sector = models.ForeignKey(Sector, related_name="sections", blank=True, null=True)
+
+    def __str__(self):
+        return "{}".format(self.title).encode('utf-8')
+
+class Solution(MyBaseModel):
+    name = models.CharField(max_length=500, blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True, null=True)
+    subtitle = models.CharField(max_length=255, blank=True, null=True)
+    content = models.TextField(max_length=1000, blank=True, null=True)
+    content_title = models.CharField(max_length=255, blank=True, null=True)
+    content_image = models.FileField(upload_to='documents/', blank=True, null=True)
+    content2_title = models.CharField(max_length=255, blank=True, null=True)
+    content2 = models.TextField(max_length=1000, blank=True, null=True)
+    content2_image = models.FileField(upload_to='documents/', blank=True, null=True)
+    content3_title = models.CharField(max_length=255, blank=True, null=True)
+    content3 = models.TextField(max_length=1000, blank=True, null=True)
+    footer_title = models.CharField(max_length=255, blank=True, null=True)
+    footer_subtitle = models.CharField(max_length=255, blank=True, null=True)
+    footer_image = models.FileField(upload_to='documents/', blank=True, null=True)
+    footer_subtitle2 = models.CharField(max_length=255, blank=True, null=True)
 
     def __str__(self):
         return "{}".format(self.name).encode('utf-8')

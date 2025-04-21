@@ -1,0 +1,81 @@
+/* Sectors.css */
+.sector-heading {
+  color: #5a2684;
+  font-size: 2.5rem;
+  font-weight: 700;
+  margin-bottom: 1.5rem;
+  font-family: "Neue Haas Grotesk Display Pro Bold", sans-serif !important;
+}
+
+.sector-description {
+  font-size: 1rem;
+  line-height: 1.6;
+  margin-bottom: 2rem;
+}
+
+.sector-image {
+  width: 100%;
+  height: auto;
+  border-radius: 4px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+}
+
+.featured-product-section {
+  padding: 40px 0;
+  margin: 20px 0;
+}
+
+.featured-product-heading {
+  color: #5a2684;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 1rem;
+  font-family: "Neue Haas Grotesk Display Pro Bold", sans-serif !important;
+}
+
+.news-section {
+  padding: 40px 0;
+  background-color: #f1f2f3;
+}
+
+.news-heading {
+  color: #5a2684;
+  font-size: 2rem;
+  font-weight: 700;
+  margin-bottom: 2rem;
+  text-align: center;
+  font-family: "Neue Haas Grotesk Display Pro Bold", sans-serif !important;
+}
+
+.bg-gray-100 {
+  background-color: #f8f9fa;
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .sector-heading {
+    font-size: 2rem;
+  }
+  
+  .featured-product-heading {
+    font-size: 1.7rem;
+  }
+  
+  .news-heading {
+    font-size: 1.7rem;
+  }
+}
+
+@media (max-width: 576px) {
+  .sector-heading {
+    font-size: 1.7rem;
+  }
+  
+  .featured-product-heading {
+    font-size: 1.5rem;
+  }
+  
+  .news-heading {
+    font-size: 1.5rem;
+  }
+}

@@ -1,10 +1,12 @@
 .home-nav {
-  width: 300px;
-  height: 60px;
-  background-color: rgba(0, 0, 0, 0.7);
-  display: flex;
+  width: 500px;
+  height: 40px;
+  right: 0px;
+  top: 30px;
+  position: absolute;
   align-items: center;
   justify-content: center;
+  z-index: 10;
 }
 
 .home-nav-container {
@@ -12,37 +14,74 @@
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 0 15px;
+  padding: 0 25px 0 0;
 }
 
 .home-nav-links {
   display: flex;
-  gap: 20px;
+  gap: 10px;
 }
 
 .nav-link {
   color: white;
+  font-weight: 300;
   text-decoration: none;
-  font-size: 14px;
-  transition: opacity 0.2s ease;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  font-family: "Aktiv Grotesk Regular", sans-serif !important;
 }
 
-.nav-link:hover {
-  opacity: 0.8;
+a.nav-link.mylink {
+  color: white;
+  font-weight: 300;
+  text-decoration: none;
+  font-size: 13px;
+  letter-spacing: 0.3px;
+  font-family: "Aktiv Grotesk Regular", sans-serif !important;
+}
+
+.nav-link:hover, a.nav-link.mylink:hover {
+  color: #32c8d4 !important;
 }
 
 .search-sds-button {
   display: flex;
   align-items: center;
-  background-color: rgba(255, 255, 255, 0.2);
+  background: #32c8d4;
   border-radius: 20px;
   padding: 5px 15px;
 }
+
+.full-width-overlay {
+  gap: 10px;
+  top: 120px;
+  width: 100vw !important;
+  max-width: 100vw !important;
+  position: fixed;
+  left: 0;
+  width: 100vw;
+  z-index: 1050 !important;    /* Make sure it's on top (Bootstrap modals use 1050) */
+  background-color: white; /* Or transparent depending on your design */
+  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.1); /* Optional shadow for overlay feel */
+}
+
 
 .search-icon {
   width: 16px;
   height: 16px;
   margin-right: 5px;
+  background-color: transparent;
+  color: white;
+}
+
+.products-search-icon {
+  width: 16px;
+  height: 16px;
+  position: absolute;
+  left: -8px;
+  top: 7px;
+  background-color: transparent;
+  color: white;
 }
 
 .sds-link {

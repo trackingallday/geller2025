@@ -3,7 +3,7 @@ from django.contrib import admin
 import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
-    Sector, NewsPost
+    Sector, NewsPost, SectorSection
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm
@@ -92,13 +92,25 @@ class ConfigAdmin(ImportExportModelAdmin):
 class SizeAdmin(ImportExportModelAdmin):
     pass
 
+
+class SectorSectionInline(admin.TabularInline):  # or admin.StackedInline
+    model = SectorSection
+    extra = 1  # Number of empty forms to display
+    fields = ('title', 'description', 'image', 'image_preview')
+    readonly_fields = ('image_preview',)
+    
+    def image_preview(self, obj):
+        if obj.image:
+            return '<img src="%s" style="max-height: 100px; max-width: 100px;" />' % obj.image.url
+        return "No image"
+    image_preview.allow_tags = True
+    image_preview.short_description = 'Preview'
+
 class SectorAdmin(admin.ModelAdmin):
-    fields = ['name', 'description', 'product_feature', 'image']
+    inlines = [SectorSectionInline]
 
 class NewsPostAdmin(ImportExportModelAdmin):
     pass
-
-
 
 
 admin.site.register(SafetyWear, SafetyWearAdmin)

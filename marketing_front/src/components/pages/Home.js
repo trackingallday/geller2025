@@ -7,6 +7,7 @@ import Hero2 from '../Hero2/Hero2';
 import ArticleCard from '../AritcleCard/ArticalCard';
 import ArticleCol from '../AritcleCol/ArticleCol';
 import ArticleRow from '../ArticleRow/ArticleRow';
+import HomeNav from '../HomeNav/HomeNav';
 
 //const URI = 'http://localhost:8000';
 
@@ -77,7 +78,6 @@ export default class Home extends Component {
           </div>
         </div>
         <Hero2 />
-        
         <div className="container py-4">
           <div className="row g-4">
               <div className="col col-md-6 col-lg-6 col-xs-12 pt-2">

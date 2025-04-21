@@ -2,7 +2,7 @@ import React from "react";
 import "./ArticleRow.css";
 import serverUrl from "../../constants/serverUrl";
 
-const ArticleRow = ({ image, title, body, linkColor, bgColor, pColor, titleColor }) => {
+const ArticleRow = ({ image, title, body, linkColor, bgColor, pColor, titleColor, isHTMLBody }) => {
   
   return (
 <div className="card border-0 rounded" style={{ color: titleColor, backgroundColor: bgColor }}>
@@ -10,9 +10,16 @@ const ArticleRow = ({ image, title, body, linkColor, bgColor, pColor, titleColor
   <div className="card-body p-4" style={{ color: titleColor, backgroundColor: bgColor }}>
     <h1 className="card-title">{title}</h1>
     <div className="card-text small text-truncate-multiline">
-      <p style={{ color: pColor }} className="article-row-p">
+      {body && !isHTMLBody && (<p style={{ color: pColor }} className="article-row-p">
         {body}
-      </p>
+      </p>)}
+      {body && isHTMLBody && (
+        <div
+          className="article-row-html"
+          dangerouslySetInnerHTML={{ __html: body }}
+          style={{ color: pColor }}
+        />
+      )}
     </div>
     
     <a href="#" className="btn btn-link text-primary p-0" style={{ color: linkColor }}>

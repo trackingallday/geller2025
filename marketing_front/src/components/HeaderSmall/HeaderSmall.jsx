@@ -1,10 +1,15 @@
-import React from "react";
+import React, { useState } from "react";
 import './HeaderSmall.css';
+import SectorNav from "../HomeNav/SectorsNav";
 
-const HeaderSmall = () => {
+
+const HeaderSmall = ({ }) => {
+  const [showSectors, setShowSectors] = useState(true);
+  const [showSystems, setShowSystems] = useState(false);
   return (
     <nav className="navbar navbar-expand-lg d-flex justify-content-end myheader"
       style={{ backgroundColor: "#5a2684"}}>
+        { showSectors && <SectorNav /> }
         <div className="container p-0">
           {/* Brand Name */}
           <img class="small-header-logo" src="/static/media/new_geller_white.afc828d5.svg"></img>
@@ -12,7 +17,8 @@ const HeaderSmall = () => {
           {/* Navbar Items */}
           <div className="d-flex ms-auto justify-content-end w-100">
             <a className="nav-link text-white small" href="#">Products</a>
-            <a className="nav-link text-white small" href="#">Solutions</a>
+            <a className="nav-link text-white small" href="#"
+              onClick={() => setShowSectors(!showSectors)}>Sectors</a>
             <a className="nav-link text-white small" href="#">Systems</a>
             <a className="nav-link text-white small" href="#">Support</a>
 

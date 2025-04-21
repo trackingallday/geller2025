@@ -28,16 +28,16 @@
 }
 
 .myimg:hover {
-  transform: scale(1.025);
+  /*transform: scale(1.025);
   transition: all 0.3s ease-in-out;
   /* fuzzy  border */
 
   /* Create a 2px fade on each edge */
-  -webkit-mask-image: 
-    linear-gradient(to right, transparent 0px, black 1px),  /* left edge */
-    linear-gradient(to left, transparent 0px, black 1px),   /* right edge */
-    linear-gradient(to bottom, transparent 0px, black 1px), /* top edge */
-    linear-gradient(to top, transparent 0px, black 1px);    /* bottom edge */
+  /*-webkit-mask-image: 
+    linear-gradient(to right, transparent 0px, black 1px),  
+    linear-gradient(to left, transparent 0px, black 1px),   
+    linear-gradient(to bottom, transparent 0px, black 1px), 
+    linear-gradient(to top, transparent 0px, black 1px);   
 
   -webkit-mask-composite: intersect;
   mask-composite: intersect;
@@ -45,7 +45,7 @@
   -webkit-mask-size: 100% 100%;
   mask-size: 100% 100%;
   -webkit-mask-repeat: no-repeat;
-  mask-repeat: no-repeat;
+  mask-repeat: no-repeat;*/
 }
 
 .btn.btn-link.text-primary {

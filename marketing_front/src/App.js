@@ -13,7 +13,8 @@ import NotFound from './components/pages/NotFound';
 import GetSDS from './components/pages/GetSDS';
 import Sectors from './components/pages/Sectors';
 import URI from  './constants/serverUrl';
-
+import sectorStore, { getSectors, setSectors } from './stores/sectorsStore';
+import SdsSearchTable from './components/SDSSearchTable/SDSSearchTable';
 import MobileNav from './components/MobileNav';
 import { Route, NavLink, Switch } from 'react-router-dom';
 import { withRouter } from 'react-router';
@@ -29,10 +30,27 @@ class App extends Component {
     reqeust.get(URI + '/public_products/')
       .end((err, res) => {
         let data = JSON.parse(res.text);
-        let c = {};
+        const categories = data.categories;
+        const markets = data.markets;
+        console.log('Categories:', categories);
+        data.products = data.products.map(p => {
+          const c = p.productCategory.length && p.productCategory.map(ci => {
+            return categories.find(ca => ca.id == ci);
+          });
+          const m = p.markets && p.markets.map(m => {
+           return markets.find(ma => ma.id == m);
+          });
+          return {
+            ...p,
+            _categories: c,
+            _markets: m,
+          }
+        });
+        const c = {};
         data.configs.forEach(co => c[co.name] = co.val)
         data.configs = c;
         console.log(data);
+        sectorStore.dispatch(setSectors(data.sectors));
         this.setState({data, loaded: true});
       });
   }
@@ -75,7 +93,7 @@ class App extends Component {
   }
 
   search = (value) => {
-    const { products, markets, categories } = this.state.data;
+    const { products, categories, markets } = this.state.data;
     const product = products.find(p => p.name === value)
     if(product) {
       return this.changePage('/product/' + product.id);
@@ -158,6 +176,10 @@ class App extends Component {
     return <Sectors sector={sector} />
   }
 
+  renderSearch = (match) => {
+    return <SdsSearchTable products={this.state.data.products} />
+  }
+
   render() {
     const isHome = window.location.pathname === '/';
 
@@ -190,6 +212,7 @@ class App extends Component {
           <Route exact={true} path="/contact" render={(m) => this.renderContact(m)} key={12} />
           <Route exact={true} path="/contact/:product_id" render={(m) => this.renderContact(m)} key={19} />
           <Route exact={true} path="/getsds/:product_id" render={(m) => this.renderSDS(m)} key={501} />
+          <Route exact={true} path="/search" render={(m) => this.renderSearch(m)} key={502} />
           <Route component={this.withConfigs(NotFound)} />
         </Switch>
         <div className="container">
