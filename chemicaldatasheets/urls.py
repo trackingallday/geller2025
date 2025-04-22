@@ -1,4 +1,5 @@
-"""chemicaldatasheets URL Configuration
+"""
+chemicaldatasheets URL Configuration
 
 The `urlpatterns` list routes URLs to views. For more information please see:
     https://docs.djangoproject.com/en/1.11/topics/http/urls/
@@ -13,9 +14,8 @@ Including another URLconf
     1. Import the include() function: from django.conf.urls import url, include
     2. Add a URL to urlpatterns:  url(r'^blog/', include('blog.urls'))
 """
-from django.conf.urls import url
 from django.contrib import admin
-from django.conf.urls import url, include
+from django.urls import include, path, re_path
 from rest_framework.authtoken import views as rest_framework_views
 from django.conf.urls.static import static
 from django.conf import settings
@@ -24,11 +24,11 @@ from django.views.generic.base import RedirectView
 
 
 urlpatterns = [
-    url(r'^admin/', admin.site.urls, name='admin'),
-    url(r'^admin$', RedirectView.as_view(url='/admin/', permanent=True)),
-    url(r'^get_auth_token/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
-    url(r'^accounts/', include('django.contrib.auth.urls')),
-    url(r'', include('chemsapp.urls', namespace='chemsapp', app_name='chemsapp')),
+    re_path(r'^admin/', admin.site.urls, name='admin'),
+    path('admin', RedirectView.as_view(url='/admin/', permanent=True)),
+    path('get_auth_token/', rest_framework_views.obtain_auth_token, name='get_auth_token'),
+    path('accounts/', include('django.contrib.auth.urls')),
+    path('', include('chemsapp.urls', namespace='chemsapp')),
 ]
 
 # Pass on any 404 errors to the marketing frontend handler.

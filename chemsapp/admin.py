@@ -29,14 +29,17 @@ class ProductResource(resources.ModelResource):
         model = Product
 
 
+@admin.register(SafetyWear)
 class SafetyWearAdmin(ImportExportModelAdmin):
     resource_class = SafetyWearResource
 
 
+@admin.register(Distributor)
 class DistributorAdmin(ImportExportModelAdmin):
     resource_class = DistributorResource
 
 
+@admin.register(Customer)
 class CustomerAdmin(ImportExportModelAdmin):
     search_fields = ['address', 'businessName',]
     resource_class = CustomerResource
@@ -50,6 +53,7 @@ class UserAdmin(admin.ModelAdmin):
     pass
 
 
+@admin.register(Product)
 class ProductAdmin(ImportExportModelAdmin):
     search_fields = ['name',]
     readonly_fields = ["properties", "application"]
@@ -68,17 +72,21 @@ class ProfileAdmin(ImportExportModelAdmin):
     pass
 
 
+@admin.register(ProductCategory)
 class CategoryAdmin(ImportExportModelAdmin):
     form = ProductCategoryForm
     pass
 
+@admin.register(Post)
 class PostAdmin(ImportExportModelAdmin):
     form = PostForm
     pass
 
+@admin.register(MarketCategory)
 class MarketAdmin(ImportExportModelAdmin):
     pass
 
+@admin.register(Contact)
 class ContactAdmin(ImportExportModelAdmin):
     def _created_at(self, obj):
         return obj.created_at.astimezone(pytz.timezone('Pacific/Auckland')).strftime('%c')
@@ -86,9 +94,11 @@ class ContactAdmin(ImportExportModelAdmin):
     search_fields = ['nameFrom', 'emailFrom', 'companyName',]
 
 
+@admin.register(Config)
 class ConfigAdmin(ImportExportModelAdmin):
     read_only_fields = ('name', )
 
+@admin.register(Size)
 class SizeAdmin(ImportExportModelAdmin):
     pass
 
@@ -99,30 +109,21 @@ class SectorSectionInline(admin.TabularInline):  # or admin.StackedInline
     fields = ('title', 'description', 'image', 'image_preview')
     readonly_fields = ('image_preview',)
     
+    @admin.display(
+        description='Preview'
+    )
     def image_preview(self, obj):
         if obj.image:
             return '<img src="%s" style="max-height: 100px; max-width: 100px;" />' % obj.image.url
         return "No image"
-    image_preview.allow_tags = True
-    image_preview.short_description = 'Preview'
 
+@admin.register(Sector)
 class SectorAdmin(admin.ModelAdmin):
     inlines = [SectorSectionInline]
 
+@admin.register(NewsPost)
 class NewsPostAdmin(ImportExportModelAdmin):
     pass
 
 
-admin.site.register(SafetyWear, SafetyWearAdmin)
-admin.site.register(Contact, ContactAdmin)
-admin.site.register(Size, SizeAdmin)
-admin.site.register(Config, ConfigAdmin)
-admin.site.register(Distributor, DistributorAdmin)
-admin.site.register(Customer, CustomerAdmin)
-admin.site.register(Product, ProductAdmin)
 admin.site.register(Profile, ProfileAdmin)
-admin.site.register(ProductCategory, CategoryAdmin)
-admin.site.register(Post, PostAdmin)
-admin.site.register(MarketCategory, MarketAdmin)
-admin.site.register(Sector, SectorAdmin)
-admin.site.register(NewsPost, NewsPostAdmin)

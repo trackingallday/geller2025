@@ -27,7 +27,7 @@ class MyBaseModel(models.Model):
 
 
 class Profile(MyBaseModel):
-    user = models.OneToOneField(User, unique=True)
+    user = models.OneToOneField(User, on_delete=models.CASCADE, unique=True)
     phoneNumber = models.CharField(max_length=100)
     cellPhoneNumber = models.CharField(max_length=100, blank=True, null=True)
     businessName = models.CharField(max_length=255)
@@ -66,7 +66,7 @@ class Product(models.Model):
     infoSheet = models.FileField(upload_to='documents/', blank=True, null=True)
     sdsSheet = models.FileField(upload_to='documents/', blank=True, null=True)
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
-    uploadedBy = models.ForeignKey(User, on_delete=None, related_name="products_added")
+    uploadedBy = models.ForeignKey(User, on_delete=models.CASCADE, related_name="products_added")
     subCategory = models.ManyToManyField(ProductCategory, blank=True, null=True, related_name='subcategories')
     public = models.BooleanField(default=False)
     productCategory = models.ManyToManyField(ProductCategory, through=ProductCategory.products.through, blank=True, null=True, related_name='categories')
@@ -114,12 +114,12 @@ class Sector(MyBaseModel):
     name = models.CharField(max_length=500, blank=True, null=True)
     description = RichTextField()
     image = models.FileField(upload_to='documents/', blank=True, null=True)
-    product_feature = models.ForeignKey(Product, related_name="sectors", blank=True, null=True)
+    product_feature = models.ForeignKey(Product, on_delete=models.CASCADE, related_name="sectors", blank=True, null=True)
     product_feature_title = models.CharField(max_length=100, blank=True, null=True)
     product_feature_desccription = models.CharField(max_length=1000, blank=True, null=True)
     product_feature_image = models.FileField(upload_to='documents/', blank=True, null=True)
-    news_post_1 = models.ForeignKey(NewsPost, related_name="sectors", blank=True, null=True)
-    news_post_2 = models.ForeignKey(NewsPost, related_name="sectors_2", blank=True, null=True)
+    news_post_1 = models.ForeignKey(NewsPost, on_delete=models.CASCADE, related_name="sectors", blank=True, null=True)
+    news_post_2 = models.ForeignKey(NewsPost, on_delete=models.CASCADE, related_name="sectors_2", blank=True, null=True)
 
     def __str__(self):
         return "{}".format(self.name).encode('utf-8')
@@ -128,7 +128,7 @@ class SectorSection(MyBaseModel):
     title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(max_length=1000, blank=True, null=True)
     image = models.FileField(upload_to='documents/', blank=True, null=True)
-    sector = models.ForeignKey(Sector, related_name="sections", blank=True, null=True)
+    sector = models.ForeignKey(Sector, on_delete=models.CASCADE, related_name="sections", blank=True, null=True)
 
     def __str__(self):
         return "{}".format(self.title).encode('utf-8')
@@ -166,7 +166,7 @@ class MarketCategory(models.Model):
 class Customer(Profile):
     products = models.ManyToManyField(Product, related_name="customers", blank=True, null=True)
     geocodingDetail = models.TextField(max_length=1500, blank=True, null=True)
-    distributorParent = models.ForeignKey('Distributor', blank=True, null=True)
+    distributorParent = models.ForeignKey('Distributor', on_delete=models.CASCADE, blank=True, null=True)
 
     def __str__(self):
         return "{} {} {}".format(self.businessName, self.user.email, self.distributorParent)
