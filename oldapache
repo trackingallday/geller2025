@@ -49,3 +49,14 @@ WSGIScriptAlias / /home/rimu/geller_brush/chemicaldatasheets/wsgi.py
 
 </VirtualHost>
 </IfModule>
+
+WSGIDaemonProcess geller_brush python-home=/home/rimu/geller_brush/venv python-path=/home/rimu/geller_brush
+WSGIProcessGroup geller_brush
+
+WSGIScriptAlias / /home/rimu/geller_brush/chemicaldatasheets/wsgi.py
+
+<Directory /home/rimu/geller_brush/chemicaldatasheets>
+    <Files wsgi.py>
+        Require all granted
+    </Files>
+</Directory>
