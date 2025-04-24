@@ -39,7 +39,6 @@ __pycache__/
 **/main.*.css*
 
 # Django log file
-alllogs.log
 
 # Collected statics output
 dist_static/
