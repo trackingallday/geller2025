@@ -40,7 +40,7 @@ class Profile(MyBaseModel):
         return "{} {} {} {} {}".format(self.businessName, self.user.first_name, self.user.last_name, self.user.email, self.user.username)
 
 
-class ProductCategory(MyBaseModel):
+class ProductCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=1000)
     products = models.ManyToManyField('Product', blank=True, null=True, related_name='categories')
@@ -53,7 +53,7 @@ class ProductCategory(MyBaseModel):
         return "{} ".format(self.name)
 
 
-class Product(MyBaseModel):
+class Product(models):
     name = models.CharField(max_length=255, unique=True)
     subheading = models.CharField(max_length=255, blank=True, null=True)
     secondaryImageLink = models.FileField(upload_to='documents/', blank=True, null=True)
