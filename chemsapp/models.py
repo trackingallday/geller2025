@@ -101,7 +101,12 @@ class Post(MyBaseModel):
     def __str__(self):
         return "{} {} {}".format(self.page, self.title, self.name)
     
-class NewsArticle(Post):
+class NewsArticle(MyBaseModel):
+    name = models.CharField(max_length=500, blank=True, null=True)
+    title = models.CharField(max_length=255, blank=True, null=True)
+    content = RichTextField()
+    image = models.FileField(upload_to='documents/', blank=True, null=True)
+    linkURL = models.CharField(max_length=1000, blank=True, null=True)
     postType = models.CharField(max_length=100, blank=True, null=True)
     postDate = models.DateTimeField(auto_now_add=True)
     isFeatured = models.BooleanField(default=False)

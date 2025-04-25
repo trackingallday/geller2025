@@ -97,12 +97,12 @@ APPEND_SLASH=True
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
 
 # import os
 # from urllib.parse import urlparse
@@ -125,17 +125,17 @@ APPEND_SLASH=True
 #         }
 #     }
 # else:
-# Fallback to individual environment variables if DATABASE_URL is not provided
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE', 'railway'),
-        'USER': os.getenv('PGUSER', 'postgres'),
-        'PASSWORD': os.getenv('PGPASSWORD', 'PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS'),
-        'HOST': os.getenv('PGHOST', 'postgres.railway.internal'),  # Use Railway internal host
-        'PORT': os.getenv('PGPORT', '5432'),
-    }
-}
+#     # Fallback to individual environment variables if DATABASE_URL is not provided
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('PGDATABASE', 'railway'),
+#         'USER': os.getenv('PGUSER', 'postgres'),
+#         'PASSWORD': os.getenv('PGPASSWORD', 'PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS'),
+#         'HOST': os.getenv('PGHOST', 'switchyard.proxy.rlwy.net'),  # Use Railway internal host
+#         'PORT': os.getenv('PGPORT', '41935'),
+#     }
+# }
 
 
 REST_FRAMEWORK = {
