@@ -2,14 +2,14 @@ import os
 import random
 from django.core.management.base import BaseCommand
 from django.conf import settings
-from chemsapp.models import Sector, SectorSection  # Replace 'your_app' with your app name
+from chemsapp.models import MarketSector, MarketSectorSection  # Replace 'your_app' with your app name
 
 class Command(BaseCommand):
     help = 'Creates 4 sector sections for each sector with random images'
 
     def handle(self, *args, **options):
         # Get all available sectors
-        sectors = Sector.objects.all()
+        sectors = MarketSector.objects.all()
         
         if not sectors.exists():
             self.stdout.write(self.style.ERROR('No sectors found. Please create sectors first.'))
@@ -106,7 +106,7 @@ class Command(BaseCommand):
                 random_image = random.choice(image_files)
                 image_path = os.path.join(images_dir, random_image)
                 
-                SectorSection.objects.create(
+                MarketSectorSection.objects.create(
                     title=template["title"],
                     description=template["description"],
                     sector=sector,

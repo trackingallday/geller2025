@@ -13,7 +13,7 @@ from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWe
     ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
     CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer, \
     SectorSerializer, NewsPostSerializer
-from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, Sector, NewsPost
+from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 
@@ -455,11 +455,11 @@ def public_products(request):
         products = PublicProductSerializer(Product.objects.filter(public=True), many=True).data
         categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
         posts = PostSererializer(Post.objects.all(), many=True).data
-        news_posts = NewsPostSerializer(NewsPost.objects.all(), many=True).data
+        news_posts = NewsPostSerializer(NewsArticle.objects.all(), many=True).data
         markets = MarketSerializer(MarketCategory.objects.all(), many=True).data
         configs = ConfigSerializer(Config.objects.all(), many=True).data
         sizes = SizeSerializer(Size.objects.all(), many=True).data
-        sectors = SectorSerializer(Sector.objects.all(), many=True).data
+        sectors = SectorSerializer(MarketSector.objects.all(), many=True).data
         return JsonResponse(
             {'products': products, 'categories': categories, 'posts': posts,
              'markets': markets, 'configs': configs, 'sizes': sizes,
@@ -491,7 +491,7 @@ def categories_list(request):
 @api_view(['GET'])
 def sectors_list(request):
     if request.user:
-        data = SectorSerializer(Sector.objects.all(), many=True).data
+        data = SectorSerializer(MarketSector.objects.all(), many=True).data
         return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'evildoer'})
@@ -500,7 +500,7 @@ def sectors_list(request):
 @api_view(['GET'])
 def news_post_list(request):
     if request.user:
-        data = NewsPostSerializer(NewsPost.objects.all(), many=True).data
+        data = NewsPostSerializer(NewsArticle.objects.all(), many=True).data
         return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'evildoer'})

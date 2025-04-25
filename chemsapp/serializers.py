@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear, ProductCategory,\
-    Post, MarketCategory, Config, Contact, Size, Sector, NewsPost, SectorSection
+    Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle, MarketSectorSection
 from rest_framework import serializers
 import pyqrcode
 import base64
@@ -253,7 +253,7 @@ class SizeSerializer(serializers.ModelSerializer):
 
 class NewsPostSerializer(serializers.ModelSerializer):
     class Meta:
-        model = NewsPost
+        model = NewsArticle
         fields = (
             'id', 'title', 'name', 'content', 'image',
             'page', 'linkURL', 'linkText', 'linkColor',
@@ -263,7 +263,7 @@ class NewsPostSerializer(serializers.ModelSerializer):
 
 class SectorSectionSerializer(serializers.ModelSerializer):
     class Meta:
-        model = SectorSection
+        model = MarketSectorSection
         fields = (
             'id', 'title', 'description', 'image'
         )
@@ -275,7 +275,7 @@ class SectorSerializer(serializers.ModelSerializer):
     sections = SectorSectionSerializer(many=True, read_only=True)
     
     class Meta:
-        model = Sector
+        model = MarketSector
         fields = (
             'id', 'name', 'description', 'image', 
             'product_feature', 'product_feature_title', 

@@ -101,7 +101,7 @@ class Post(MyBaseModel):
     def __str__(self):
         return "{} {} {}".format(self.page, self.title, self.name)
     
-class NewsPost(Post):
+class NewsArticle(Post):
     postType = models.CharField(max_length=100, blank=True, null=True)
     postDate = models.DateTimeField(auto_now_add=True)
     isFeatured = models.BooleanField(default=False)
@@ -110,7 +110,7 @@ class NewsPost(Post):
     def __str__(self):
         return "{} {} {}".format(self.page, self.title, self.name)
 
-class Sector(MyBaseModel):
+class MarketSector(MyBaseModel):
     name = models.CharField(max_length=500, blank=True, null=True)
     description = RichTextField()
     image = models.FileField(upload_to='documents/', blank=True, null=True)
@@ -118,22 +118,22 @@ class Sector(MyBaseModel):
     product_feature_title = models.CharField(max_length=100, blank=True, null=True)
     product_feature_desccription = models.CharField(max_length=1000, blank=True, null=True)
     product_feature_image = models.FileField(upload_to='documents/', blank=True, null=True)
-    news_post_1 = models.ForeignKey(NewsPost, related_name="sectors", blank=True, null=True)
-    news_post_2 = models.ForeignKey(NewsPost, related_name="sectors_2", blank=True, null=True)
+    news_post_1 = models.ForeignKey(NewsArticle, related_name="sectors", blank=True, null=True)
+    news_post_2 = models.ForeignKey(NewsArticle, related_name="sectors_2", blank=True, null=True)
 
     def __str__(self):
         return "{}".format(self.name).encode('utf-8')
 
-class SectorSection(MyBaseModel):
+class MarketSectorSection(MyBaseModel):
     title = models.CharField(max_length=255, blank=True, null=True)
     description = models.TextField(max_length=1000, blank=True, null=True)
     image = models.FileField(upload_to='documents/', blank=True, null=True)
-    sector = models.ForeignKey(Sector, related_name="sections", blank=True, null=True)
+    sector = models.ForeignKey(MarketSector, related_name="sections", blank=True, null=True)
 
     def __str__(self):
         return "{}".format(self.title).encode('utf-8')
 
-class Solution(MyBaseModel):
+class SectorSolution(MyBaseModel):
     name = models.CharField(max_length=500, blank=True, null=True)
     title = models.CharField(max_length=255, blank=True, null=True)
     subtitle = models.CharField(max_length=255, blank=True, null=True)

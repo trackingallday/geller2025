@@ -1,5 +1,5 @@
 from django.core.management.base import BaseCommand
-from chemsapp.models import NewsPost
+from chemsapp.models import NewsArticle
 from django.utils.timezone import now, timedelta
 import random
 
@@ -101,7 +101,7 @@ class Command(BaseCommand):
         ]
 
         for i, data in enumerate(news_data):
-            NewsPost.objects.create(
+            NewsArticle.objects.create(
                 name="news-post-{}".format(i),
                 title=data["title"],
                 content=data["content"],
