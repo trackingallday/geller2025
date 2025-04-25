@@ -93,18 +93,6 @@ def mail_customer(subject, content, customer_email, reply_to=None):
 
 
 @csrf_exempt
-def index(request):
-    with open(os.path.join(settings.REACT_APP_DIR, 'build', 'index.html')) as f:
-        return HttpResponse(f.read())
-
-@csrf_exempt
-def marketing_site(request):
-    print(os.path.join(settings.MARKETING_APP_DIR, 'build', 'index.html'))
-    with open(os.path.join(settings.MARKETING_APP_DIR, 'build', 'index.html')) as f:
-        return HttpResponse(f.read())
-
-
-@csrf_exempt
 @api_view(['GET'])
 def customers_list(request):
     if request.user.profile.profileType == 'admin':
