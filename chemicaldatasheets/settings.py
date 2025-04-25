@@ -31,6 +31,7 @@ ALLOWED_HOSTS = [
                     'www.geller.co.nz', 'geller.co.nz', '157.245.125.77', '104.236.249.246',
                     'geller.work.gd', 'www.geller.work.gd',
                     'geller2.work.gd', 'www.geller2.work.gd',
+                    '67d6-121-98-82-132.ngrok-free.app',
                 ]
 
 DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
@@ -55,9 +56,9 @@ INSTALLED_APPS = [
 ]
 
 MIDDLEWARE = [
+    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
-    'corsheaders.middleware.CorsMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
     'django.contrib.auth.middleware.AuthenticationMiddleware',
@@ -66,6 +67,8 @@ MIDDLEWARE = [
 ]
 
 CORS_ORIGIN_ALLOW_ALL = True
+CORS_ALLOW_HEADERS = '*'
+CORS_ALLOW_METHODS = '*'
 ROOT_URLCONF = 'chemicaldatasheets.urls'
 
 TEMPLATES = [

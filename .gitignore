@@ -49,3 +49,4 @@ dist/
 
 # Published archives
 geller_*.tgz
+/upgrade_env

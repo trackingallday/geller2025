@@ -43,34 +43,34 @@ urlpatterns = [
     url(r'^sizes_list/', sizes_list, name="sizes_list"),
     url(r'^sds_enquire/', sds_enquire, name="sds_enquire"),
 
-    # Marketing frontend
-    url(r'^$', marketing_site, name='marketing_site'),
-    # Product List
-    url(r'^our_products/(?:all|\d+)/$', marketing_site, name='marketing_our_products'),
-    url(r'^our_products/(?:all|\d+)/\d+/$', marketing_site, name='marketing_our_products_sub_category'),
-    # Product
-    url(r'^product/\d+/$', marketing_site, name='marketing_site_product'),
-    url(r'^product/\d+/\d+/$', marketing_site, name='marketing_site_product_market_id'),
-    # Market List and Market
-    url(r'^our_markets/$', marketing_site, name='marketing_site_our_markets'),
-    url(r'^our_markets/\d+/$', marketing_site, name='marketing_site_our_markets_market_id'),
-    # About page and posts
-    url(r'^about/$', marketing_site, name='marketing_site_about'),
-    url(r'^about/\d+/$', marketing_site, name='marketing_site_about_post'),
-    # News page and posts
-    url(r'^news/$', marketing_site, name='marketing_site_news'),
-    url(r'^news/\d+/$', marketing_site, name='marketing_site_news_post'),
-    # Support page and posts
-    url(r'^support/$', marketing_site, name='marketing_site_support'),
-    url(r'^support/\d+/$', marketing_site, name='marketing_site_support_post'),
-    # Contact page and inquiry
-    url(r'^contact/$', marketing_site, name='marketing_site_contact'),
-    url(r'^contact/\d+/$', marketing_site, name='marketing_site_contact_product_id'),
-    # SDS Download page
-    url(r'^getsds/\d+/$', marketing_site, name='marketing_site_getsds_product_id'),
-    # Sectors page and sector detail
-    url(r'^sectors/$', marketing_site, name='marketing_site_sectors'),
-    url(r'^sectors/\d+/$', marketing_site, name='marketing_site_sector_detail'),
+    # # Marketing frontend
+    # url(r'^$', marketing_site, name='marketing_site'),
+    # # Product List
+    # url(r'^our_products/(?:all|\d+)/$', marketing_site, name='marketing_our_products'),
+    # url(r'^our_products/(?:all|\d+)/\d+/$', marketing_site, name='marketing_our_products_sub_category'),
+    # # Product
+    # url(r'^product/\d+/$', marketing_site, name='marketing_site_product'),
+    # url(r'^product/\d+/\d+/$', marketing_site, name='marketing_site_product_market_id'),
+    # # Market List and Market
+    # url(r'^our_markets/$', marketing_site, name='marketing_site_our_markets'),
+    # url(r'^our_markets/\d+/$', marketing_site, name='marketing_site_our_markets_market_id'),
+    # # About page and posts
+    # url(r'^about/$', marketing_site, name='marketing_site_about'),
+    # url(r'^about/\d+/$', marketing_site, name='marketing_site_about_post'),
+    # # News page and posts
+    # url(r'^news/$', marketing_site, name='marketing_site_news'),
+    # url(r'^news/\d+/$', marketing_site, name='marketing_site_news_post'),
+    # # Support page and posts
+    # url(r'^support/$', marketing_site, name='marketing_site_support'),
+    # url(r'^support/\d+/$', marketing_site, name='marketing_site_support_post'),
+    # # Contact page and inquiry
+    # url(r'^contact/$', marketing_site, name='marketing_site_contact'),
+    # url(r'^contact/\d+/$', marketing_site, name='marketing_site_contact_product_id'),
+    # # SDS Download page
+    # url(r'^getsds/\d+/$', marketing_site, name='marketing_site_getsds_product_id'),
+    # # Sectors page and sector detail
+    # url(r'^sectors/$', marketing_site, name='marketing_site_sectors'),
+    # url(r'^sectors/\d+/$', marketing_site, name='marketing_site_sector_detail'),
     # Any unmatched route will 404 and it'll drop down to handler404 below.
 ]
 
