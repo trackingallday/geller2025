@@ -51,5 +51,6 @@ dist/
 geller_*.tgz
 /upgrade_env
 Geller_Site_Files
-.vscode
+/.vscode
+/virenv
 
