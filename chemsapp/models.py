@@ -53,7 +53,7 @@ class ProductCategory(models.Model):
         return "{} ".format(self.name)
 
 
-class Product(models):
+class Product(models.Model):
     name = models.CharField(max_length=255, unique=True)
     subheading = models.CharField(max_length=255, blank=True, null=True)
     secondaryImageLink = models.FileField(upload_to='documents/', blank=True, null=True)
