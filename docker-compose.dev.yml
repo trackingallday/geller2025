@@ -1,0 +1,40 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - .:/app
+    environment:
+      - DJANGO_SETTINGS_MODULE=chemicaldatasheets.settings
+      - DEBUG=True
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+      - DJANGO_SUPERUSER_PASSWORD=adminpassword
+      - POSTGRES_HOST=db
+    depends_on:
+      - db
+    command: python manage.py runserver 0.0.0.0:8000
+    networks:
+      - geller_dev_network
+  
+  db:
+    image: postgres:13
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=geller
+    networks:
+      - geller_dev_network
+
+volumes:
+  postgres_data:
+
+networks:
+  geller_dev_network:
+    driver: bridge

@@ -17,7 +17,7 @@ MarkupPy==1.18
 odfpy==1.4.1
 openpyxl==3.1.2
 packaging==25.0
-psycopg==3.2.6
+psycopg2-binary==2.9.9
 PyQRCode==1.2.1
 pytz==2025.2
 PyYAML==6.0.2

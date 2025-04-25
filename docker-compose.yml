@@ -1,0 +1,57 @@
+version: '3.8'
+
+services:
+  web:
+    build: .
+    restart: always
+    ports:
+      - "8000:8000"
+    volumes:
+      - ./chemsapp/media:/app/chemsapp/media
+      - static_volume:/app/dist_static
+      - static_volume:/app/frontend/build/static
+    environment:
+      - DJANGO_SETTINGS_MODULE=chemicaldatasheets.settings_docker
+      - DEBUG=False
+      - DJANGO_SUPERUSER_USERNAME=admin
+      - DJANGO_SUPERUSER_EMAIL=admin@example.com
+      - DJANGO_SUPERUSER_PASSWORD=adminpassword
+      - POSTGRES_HOST=db
+    depends_on:
+      - db
+    networks:
+      - geller_network
+  
+  db:
+    image: postgres:14-alpine
+    volumes:
+      - postgres_data:/var/lib/postgresql/data/
+    environment:
+      - POSTGRES_PASSWORD=postgres
+      - POSTGRES_USER=postgres
+      - POSTGRES_DB=geller
+    networks:
+      - geller_network
+  
+  nginx:
+    image: nginx:alpine
+    ports:
+      - "80:80"
+      - "443:443"
+    volumes:
+      - ./nginx/conf.d:/etc/nginx/conf.d
+      - ./nginx/certs:/etc/nginx/ssl
+      - static_volume:/var/www/static
+      - ./chemsapp/media:/var/www/media
+    depends_on:
+      - web
+    networks:
+      - geller_network
+
+volumes:
+  postgres_data:
+  static_volume:
+
+networks:
+  geller_network:
+    driver: bridge
