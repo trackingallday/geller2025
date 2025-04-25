@@ -149,6 +149,8 @@ class SectorSolution(MyBaseModel):
     footer_subtitle = models.CharField(max_length=255, blank=True, null=True)
     footer_image = models.FileField(upload_to='documents/', blank=True, null=True)
     footer_subtitle2 = models.CharField(max_length=255, blank=True, null=True)
+    extra = models.TextField(max_length=1000, blank=True, null=True)
+
 
     def __str__(self):
         return "{}".format(self.name).encode('utf-8')
