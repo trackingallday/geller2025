@@ -50,3 +50,5 @@ dist/
 # Published archives
 geller_*.tgz
 /upgrade_env
+Geller_Site_Files
+
