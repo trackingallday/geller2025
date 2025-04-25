@@ -40,7 +40,7 @@ class Profile(MyBaseModel):
         return "{} {} {} {} {}".format(self.businessName, self.user.first_name, self.user.last_name, self.user.email, self.user.username)
 
 
-class ProductCategory(models.Model):
+class ProductCategory(MyBaseModel):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=1000)
     products = models.ManyToManyField('Product', blank=True, null=True, related_name='categories')
