@@ -32,6 +32,7 @@ ALLOWED_HOSTS = [
                     'geller.work.gd', 'www.geller.work.gd',
                     'geller2.work.gd', 'www.geller2.work.gd',
                     '67d6-121-98-82-132.ngrok-free.app',
+                    'geller2025-production-4bef.up.railway.app'
                 ]
 
 DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
