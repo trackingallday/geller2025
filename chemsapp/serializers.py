@@ -1,6 +1,6 @@
 from django.contrib.auth.models import User
 from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear, ProductCategory,\
-    Post, MarketCategory, Config, Contact, Size, MarketSector, MarketSectorSection
+    Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle, MarketSectorSection
 from rest_framework import serializers
 import pyqrcode
 import base64
@@ -87,24 +87,16 @@ class ProductSerializer(serializers.ModelSerializer):
 
 class PublicProductSerializer(serializers.ModelSerializer):
 
-    #markets = serializers.PrimaryKeyRelatedField(many=True, queryset=MarketCategory.objects.all())
+    markets = serializers.PrimaryKeyRelatedField(many=True, queryset=MarketCategory.objects.all())
     
 
     class Meta:
         model = Product
         fields = (
-            'id',
-            'name',
-            'subheading',
-            'primaryImageLink',
-            'secondaryImageLink',
-            'productCode',
-            'productCodes',
-            'brand',
-            'infoSheet',
-            'description',
-            'markets',
-            'directions'
+            'id', 'name', 'subheading', 'primaryImageLink', 'secondaryImageLink',
+            'productCode', 'productCodes', 'brand', 'infoSheet', 'productCategory',
+            'description', 'markets', 'directions', 'subCategory',
+            'sizes',
 
         )
 
@@ -260,15 +252,15 @@ class SizeSerializer(serializers.ModelSerializer):
             'id', 'name', 'desc', 'amount', 'image', 'imageNo', 'isBag',
         )
 
-# class NewsPostSerializer(serializers.ModelSerializer):
-#     class Meta:
-#         model = NewsArticle
-#         fields = (
-#             'title', 'name', 'content', 'image',
-#             'page', 'linkURL', 'linkText', 'linkColor',
-#             'created_at', 'updated_at', 'postType', 'postDate',
-#             'isFeatured', 'isActive',
-#         )
+class NewsPostSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = NewsArticle
+        fields = (
+            'id', 'title', 'name', 'content', 'image',
+            'page', 'linkURL', 'linkText', 'linkColor',
+            'created_at', 'updated_at', 'postType', 'postDate',
+            'isFeatured', 'isActive',
+        )
 
 class SectorSectionSerializer(serializers.ModelSerializer):
     class Meta:
@@ -279,8 +271,8 @@ class SectorSectionSerializer(serializers.ModelSerializer):
         
 class SectorSerializer(serializers.ModelSerializer):
     product_feature = ProductSerializer(many=False, read_only=True)
-    #news_post_1 = NewsPostSerializer(many=False, read_only=True)
-    #news_post_2 = NewsPostSerializer(many=False, read_only=True)
+    news_post_1 = NewsPostSerializer(many=False, read_only=True)
+    news_post_2 = NewsPostSerializer(many=False, read_only=True)
     sections = SectorSectionSerializer(many=True, read_only=True)
     
     class Meta:
@@ -289,6 +281,6 @@ class SectorSerializer(serializers.ModelSerializer):
             'id', 'name', 'description', 'image', 
             'product_feature', 'product_feature_title', 
             'product_feature_desccription', 'product_feature_image',
-            'created_at', 'updated_at',
+            'news_post_1', 'news_post_2', 'created_at', 'updated_at',
             'sections'
         )
