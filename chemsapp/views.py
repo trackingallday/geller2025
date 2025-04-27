@@ -38,10 +38,16 @@ def upload_file(request):
     if request.method == 'POST' and request.FILES:
         uploaded_files = request.FILES.getlist('files')
         save_path = '/data/documents'  # Railway volume mount
-
+        
         saved_files = []
         for file in uploaded_files:
             file_path = os.path.join(save_path, file.name)
+            # if the file already exists, overwrite it
+            if os.path.exists(file_path):
+                os.remove(file_path)
+            # save the file
+            # open the file in write-binary mode
+            # and write the content of the uploaded file to it
             with open(file_path, 'wb+') as destination:
                 for chunk in file.chunks():
                     destination.write(chunk)
