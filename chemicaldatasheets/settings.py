@@ -10,6 +10,9 @@ For the full list of settings and their values, see
 https://docs.djangoproject.com/en/1.11/ref/settings/
 """
 
+DEFAULT_AUTO_FIELD='django.db.models.AutoField' 
+
+
 import os
 from platform import node as platform_hostname
 
