@@ -38,10 +38,10 @@ ALLOWED_HOSTS = [
                     'geller2025-production-4bef.up.railway.app'
                     
                 ]
-CSRF_TRUSTED_ORIGINS = ['https://geller2025-production-4bef.up.railway.app'
-                        ,'geller-admin-production.up.railway.app',
-                        'geller2025-production-4bef.up.railway.app',
-                        'localhost:8000',]
+CSRF_TRUSTED_ORIGINS = ['https://geller2025-production-4bef.up.railway.app',
+                        'https://geller-admin-production.up.railway.app',
+                        'https://geller2025-production-4bef.up.railway.app',
+                        'http://localhost:8000']
 
 
 DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
