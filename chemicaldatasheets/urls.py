@@ -20,6 +20,7 @@ from rest_framework.authtoken import views as rest_framework_views
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic.base import RedirectView
+from chemsapp.views import upload_file
 
 
 
@@ -28,6 +29,7 @@ urlpatterns = [
     url(r'^admin$', RedirectView.as_view(url='/admin/', permanent=True)),
     url(r'^get_auth_token/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
     url(r'^accounts/', include('django.contrib.auth.urls')),
+    url(r'^upload_file/', upload_file, name='upload_file'),
     url(r'', include('chemsapp.urls', namespace='chemsapp', app_name='chemsapp')),
 ]
 

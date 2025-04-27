@@ -186,7 +186,7 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
-MEDIA_ROOT = '/data/media'
+MEDIA_ROOT = '/data'
 #MEDIA_ROOT = os.path.join(CHEMS_APP_DIR, 'media')
 
 CHEMS_APP_DIR = os.path.join(BASE_DIR, 'chemsapp')

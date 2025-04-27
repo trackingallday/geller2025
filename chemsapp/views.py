@@ -25,8 +25,31 @@ from django.core import serializers
 import json
 from django.core.mail import EmailMessage
 import time
+from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger('django')
+
+
+@csrf_exempt  # Disable CSRF protection just for now (because you're uploading manually)
+def upload_file(request):
+    #make this a directory if not exists
+    if not os.path.exists('/data/documents'):
+        os.makedirs('/data/documents')
+    if request.method == 'POST' and request.FILES:
+        uploaded_files = request.FILES.getlist('files')
+        save_path = '/data/documents'  # Railway volume mount
+
+        saved_files = []
+        for file in uploaded_files:
+            file_path = os.path.join(save_path, file.name)
+            with open(file_path, 'wb+') as destination:
+                for chunk in file.chunks():
+                    destination.write(chunk)
+            saved_files.append(file.name)
+
+        return JsonResponse({'status': 'success', 'saved_files': saved_files})
+    else:
+        return JsonResponse({'error': 'No files uploaded'}, status=400)
 
 def getFileFromBase64(data, filename):
     format, imgstr = data.split(';base64,')
