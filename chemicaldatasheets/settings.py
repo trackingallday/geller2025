@@ -36,7 +36,13 @@ ALLOWED_HOSTS = [
                     'geller2.work.gd', 'www.geller2.work.gd',
                     '67d6-121-98-82-132.ngrok-free.app',
                     'geller2025-production-4bef.up.railway.app'
+                    
                 ]
+CSRF_TRUSTED_ORIGINS = ['https://geller2025-production-4bef.up.railway.app'
+                        ,'geller-admin-production.up.railway.app',
+                        'geller2025-production-4bef.up.railway.app',
+                        'localhost:8000',]
+
 
 DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
 if platform_hostname() in DEBUG_HOSTS:
