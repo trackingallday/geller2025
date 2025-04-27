@@ -46,6 +46,7 @@ def upload_file(request):
                 for chunk in file.chunks():
                     destination.write(chunk)
             saved_files.append(file.name)
+            
 
         return JsonResponse({'status': 'success', 'saved_files': saved_files})
     else:
@@ -472,11 +473,17 @@ def distributors_list(request):
 
     return JsonResponse({'error': 'evildoer'})
 
+print('public_products')
+
 @csrf_exempt
 def public_products(request):
+
+    print('public_productssssss')
     try:
         products = PublicProductSerializer(Product.objects.filter(public=True), many=True).data
+        print(products)
         categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
+        print(categories)
         posts = PostSererializer(Post.objects.all(), many=True).data
         news_posts = NewsPostSerializer(NewsArticle.objects.all(), many=True).data
         markets = MarketSerializer(MarketCategory.objects.all(), many=True).data

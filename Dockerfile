@@ -1,5 +1,5 @@
 # Use Python 2.7 slim image
-FROM python:2.7-slim
+FROM python:3.5-slim
 
 ENV PYTHONDONTWRITEBYTECODE 1
 ENV PYTHONUNBUFFERED 1
