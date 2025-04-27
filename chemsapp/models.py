@@ -97,15 +97,15 @@ class Post(MyBaseModel):
     def __str__(self):
         return "{} {} {}".format(self.page, self.title, self.name)
     
-# class NewsArticle(Post):
+class NewsArticle(Post):
     
-#     postType = models.CharField(max_length=100, blank=True, null=True)
-#     postDate = models.DateTimeField(auto_now_add=True)
-#     isFeatured = models.BooleanField(default=False)
-#     isActive = models.BooleanField(default=False)
+    postType = models.CharField(max_length=100, blank=True, null=True)
+    postDate = models.DateTimeField(auto_now_add=True)
+    isFeatured = models.BooleanField(default=False)
+    isActive = models.BooleanField(default=False)
 
-#     def __str__(self):
-#         return "{} {} {}".format(self.page, self.title, self.name)
+    def __str__(self):
+        return "{} {} {}".format(self.page, self.title, self.name)
 
 class MarketSector(MyBaseModel):
     name = models.CharField(max_length=500, blank=True, null=True)
@@ -115,8 +115,8 @@ class MarketSector(MyBaseModel):
     product_feature_title = models.CharField(max_length=100, blank=True, null=True)
     product_feature_desccription = models.CharField(max_length=1000, blank=True, null=True)
     product_feature_image = models.FileField(upload_to='documents/', blank=True, null=True)
-    #news_post_1 = models.ForeignKey(NewsArticle, related_name="sectors", blank=True, null=True, on_delete=models.CASCADE)
-    #news_post_2 = models.ForeignKey(NewsArticle, related_name="sectors_2", blank=True, null=True, on_delete=models.CASCADE)
+    news_post_1 = models.ForeignKey(NewsArticle, related_name="sectors", blank=True, null=True, on_delete=models.CASCADE)
+    news_post_2 = models.ForeignKey(NewsArticle, related_name="sectors_2", blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
         return "{}".format(self.name).encode('utf-8')
