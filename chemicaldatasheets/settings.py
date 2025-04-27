@@ -186,6 +186,8 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
+MEDIA_ROOT = '/data/media'
+#MEDIA_ROOT = os.path.join(CHEMS_APP_DIR, 'media')
 
 CHEMS_APP_DIR = os.path.join(BASE_DIR, 'chemsapp')
 MAIN_DIR = os.path.join(BASE_DIR, 'chemicaldatasheets')
@@ -193,6 +195,10 @@ MAIN_DIR = os.path.join(BASE_DIR, 'chemicaldatasheets')
 STATICFILES_DIRS = [
     os.path.join(CHEMS_APP_DIR, 'static', 'chemsapp'),
 ]
+PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
+STATIC_ROOT = os.path.join(BASE_DIR, 'dist_static')
+#media files where uploaded files go to
+
 
 CKEDITOR_CONFIGS = {
     'default': {
@@ -207,11 +213,9 @@ CKEDITOR_CONFIGS = {
 }
 
 
-#media files where uploaded files go to
-MEDIA_ROOT = os.path.join(CHEMS_APP_DIR, 'media')
 
-PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
-STATIC_ROOT = os.path.join(BASE_DIR, 'dist_static')
+
+
 
 #email settings
 EMAIL_HOST = 'mail.smtp2go.com'
