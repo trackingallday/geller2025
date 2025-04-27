@@ -12,8 +12,8 @@ import requests
 from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
     ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
     CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer, \
-    SectorSerializer, NewsPostSerializer
-from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle
+    SectorSerializer
+from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, MarketSector
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 
@@ -384,7 +384,6 @@ def edit_product(request):
 
     if data.get('sizes'):
         product.sizes = Size.objects.filter(pk__in=data.get('sizes'))
-    print(data.get('sizes'))
     product.updated_at = datetime.datetime.now()
 
     for key in ['primaryImageLink', 'secondaryImageLink']:
@@ -473,19 +472,17 @@ def distributors_list(request):
 
     return JsonResponse({'error': 'evildoer'})
 
-print('public_products')
 
 @csrf_exempt
 def public_products(request):
-
-    print('public_productssssss')
     try:
-        products = PublicProductSerializer(Product.objects.filter(public=True), many=True).data
-        print(products)
+        p = Product.objects.prefetch_related(
+            'productCategory', 'subCategory', 'markets', 'safetyWears', 'sizes'
+        ).all()
+        products = PublicProductSerializer(p, many=True).data
         categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
-        print(categories)
         posts = PostSererializer(Post.objects.all(), many=True).data
-        news_posts = NewsPostSerializer(NewsArticle.objects.all(), many=True).data
+        news_posts =[]
         markets = MarketSerializer(MarketCategory.objects.all(), many=True).data
         configs = ConfigSerializer(Config.objects.all(), many=True).data
         sizes = SizeSerializer(Size.objects.all(), many=True).data
@@ -530,8 +527,9 @@ def sectors_list(request):
 @api_view(['GET'])
 def news_post_list(request):
     if request.user:
-        data = NewsPostSerializer(NewsArticle.objects.all(), many=True).data
-        return JsonResponse(data, safe=False)
+        #data = NewsPostSerializer(NewsArticle.objects.all(), many=True).data
+        #return JsonResponse(data, safe=False)
+        pass
 
     return JsonResponse({'error': 'evildoer'})
 

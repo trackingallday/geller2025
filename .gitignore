@@ -54,3 +54,7 @@ Geller_Site_Files
 /.vscode
 /virenv
 
+/chemsapp/migrations
+chemsapp/migrations/0001_initial.py
+/chemsapp/migrations
+chemsapp/migrations/0001_initial.py

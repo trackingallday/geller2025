@@ -83,26 +83,6 @@ class Migration(migrations.Migration):
             },
         ),
         migrations.CreateModel(
-            name='NewsArticle',
-            fields=[
-                ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
-                ('created_at', models.DateTimeField(auto_now_add=True)),
-                ('updated_at', models.DateTimeField(auto_now=True)),
-                ('name', models.CharField(blank=True, max_length=500, null=True)),
-                ('title', models.CharField(blank=True, max_length=255, null=True)),
-                ('content', ckeditor.fields.RichTextField()),
-                ('image', models.FileField(blank=True, null=True, upload_to=b'documents/')),
-                ('linkURL', models.CharField(blank=True, max_length=1000, null=True)),
-                ('postType', models.CharField(blank=True, max_length=100, null=True)),
-                ('postDate', models.DateTimeField(auto_now_add=True)),
-                ('isFeatured', models.BooleanField(default=False)),
-                ('isActive', models.BooleanField(default=False)),
-            ],
-            options={
-                'abstract': False,
-            },
-        ),
-        migrations.CreateModel(
             name='Post',
             fields=[
                 ('id', models.AutoField(auto_created=True, primary_key=True, serialize=False, verbose_name='ID')),
