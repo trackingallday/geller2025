@@ -3,7 +3,7 @@ from django.contrib import admin
 import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
-    MarketSector, MarketSectorSection
+    MarketSector, MarketSectorSection, NewsArticle
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm
@@ -123,5 +123,6 @@ admin.site.register(Product, ProductAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
+admin.site.register(NewsArticle, NewsPostAdmin)
 admin.site.register(MarketCategory, MarketAdmin)
 admin.site.register(MarketSector, SectorAdmin)
