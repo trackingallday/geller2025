@@ -1,6 +1,7 @@
 import logging
 import random
 import string
+from django.views.decorators.cache import cache_control
 from django.forms import ValidationError
 from django.http import HttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
@@ -12,8 +13,8 @@ import requests
 from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
     ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
     CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer, \
-    SectorSerializer
-from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, MarketSector
+    SectorSerializer, NewsPostSerializer
+from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle
 from django.contrib.auth.models import User
 from rest_framework.decorators import api_view
 
@@ -480,6 +481,7 @@ def distributors_list(request):
 
 
 @csrf_exempt
+@cache_control(public=True, max_age=360, stale_while_revalidate=60)
 def public_products(request):
     try:
         p = Product.objects.prefetch_related(
@@ -488,7 +490,7 @@ def public_products(request):
         products = PublicProductSerializer(p, many=True).data
         categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
         posts = PostSererializer(Post.objects.all(), many=True).data
-        news_posts =[]
+        news_posts = NewsPostSerializer(NewsArticle.objects.all(), many=True).data
         markets = MarketSerializer(MarketCategory.objects.all(), many=True).data
         configs = ConfigSerializer(Config.objects.all(), many=True).data
         sizes = SizeSerializer(Size.objects.all(), many=True).data
