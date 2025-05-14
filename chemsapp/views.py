@@ -481,7 +481,7 @@ def distributors_list(request):
 
 
 @csrf_exempt
-@cache_control(public=True, max_age=360, stale_while_revalidate=60)
+@cache_control(public=True, max_age=10, stale_while_revalidate=60)
 def public_products(request):
     try:
         p = Product.objects.prefetch_related(
