@@ -131,7 +131,7 @@ class MarketSectorSection(MyBaseModel):
     sector = models.ForeignKey(MarketSector, related_name="sections", blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        return "{}".format(self.title).encode('utf-8')
+        return "{}".format(self.title)
 
 class SectorSolution(MyBaseModel):
     name = models.CharField(max_length=500, blank=True, null=True)
@@ -153,7 +153,7 @@ class SectorSolution(MyBaseModel):
 
 
     def __str__(self):
-        return "{}".format(self.name).encode('utf-8')
+        return "{}".format(self.name)
 
 
 class MarketCategory(models.Model):
