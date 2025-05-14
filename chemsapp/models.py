@@ -119,10 +119,7 @@ class MarketSector(MyBaseModel):
     #news_post_2 = models.ForeignKey(NewsArticle, related_name="sectors_2", blank=True, null=True, on_delete=models.CASCADE)
 
     def __str__(self):
-        try:
-            return "{}".format(self.name).encode('utf-8')
-        except:
-            return "{}".format(self.name)
+        return self.name
 
 class MarketSectorSection(MyBaseModel):
     title = models.CharField(max_length=255, blank=True, null=True)
