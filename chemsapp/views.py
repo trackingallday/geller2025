@@ -486,7 +486,7 @@ def public_products(request):
     try:
         p = Product.objects.prefetch_related(
             'productCategory', 'subCategory', 'markets', 'safetyWears', 'sizes'
-        ).all()
+        ).filter(public=True).order_by('name')
         products = PublicProductSerializer(p, many=True).data
         categories = CategorySerializer(ProductCategory.objects.all(), many=True).data
         posts = PostSererializer(Post.objects.all(), many=True).data
@@ -641,7 +641,7 @@ def download_product_document(request, product_id, document_type):
             return _download_pdf_document(product.sdsSheet.path)
         if 'info' == document_type and product.infoSheet and product.infoSheet.path.strip():
             return _download_pdf_document(product.infoSheet.path)
-        raise Http404("Document was not found.")
+        raise Http404("Document could not be found.")
     except Http404:
         raise
     except Exception as e:
