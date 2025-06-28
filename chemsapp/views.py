@@ -556,12 +556,12 @@ def sizes_list(request):
 def create_contact(request):
     b = json.loads(request.GET['data'])
 
-    cap_value = b.pop("captcha_token")
-    r = requests.post('https://www.google.com/recaptcha/api/siteverify',
-                        { 'secret': settings.RECAPTCHA_PRIVATE_KEY, 'response': cap_value })
-    res = r.json()
-    if not res.get('success') or res.get('score', 0) < 0.7:
-        raise ValidationError('There was a problem with your request, please try again', code="recaptcha")
+    #cap_value = b.pop("captcha_token")
+    #r = requests.post('https://www.google.com/recaptcha/api/siteverify',
+    #                    { 'secret': settings.RECAPTCHA_PRIVATE_KEY, 'response': cap_value })
+    #res = r.json()
+    #if not res.get('success') or res.get('score', 0) < 0.7:
+    #    raise ValidationError('There was a problem with your request, please try again', code="recaptcha")
 
     c = ContactSerializer(data=b)
     c.is_valid()
