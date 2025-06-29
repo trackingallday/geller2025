@@ -186,7 +186,7 @@ def new_customer(request):
     return JsonResponse({"message": "customer saved"})
 
 
-@tryansaction.atomic
+@transaction.atomic
 @csrf_exempt
 @api_view(['POST'])
 def special_customer_edit(request):
