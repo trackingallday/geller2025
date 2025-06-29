@@ -193,7 +193,7 @@ def special_customer_edit(request):
     This endpoint is for special cases where a customer needs to be edited without being logged in.
     It is not recommended for regular use and should be used with caution.
     """
-    data = request.data['data']
+    data = json.loads(request.body)
     try:
         customer = Customer.objects.get(pk=data.get('id'))
     except Customer.DoesNotExist:
