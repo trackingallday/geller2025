@@ -188,7 +188,6 @@ def new_customer(request):
 
 @transaction.atomic
 @csrf_exempt
-@api_view(['POST'])
 def special_customer_edit(request):
     """
     This endpoint is for special cases where a customer needs to be edited without being logged in.
