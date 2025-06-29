@@ -4,7 +4,7 @@ from rest_framework.authtoken import views as drf_views
 from chemsapp.views import customers_list, products_list, new_customer, edit_customer, safety_wears_list,\
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
     new_distributor, edit_distributor, printout, public_products, markets_list, categories_list, create_contact,\
-    sizes_list, download_product_document, sds_enquire
+    sizes_list, download_product_document, sds_enquire, special_customer_edit
 
 urlpatterns = [
     re_path(r'^auth$', drf_views.obtain_auth_token, name='auth'),
@@ -18,6 +18,7 @@ urlpatterns = [
     re_path(r'^distributors_list/', distributors_list, name='distributors_list'),
     re_path(r'^new_customer/', new_customer, name="new_customer"),
     re_path(r'^edit_customer/', edit_customer, name="edit_customer"),
+    re_path(r'^special_customer_edit/', special_customer_edit, name="special_customer_edit"),
     re_path(r'^safety_wears_list', safety_wears_list, name="safety_wears_list"),
     re_path(r'^new_distributor/', new_distributor, name="new_distributor"),
     re_path(r'^edit_distributor/', edit_distributor, name="edit_distributor"),
