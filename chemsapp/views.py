@@ -193,22 +193,23 @@ def special_customer_edit(request):
     This endpoint is for special cases where a customer needs to be edited without being logged in.
     It is not recommended for regular use and should be used with caution.
     """
-    data = json.loads(request.body)
-    try:
-        customer = Customer.objects.get(pk=data.get('id'))
-    except Customer.DoesNotExist:
-        return JsonResponse({"error": "Customer does not exist"}, status=404)
+    dataas = json.loads(request.body)
+    for data in dataas: 
+        try:
+            customer = Customer.objects.get(pk=data.get('id'))
+        except Customer.DoesNotExist:
+            return JsonResponse({"error": "Customer does not exist"}, status=404)
 
-    ids = [b for b in data.get('products') if isinstance(b, int)]
-    names = [b.strip() for b in data.get('products') if isinstance(b, str)]
+        ids = [b for b in data.get('products') if isinstance(b, int)]
+        names = [b.strip() for b in data.get('products') if isinstance(b, str)]
 
-    products = Product.objects.filter(Q(pk__in=ids) | Q(name__in=names))
+        products = Product.objects.filter(Q(pk__in=ids) | Q(name__in=names))
 
-    customer.products.set(products)
-    customer.updated_at = datetime.datetime.now()
-    customer.save()
+        customer.products.set(products)
+        customer.updated_at = datetime.datetime.now()
+        customer.save()
 
-    return JsonResponse({"message": "customer edited"})
+    return JsonResponse({"message": "customers edited"})
 
 @transaction.atomic
 @csrf_exempt
