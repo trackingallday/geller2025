@@ -176,7 +176,7 @@ def new_customer(request):
         return JsonResponse({'error': str(e)}, status=422)
 
     products = Product.objects.filter(pk__in=data.get('products'))
-    customer.products = products
+    customer.products.set(products)
     customer.created_at = datetime.datetime.now()
     customer.distributorParent = request.user.profile.distributor
     customer.profileType = "customer"
@@ -204,7 +204,7 @@ def special_customer_edit(request):
 
     products = Product.objects.filter(Q(pk__in=ids) | Q(name__in=names))
 
-    customer.products = products
+    customer.products.set(products)
     customer.updated_at = datetime.datetime.now()
     customer.save()
 
@@ -246,7 +246,7 @@ def edit_customer(request):
 
     products = Product.objects.filter(Q(pk__in=ids) | Q(name__in=names))
 
-    customer.products = products
+    customer.products.set(products)
     customer.updated_at = datetime.datetime.now()
     customer.save()
 
