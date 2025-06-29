@@ -194,9 +194,11 @@ def special_customer_edit(request):
     It is not recommended for regular use and should be used with caution.
     """
     dataas = json.loads(request.body)
+    allProducts = []
     for data in dataas: 
         try:
             customer = Customer.objects.get(pk=data.get('id'))
+            print(customer)
         except Customer.DoesNotExist:
             return JsonResponse({"error": "Customer does not exist"}, status=404)
 
@@ -204,12 +206,13 @@ def special_customer_edit(request):
         names = [b.strip() for b in data.get('products') if isinstance(b, str)]
 
         products = Product.objects.filter(Q(pk__in=ids) | Q(name__in=names))
-
+        print(products)
         customer.products.set(products)
+        allProducts.extend([p.id for p in products if p not in allProducts])
         customer.updated_at = datetime.datetime.now()
         customer.save()
 
-    return JsonResponse({"message": "customers edited"})
+    return JsonResponse({"message": "customers edited", "products": allProducts})
 
 @transaction.atomic
 @csrf_exempt
