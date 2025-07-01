@@ -130,7 +130,8 @@ def customers_list(request):
         custs = CustomerSerializer(Customer.objects.all(), many=True).data
         return JsonResponse(custs, safe=False)
 
-    customers = request.user.profile.distributor.customers
+    customers = request.user.profile.distributor.customers.prefetch_related(
+        'products', 'user', 'products__productCategory', 'products__subCategory')
     serializer = CustomerSerializer(customers, many=True)
     return JsonResponse(serializer.data, safe=False)
 
@@ -138,14 +139,35 @@ def customers_list(request):
 @csrf_exempt
 @api_view(['GET'])
 def products_list(request):
-    if not request.user.profile.profileType == 'customer':
-        products = Product.objects.all()
+    print(datetime.datetime.now(), "products_list called by", request.user)
+
+    user = request.user
+    profile = getattr(user, "profile", None)
+    is_customer = getattr(profile, "profileType", None) == "customer"
+
+    # Base queryset
+    if is_customer:
+        products_qs = getattr(profile.customer, "products", Product.objects.none())
     else:
-        products = request.user.profile.customer.products
+        products_qs = Product.objects.all()
 
-    serializer = ProductSerializer(products, many=True, context={"user": request.user})
-    return JsonResponse(serializer.data, safe=False)
+    # Optimized related loading
+    products_qs = products_qs.select_related().prefetch_related(
+        'productCategory',
+        'subCategory',
+        'markets',
+        'safetyWears',
+        'sizes',
+        'customers',
+    )
 
+    # Serialize once
+    serializer = ProductSerializer(products_qs, many=True, context={"user": user})
+    data = serializer.data
+
+    print(datetime.datetime.now(), "products_list completed for", request.user)
+    print("Products list length:", len(data))
+    return JsonResponse(data, safe=False)
 
 @transaction.atomic
 @csrf_exempt

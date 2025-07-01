@@ -41,7 +41,8 @@ ALLOWED_HOSTS = [
 CSRF_TRUSTED_ORIGINS = ['https://geller2025-production-4bef.up.railway.app',
                         'https://geller-admin-production.up.railway.app',
                         'https://geller2025-production-4bef.up.railway.app',
-                        'http://localhost:8000']
+                        'http://localhost:8000',
+                        'http://localhost:3000',]
 
 
 DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
@@ -106,19 +107,19 @@ APPEND_SLASH=True
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-# DATABASES = {
-#     'default': {
-#         'ENGINE': 'django.db.backends.sqlite3',
-#         'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-#     }
-# }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.sqlite3',
+        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
+    }
+}
 DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'NAME': os.getenv('PGDATABASE', 'railway'),
         'USER': os.getenv('PGUSER', 'postgres'),
         'PASSWORD': os.getenv('PGPASSWORD', 'PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS'),
-        'HOST': os.getenv('PGHOST', 'switchyard.proxy.rlwy.net'),  # Use Railway internal host
+        'HOST': os.getenv('PGHOST', 'postgres.railway.internal'),#'switchyard.proxy.rlwy.net'),  # Use Railway internal host.
         'PORT': os.getenv('PGPORT', '41935'),
     }
 }
