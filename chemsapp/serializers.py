@@ -259,7 +259,7 @@ class NewsPostSerializer(serializers.ModelSerializer):
             'id', 'title', 'name', 'content', 'image',
             'page', 'linkURL', 'linkText', 'linkColor',
             'created_at', 'updated_at', 'postType', 'postDate',
-            'isFeatured', 'isActive', , 'author',
+            'isFeatured', 'isActive', 'author',
         )
 
 class SectorSectionSerializer(serializers.ModelSerializer):
