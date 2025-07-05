@@ -215,7 +215,7 @@ class PostSererializer(serializers.ModelSerializer):
         fields = (
             'id', 'title', 'name', 'content', 'image',
             'page', 'linkURL', 'linkText', 'linkColor',
-            'created_at', 'updated_at',
+            'created_at', 'updated_at', 'author',
         )
 
 
@@ -259,7 +259,7 @@ class NewsPostSerializer(serializers.ModelSerializer):
             'id', 'title', 'name', 'content', 'image',
             'page', 'linkURL', 'linkText', 'linkColor',
             'created_at', 'updated_at', 'postType', 'postDate',
-            'isFeatured', 'isActive',
+            'isFeatured', 'isActive', , 'author',
         )
 
 class SectorSectionSerializer(serializers.ModelSerializer):
