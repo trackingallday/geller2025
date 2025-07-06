@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     'rest_framework',
     'rest_framework.authtoken',
     'chemsapp',
+    'reports',
     'corsheaders',
     'import_export',
     'ckeditor',
