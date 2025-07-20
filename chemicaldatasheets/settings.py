@@ -35,14 +35,15 @@ ALLOWED_HOSTS = [
                     'geller.work.gd', 'www.geller.work.gd',
                     'geller2.work.gd', 'www.geller2.work.gd',
                     '67d6-121-98-82-132.ngrok-free.app',
-                    'geller2025-production-4bef.up.railway.app'
+                    'geller2025-production-4bef.up.railway.app',
+                    'admin.geller.co.nz',
                     
                 ]
 CSRF_TRUSTED_ORIGINS = ['https://geller2025-production-4bef.up.railway.app',
                         'https://geller-admin-production.up.railway.app',
                         'https://geller2025-production-4bef.up.railway.app',
                         'http://localhost:8000',
-                        'http://localhost:3000',]
+                        'http://localhost:3000','www.geller.co.nz', 'geller.co.nz','admin.geller.co.nz',]
 
 
 DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
