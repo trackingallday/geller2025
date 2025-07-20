@@ -43,7 +43,7 @@ CSRF_TRUSTED_ORIGINS = ['https://geller2025-production-4bef.up.railway.app',
                         'https://geller-admin-production.up.railway.app',
                         'https://geller2025-production-4bef.up.railway.app',
                         'http://localhost:8000',
-                        'http://localhost:3000','www.geller.co.nz', 'geller.co.nz','admin.geller.co.nz',]
+                        'http://localhost:3000','https://www.geller.co.nz', 'https://geller.co.nz','https://admin.geller.co.nz',]
 
 
 DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
