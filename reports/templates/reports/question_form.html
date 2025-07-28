@@ -1,0 +1,201 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-type-preview {
+        border: 1px solid #dee2e6;
+        border-radius: 0.375rem;
+        padding: 15px;
+        background-color: #f8f9fa;
+        margin-top: 10px;
+    }
+    .preview-hidden {
+        display: none;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-patch-question"></i> {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.question_text.id_for_label }}" class="form-label">Question Text *</label>
+                            {{ form.question_text }}
+                            {% if form.question_text.errors %}
+                                <div class="text-danger small">{{ form.question_text.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Enter the question you want to ask</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.question_type.id_for_label }}" class="form-label">Question Type *</label>
+                            {{ form.question_type }}
+                            {% if form.question_type.errors %}
+                                <div class="text-danger small">{{ form.question_type.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Choose how users will answer this question</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.section.id_for_label }}" class="form-label">Section</label>
+                            {{ form.section }}
+                            {% if form.section.errors %}
+                                <div class="text-danger small">{{ form.section.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Group questions into sections for better organization</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.help_text.id_for_label }}" class="form-label">Help Text</label>
+                            {{ form.help_text }}
+                            {% if form.help_text.errors %}
+                                <div class="text-danger small">{{ form.help_text.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Additional instructions or guidance for this question</div>
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+                                    {{ form.order }}
+                                    {% if form.order.errors %}
+                                        <div class="text-danger small">{{ form.order.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Order in which this question appears</div>
+                                </div>
+                            </div>
+                            <div class="col-md-6">
+                                <div class="mb-3">
+                                    <div class="form-check mt-4">
+                                        {{ form.is_required }}
+                                        <label class="form-check-label" for="{{ form.is_required.id_for_label }}">
+                                            Required
+                                        </label>
+                                    </div>
+                                    <div class="form-text">Users must answer this question</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Conditional Logic -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h6 class="mb-0">Conditional Logic (Optional)</h6>
+                            </div>
+                            <div class="card-body">
+                                <div class="mb-3">
+                                    <label for="{{ form.parent_question.id_for_label }}" class="form-label">Parent Question</label>
+                                    {{ form.parent_question }}
+                                    {% if form.parent_question.errors %}
+                                        <div class="text-danger small">{{ form.parent_question.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">This question will only show if the parent question has a specific value</div>
+                                </div>
+
+                                <div class="mb-3">
+                                    <label for="{{ form.show_when_parent_value.id_for_label }}" class="form-label">Show When Parent Value</label>
+                                    {{ form.show_when_parent_value }}
+                                    {% if form.show_when_parent_value.errors %}
+                                        <div class="text-danger small">{{ form.show_when_parent_value.errors.0 }}</div>
+                                    {% endif %}
+                                    <div class="form-text">Select when this question should appear based on the parent question's value</div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'reports:report_type_detail' report_type.pk %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Report Type
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="bi bi-check-lg"></i> 
+                                {% if question %}Update{% else %}Create{% endif %} Question
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+
+        <!-- Question Type Reference -->
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Question Types
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="accordion" id="questionTypeAccordion">
+                        {% for type_code, type_name in question_types %}
+                            <div class="accordion-item">
+                                <h2 class="accordion-header" id="heading{{ forloop.counter }}">
+                                    <button class="accordion-button collapsed" type="button" data-bs-toggle="collapse" data-bs-target="#collapse{{ forloop.counter }}">
+                                        {{ type_name }}
+                                    </button>
+                                </h2>
+                                <div id="collapse{{ forloop.counter }}" class="accordion-collapse collapse" data-bs-parent="#questionTypeAccordion">
+                                    <div class="accordion-body">
+                                        {% if type_code == 'text' %}
+                                            Single line text input for short answers.
+                                        {% elif type_code == 'textarea' %}
+                                            Multi-line text input for longer responses.
+                                        {% elif type_code == 'select' %}
+                                            Dropdown menu with predefined options.
+                                        {% elif type_code == 'radio' %}
+                                            Single choice from multiple options.
+                                        {% elif type_code == 'checkbox' %}
+                                            Multiple choices from available options.
+                                        {% elif type_code == 'yesno' %}
+                                            Simple Yes/No question.
+                                        {% elif type_code == 'file' %}
+                                            File upload for documents or images.
+                                        {% elif type_code == 'signature' %}
+                                            Digital signature capture.
+                                        {% elif type_code == 'date' %}
+                                            Date picker.
+                                        {% elif type_code == 'number' %}
+                                            Numeric input with validation.
+                                        {% elif type_code == 'client_select' %}
+                                            Choose from available customers/distributors.
+                                        {% endif %}
+                                    </div>
+                                </div>
+                            </div>
+                        {% endfor %}
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb"></i> Tips
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ul class="mb-0 small">
+                        <li>Use sections to group related questions</li>
+                        <li>Order questions logically</li>
+                        <li>For choice questions, you'll add options after creating the question</li>
+                        <li>Use conditional logic for follow-up questions</li>
+                        <li>Mark critical questions as required</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

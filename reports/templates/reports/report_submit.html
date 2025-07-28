@@ -1,0 +1,191 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header bg-warning text-dark">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Submit Report for Review
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <h6><i class="bi bi-info-circle"></i> Before Submitting</h6>
+                        <p class="mb-0">Once submitted, you will not be able to edit this report. Please review all answers carefully.</p>
+                    </div>
+
+                    <!-- Report Summary -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Report Details</h6>
+                        </div>
+                        <div class="card-body">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <table class="table table-borderless table-sm">
+                                        <tr>
+                                            <td class="fw-bold">Document Number:</td>
+                                            <td><code>{{ report.document_number }}</code></td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Report Type:</td>
+                                            <td>{{ report.report_type.name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Customer:</td>
+                                            <td>{{ report.customer.name }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Distributor:</td>
+                                            <td>{{ report.distributor.name }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                                <div class="col-md-6">
+                                    <table class="table table-borderless table-sm">
+                                        <tr>
+                                            <td class="fw-bold">Inspection Date:</td>
+                                            <td>{{ report.inspection_date|date:"F d, Y" }}</td>
+                                        </tr>
+                                        <tr>
+                                            <td class="fw-bold">Prepared By:</td>
+                                            <td>{{ report.prepared_by.get_full_name|default:report.prepared_by.username }}</td>
+                                        </tr>
+                                        {% if report.store_compliance_manager %}
+                                        <tr>
+                                            <td class="fw-bold">Store Manager:</td>
+                                            <td>{{ report.store_compliance_manager }}</td>
+                                        </tr>
+                                        {% endif %}
+                                        <tr>
+                                            <td class="fw-bold">Created:</td>
+                                            <td>{{ report.created_at|date:"F d, Y" }}</td>
+                                        </tr>
+                                    </table>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Completion Status -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Completion Status</h6>
+                        </div>
+                        <div class="card-body">
+                            {% with total_questions=report.report_type.questions.count answered_questions=report.answers.count %}
+                                <div class="row text-center">
+                                    <div class="col-md-4">
+                                        <h4 class="text-primary">{{ total_questions }}</h4>
+                                        <small class="text-muted">Total Questions</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        <h4 class="text-info">{{ answered_questions }}</h4>
+                                        <small class="text-muted">Answered</small>
+                                    </div>
+                                    <div class="col-md-4">
+                                        {% if total_questions > 0 %}
+                                            {% if answered_questions == total_questions %}
+                                                <h4 class="text-success">100%</h4>
+                                            {% else %}
+                                                {% if answered_questions > 0 %}
+                                                    <h4 class="text-warning">Partial</h4>
+                                                {% else %}
+                                                    <h4 class="text-danger">0%</h4>
+                                                {% endif %}
+                                            {% endif %}
+                                        {% else %}
+                                            <h4 class="text-muted">N/A</h4>
+                                        {% endif %}
+                                        <small class="text-muted">Complete</small>
+                                    </div>
+                                </div>
+
+                                {% if answered_questions < total_questions %}
+                                    <div class="alert alert-warning mt-3">
+                                        <i class="bi bi-exclamation-triangle"></i>
+                                        <strong>Incomplete Report:</strong> 
+                                        Some questions have not been answered.
+                                        You can still submit this report, but it's recommended to complete all questions.
+                                    </div>
+                                {% else %}
+                                    <div class="alert alert-success mt-3">
+                                        <i class="bi bi-check-circle"></i>
+                                        <strong>Complete:</strong> All questions have been answered.
+                                    </div>
+                                {% endif %}
+                            {% endwith %}
+                        </div>
+                    </div>
+
+                    <!-- Required Fields Note -->
+                    <div class="card mb-4">
+                        <div class="card-header">
+                            <h6 class="mb-0">Important Note</h6>
+                        </div>
+                        <div class="card-body">
+                            <p class="mb-0">Please ensure all required fields (marked with *) have been completed before submitting.</p>
+                        </div>
+                    </div>
+
+                    <!-- Submit Form -->
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="form-check mb-4">
+                            <input class="form-check-input" type="checkbox" value="" id="confirmSubmit" required>
+                            <label class="form-check-label" for="confirmSubmit">
+                                I confirm that I have reviewed all answers and this report is ready for submission.
+                            </label>
+                        </div>
+
+                        <div class="d-flex justify-content-between align-items-center">
+                            <div>
+                                <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-outline-secondary">
+                                    <i class="bi bi-arrow-left"></i> Back to Report
+                                </a>
+                                <a href="{% url 'reports:report_fill' report.pk %}" class="btn btn-outline-warning ms-2">
+                                    <i class="bi bi-pencil"></i> Continue Editing
+                                </a>
+                            </div>
+                            <button type="submit" class="btn btn-success btn-lg">
+                                <i class="bi bi-check-circle"></i> Submit for Review
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- What Happens Next -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-lightbulb"></i> What Happens Next?
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <ol class="mb-0">
+                        <li>Your report will be marked as "Submitted" and locked for editing</li>
+                        <li>The report will be reviewed by the appropriate personnel</li>
+                        <li>You will be notified of approval or if any changes are needed</li>
+                        <li>Approved reports become part of the official record</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add confirmation dialog for submission
+    document.querySelector('form').addEventListener('submit', function(e) {
+        if (!confirm('Are you sure you want to submit this report? You will not be able to edit it after submission.')) {
+            e.preventDefault();
+        }
+    });
+</script>
+{% endblock %}

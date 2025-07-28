@@ -1,0 +1,58 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-6">
+            <div class="card border-danger">
+                <div class="card-header bg-danger text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-exclamation-triangle"></i> Confirm Option Deletion
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-warning">
+                        <h6><i class="bi bi-exclamation-triangle"></i> Warning</h6>
+                        <p class="mb-0">This will affect any existing answers that selected this option.</p>
+                    </div>
+
+                    <p>Are you sure you want to delete this option:</p>
+                    <div class="card mb-3">
+                        <div class="card-body">
+                            <h6 class="card-title">
+                                {{ option.text }}
+                                {% if option.is_flag %}
+                                    <span class="badge bg-warning ms-2">FLAG</span>
+                                {% endif %}
+                            </h6>
+                            {% if option.value %}
+                                <p class="card-text"><strong>Value:</strong> <code>{{ option.value }}</code></p>
+                            {% endif %}
+                            {% if option.additional_instructions %}
+                                <p class="card-text">
+                                    <strong>Instructions:</strong> {{ option.additional_instructions }}
+                                </p>
+                            {% endif %}
+                            <small class="text-muted">
+                                Question: {{ option.question.question_text|truncatechars:50 }}
+                            </small>
+                        </div>
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'reports:question_options' option.question.pk %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-danger">
+                                <i class="bi bi-trash"></i> Delete Option
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

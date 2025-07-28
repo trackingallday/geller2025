@@ -1,0 +1,111 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-download"></i> {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    {% if existing_sample %}
+                        <div class="alert alert-info">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-info-circle"></i> Sample Already Exists
+                            </h6>
+                            <p class="mb-2">A sample grocery store report template already exists:</p>
+                            <p class="mb-2"><strong>{{ existing_sample.name }}</strong></p>
+                            <div class="d-flex gap-2">
+                                <a href="{% url 'reports:report_type_detail' existing_sample.pk %}" class="btn btn-primary btn-sm">
+                                    <i class="bi bi-eye"></i> View Existing Sample
+                                </a>
+                                <form method="post" class="d-inline">
+                                    {% csrf_token %}
+                                    <button type="submit" class="btn btn-warning btn-sm" onclick="return confirm('This will recreate the sample report. Any customizations will be lost. Continue?')">
+                                        <i class="bi bi-arrow-clockwise"></i> Recreate Sample
+                                    </button>
+                                </form>
+                            </div>
+                        </div>
+                    {% else %}
+                        <div class="mb-4">
+                            <h6>What This Will Create</h6>
+                            <p>This will create a comprehensive grocery store audit report template based on your CSV file, including:</p>
+                            
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle text-success"></i> Report header section</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Produce department inspections</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Sanitizer concentration tests</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Chemical storage checks</li>
+                                    </ul>
+                                </div>
+                                <div class="col-md-6">
+                                    <ul class="list-unstyled">
+                                        <li><i class="bi bi-check-circle text-success"></i> Equipment condition assessments</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Food contact surface evaluations</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Conditional logic for follow-up questions</li>
+                                        <li><i class="bi bi-check-circle text-success"></i> Multiple choice options with flagging</li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="alert alert-primary">
+                            <h6 class="alert-heading">
+                                <i class="bi bi-lightbulb"></i> Sample Features
+                            </h6>
+                            <ul class="mb-0">
+                                <li><strong>Sections:</strong> Organized into logical groups (First Page, Produce Department, etc.)</li>
+                                <li><strong>Question Types:</strong> Text, select, radio, checkbox, date inputs</li>
+                                <li><strong>Conditional Logic:</strong> Follow-up questions that appear based on previous answers</li>
+                                <li><strong>Flagged Options:</strong> Critical issues that require attention are automatically flagged</li>
+                                <li><strong>Auto-numbering:</strong> Document numbers with "MAR" prefix (MAR0001, MAR0002, etc.)</li>
+                            </ul>
+                        </div>
+
+                        <form method="post">
+                            {% csrf_token %}
+                            <div class="d-flex justify-content-between">
+                                <a href="{% url 'reports:report_type_list' %}" class="btn btn-secondary">
+                                    <i class="bi bi-arrow-left"></i> Back to Report Types
+                                </a>
+                                <button type="submit" class="btn btn-success">
+                                    <i class="bi bi-download"></i> Create Sample Report Template
+                                </button>
+                            </div>
+                        </form>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Preview Card -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-eye"></i> Sample Preview
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <p><strong>Report Name:</strong> Monthly Audit Report - Grocery</p>
+                    <p><strong>Description:</strong> Comprehensive food safety and compliance audit for grocery stores</p>
+                    <p><strong>Sections:</strong> 5 organized sections</p>
+                    <p><strong>Questions:</strong> ~20 questions with conditional logic</p>
+                    <p><strong>Features:</strong></p>
+                    <ul>
+                        <li>Client selection and basic information</li>
+                        <li>Pass/Fail questions with follow-up details</li>
+                        <li>Equipment testing and evaluation</li>
+                        <li>Issue tracking with specific problem identification</li>
+                        <li>Equipment condition monitoring</li>
+                    </ul>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

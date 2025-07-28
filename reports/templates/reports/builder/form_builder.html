@@ -1,0 +1,458 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .builder-sidebar {
+        background: #f8f9fa;
+        min-height: calc(100vh - 56px);
+        border-right: 1px solid #dee2e6;
+    }
+    
+    .builder-main {
+        padding: 20px;
+    }
+    
+    .question-item {
+        border: 1px solid #dee2e6;
+        border-radius: 5px;
+        margin-bottom: 10px;
+        background: white;
+        cursor: move;
+        transition: all 0.3s ease;
+    }
+    
+    .question-item:hover {
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        border-color: #0d6efd;
+    }
+    
+    .question-item.dragging {
+        opacity: 0.7;
+        transform: rotate(5deg);
+    }
+    
+    .section-container {
+        min-height: 100px;
+        border: 2px dashed #dee2e6;
+        border-radius: 5px;
+        padding: 15px;
+        margin-bottom: 20px;
+        background: #f8f9fa;
+    }
+    
+    .section-container.drag-over {
+        border-color: #0d6efd;
+        background: #e7f3ff;
+    }
+    
+    .section-header {
+        background: linear-gradient(90deg, #0d6efd, #6610f2);
+        color: white;
+        padding: 10px 15px;
+        margin: -15px -15px 15px -15px;
+        border-radius: 5px 5px 0 0;
+        display: flex;
+        justify-content: between;
+        align-items: center;
+    }
+    
+    .template-item {
+        border: 1px solid #dee2e6;
+        padding: 10px;
+        margin-bottom: 5px;
+        border-radius: 3px;
+        cursor: pointer;
+        background: white;
+    }
+    
+    .template-item:hover {
+        background: #e9ecef;
+        border-color: #0d6efd;
+    }
+    
+    .question-type-badge {
+        font-size: 0.7em;
+        padding: 2px 6px;
+    }
+    
+    .conditional-rule {
+        background: #fff3cd;
+        border: 1px solid #ffeaa7;
+        padding: 8px 12px;
+        margin: 5px 0;
+        border-radius: 3px;
+        font-size: 0.85em;
+    }
+    
+    .drop-zone {
+        min-height: 50px;
+        border: 2px dashed #ccc;
+        border-radius: 5px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #666;
+        margin: 10px 0;
+        transition: all 0.3s ease;
+    }
+    
+    .drop-zone.drag-over {
+        border-color: #0d6efd;
+        background: #e7f3ff;
+        color: #0d6efd;
+    }
+    
+    .builder-toolbar {
+        position: sticky;
+        top: 0;
+        background: white;
+        border-bottom: 1px solid #dee2e6;
+        padding: 10px 0;
+        margin-bottom: 20px;
+        z-index: 100;
+    }
+</style>
+{% endblock %}
+
+{% block page_actions %}
+<div class="btn-group" role="group">
+    <a href="{% url 'reports:customer_assignments' report_type.pk %}" class="btn btn-outline-primary">
+        <i class="bi bi-people"></i> Customers ({{ assigned_customers.count }})
+    </a>
+    <a href="{% url 'reports:conditional_rules' report_type.pk %}" class="btn btn-outline-warning">
+        <i class="bi bi-diagram-3"></i> Rules ({{ conditional_rules.count }})
+    </a>
+    <button type="button" class="btn btn-success" id="previewBtn">
+        <i class="bi bi-eye"></i> Preview
+    </button>
+    <a href="{% url 'reports:report_create' report_type.pk %}" class="btn btn-primary">
+        <i class="bi bi-file-plus"></i> Create Report
+    </a>
+</div>
+{% endblock %}
+
+{% block content %}
+<div class="row">
+    <!-- Sidebar -->
+    <div class="col-md-3">
+        <div class="builder-sidebar p-3">
+            <!-- Report Type Info -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-info-circle"></i> Report Info</h6>
+                </div>
+                <div class="card-body py-2">
+                    <small>
+                        <strong>{{ report_type.name }}</strong><br>
+                        <span class="text-muted">{{ questions.count }} questions in {{ sections.count }} sections</span>
+                    </small>
+                </div>
+            </div>
+            
+            <!-- Quick Actions -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-lightning"></i> Quick Add</h6>
+                </div>
+                <div class="card-body">
+                    <div class="d-grid gap-2">
+                        <button class="btn btn-outline-primary btn-sm" onclick="quickAddSection()">
+                            <i class="bi bi-folder-plus"></i> Add Section
+                        </button>
+                        <button class="btn btn-outline-success btn-sm" onclick="quickAddQuestion()">
+                            <i class="bi bi-patch-question"></i> Add Question
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Question Types -->
+            <div class="card mb-3">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-ui-radios"></i> Question Types</h6>
+                </div>
+                <div class="card-body p-2">
+                    {% for type_id, type_name in question_types %}
+                    <div class="template-item" draggable="true" data-question-type="{{ type_id }}">
+                        <small>
+                            <strong>{{ type_name }}</strong>
+                            <span class="badge bg-secondary question-type-badge">{{ type_id }}</span>
+                        </small>
+                    </div>
+                    {% endfor %}
+                </div>
+            </div>
+            
+            <!-- Templates -->
+            <div class="card">
+                <div class="card-header">
+                    <h6 class="mb-0"><i class="bi bi-collection"></i> Templates</h6>
+                </div>
+                <div class="card-body p-2" style="max-height: 300px; overflow-y: auto;">
+                    {% regroup templates by category as category_list %}
+                    {% for category in category_list %}
+                        <div class="mb-2">
+                            <small class="text-muted text-uppercase">{{ category.grouper }}</small>
+                            {% for template in category.list %}
+                            <div class="template-item" draggable="true" data-template-id="{{ template.id }}">
+                                <small>
+                                    <strong>{{ template.name }}</strong><br>
+                                    <span class="text-muted">{{ template.question_text|truncatechars:50 }}</span>
+                                    <span class="badge bg-info question-type-badge">{{ template.get_question_type_display }}</span>
+                                </small>
+                            </div>
+                            {% endfor %}
+                        </div>
+                    {% endfor %}
+                    
+                    {% if not templates %}
+                        <small class="text-muted">No templates available</small>
+                    {% endif %}
+                </div>
+            </div>
+        </div>
+    </div>
+    
+    <!-- Main Builder Area -->
+    <div class="col-md-9">
+        <div class="builder-main">
+            <!-- Toolbar -->
+            <div class="builder-toolbar">
+                <div class="btn-toolbar justify-content-between">
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-primary" onclick="saveOrder()">
+                            <i class="bi bi-save"></i> Save Order
+                        </button>
+                        <button class="btn btn-outline-secondary" onclick="autoArrangeQuestions()">
+                            <i class="bi bi-arrow-down-up"></i> Auto-arrange
+                        </button>
+                    </div>
+                    <div class="btn-group btn-group-sm">
+                        <button class="btn btn-outline-info" id="toggleConditionalRules">
+                            <i class="bi bi-diagram-3"></i> Show Rules
+                        </button>
+                    </div>
+                </div>
+            </div>
+            
+            <!-- Form Builder Area -->
+            <div id="form-builder-area">
+                {% if sections %}
+                    {% for section in sections %}
+                    <div class="section-container" data-section-id="{{ section.id }}">
+                        <div class="section-header">
+                            <div>
+                                <h5 class="mb-0">
+                                    <i class="bi bi-folder"></i> {{ section.name }}
+                                </h5>
+                                {% if section.description %}
+                                    <small>{{ section.description }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="btn-group btn-group-sm">
+                                <button class="btn btn-light btn-sm" onclick="editSection({{ section.id }})">
+                                    <i class="bi bi-pencil"></i>
+                                </button>
+                                <button class="btn btn-light btn-sm" onclick="deleteSection({{ section.id }})">
+                                    <i class="bi bi-trash"></i>
+                                </button>
+                            </div>
+                        </div>
+                        
+                        <!-- Questions in this section -->
+                        <div class="question-list" data-section-id="{{ section.id }}">
+                            {% for question in questions %}
+                                {% if question.section.id == section.id %}
+                                    {% include 'reports/builder/question_item.html' %}
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <!-- Drop zone for new questions -->
+                            <div class="drop-zone" data-section-id="{{ section.id }}">
+                                Drop questions here or click to add
+                            </div>
+                        </div>
+                    </div>
+                    {% endfor %}
+                {% endif %}
+                
+                <!-- Questions without sections -->
+                {% if questions %}
+                    {% with no_section_questions=True %}
+                    <div class="section-container" data-section-id="">
+                        <div class="section-header">
+                            <h5 class="mb-0">
+                                <i class="bi bi-question-circle"></i> General Questions
+                            </h5>
+                        </div>
+                        
+                        <div class="question-list" data-section-id="">
+                            {% for question in questions %}
+                                {% if not question.section %}
+                                    {% include 'reports/builder/question_item.html' %}
+                                {% endif %}
+                            {% endfor %}
+                            
+                            <div class="drop-zone" data-section-id="">
+                                Drop questions here or click to add
+                            </div>
+                        </div>
+                    </div>
+                    {% endwith %}
+                {% endif %}
+                
+                <!-- Empty state -->
+                {% if not sections and not questions %}
+                <div class="text-center py-5">
+                    <i class="bi bi-tools display-1 text-muted"></i>
+                    <h4 class="mt-3">Start Building Your Form</h4>
+                    <p class="text-muted">Drag question types from the sidebar or click the buttons to get started.</p>
+                    <div class="d-grid gap-2 d-md-block">
+                        <button class="btn btn-primary" onclick="quickAddSection()">
+                            <i class="bi bi-folder-plus"></i> Add First Section
+                        </button>
+                        <button class="btn btn-outline-primary" onclick="quickAddQuestion()">
+                            <i class="bi bi-patch-question"></i> Add Question
+                        </button>
+                    </div>
+                </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Question Editor Modal -->
+<div class="modal fade" id="questionModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Question</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="questionForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="questionId" name="question_id">
+                    
+                    <div class="mb-3">
+                        <label for="questionText" class="form-label">Question Text *</label>
+                        <textarea class="form-control" id="questionText" name="question_text" rows="3" required></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="questionType" class="form-label">Question Type *</label>
+                                <select class="form-select" id="questionType" name="question_type" required>
+                                    {% for type_id, type_name in question_types %}
+                                        <option value="{{ type_id }}">{{ type_name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="questionSection" class="form-label">Section</label>
+                                <select class="form-select" id="questionSection" name="section">
+                                    <option value="">No section</option>
+                                    {% for section in sections %}
+                                        <option value="{{ section.id }}">{{ section.name }}</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="helpText" class="form-label">Help Text</label>
+                        <textarea class="form-control" id="helpText" name="help_text" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="row">
+                        <div class="col-md-6">
+                            <div class="form-check mb-3">
+                                <input class="form-check-input" type="checkbox" id="isRequired" name="is_required">
+                                <label class="form-check-label" for="isRequired">Required Question</label>
+                            </div>
+                        </div>
+                        <div class="col-md-6">
+                            <div class="mb-3">
+                                <label for="questionOrder" class="form-label">Order</label>
+                                <input type="number" class="form-control" id="questionOrder" name="order" min="0">
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <!-- Options section for choice questions -->
+                    <div id="optionsSection" style="display: none;">
+                        <h6>Answer Options</h6>
+                        <div id="optionsList"></div>
+                        <button type="button" class="btn btn-sm btn-outline-primary" onclick="addOption()">
+                            <i class="bi bi-plus"></i> Add Option
+                        </button>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteQuestion()" id="deleteQuestionBtn" style="display: none;">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveQuestion()">Save Question</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Section Editor Modal -->
+<div class="modal fade" id="sectionModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Edit Section</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="sectionForm">
+                    {% csrf_token %}
+                    <input type="hidden" id="sectionId" name="section_id">
+                    
+                    <div class="mb-3">
+                        <label for="sectionName" class="form-label">Section Name *</label>
+                        <input type="text" class="form-control" id="sectionName" name="name" required>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sectionDescription" class="form-label">Description</label>
+                        <textarea class="form-control" id="sectionDescription" name="description" rows="2"></textarea>
+                    </div>
+                    
+                    <div class="mb-3">
+                        <label for="sectionOrder" class="form-label">Order</label>
+                        <input type="number" class="form-control" id="sectionOrder" name="order" min="0">
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                <button type="button" class="btn btn-danger" onclick="deleteSection()" id="deleteSectionBtn" style="display: none;">
+                    <i class="bi bi-trash"></i> Delete
+                </button>
+                <button type="button" class="btn btn-primary" onclick="saveSection()">Save Section</button>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script src="{% url 'reports:form_builder_js' %}"></script>
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    initializeFormBuilder({{ report_type.pk }});
+});
+</script>
+{% endblock %}

@@ -1,0 +1,291 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_actions %}
+    <div class="btn-group" role="group">
+        {% if report.status == 'draft' %}
+            <a href="{% url 'reports:report_fill' report.pk %}" class="btn btn-warning">
+                <i class="bi bi-pencil"></i> Continue Editing
+            </a>
+            <a href="{% url 'reports:report_submit' report.pk %}" class="btn btn-success">
+                <i class="bi bi-check-circle"></i> Submit Report
+            </a>
+        {% endif %}
+        <a href="{% url 'reports:report_list' %}" class="btn btn-outline-secondary">
+            <i class="bi bi-arrow-left"></i> Back to Reports
+        </a>
+    </div>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <!-- Report Header -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <h5 class="mb-0">
+                            <i class="bi bi-file-earmark-text"></i> {{ report.document_number }}
+                        </h5>
+                        <small class="text-muted">{{ report.report_type.name }}</small>
+                    </div>
+                    <div>
+                        {% if report.status == 'draft' %}
+                            <span class="badge bg-secondary fs-6">
+                                <i class="bi bi-pencil"></i> Draft
+                            </span>
+                        {% elif report.status == 'submitted' %}
+                            <span class="badge bg-primary fs-6">
+                                <i class="bi bi-clock"></i> Submitted
+                            </span>
+                        {% elif report.status == 'approved' %}
+                            <span class="badge bg-success fs-6">
+                                <i class="bi bi-check-circle"></i> Approved
+                            </span>
+                        {% elif report.status == 'rejected' %}
+                            <span class="badge bg-danger fs-6">
+                                <i class="bi bi-x-circle"></i> Rejected
+                            </span>
+                        {% endif %}
+                    </div>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td class="fw-bold">Customer:</td>
+                                    <td>{{ report.customer.name }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Distributor:</td>
+                                    <td>{{ report.distributor.name }}</td>
+                                </tr>
+                                {% if report.store_compliance_manager %}
+                                <tr>
+                                    <td class="fw-bold">Store Manager:</td>
+                                    <td>{{ report.store_compliance_manager }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                        <div class="col-md-6">
+                            <table class="table table-borderless table-sm">
+                                <tr>
+                                    <td class="fw-bold">Inspection Date:</td>
+                                    <td>{{ report.inspection_date|date:"F d, Y" }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Prepared By:</td>
+                                    <td>{{ report.prepared_by.get_full_name|default:report.prepared_by.username }}</td>
+                                </tr>
+                                <tr>
+                                    <td class="fw-bold">Created:</td>
+                                    <td>{{ report.created_at|date:"F d, Y g:i A" }}</td>
+                                </tr>
+                                {% if report.submitted_at %}
+                                <tr>
+                                    <td class="fw-bold">Submitted:</td>
+                                    <td>{{ report.submitted_at|date:"F d, Y g:i A" }}</td>
+                                </tr>
+                                {% endif %}
+                            </table>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Report Questions and Answers -->
+            {% if answers %}
+                {% regroup answers by question.section as section_list %}
+                {% for section in section_list %}
+                    {% if section.grouper %}
+                        <div class="card mb-3">
+                            <div class="card-header bg-primary text-white">
+                                <h5 class="mb-0">
+                                    <i class="bi bi-folder"></i> {{ section.grouper.name }}
+                                </h5>
+                                {% if section.grouper.description %}
+                                    <small>{{ section.grouper.description }}</small>
+                                {% endif %}
+                            </div>
+                            <div class="card-body">
+                                {% for answer in section.list %}
+                                    <div class="mb-4 pb-3 border-bottom">
+                                        <h6 class="fw-bold">
+                                            {{ answer.question.question_text }}
+                                            {% if answer.question.is_required %}<span class="text-danger">*</span>{% endif %}
+                                        </h6>
+                                        
+                                        {% if answer.question.help_text %}
+                                            <div class="text-muted small mb-2">{{ answer.question.help_text }}</div>
+                                        {% endif %}
+
+                                        <div class="answer-content">
+                                            {% if answer.question.question_type == 'yesno' %}
+                                                {% if answer.text_answer == 'yes' %}
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle"></i> Yes
+                                                    </span>
+                                                {% elif answer.text_answer == 'no' %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle"></i> No
+                                                    </span>
+                                                {% else %}
+                                                    <span class="text-muted">Not answered</span>
+                                                {% endif %}
+
+                                            {% elif answer.question.question_type in 'select,radio,checkbox' %}
+                                                {% if answer.selected_options.all %}
+                                                    {% for option in answer.selected_options.all %}
+                                                        <span class="badge bg-info me-2">
+                                                            {{ option.text }}
+                                                            {% if option.is_flag %}
+                                                                <i class="bi bi-flag-fill text-warning"></i>
+                                                            {% endif %}
+                                                        </span>
+                                                        {% if option.additional_instructions %}
+                                                            <div class="alert alert-warning mt-2">
+                                                                <strong>Instructions:</strong> {{ option.additional_instructions }}
+                                                            </div>
+                                                        {% endif %}
+                                                    {% endfor %}
+                                                {% else %}
+                                                    <span class="text-muted">Not selected</span>
+                                                {% endif %}
+
+                                            {% elif answer.question.question_type == 'number' %}
+                                                {% if answer.number_answer is not None %}
+                                                    <strong>{{ answer.number_answer }}</strong>
+                                                {% else %}
+                                                    <span class="text-muted">Not answered</span>
+                                                {% endif %}
+
+                                            {% elif answer.question.question_type == 'date' %}
+                                                {% if answer.date_answer %}
+                                                    <strong>{{ answer.date_answer|date:"F d, Y" }}</strong>
+                                                {% else %}
+                                                    <span class="text-muted">Not answered</span>
+                                                {% endif %}
+
+                                            {% elif answer.question.question_type == 'file' %}
+                                                {% if answer.file_answer %}
+                                                    <a href="{{ answer.file_answer.url }}" target="_blank" class="btn btn-outline-primary btn-sm">
+                                                        <i class="bi bi-download"></i> Download File
+                                                    </a>
+                                                {% else %}
+                                                    <span class="text-muted">No file uploaded</span>
+                                                {% endif %}
+
+                                            {% elif answer.question.question_type == 'signature' %}
+                                                {% if answer.signature_answer %}
+                                                    <img src="{{ answer.signature_answer.url }}" alt="Signature" 
+                                                         class="img-thumbnail" style="max-height: 100px;">
+                                                {% else %}
+                                                    <span class="text-muted">No signature provided</span>
+                                                {% endif %}
+
+                                            {% else %}
+                                                <!-- Text/textarea answers -->
+                                                {% if answer.text_answer %}
+                                                    <div class="border-start border-3 border-info ps-3">
+                                                        {{ answer.text_answer|linebreaks }}
+                                                    </div>
+                                                {% else %}
+                                                    <span class="text-muted">Not answered</span>
+                                                {% endif %}
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% else %}
+                        <!-- Questions without sections -->
+                        <div class="card mb-3">
+                            <div class="card-header">
+                                <h5 class="mb-0">General Questions</h5>
+                            </div>
+                            <div class="card-body">
+                                {% for answer in section.list %}
+                                    <div class="mb-4 pb-3 border-bottom">
+                                        <h6 class="fw-bold">{{ answer.question.question_text }}</h6>
+                                        <!-- Same answer display logic as above -->
+                                        <div class="answer-content">
+                                            {% if answer.text_answer %}
+                                                <div class="border-start border-3 border-info ps-3">
+                                                    {{ answer.text_answer|linebreaks }}
+                                                </div>
+                                            {% else %}
+                                                <span class="text-muted">Not answered</span>
+                                            {% endif %}
+                                        </div>
+                                    </div>
+                                {% endfor %}
+                            </div>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-clipboard-x display-1 text-muted"></i>
+                        <h4 class="mt-3">No Answers Yet</h4>
+                        <p class="text-muted">This report hasn't been filled out yet.</p>
+                        <a href="{% url 'reports:report_fill' report.pk %}" class="btn btn-primary">
+                            <i class="bi bi-pencil"></i> Start Filling Report
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+
+            <!-- Report Summary -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">Report Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-primary">{{ answers.count }}</h4>
+                                <small class="text-muted">Total Answers</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-info">{{ report.report_type.questions.count }}</h4>
+                                <small class="text-muted">Total Questions</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                {% if report.report_type.questions.count > 0 %}
+                                    {% if answers.count == report.report_type.questions.count %}
+                                        <h4 class="text-success">100%</h4>
+                                    {% else %}
+                                        {% if answers.count > 0 %}
+                                            <h4 class="text-warning">Partial</h4>
+                                        {% else %}
+                                            <h4 class="text-danger">0%</h4>
+                                        {% endif %}
+                                    {% endif %}
+                                {% else %}
+                                    <h4 class="text-muted">N/A</h4>
+                                {% endif %}
+                                <small class="text-muted">Complete</small>
+                            </div>
+                        </div>
+                        <div class="col-md-3">
+                            <div class="text-center">
+                                <h4 class="text-secondary">{{ report.status|title }}</h4>
+                                <small class="text-muted">Status</small>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

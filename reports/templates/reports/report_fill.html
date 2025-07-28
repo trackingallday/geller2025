@@ -1,0 +1,382 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block extra_css %}
+<style>
+    .question-card {
+        margin-bottom: 20px;
+        border-left: 4px solid #0d6efd;
+    }
+    .question-required {
+        color: #dc3545;
+    }
+    .question-help {
+        font-size: 0.875em;
+        color: #6c757d;
+        margin-top: 5px;
+    }
+    .section-divider {
+        background: linear-gradient(90deg, #0d6efd, #6610f2);
+        color: white;
+        padding: 15px;
+        margin: 30px 0 20px 0;
+        border-radius: 5px;
+    }
+    .signature-pad {
+        border: 2px dashed #dee2e6;
+        height: 200px;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        color: #6c757d;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            <!-- Report Header -->
+            <div class="card mb-4">
+                <div class="card-header bg-primary text-white">
+                    <h5 class="mb-0">
+                        <i class="bi bi-clipboard-data"></i> {{ title }}
+                    </h5>
+                    <small>Report Type: {{ report.report_type.name }}</small>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-3">
+                            <strong>Document #:</strong><br>
+                            <code>{{ report.document_number }}</code>
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Customer:</strong><br>
+                            {{ report.customer.name }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Distributor:</strong><br>
+                            {{ report.distributor.name }}
+                        </div>
+                        <div class="col-md-3">
+                            <strong>Inspection Date:</strong><br>
+                            {{ report.inspection_date|date:"M d, Y" }}
+                        </div>
+                    </div>
+                    {% if report.store_compliance_manager %}
+                    <div class="row mt-2">
+                        <div class="col-md-6">
+                            <strong>Store Compliance Manager:</strong><br>
+                            {{ report.store_compliance_manager }}
+                        </div>
+                    </div>
+                    {% endif %}
+                </div>
+            </div>
+
+            <!-- Questions Form -->
+            <form method="post">
+                {% csrf_token %}
+                
+                {% regroup questions by section as section_list %}
+                {% for section in section_list %}
+                    {% if section.grouper %}
+                        <div class="section-divider">
+                            <h4 class="mb-1">
+                                <i class="bi bi-folder"></i> {{ section.grouper.name }}
+                            </h4>
+                            {% if section.grouper.description %}
+                                <p class="mb-0">{{ section.grouper.description }}</p>
+                            {% endif %}
+                        </div>
+                    {% endif %}
+
+                    {% for question in section.list %}
+                        <div class="card question-card" 
+                             data-question-id="{{ question.id }}"
+                             {% if question.parent_question %}
+                                 data-parent-question="{{ question.parent_question.id }}"
+                                 data-show-when-value="{{ question.show_when_parent_value }}"
+                                 style="display: none;"
+                             {% endif %}>
+                            <div class="card-body">
+                                <h6 class="card-title">
+                                    {{ question.question_text }}
+                                    {% if question.is_required %}<span class="question-required">*</span>{% endif %}
+                                </h6>
+                                
+                                {% if question.help_text %}
+                                    <div class="question-help">{{ question.help_text }}</div>
+                                {% endif %}
+
+                                <div class="mt-3">
+                                    {% comment %} Find existing answer for this question {% endcomment %}
+                                    {% with current_answer=None %}
+                                        {% for answer in report.answers.all %}
+                                            {% if answer.question.id == question.id %}
+                                                {% with current_answer=answer %}
+                                                {% endwith %}
+                                            {% endif %}
+                                        {% endfor %}
+                                        
+                                        {% if question.question_type == 'text' %}
+                                            <input type="text" name="question_{{ question.id }}" 
+                                                   class="form-control" 
+                                                   value="{% for answer in report.answers.all %}{% if answer.question.id == question.id %}{{ answer.text_answer|default:'' }}{% endif %}{% endfor %}"
+                                                   {% if question.is_required %}required{% endif %}>
+
+                                        {% elif question.question_type == 'textarea' %}
+                                            <textarea name="question_{{ question.id }}" 
+                                                      class="form-control" rows="3"
+                                                      {% if question.is_required %}required{% endif %}>{% for answer in report.answers.all %}{% if answer.question.id == question.id %}{{ answer.text_answer|default:'' }}{% endif %}{% endfor %}</textarea>
+
+                                        {% elif question.question_type == 'number' %}
+                                            <input type="number" name="question_{{ question.id }}" 
+                                                   class="form-control" step="any"
+                                                   value="{% for answer in report.answers.all %}{% if answer.question.id == question.id %}{{ answer.number_answer|default:'' }}{% endif %}{% endfor %}"
+                                                   {% if question.is_required %}required{% endif %}>
+
+                                        {% elif question.question_type == 'date' %}
+                                            <input type="date" name="question_{{ question.id }}" 
+                                                   class="form-control"
+                                                   value="{% for answer in report.answers.all %}{% if answer.question.id == question.id %}{{ answer.date_answer|date:'Y-m-d'|default:'' }}{% endif %}{% endfor %}"
+                                                   {% if question.is_required %}required{% endif %}>
+
+                                        {% elif question.question_type == 'yesno' %}
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" 
+                                                       name="question_{{ question.id }}" value="yes" 
+                                                       id="q{{ question.id }}_yes"
+                                                       {% for answer in report.answers.all %}{% if answer.question.id == question.id and answer.text_answer == 'yes' %}checked{% endif %}{% endfor %}
+                                                       {% if question.is_required %}required{% endif %}>
+                                                <label class="form-check-label" for="q{{ question.id }}_yes">
+                                                    <i class="bi bi-check-circle text-success"></i> Yes
+                                                </label>
+                                            </div>
+                                            <div class="form-check form-check-inline">
+                                                <input class="form-check-input" type="radio" 
+                                                       name="question_{{ question.id }}" value="no" 
+                                                       id="q{{ question.id }}_no"
+                                                       {% for answer in report.answers.all %}{% if answer.question.id == question.id and answer.text_answer == 'no' %}checked{% endif %}{% endfor %}
+                                                       {% if question.is_required %}required{% endif %}>
+                                                <label class="form-check-label" for="q{{ question.id }}_no">
+                                                    <i class="bi bi-x-circle text-danger"></i> No
+                                                </label>
+                                            </div>
+
+                                        {% elif question.question_type == 'select' %}
+                                            <select name="question_{{ question.id }}" class="form-select"
+                                                    {% if question.is_required %}required{% endif %}>
+                                                <option value="">-- Select an option --</option>
+                                                {% for option in question.options.all %}
+                                                    <option value="{{ option.id }}" 
+                                                            {% for answer in report.answers.all %}{% if answer.question.id == question.id %}{% if option in answer.selected_options.all %}selected{% endif %}{% endif %}{% endfor %}>
+                                                        {{ option.text }}
+                                                    </option>
+                                                {% endfor %}
+                                            </select>
+
+                                        {% elif question.question_type == 'radio' %}
+                                            {% for option in question.options.all %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="radio" 
+                                                           name="question_{{ question.id }}" value="{{ option.id }}" 
+                                                           id="q{{ question.id }}_{{ option.id }}"
+                                                           {% for answer in report.answers.all %}{% if answer.question.id == question.id %}{% if option in answer.selected_options.all %}checked{% endif %}{% endif %}{% endfor %}
+                                                           {% if question.is_required %}required{% endif %}>
+                                                    <label class="form-check-label" for="q{{ question.id }}_{{ option.id }}">
+                                                        {{ option.text }}
+                                                        {% if option.is_flag %}
+                                                            <span class="badge bg-warning ms-2">FLAG</span>
+                                                        {% endif %}
+                                                    </label>
+                                                    {% if option.additional_instructions %}
+                                                        <div class="form-text">{{ option.additional_instructions }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+
+                                        {% elif question.question_type == 'checkbox' %}
+                                            {% for option in question.options.all %}
+                                                <div class="form-check">
+                                                    <input class="form-check-input" type="checkbox" 
+                                                           name="question_{{ question.id }}" value="{{ option.id }}" 
+                                                           id="q{{ question.id }}_{{ option.id }}"
+                                                           {% for answer in report.answers.all %}{% if answer.question.id == question.id %}{% if option in answer.selected_options.all %}checked{% endif %}{% endif %}{% endfor %}>
+                                                    <label class="form-check-label" for="q{{ question.id }}_{{ option.id }}">
+                                                        {{ option.text }}
+                                                        {% if option.is_flag %}
+                                                            <span class="badge bg-warning ms-2">FLAG</span>
+                                                        {% endif %}
+                                                    </label>
+                                                    {% if option.additional_instructions %}
+                                                        <div class="form-text">{{ option.additional_instructions }}</div>
+                                                    {% endif %}
+                                                </div>
+                                            {% endfor %}
+
+                                        {% elif question.question_type == 'file' %}
+                                            <input type="file" name="question_{{ question.id }}" 
+                                                   class="form-control"
+                                                   {% if question.is_required %}required{% endif %}>
+                                            {% for answer in report.answers.all %}
+                                                {% if answer.question.id == question.id and answer.file_answer %}
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">
+                                                            Current file: <a href="{{ answer.file_answer.url }}" target="_blank">{{ answer.file_answer.name }}</a>
+                                                        </small>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+
+                                        {% elif question.question_type == 'signature' %}
+                                            <input type="file" name="question_{{ question.id }}" 
+                                                   class="form-control" accept="image/*"
+                                                   {% if question.is_required %}required{% endif %}>
+                                            {% for answer in report.answers.all %}
+                                                {% if answer.question.id == question.id and answer.signature_answer %}
+                                                    <div class="mt-2">
+                                                        <small class="text-muted">
+                                                            Current signature: <a href="{{ answer.signature_answer.url }}" target="_blank">View</a>
+                                                        </small>
+                                                    </div>
+                                                {% endif %}
+                                            {% endfor %}
+                                            <div class="signature-pad mt-2">
+                                                <div class="text-center">
+                                                    <i class="bi bi-pencil-square fs-1"></i><br>
+                                                    Upload signature image or use camera
+                                                </div>
+                                            </div>
+
+                                        {% else %}
+                                            <div class="alert alert-warning">
+                                                <i class="bi bi-exclamation-triangle"></i> 
+                                                Unsupported question type: {{ question.question_type }}
+                                            </div>
+                                        {% endif %}
+                                    {% endwith %}
+                                </div>
+                            </div>
+                        </div>
+                    {% endfor %}
+                {% endfor %}
+
+                <!-- Submit Actions -->
+                <div class="card mt-4">
+                    <div class="card-body">
+                        <div class="d-flex justify-content-between align-items-center">
+                            <a href="{% url 'reports:report_detail' report.pk %}" class="btn btn-outline-secondary">
+                                <i class="bi bi-arrow-left"></i> Back to Report
+                            </a>
+                            <div>
+                                <button type="submit" class="btn btn-primary btn-lg me-2">
+                                    <i class="bi bi-save"></i> Save Answers
+                                </button>
+                                <a href="{% url 'reports:report_submit' report.pk %}" class="btn btn-success btn-lg">
+                                    <i class="bi bi-check-circle"></i> Submit Report
+                                </a>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Add some basic form validation and UX improvements
+    document.addEventListener('DOMContentLoaded', function() {
+        const form = document.querySelector('form');
+        
+        // Handle conditional question logic
+        function handleConditionalQuestions() {
+            // Get all questions with conditional logic
+            const conditionalQuestions = document.querySelectorAll('[data-parent-question]');
+            
+            conditionalQuestions.forEach(question => {
+                const parentQuestionId = question.dataset.parentQuestion;
+                const showWhenValue = question.dataset.showWhenValue;
+                const parentInputs = document.querySelectorAll(`input[name="question_${parentQuestionId}"]`);
+                
+                function checkVisibility() {
+                    let shouldShow = false;
+                    parentInputs.forEach(input => {
+                        if (input.checked && input.value === showWhenValue) {
+                            shouldShow = true;
+                        }
+                    });
+                    
+                    if (shouldShow) {
+                        question.style.display = 'block';
+                        // Enable required validation for visible questions
+                        const requiredInputs = question.querySelectorAll('[data-required="true"]');
+                        requiredInputs.forEach(input => input.setAttribute('required', 'required'));
+                    } else {
+                        question.style.display = 'none';
+                        // Clear values and disable required validation for hidden questions
+                        const inputs = question.querySelectorAll('input, select, textarea');
+                        inputs.forEach(input => {
+                            if (input.type === 'checkbox' || input.type === 'radio') {
+                                input.checked = false;
+                            } else {
+                                input.value = '';
+                            }
+                            input.removeAttribute('required');
+                        });
+                    }
+                }
+                
+                // Check visibility on page load
+                checkVisibility();
+                
+                // Add event listeners to parent question inputs
+                parentInputs.forEach(input => {
+                    input.addEventListener('change', checkVisibility);
+                });
+            });
+        }
+        
+        // Initialize conditional logic
+        handleConditionalQuestions();
+        
+        // Store original required status for conditional questions
+        const conditionalQuestions = document.querySelectorAll('[data-parent-question]');
+        conditionalQuestions.forEach(question => {
+            const requiredInputs = question.querySelectorAll('[required]');
+            requiredInputs.forEach(input => {
+                input.setAttribute('data-required', 'true');
+            });
+        });
+        
+        // Form validation
+        form.addEventListener('submit', function(e) {
+            const requiredFields = form.querySelectorAll('[required]');
+            let allValid = true;
+            
+            requiredFields.forEach(field => {
+                // Only validate visible fields
+                const questionCard = field.closest('.question-card');
+                if (questionCard && questionCard.style.display === 'none') {
+                    return; // Skip hidden fields
+                }
+                
+                if (!field.value.trim()) {
+                    field.classList.add('is-invalid');
+                    allValid = false;
+                } else {
+                    field.classList.remove('is-invalid');
+                }
+            });
+            
+            if (!allValid) {
+                e.preventDefault();
+                alert('Please fill in all required fields marked with *');
+            }
+        });
+    });
+</script>
+{% endblock %}

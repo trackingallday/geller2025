@@ -1,0 +1,164 @@
+<!-- Question Item Template -->
+<div class="question-item" data-question-id="{{ question.id }}" data-order="{{ question.order }}">
+    <div class="card-body py-2">
+        <div class="d-flex justify-content-between align-items-start">
+            <div class="flex-grow-1">
+                <!-- Question header -->
+                <div class="d-flex align-items-center gap-2 mb-1">
+                    <span class="badge bg-secondary question-type-badge">{{ question.get_question_type_display }}</span>
+                    {% if question.is_required %}
+                        <span class="badge bg-warning">Required</span>
+                    {% endif %}
+                    {% if question.parent_question %}
+                        <span class="badge bg-info">Conditional</span>
+                    {% endif %}
+                    <small class="text-muted">Order: {{ question.order }}</small>
+                </div>
+                
+                <!-- Question text -->
+                <div class="question-text mb-1">
+                    {{ question.question_text|truncatechars:100 }}
+                </div>
+                
+                <!-- Help text -->
+                {% if question.help_text %}
+                    <div class="text-muted small mb-2">{{ question.help_text|truncatechars:80 }}</div>
+                {% endif %}
+                
+                <!-- Options preview for choice questions -->
+                {% if question.question_type in 'select,radio,checkbox' and question.options.exists %}
+                    <div class="options-preview">
+                        <small class="text-muted">Options ({{ question.options.count }}):</small>
+                        <div class="ms-2">
+                            {% for option in question.options.all|slice:":3" %}
+                                <span class="badge bg-light text-dark me-1">
+                                    {{ option.text }}
+                                    {% if option.is_flag %}<i class="bi bi-flag-fill text-danger"></i>{% endif %}
+                                </span>
+                            {% endfor %}
+                            {% if question.options.count > 3 %}
+                                <span class="text-muted">... +{{ question.options.count|add:"-3" }} more</span>
+                            {% endif %}
+                        </div>
+                    </div>
+                {% endif %}
+                
+                <!-- Conditional logic info -->
+                {% if question.parent_question %}
+                    <div class="conditional-info mt-2">
+                        <small class="text-info">
+                            <i class="bi bi-diagram-3"></i> 
+                            Shows when "{{ question.parent_question.question_text|truncatechars:30 }}" = "{{ question.show_when_parent_value }}"
+                        </small>
+                    </div>
+                {% endif %}
+                
+                <!-- Show rules that target this question -->
+                {% for rule in conditional_rules %}
+                    {% if rule.target_question.id == question.id %}
+                        <div class="conditional-rule" id="rule-{{ rule.id }}" style="display: none;">
+                            <small>
+                                <i class="bi bi-diagram-3"></i> 
+                                <strong>{{ rule.name }}:</strong> 
+                                {{ rule.get_action_display }} when "{{ rule.trigger_question.question_text|truncatechars:20 }}" 
+                                {{ rule.get_trigger_operator_display|lower }} "{{ rule.trigger_value }}"
+                            </small>
+                        </div>
+                    {% endif %}
+                {% endfor %}
+            </div>
+            
+            <!-- Action buttons -->
+            <div class="btn-group btn-group-sm" role="group">
+                <!-- Drag handle -->
+                <button class="btn btn-light drag-handle" type="button">
+                    <i class="bi bi-grip-vertical"></i>
+                </button>
+                
+                <!-- Options button for choice questions -->
+                {% if question.question_type in 'select,radio,checkbox' %}
+                    <a href="{% url 'reports:question_options' question.pk %}" class="btn btn-outline-info" target="_blank">
+                        <i class="bi bi-list"></i>
+                    </a>
+                {% endif %}
+                
+                <!-- Edit button -->
+                <button class="btn btn-outline-warning" onclick="editQuestion({{ question.id }})">
+                    <i class="bi bi-pencil"></i>
+                </button>
+                
+                <!-- Duplicate button -->
+                <button class="btn btn-outline-secondary" onclick="duplicateQuestion({{ question.id }})" title="Duplicate">
+                    <i class="bi bi-files"></i>
+                </button>
+                
+                <!-- Delete button -->
+                <button class="btn btn-outline-danger" onclick="deleteQuestion({{ question.id }})" title="Delete">
+                    <i class="bi bi-trash"></i>
+                </button>
+            </div>
+        </div>
+        
+        <!-- Question preview for certain types -->
+        <div class="question-preview mt-2" style="display: none;">
+            <div class="border rounded p-2 bg-light">
+                <small class="text-muted d-block mb-1">Preview:</small>
+                
+                {% if question.question_type == 'text' %}
+                    <input type="text" class="form-control form-control-sm" placeholder="Text input..." disabled>
+                    
+                {% elif question.question_type == 'textarea' %}
+                    <textarea class="form-control form-control-sm" rows="2" placeholder="Long text..." disabled></textarea>
+                    
+                {% elif question.question_type == 'yesno' %}
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" disabled>
+                        <label class="form-check-label">Yes</label>
+                    </div>
+                    <div class="form-check form-check-inline">
+                        <input class="form-check-input" type="radio" disabled>
+                        <label class="form-check-label">No</label>
+                    </div>
+                    
+                {% elif question.question_type == 'select' %}
+                    <select class="form-select form-select-sm" disabled>
+                        <option>Select an option...</option>
+                        {% for option in question.options.all|slice:":3" %}
+                            <option>{{ option.text }}</option>
+                        {% endfor %}
+                    </select>
+                    
+                {% elif question.question_type == 'radio' %}
+                    {% for option in question.options.all|slice:":3" %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" disabled>
+                            <label class="form-check-label">{{ option.text }}</label>
+                        </div>
+                    {% endfor %}
+                    
+                {% elif question.question_type == 'checkbox' %}
+                    {% for option in question.options.all|slice:":3" %}
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" disabled>
+                            <label class="form-check-label">{{ option.text }}</label>
+                        </div>
+                    {% endfor %}
+                    
+                {% elif question.question_type == 'number' %}
+                    <input type="number" class="form-control form-control-sm" placeholder="Enter number..." disabled>
+                    
+                {% elif question.question_type == 'date' %}
+                    <input type="date" class="form-control form-control-sm" disabled>
+                    
+                {% elif question.question_type == 'file' %}
+                    <input type="file" class="form-control form-control-sm" disabled>
+                    
+                {% elif question.question_type == 'signature' %}
+                    <div class="text-center p-2 border" style="min-height: 60px;">
+                        <i class="bi bi-pencil-square"></i> Digital Signature
+                    </div>
+                {% endif %}
+            </div>
+        </div>
+    </div>
+</div>

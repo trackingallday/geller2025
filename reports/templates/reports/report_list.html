@@ -1,0 +1,148 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block page_actions %}
+    <a href="{% url 'reports:report_type_list' %}" class="btn btn-primary">
+        <i class="bi bi-plus-circle"></i> Create New Report
+    </a>
+{% endblock %}
+
+{% block content %}
+    <div class="row">
+        <div class="col-12">
+            {% if page_obj %}
+                <div class="card">
+                    <div class="card-body p-0">
+                        <div class="table-responsive">
+                            <table class="table table-hover mb-0">
+                                <thead class="table-light">
+                                    <tr>
+                                        <th>Document Number</th>
+                                        <th>Report Type</th>
+                                        <th>Customer</th>
+                                        <th>Status</th>
+                                        <th>Inspection Date</th>
+                                        <th>Created</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    {% for report in page_obj %}
+                                        <tr>
+                                            <td>
+                                                <code class="fs-6">{{ report.document_number }}</code>
+                                            </td>
+                                            <td>
+                                                <strong>{{ report.report_type.name }}</strong>
+                                            </td>
+                                            <td>{{ report.customer.name }}</td>
+                                            <td>
+                                                {% if report.status == 'draft' %}
+                                                    <span class="badge bg-secondary">
+                                                        <i class="bi bi-pencil"></i> Draft
+                                                    </span>
+                                                {% elif report.status == 'submitted' %}
+                                                    <span class="badge bg-primary">
+                                                        <i class="bi bi-clock"></i> Submitted
+                                                    </span>
+                                                {% elif report.status == 'approved' %}
+                                                    <span class="badge bg-success">
+                                                        <i class="bi bi-check-circle"></i> Approved
+                                                    </span>
+                                                {% elif report.status == 'rejected' %}
+                                                    <span class="badge bg-danger">
+                                                        <i class="bi bi-x-circle"></i> Rejected
+                                                    </span>
+                                                {% endif %}
+                                            </td>
+                                            <td>{{ report.inspection_date|date:"M d, Y" }}</td>
+                                            <td>{{ report.created_at|date:"M d, Y" }}</td>
+                                            <td>
+                                                <div class="btn-group btn-group-sm" role="group">
+                                                    <a href="{% url 'reports:report_detail' report.pk %}" 
+                                                       class="btn btn-outline-primary" title="View Report">
+                                                        <i class="bi bi-eye"></i>
+                                                    </a>
+                                                    {% if report.status == 'draft' %}
+                                                        <a href="{% url 'reports:report_fill' report.pk %}" 
+                                                           class="btn btn-outline-warning" title="Continue Filling">
+                                                            <i class="bi bi-pencil"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                    {% if report.status == 'draft' %}
+                                                        <a href="{% url 'reports:report_submit' report.pk %}" 
+                                                           class="btn btn-outline-success" title="Submit Report">
+                                                            <i class="bi bi-check"></i>
+                                                        </a>
+                                                    {% endif %}
+                                                </div>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pagination -->
+                {% if page_obj.has_other_pages %}
+                    <nav aria-label="Reports pagination" class="mt-4">
+                        <ul class="pagination justify-content-center">
+                            {% if page_obj.has_previous %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page=1">
+                                        <i class="bi bi-chevron-double-left"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.previous_page_number }}">
+                                        <i class="bi bi-chevron-left"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+
+                            {% for num in page_obj.paginator.page_range %}
+                                {% if page_obj.number == num %}
+                                    <li class="page-item active">
+                                        <span class="page-link">{{ num }}</span>
+                                    </li>
+                                {% elif num > page_obj.number|add:'-3' and num < page_obj.number|add:'3' %}
+                                    <li class="page-item">
+                                        <a class="page-link" href="?page={{ num }}">{{ num }}</a>
+                                    </li>
+                                {% endif %}
+                            {% endfor %}
+
+                            {% if page_obj.has_next %}
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.next_page_number }}">
+                                        <i class="bi bi-chevron-right"></i>
+                                    </a>
+                                </li>
+                                <li class="page-item">
+                                    <a class="page-link" href="?page={{ page_obj.paginator.num_pages }}">
+                                        <i class="bi bi-chevron-double-right"></i>
+                                    </a>
+                                </li>
+                            {% endif %}
+                        </ul>
+                    </nav>
+                {% endif %}
+
+            {% else %}
+                <div class="card">
+                    <div class="card-body text-center py-5">
+                        <i class="bi bi-file-earmark-text display-1 text-muted"></i>
+                        <h4 class="mt-3">No Reports Yet</h4>
+                        <p class="text-muted">Create your first report by selecting a report type.</p>
+                        <a href="{% url 'reports:report_type_list' %}" class="btn btn-primary">
+                            <i class="bi bi-plus-circle"></i> Create New Report
+                        </a>
+                    </div>
+                </div>
+            {% endif %}
+        </div>
+    </div>
+{% endblock %}

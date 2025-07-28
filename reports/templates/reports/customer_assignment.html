@@ -1,0 +1,324 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}Customer Assignment - {{ report_type.name }}{% endblock %}
+
+{% block content %}
+<div class="container mt-4">
+    <div class="row">
+        <div class="col-md-8">
+            <div class="card">
+                <div class="card-header">
+                    <h4>Assign Report Type to Customers</h4>
+                    <p class="text-muted mb-0">{{ report_type.name }}</p>
+                </div>
+                <div class="card-body">
+                    <form id="assignment-form" method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label class="form-label">Search Customers:</label>
+                            <input type="text" id="customer-search" class="form-control" placeholder="Search by name or email...">
+                        </div>
+
+                        <div class="row">
+                            <div class="col-md-6">
+                                <h6>Available Customers</h6>
+                                <div id="available-customers" class="customer-list border rounded p-3" style="height: 400px; overflow-y: auto;">
+                                    {% for customer in available_customers %}
+                                    <div class="customer-item p-2 border-bottom" data-customer-id="{{ customer.id }}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ customer.get_full_name|default:customer.username }}</strong>
+                                                <br><small class="text-muted">{{ customer.email }}</small>
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-primary add-customer">
+                                                <i class="fas fa-plus"></i> Add
+                                            </button>
+                                        </div>
+                                    </div>
+                                    {% empty %}
+                                    <p class="text-muted">No available customers found.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+
+                            <div class="col-md-6">
+                                <h6>Assigned Customers</h6>
+                                <div id="assigned-customers" class="customer-list border rounded p-3" style="height: 400px; overflow-y: auto;">
+                                    {% for assignment in assigned_customers %}
+                                    <div class="customer-item p-2 border-bottom" data-customer-id="{{ assignment.customer.id }}">
+                                        <div class="d-flex justify-content-between align-items-center">
+                                            <div>
+                                                <strong>{{ assignment.customer.get_full_name|default:assignment.customer.username }}</strong>
+                                                <br><small class="text-muted">{{ assignment.customer.email }}</small>
+                                                {% if assignment.assigned_date %}
+                                                <br><small class="text-success">Assigned: {{ assignment.assigned_date|date:"M d, Y" }}</small>
+                                                {% endif %}
+                                            </div>
+                                            <button type="button" class="btn btn-sm btn-outline-danger remove-customer">
+                                                <i class="fas fa-times"></i> Remove
+                                            </button>
+                                        </div>
+                                        <input type="hidden" name="assigned_customers" value="{{ assignment.customer.id }}">
+                                    </div>
+                                    {% empty %}
+                                    <p class="text-muted">No customers assigned yet.</p>
+                                    {% endfor %}
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="mt-4">
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <div class="form-check">
+                                        <input class="form-check-input" type="checkbox" id="notify-customers" name="notify_customers" value="1">
+                                        <label class="form-check-label" for="notify-customers">
+                                            Send notification emails to assigned customers
+                                        </label>
+                                    </div>
+                                </div>
+                                <div class="col-md-6">
+                                    <div class="mb-3">
+                                        <label for="due-date" class="form-label">Due Date (optional):</label>
+                                        <input type="date" id="due-date" name="due_date" class="form-control" value="{{ assignment.due_date|date:'Y-m-d' }}">
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'reports:report_type_detail' report_type.pk %}" class="btn btn-secondary">
+                                <i class="fas fa-arrow-left"></i> Back to Report Type
+                            </a>
+                            <button type="submit" class="btn btn-primary">
+                                <i class="fas fa-save"></i> Save Assignments
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+        </div>
+        
+        <div class="col-md-4">
+            <div class="card">
+                <div class="card-header">
+                    <h6>Assignment Summary</h6>
+                </div>
+                <div class="card-body">
+                    <div class="mb-3">
+                        <label class="form-label">Total Assigned:</label>
+                        <span id="assigned-count" class="badge bg-primary">{{ assigned_customers|length }}</span>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Available:</label>
+                        <span id="available-count" class="badge bg-secondary">{{ available_customers|length }}</span>
+                    </div>
+                    <hr>
+                    <div class="mb-3">
+                        <h6>Bulk Actions</h6>
+                        <div class="d-grid gap-2">
+                            <button type="button" id="assign-all" class="btn btn-sm btn-outline-primary">
+                                Assign All Available
+                            </button>
+                            <button type="button" id="remove-all" class="btn btn-sm btn-outline-danger">
+                                Remove All Assignments
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mt-3">
+                <div class="card-header">
+                    <h6>Import Customers</h6>
+                </div>
+                <div class="card-body">
+                    <form id="import-form" enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="mb-3">
+                            <label for="customer-file" class="form-label">Upload CSV:</label>
+                            <input type="file" id="customer-file" name="customer_file" class="form-control" accept=".csv">
+                            <small class="text-muted">CSV format: email,first_name,last_name</small>
+                        </div>
+                        <button type="button" id="import-customers" class="btn btn-sm btn-outline-success">
+                            <i class="fas fa-upload"></i> Import & Assign
+                        </button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const availableContainer = document.getElementById('available-customers');
+    const assignedContainer = document.getElementById('assigned-customers');
+    const searchInput = document.getElementById('customer-search');
+    const assignedCount = document.getElementById('assigned-count');
+    const availableCount = document.getElementById('available-count');
+
+    // Search functionality
+    searchInput.addEventListener('input', function() {
+        const searchTerm = this.value.toLowerCase();
+        const customerItems = availableContainer.querySelectorAll('.customer-item');
+        
+        customerItems.forEach(item => {
+            const text = item.textContent.toLowerCase();
+            item.style.display = text.includes(searchTerm) ? 'block' : 'none';
+        });
+    });
+
+    // Add customer
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('add-customer') || e.target.parentElement.classList.contains('add-customer')) {
+            e.preventDefault();
+            const button = e.target.classList.contains('add-customer') ? e.target : e.target.parentElement;
+            const customerItem = button.closest('.customer-item');
+            const customerId = customerItem.dataset.customerId;
+            
+            // Clone the item
+            const clonedItem = customerItem.cloneNode(true);
+            
+            // Update button
+            const newButton = clonedItem.querySelector('.add-customer');
+            newButton.className = 'btn btn-sm btn-outline-danger remove-customer';
+            newButton.innerHTML = '<i class="fas fa-times"></i> Remove';
+            
+            // Add hidden input
+            const hiddenInput = document.createElement('input');
+            hiddenInput.type = 'hidden';
+            hiddenInput.name = 'assigned_customers';
+            hiddenInput.value = customerId;
+            clonedItem.appendChild(hiddenInput);
+            
+            // Move to assigned list
+            assignedContainer.appendChild(clonedItem);
+            customerItem.remove();
+            
+            updateCounts();
+        }
+    });
+
+    // Remove customer
+    document.addEventListener('click', function(e) {
+        if (e.target.classList.contains('remove-customer') || e.target.parentElement.classList.contains('remove-customer')) {
+            e.preventDefault();
+            const button = e.target.classList.contains('remove-customer') ? e.target : e.target.parentElement;
+            const customerItem = button.closest('.customer-item');
+            
+            // Clone the item
+            const clonedItem = customerItem.cloneNode(true);
+            
+            // Update button
+            const newButton = clonedItem.querySelector('.remove-customer');
+            newButton.className = 'btn btn-sm btn-outline-primary add-customer';
+            newButton.innerHTML = '<i class="fas fa-plus"></i> Add';
+            
+            // Remove hidden input and assignment info
+            const hiddenInput = clonedItem.querySelector('input[name="assigned_customers"]');
+            if (hiddenInput) hiddenInput.remove();
+            
+            const assignmentInfo = clonedItem.querySelector('.text-success');
+            if (assignmentInfo) assignmentInfo.remove();
+            
+            // Move to available list
+            availableContainer.appendChild(clonedItem);
+            customerItem.remove();
+            
+            updateCounts();
+        }
+    });
+
+    // Bulk assign all
+    document.getElementById('assign-all').addEventListener('click', function() {
+        const availableItems = availableContainer.querySelectorAll('.customer-item');
+        availableItems.forEach(item => {
+            const addButton = item.querySelector('.add-customer');
+            if (addButton) addButton.click();
+        });
+    });
+
+    // Bulk remove all
+    document.getElementById('remove-all').addEventListener('click', function() {
+        const assignedItems = assignedContainer.querySelectorAll('.customer-item');
+        assignedItems.forEach(item => {
+            const removeButton = item.querySelector('.remove-customer');
+            if (removeButton) removeButton.click();
+        });
+    });
+
+    // Update counts
+    function updateCounts() {
+        const assignedItems = assignedContainer.querySelectorAll('.customer-item').length;
+        const availableItems = availableContainer.querySelectorAll('.customer-item').length;
+        
+        assignedCount.textContent = assignedItems;
+        availableCount.textContent = availableItems;
+        
+        // Update empty messages
+        updateEmptyMessages();
+    }
+
+    function updateEmptyMessages() {
+        const assignedItems = assignedContainer.querySelectorAll('.customer-item');
+        const availableItems = availableContainer.querySelectorAll('.customer-item');
+        
+        // Handle assigned customers empty message
+        let assignedEmpty = assignedContainer.querySelector('.text-muted');
+        if (assignedItems.length === 0 && !assignedEmpty) {
+            const emptyMsg = document.createElement('p');
+            emptyMsg.className = 'text-muted';
+            emptyMsg.textContent = 'No customers assigned yet.';
+            assignedContainer.appendChild(emptyMsg);
+        } else if (assignedItems.length > 0 && assignedEmpty) {
+            assignedEmpty.remove();
+        }
+        
+        // Handle available customers empty message
+        let availableEmpty = availableContainer.querySelector('.text-muted');
+        if (availableItems.length === 0 && !availableEmpty) {
+            const emptyMsg = document.createElement('p');
+            emptyMsg.className = 'text-muted';
+            emptyMsg.textContent = 'No available customers found.';
+            availableContainer.appendChild(emptyMsg);
+        } else if (availableItems.length > 0 && availableEmpty) {
+            availableEmpty.remove();
+        }
+    }
+
+    // Import customers
+    document.getElementById('import-customers').addEventListener('click', function() {
+        const fileInput = document.getElementById('customer-file');
+        const file = fileInput.files[0];
+        
+        if (!file) {
+            alert('Please select a CSV file to import.');
+            return;
+        }
+        
+        const formData = new FormData();
+        formData.append('customer_file', file);
+        formData.append('csrfmiddlewaretoken', document.querySelector('[name=csrfmiddlewaretoken]').value);
+        
+        fetch(`{% url 'reports:import_customers' report_type.pk %}`, {
+            method: 'POST',
+            body: formData
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.success) {
+                alert(`Successfully imported ${data.imported_count} customers.`);
+                location.reload();
+            } else {
+                alert('Error importing customers: ' + data.error);
+            }
+        })
+        .catch(error => {
+            alert('Error importing customers: ' + error.message);
+        });
+    });
+});
+</script>
+{% endblock %}

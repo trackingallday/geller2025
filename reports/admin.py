@@ -1,7 +1,8 @@
 from django.contrib import admin
 from .models import (
     ReportType, ReportSection, Question, QuestionOption, 
-    Report, Answer, ConditionalRule
+    Report, Answer, ConditionalRule, ReportTypeCustomer, 
+    QuestionTemplate
 )
 
 
@@ -24,12 +25,23 @@ class QuestionOptionInline(admin.TabularInline):
     fields = ('text', 'value', 'is_flag', 'order')
 
 
+class ReportTypeCustomerInline(admin.TabularInline):
+    model = ReportTypeCustomer
+    extra = 0
+    fields = ('customer', 'is_active', 'assigned_date', 'assigned_by')
+    readonly_fields = ('assigned_date', 'assigned_by')
+
+
 @admin.register(ReportType)
 class ReportTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'auto_number_prefix', 'is_active', 'created_by', 'created_at')
+    list_display = ('name', 'auto_number_prefix', 'assigned_customers_count', 'is_active', 'created_by', 'created_at')
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'description')
-    inlines = [ReportSectionInline, QuestionInline]
+    inlines = [ReportSectionInline, QuestionInline, ReportTypeCustomerInline]
+    
+    def assigned_customers_count(self, obj):
+        return obj.reporttypecustomer_set.count()
+    assigned_customers_count.short_description = 'Assigned Customers'
     
     def save_model(self, request, obj, form, change):
         if not change:
@@ -131,3 +143,57 @@ class ConditionalRuleAdmin(admin.ModelAdmin):
     def target_question_short(self, obj):
         return obj.target_question.question_text[:30] + "..." if len(obj.target_question.question_text) > 30 else obj.target_question.question_text
     target_question_short.short_description = 'Target Question'
+
+
+@admin.register(ReportTypeCustomer)
+class ReportTypeCustomerAdmin(admin.ModelAdmin):
+    list_display = ('report_type', 'customer_name', 'customer_email', 'assigned_date', 'is_active', 'assigned_by')
+    list_filter = ('report_type', 'assigned_date', 'is_active')
+    search_fields = ('customer__businessName', 'customer__email', 'report_type__name')
+    readonly_fields = ('assigned_date', 'assigned_by')
+    date_hierarchy = 'assigned_date'
+    
+    def customer_name(self, obj):
+        return obj.customer.businessName or obj.customer.get_full_name()
+    customer_name.short_description = 'Customer Name'
+    customer_name.admin_order_field = 'customer__businessName'
+    
+    def customer_email(self, obj):
+        return obj.customer.email
+    customer_email.short_description = 'Customer Email'
+    customer_email.admin_order_field = 'customer__email'
+    
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.assigned_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(QuestionTemplate)
+class QuestionTemplateAdmin(admin.ModelAdmin):
+    list_display = ('name', 'question_type', 'category', 'usage_count', 'created_by', 'created_at')
+    list_filter = ('question_type', 'category', 'created_at', 'created_by')
+    search_fields = ('name', 'question_text')
+    readonly_fields = ('usage_count', 'created_at', 'updated_at', 'created_by')
+    
+    fieldsets = (
+        ('Template Information', {
+            'fields': ('name', 'category')
+        }),
+        ('Question Content', {
+            'fields': ('question_text', 'question_type', 'help_text', 'is_required_default')
+        }),
+        ('Configuration', {
+            'fields': ('template_options',),
+            'classes': ('collapse',)
+        }),
+        ('Usage & Metadata', {
+            'fields': ('usage_count', 'created_by', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+    
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.created_by = request.user
+        super().save_model(request, obj, form, change)

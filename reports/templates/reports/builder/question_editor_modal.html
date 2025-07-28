@@ -1,0 +1,760 @@
+<!-- Question Editor Modal -->
+<div class="modal fade" id="questionEditorModal" tabindex="-1" aria-labelledby="questionEditorModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-xl">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questionEditorModalLabel">
+                    <span id="modal-action">Add</span> Question
+                </h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="questionEditorForm">
+                <div class="modal-body">
+                    <div class="row">
+                        <!-- Left Column: Basic Properties -->
+                        <div class="col-md-6">
+                            <div class="card">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Question Properties</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="mb-3">
+                                        <label for="question-text" class="form-label">Question Text <span class="text-danger">*</span></label>
+                                        <textarea id="question-text" name="text" class="form-control" rows="3" required
+                                                  placeholder="Enter your question text here..."></textarea>
+                                        <div class="form-text">This is the main question that users will see.</div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="question-type" class="form-label">Question Type <span class="text-danger">*</span></label>
+                                        <select id="question-type" name="question_type" class="form-select" required>
+                                            <option value="">Select question type...</option>
+                                            <option value="text">Short Text</option>
+                                            <option value="textarea">Long Text</option>
+                                            <option value="number">Number</option>
+                                            <option value="email">Email</option>
+                                            <option value="date">Date</option>
+                                            <option value="time">Time</option>
+                                            <option value="datetime">Date & Time</option>
+                                            <option value="select">Dropdown</option>
+                                            <option value="radio">Multiple Choice (Single)</option>
+                                            <option value="checkbox">Multiple Choice (Multiple)</option>
+                                            <option value="file">File Upload</option>
+                                            <option value="signature">Digital Signature</option>
+                                            <option value="rating">Rating Scale</option>
+                                        </select>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="question-help" class="form-label">Help Text</label>
+                                        <textarea id="question-help" name="help_text" class="form-control" rows="2"
+                                                  placeholder="Optional help text or instructions..."></textarea>
+                                        <div class="form-text">Additional guidance shown below the question.</div>
+                                    </div>
+
+                                    <div class="row">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="question-order" class="form-label">Order</label>
+                                                <input type="number" id="question-order" name="order" class="form-control" min="1" value="1">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="question-section" class="form-label">Section</label>
+                                                <select id="question-section" name="section" class="form-select">
+                                                    <option value="">No section</option>
+                                                </select>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="question-required" name="is_required">
+                                            <label class="form-check-label" for="question-required">
+                                                Required Question
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+
+                        <!-- Right Column: Advanced Options -->
+                        <div class="col-md-6">
+                            <!-- Options Panel (for select, radio, checkbox) -->
+                            <div class="card mb-3" id="options-panel" style="display: none;">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Answer Options</h6>
+                                    <button type="button" class="btn btn-sm btn-outline-primary" id="add-option">
+                                        <i class="fas fa-plus"></i> Add Option
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="options-container">
+                                        <!-- Options will be dynamically added here -->
+                                    </div>
+                                    <div class="mt-3">
+                                        <div class="form-check">
+                                            <input class="form-check-input" type="checkbox" id="allow-other" name="allow_other">
+                                            <label class="form-check-label" for="allow-other">
+                                                Allow "Other" option with text input
+                                            </label>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Validation Panel -->
+                            <div class="card mb-3" id="validation-panel">
+                                <div class="card-header">
+                                    <h6 class="mb-0">Validation Rules</h6>
+                                </div>
+                                <div class="card-body">
+                                    <div class="row" id="text-validation" style="display: none;">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="min-length" class="form-label">Min Length</label>
+                                                <input type="number" id="min-length" name="min_length" class="form-control" min="0">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="max-length" class="form-label">Max Length</label>
+                                                <input type="number" id="max-length" name="max_length" class="form-control" min="0">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="row" id="number-validation" style="display: none;">
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="min-value" class="form-label">Min Value</label>
+                                                <input type="number" id="min-value" name="min_value" class="form-control" step="any">
+                                            </div>
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="mb-3">
+                                                <label for="max-value" class="form-label">Max Value</label>
+                                                <input type="number" id="max-value" name="max_value" class="form-control" step="any">
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div id="file-validation" style="display: none;">
+                                        <div class="mb-3">
+                                            <label for="allowed-types" class="form-label">Allowed File Types</label>
+                                            <input type="text" id="allowed-types" name="allowed_file_types" class="form-control" 
+                                                   placeholder="e.g., .pdf,.jpg,.png">
+                                            <div class="form-text">Comma-separated file extensions</div>
+                                        </div>
+                                        <div class="mb-3">
+                                            <label for="max-file-size" class="form-label">Max File Size (MB)</label>
+                                            <input type="number" id="max-file-size" name="max_file_size" class="form-control" min="0" max="100">
+                                        </div>
+                                    </div>
+
+                                    <div id="rating-validation" style="display: none;">
+                                        <div class="row">
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="rating-min" class="form-label">Min Rating</label>
+                                                    <input type="number" id="rating-min" name="rating_min" class="form-control" value="1" min="0">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="rating-max" class="form-label">Max Rating</label>
+                                                    <input type="number" id="rating-max" name="rating_max" class="form-control" value="5" min="1">
+                                                </div>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <div class="mb-3">
+                                                    <label for="rating-step" class="form-label">Step</label>
+                                                    <input type="number" id="rating-step" name="rating_step" class="form-control" value="1" min="0.1" step="0.1">
+                                                </div>
+                                            </div>
+                                        </div>
+                                    </div>
+
+                                    <div class="mb-3">
+                                        <label for="validation-message" class="form-label">Custom Error Message</label>
+                                        <input type="text" id="validation-message" name="validation_message" class="form-control"
+                                               placeholder="Custom message when validation fails">
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Conditional Logic Panel -->
+                            <div class="card" id="logic-panel">
+                                <div class="card-header d-flex justify-content-between align-items-center">
+                                    <h6 class="mb-0">Conditional Logic</h6>
+                                    <button type="button" class="btn btn-sm btn-outline-secondary" id="add-condition">
+                                        <i class="fas fa-plus"></i> Add Condition
+                                    </button>
+                                </div>
+                                <div class="card-body">
+                                    <div id="conditions-container">
+                                        <p class="text-muted">No conditional logic rules defined.</p>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <div class="d-flex justify-content-between w-100">
+                        <div>
+                            <button type="button" class="btn btn-outline-info" id="preview-question">
+                                <i class="fas fa-eye"></i> Preview
+                            </button>
+                            <button type="button" class="btn btn-outline-secondary" id="save-template" style="display: none;">
+                                <i class="fas fa-save"></i> Save as Template
+                            </button>
+                        </div>
+                        <div>
+                            <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                            <button type="submit" class="btn btn-primary">
+                                <span id="submit-text">Add Question</span>
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<!-- Question Preview Modal -->
+<div class="modal fade" id="questionPreviewModal" tabindex="-1" aria-labelledby="questionPreviewModalLabel" aria-hidden="true">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="questionPreviewModalLabel">Question Preview</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <div class="modal-body">
+                <div id="question-preview-content" class="border p-3 bg-light">
+                    <!-- Preview content will be generated here -->
+                </div>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<!-- Condition Editor Modal -->
+<div class="modal fade" id="conditionEditorModal" tabindex="-1" aria-labelledby="conditionEditorModalLabel" aria-hidden="true">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title" id="conditionEditorModalLabel">Add Conditional Logic</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal" aria-label="Close"></button>
+            </div>
+            <form id="conditionEditorForm">
+                <div class="modal-body">
+                    <div class="mb-3">
+                        <label for="condition-field" class="form-label">When Field</label>
+                        <select id="condition-field" name="source_field" class="form-select" required>
+                            <option value="">Select a field...</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="condition-operator" class="form-label">Condition</label>
+                        <select id="condition-operator" name="operator" class="form-select" required>
+                            <option value="">Select condition...</option>
+                            <option value="equals">Equals</option>
+                            <option value="not_equals">Does not equal</option>
+                            <option value="contains">Contains</option>
+                            <option value="not_contains">Does not contain</option>
+                            <option value="is_empty">Is empty</option>
+                            <option value="is_not_empty">Is not empty</option>
+                            <option value="greater_than">Greater than</option>
+                            <option value="less_than">Less than</option>
+                            <option value="in_list">Is one of</option>
+                            <option value="not_in_list">Is not one of</option>
+                        </select>
+                    </div>
+
+                    <div class="mb-3" id="condition-value-container">
+                        <label for="condition-value" class="form-label">Value</label>
+                        <input type="text" id="condition-value" name="value" class="form-control"
+                               placeholder="Enter comparison value...">
+                        <div class="form-text">For list conditions, separate values with commas.</div>
+                    </div>
+
+                    <div class="mb-3">
+                        <label for="condition-action" class="form-label">Action</label>
+                        <select id="condition-action" name="action" class="form-select" required>
+                            <option value="">Select action...</option>
+                            <option value="show">Show this question</option>
+                            <option value="hide">Hide this question</option>
+                            <option value="require">Make this question required</option>
+                            <option value="unrequire">Make this question optional</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Condition</button>
+                </div>
+            </form>
+        </div>
+    </div>
+</div>
+
+<style>
+.option-item {
+    display: flex;
+    align-items-center;
+    gap: 10px;
+    margin-bottom: 10px;
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    background: #f8f9fa;
+}
+
+.option-item .drag-handle {
+    cursor: move;
+    color: #6c757d;
+}
+
+.option-item input {
+    flex: 1;
+}
+
+.condition-item {
+    padding: 10px;
+    border: 1px solid #dee2e6;
+    border-radius: 5px;
+    background: #f8f9fa;
+    margin-bottom: 10px;
+}
+
+.condition-item .condition-summary {
+    font-weight: 500;
+}
+
+.condition-item .condition-details {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 5px;
+}
+
+#question-preview-content .form-group {
+    margin-bottom: 1rem;
+}
+
+#question-preview-content label {
+    font-weight: 500;
+    margin-bottom: 0.5rem;
+    display: block;
+}
+
+#question-preview-content .help-text {
+    font-size: 0.875rem;
+    color: #6c757d;
+    margin-top: 0.25rem;
+}
+</style>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const questionEditorModal = new bootstrap.Modal(document.getElementById('questionEditorModal'));
+    const questionPreviewModal = new bootstrap.Modal(document.getElementById('questionPreviewModal'));
+    const conditionEditorModal = new bootstrap.Modal(document.getElementById('conditionEditorModal'));
+    
+    const questionEditorForm = document.getElementById('questionEditorForm');
+    const conditionEditorForm = document.getElementById('conditionEditorForm');
+    
+    let currentQuestionId = null;
+    let currentConditions = [];
+    let optionCounter = 0;
+
+    // Question type change handler
+    document.getElementById('question-type').addEventListener('change', function() {
+        const questionType = this.value;
+        updatePanelsVisibility(questionType);
+    });
+
+    function updatePanelsVisibility(questionType) {
+        const optionsPanel = document.getElementById('options-panel');
+        const textValidation = document.getElementById('text-validation');
+        const numberValidation = document.getElementById('number-validation');
+        const fileValidation = document.getElementById('file-validation');
+        const ratingValidation = document.getElementById('rating-validation');
+
+        // Hide all panels
+        optionsPanel.style.display = 'none';
+        textValidation.style.display = 'none';
+        numberValidation.style.display = 'none';
+        fileValidation.style.display = 'none';
+        ratingValidation.style.display = 'none';
+
+        // Show relevant panels
+        if (['select', 'radio', 'checkbox'].includes(questionType)) {
+            optionsPanel.style.display = 'block';
+            if (document.getElementById('options-container').children.length === 0) {
+                addOption(); // Add first option
+            }
+        }
+
+        if (['text', 'textarea', 'email'].includes(questionType)) {
+            textValidation.style.display = 'block';
+        }
+
+        if (questionType === 'number') {
+            numberValidation.style.display = 'block';
+        }
+
+        if (questionType === 'file') {
+            fileValidation.style.display = 'block';
+        }
+
+        if (questionType === 'rating') {
+            ratingValidation.style.display = 'block';
+        }
+    }
+
+    // Add option handler
+    document.getElementById('add-option').addEventListener('click', addOption);
+
+    function addOption(text = '', value = '') {
+        optionCounter++;
+        const container = document.getElementById('options-container');
+        const optionDiv = document.createElement('div');
+        optionDiv.className = 'option-item';
+        optionDiv.dataset.optionId = optionCounter;
+
+        optionDiv.innerHTML = `
+            <i class="fas fa-grip-vertical drag-handle"></i>
+            <input type="text" name="option_text_${optionCounter}" placeholder="Option text" 
+                   class="form-control" value="${text}" required>
+            <input type="text" name="option_value_${optionCounter}" placeholder="Value (optional)" 
+                   class="form-control" value="${value}">
+            <button type="button" class="btn btn-outline-danger btn-sm remove-option">
+                <i class="fas fa-times"></i>
+            </button>
+        `;
+
+        container.appendChild(optionDiv);
+        
+        // Add remove handler
+        optionDiv.querySelector('.remove-option').addEventListener('click', function() {
+            optionDiv.remove();
+        });
+    }
+
+    // Add condition handler
+    document.getElementById('add-condition').addEventListener('click', function() {
+        // Populate field options
+        populateFieldOptions();
+        conditionEditorModal.show();
+    });
+
+    function populateFieldOptions() {
+        const select = document.getElementById('condition-field');
+        select.innerHTML = '<option value="">Select a field...</option>';
+        
+        // Get existing questions from form builder
+        if (window.formBuilder && window.formBuilder.questions) {
+            window.formBuilder.questions.forEach(question => {
+                if (question.id !== currentQuestionId) {
+                    const option = document.createElement('option');
+                    option.value = question.id;
+                    option.textContent = question.text;
+                    select.appendChild(option);
+                }
+            });
+        }
+    }
+
+    // Condition form handler
+    conditionEditorForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const condition = {
+            id: Date.now().toString(),
+            sourceField: formData.get('source_field'),
+            operator: formData.get('operator'),
+            value: formData.get('value'),
+            action: formData.get('action')
+        };
+
+        currentConditions.push(condition);
+        updateConditionsDisplay();
+        conditionEditorModal.hide();
+        this.reset();
+    });
+
+    function updateConditionsDisplay() {
+        const container = document.getElementById('conditions-container');
+        
+        if (currentConditions.length === 0) {
+            container.innerHTML = '<p class="text-muted">No conditional logic rules defined.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        currentConditions.forEach(condition => {
+            const conditionDiv = document.createElement('div');
+            conditionDiv.className = 'condition-item';
+            
+            const fieldText = document.querySelector(`#condition-field option[value="${condition.sourceField}"]`)?.textContent || condition.sourceField;
+            const operatorText = document.querySelector(`#condition-operator option[value="${condition.operator}"]`)?.textContent || condition.operator;
+            const actionText = document.querySelector(`#condition-action option[value="${condition.action}"]`)?.textContent || condition.action;
+
+            conditionDiv.innerHTML = `
+                <div class="d-flex justify-content-between align-items-start">
+                    <div class="flex-grow-1">
+                        <div class="condition-summary">
+                            ${actionText} when "${fieldText}" ${operatorText.toLowerCase()} "${condition.value}"
+                        </div>
+                    </div>
+                    <button type="button" class="btn btn-sm btn-outline-danger remove-condition" 
+                            data-condition-id="${condition.id}">
+                        <i class="fas fa-times"></i>
+                    </button>
+                </div>
+            `;
+
+            container.appendChild(conditionDiv);
+
+            // Add remove handler
+            conditionDiv.querySelector('.remove-condition').addEventListener('click', function() {
+                const conditionId = this.dataset.conditionId;
+                currentConditions = currentConditions.filter(c => c.id !== conditionId);
+                updateConditionsDisplay();
+            });
+        });
+    }
+
+    // Preview handler
+    document.getElementById('preview-question').addEventListener('click', function() {
+        generatePreview();
+        questionPreviewModal.show();
+    });
+
+    function generatePreview() {
+        const formData = new FormData(questionEditorForm);
+        const questionType = formData.get('question_type');
+        const questionText = formData.get('text');
+        const helpText = formData.get('help_text');
+        const isRequired = formData.has('is_required');
+
+        const previewContainer = document.getElementById('question-preview-content');
+        let previewHTML = '';
+
+        // Generate preview based on question type
+        previewHTML += `<div class="form-group">`;
+        previewHTML += `<label class="form-label">${questionText}${isRequired ? ' <span class="text-danger">*</span>' : ''}</label>`;
+
+        switch (questionType) {
+            case 'text':
+            case 'email':
+                previewHTML += `<input type="${questionType}" class="form-control" placeholder="Enter ${questionType}...">`;
+                break;
+            case 'textarea':
+                previewHTML += `<textarea class="form-control" rows="3" placeholder="Enter your response..."></textarea>`;
+                break;
+            case 'number':
+                previewHTML += `<input type="number" class="form-control" placeholder="Enter number...">`;
+                break;
+            case 'date':
+            case 'time':
+            case 'datetime-local':
+                previewHTML += `<input type="${questionType}" class="form-control">`;
+                break;
+            case 'select':
+                previewHTML += `<select class="form-select">`;
+                previewHTML += `<option value="">Choose...</option>`;
+                getOptions().forEach(option => {
+                    previewHTML += `<option value="${option.value}">${option.text}</option>`;
+                });
+                previewHTML += `</select>`;
+                break;
+            case 'radio':
+                getOptions().forEach((option, index) => {
+                    previewHTML += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="radio" name="preview-radio" id="radio-${index}" value="${option.value}">
+                            <label class="form-check-label" for="radio-${index}">${option.text}</label>
+                        </div>
+                    `;
+                });
+                break;
+            case 'checkbox':
+                getOptions().forEach((option, index) => {
+                    previewHTML += `
+                        <div class="form-check">
+                            <input class="form-check-input" type="checkbox" id="checkbox-${index}" value="${option.value}">
+                            <label class="form-check-label" for="checkbox-${index}">${option.text}</label>
+                        </div>
+                    `;
+                });
+                break;
+            case 'file':
+                previewHTML += `<input type="file" class="form-control">`;
+                break;
+            case 'rating':
+                const ratingMin = formData.get('rating_min') || 1;
+                const ratingMax = formData.get('rating_max') || 5;
+                previewHTML += `<div class="rating-preview">`;
+                for (let i = ratingMin; i <= ratingMax; i++) {
+                    previewHTML += `
+                        <label class="form-check-label me-3">
+                            <input type="radio" name="preview-rating" value="${i}" class="form-check-input me-1"> ${i}
+                        </label>
+                    `;
+                }
+                previewHTML += `</div>`;
+                break;
+        }
+
+        if (helpText) {
+            previewHTML += `<div class="help-text">${helpText}</div>`;
+        }
+
+        previewHTML += `</div>`;
+        previewContainer.innerHTML = previewHTML;
+    }
+
+    function getOptions() {
+        const options = [];
+        const container = document.getElementById('options-container');
+        const optionItems = container.querySelectorAll('.option-item');
+        
+        optionItems.forEach(item => {
+            const textInput = item.querySelector('input[name^="option_text_"]');
+            const valueInput = item.querySelector('input[name^="option_value_"]');
+            
+            if (textInput && textInput.value.trim()) {
+                options.push({
+                    text: textInput.value.trim(),
+                    value: valueInput.value.trim() || textInput.value.trim()
+                });
+            }
+        });
+        
+        return options;
+    }
+
+    // Main form submission
+    questionEditorForm.addEventListener('submit', function(e) {
+        e.preventDefault();
+        
+        const formData = new FormData(this);
+        const questionData = {
+            text: formData.get('text'),
+            question_type: formData.get('question_type'),
+            help_text: formData.get('help_text'),
+            order: formData.get('order'),
+            section: formData.get('section'),
+            is_required: formData.has('is_required'),
+            options: getOptions(),
+            conditions: currentConditions,
+            validation: {
+                min_length: formData.get('min_length'),
+                max_length: formData.get('max_length'),
+                min_value: formData.get('min_value'),
+                max_value: formData.get('max_value'),
+                allowed_file_types: formData.get('allowed_file_types'),
+                max_file_size: formData.get('max_file_size'),
+                rating_min: formData.get('rating_min'),
+                rating_max: formData.get('rating_max'),
+                rating_step: formData.get('rating_step'),
+                validation_message: formData.get('validation_message')
+            }
+        };
+
+        // Emit custom event with question data
+        const event = new CustomEvent('questionSaved', {
+            detail: {
+                questionId: currentQuestionId,
+                questionData: questionData,
+                isEdit: currentQuestionId !== null
+            }
+        });
+        
+        document.dispatchEvent(event);
+        questionEditorModal.hide();
+        resetForm();
+    });
+
+    function resetForm() {
+        questionEditorForm.reset();
+        currentQuestionId = null;
+        currentConditions = [];
+        document.getElementById('options-container').innerHTML = '';
+        updateConditionsDisplay();
+        updatePanelsVisibility('');
+        
+        document.getElementById('modal-action').textContent = 'Add';
+        document.getElementById('submit-text').textContent = 'Add Question';
+    }
+
+    // Public methods for external use
+    window.questionEditorModal = {
+        show: function(questionData = null) {
+            if (questionData) {
+                currentQuestionId = questionData.id;
+                populateForm(questionData);
+                document.getElementById('modal-action').textContent = 'Edit';
+                document.getElementById('submit-text').textContent = 'Update Question';
+            } else {
+                resetForm();
+            }
+            questionEditorModal.show();
+        },
+        hide: function() {
+            questionEditorModal.hide();
+        }
+    };
+
+    function populateForm(questionData) {
+        // Populate basic fields
+        document.getElementById('question-text').value = questionData.text || '';
+        document.getElementById('question-type').value = questionData.question_type || '';
+        document.getElementById('question-help').value = questionData.help_text || '';
+        document.getElementById('question-order').value = questionData.order || 1;
+        document.getElementById('question-section').value = questionData.section || '';
+        document.getElementById('question-required').checked = questionData.is_required || false;
+
+        // Update panels
+        updatePanelsVisibility(questionData.question_type);
+
+        // Populate options
+        if (questionData.options && questionData.options.length > 0) {
+            document.getElementById('options-container').innerHTML = '';
+            questionData.options.forEach(option => {
+                addOption(option.text, option.value);
+            });
+        }
+
+        // Populate validation
+        if (questionData.validation) {
+            const validation = questionData.validation;
+            document.getElementById('min-length').value = validation.min_length || '';
+            document.getElementById('max-length').value = validation.max_length || '';
+            document.getElementById('min-value').value = validation.min_value || '';
+            document.getElementById('max-value').value = validation.max_value || '';
+            document.getElementById('allowed-types').value = validation.allowed_file_types || '';
+            document.getElementById('max-file-size').value = validation.max_file_size || '';
+            document.getElementById('rating-min').value = validation.rating_min || 1;
+            document.getElementById('rating-max').value = validation.rating_max || 5;
+            document.getElementById('rating-step').value = validation.rating_step || 1;
+            document.getElementById('validation-message').value = validation.validation_message || '';
+        }
+
+        // Populate conditions
+        currentConditions = questionData.conditions || [];
+        updateConditionsDisplay();
+    }
+});
+</script>

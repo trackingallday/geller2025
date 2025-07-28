@@ -31,6 +31,7 @@ urlpatterns = [
     re_path(r'^get_auth_token/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
     re_path(r'^accounts/', include('django.contrib.auth.urls')),
     re_path(r'^upload_file/', upload_file, name='upload_file'),
+    re_path(r'^reports/', include('reports.urls')),
     re_path(r'', include('chemsapp.urls' )),
 
 ]
