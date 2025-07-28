@@ -8,8 +8,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('chemsapp', '0002_post_author'),
-        migrations.swappable_dependency(settings.AUTH_USER_MODEL),
         ('reports', '0001_initial'),
     ]
 
