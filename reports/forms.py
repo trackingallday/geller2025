@@ -42,26 +42,53 @@ class QuestionForm(forms.ModelForm):
             'is_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'parent_question': forms.Select(attrs={'class': 'form-select'}),
-            'show_when_parent_value': forms.Select(attrs={'class': 'form-select'}, choices=[
-                ('', '-- Select when to show --'),
-                ('yes', 'Yes'),
-                ('no', 'No')
-            ]),
+            'show_when_parent_value': forms.Select(attrs={'class': 'form-select'}),
         }
     
     def __init__(self, *args, report_type=None, **kwargs):
         super().__init__(*args, **kwargs)
         if report_type:
             self.fields['section'].queryset = report_type.sections.all()
-            # Only allow yes/no questions as parent questions for conditional logic
-            self.fields['parent_question'].queryset = report_type.questions.filter(question_type='yesno')
+            # Allow yes/no and multi-choice questions as parent questions for conditional logic
+            self.fields['parent_question'].queryset = report_type.questions.filter(
+                question_type__in=['yesno', 'select', 'radio', 'checkbox']
+            )
         else:
             self.fields['section'].queryset = ReportSection.objects.none()
             self.fields['parent_question'].queryset = Question.objects.none()
         
         # Update help text to clarify parent question restriction
-        self.fields['parent_question'].help_text = "Only Yes/No questions can be used as parent questions"
+        self.fields['parent_question'].help_text = "Select a Yes/No or multiple choice question to use as parent"
         self.fields['show_when_parent_value'].help_text = "Select when this question should appear based on the parent question's value"
+        
+        # Set up initial choices for show_when_parent_value
+        self._setup_parent_value_choices()
+    
+    def _setup_parent_value_choices(self):
+        """Set up choices for show_when_parent_value based on the parent question"""
+        choices = [('', '-- Select when to show --')]
+        
+        # If we have an instance (editing existing question)
+        if self.instance and self.instance.pk and self.instance.parent_question:
+            parent_question = self.instance.parent_question
+            choices.extend(self._get_question_choices(parent_question))
+        # If we have initial data with parent_question
+        elif self.initial.get('parent_question'):
+            try:
+                parent_question = Question.objects.get(pk=self.initial['parent_question'])
+                choices.extend(self._get_question_choices(parent_question))
+            except Question.DoesNotExist:
+                pass
+        
+        self.fields['show_when_parent_value'].choices = choices
+    
+    def _get_question_choices(self, question):
+        """Get available choices for a given question"""
+        if question.question_type == 'yesno':
+            return [('yes', 'Yes'), ('no', 'No')]
+        elif question.question_type in ['select', 'radio', 'checkbox']:
+            return [(option.value, option.text) for option in question.options.all().order_by('order')]
+        return []
     
     def clean(self):
         cleaned_data = super().clean()
@@ -70,9 +97,14 @@ class QuestionForm(forms.ModelForm):
         
         # If parent question is set, validate the trigger value
         if parent_question and show_when_parent_value:
-            if show_when_parent_value.lower() not in ['yes', 'no']:
+            valid_choices = self._get_question_choices(parent_question)
+            valid_values = [choice[0] for choice in valid_choices]
+            
+            if show_when_parent_value not in valid_values:
+                question_type_display = parent_question.get_question_type_display()
                 self.add_error('show_when_parent_value', 
-                             "Parent value must be 'yes' or 'no' for Yes/No questions")
+                             f"Invalid value for {question_type_display} question. "
+                             f"Valid options: {', '.join(valid_values)}")
         
         # If parent question is set, show_when_parent_value is required
         if parent_question and not show_when_parent_value:

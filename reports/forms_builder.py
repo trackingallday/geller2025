@@ -100,7 +100,10 @@ class QuickQuestionForm(forms.ModelForm):
         if report_type:
             self.fields['section'].queryset = report_type.sections.all()
             self.fields['section'].empty_label = "No section (general)"
-            self.fields['parent_question'].queryset = report_type.questions.all()
+            # Allow yes/no and multi-choice questions as parent questions for conditional logic
+            self.fields['parent_question'].queryset = report_type.questions.filter(
+                question_type__in=['yesno', 'select', 'radio', 'checkbox']
+            )
             self.fields['parent_question'].empty_label = "No parent question"
         else:
             self.fields['section'].queryset = ReportSection.objects.none()

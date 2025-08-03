@@ -199,3 +199,61 @@
         </div>
     </div>
 {% endblock %}
+
+{% block extra_js %}
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    const parentQuestionSelect = document.getElementById('{{ form.parent_question.id_for_label }}');
+    const showWhenValueSelect = document.getElementById('{{ form.show_when_parent_value.id_for_label }}');
+    
+    if (parentQuestionSelect && showWhenValueSelect) {
+        // Handle parent question change
+        parentQuestionSelect.addEventListener('change', function() {
+            const questionId = this.value;
+            
+            if (questionId) {
+                // Clear current options and show loading
+                showWhenValueSelect.innerHTML = '<option value="">Loading...</option>';
+                showWhenValueSelect.disabled = true;
+                
+                // Fetch options for the selected question
+                fetch(`{% url 'reports:ajax_get_question_options' 0 %}`.replace('0', questionId))
+                    .then(response => response.json())
+                    .then(data => {
+                        if (data.success) {
+                            // Clear loading message
+                            showWhenValueSelect.innerHTML = '<option value="">-- Select when to show --</option>';
+                            
+                            // Add options
+                            data.options.forEach(option => {
+                                const optionElement = document.createElement('option');
+                                optionElement.value = option.value;
+                                optionElement.textContent = option.text;
+                                showWhenValueSelect.appendChild(optionElement);
+                            });
+                            
+                            showWhenValueSelect.disabled = false;
+                        } else {
+                            showWhenValueSelect.innerHTML = '<option value="">Error loading options</option>';
+                            console.error('Error fetching question options:', data.error);
+                        }
+                    })
+                    .catch(error => {
+                        showWhenValueSelect.innerHTML = '<option value="">Error loading options</option>';
+                        console.error('Error fetching question options:', error);
+                    });
+            } else {
+                // Reset to default if no parent question selected
+                showWhenValueSelect.innerHTML = '<option value="">-- Select when to show --</option>';
+                showWhenValueSelect.disabled = false;
+            }
+        });
+        
+        // If parent question is already selected (edit mode), trigger change event
+        if (parentQuestionSelect.value) {
+            parentQuestionSelect.dispatchEvent(new Event('change'));
+        }
+    }
+});
+</script>
+{% endblock %}

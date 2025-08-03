@@ -23,6 +23,7 @@ urlpatterns = [
     path('ajax/<int:report_type_id>/template/create/', views_builder.ajax_create_from_template, name='ajax_create_from_template'),
     path('ajax/<int:report_type_id>/order/update/', views_builder.ajax_update_order, name='ajax_update_order'),
     path('ajax/<int:report_type_id>/delete/', views_builder.ajax_delete_item, name='ajax_delete_item'),
+    path('ajax/question/<int:question_id>/options/', views.get_question_options_ajax, name='ajax_get_question_options'),
     
     # Templates Management
     path('templates/', views_builder.question_templates, name='question_templates'),

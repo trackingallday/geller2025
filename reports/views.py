@@ -499,3 +499,36 @@ def create_sample_grocery_report(request):
         'existing_sample': existing_sample
     }
     return render(request, 'reports/create_sample.html', context)
+
+
+@login_required
+def get_question_options_ajax(request, question_id):
+    """AJAX endpoint to get options for a question"""
+    try:
+        question = get_object_or_404(Question, pk=question_id)
+        
+        if question.question_type == 'yesno':
+            options = [
+                {'value': 'yes', 'text': 'Yes'},
+                {'value': 'no', 'text': 'No'}
+            ]
+        elif question.question_type in ['select', 'radio', 'checkbox']:
+            options = [
+                {'value': option.value, 'text': option.text}
+                for option in question.options.all().order_by('order')
+            ]
+        else:
+            options = []
+        
+        return JsonResponse({
+            'success': True,
+            'options': options,
+            'question_type': question.question_type,
+            'question_text': question.question_text
+        })
+    
+    except Exception as e:
+        return JsonResponse({
+            'success': False,
+            'error': str(e)
+        }, status=400)
