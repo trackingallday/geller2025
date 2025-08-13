@@ -108,6 +108,105 @@ def report_type_delete(request, pk):
 
 
 @login_required
+def report_type_duplicate(request, pk):
+    """Duplicate an existing report type with all its structure"""
+    original_report_type = get_object_or_404(ReportType, pk=pk)
+    
+    if request.method == 'POST':
+        form = ReportTypeForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Create new report type
+                    new_report_type = form.save(commit=False)
+                    new_report_type.created_by = request.user
+                    new_report_type.save()
+                    
+                    # Create mapping of old section IDs to new sections
+                    section_mapping = {}
+                    
+                    # Duplicate sections
+                    for old_section in original_report_type.sections.all():
+                        new_section = ReportSection.objects.create(
+                            report_type=new_report_type,
+                            name=old_section.name,
+                            description=old_section.description,
+                            order=old_section.order
+                        )
+                        section_mapping[old_section.id] = new_section
+                    
+                    # Create mapping of old question IDs to new questions
+                    question_mapping = {}
+                    
+                    # Duplicate questions (first pass - without parent relationships)
+                    for old_question in original_report_type.questions.all():
+                        new_question = Question.objects.create(
+                            report_type=new_report_type,
+                            section=section_mapping.get(old_question.section_id) if old_question.section_id else None,
+                            question_text=old_question.question_text,
+                            question_type=old_question.question_type,
+                            help_text=old_question.help_text,
+                            is_required=old_question.is_required,
+                            order=old_question.order
+                        )
+                        question_mapping[old_question.id] = new_question
+                    
+                    # Second pass - establish parent-child relationships and conditional logic
+                    for old_question in original_report_type.questions.all():
+                        new_question = question_mapping[old_question.id]
+                        if old_question.parent_question_id:
+                            new_question.parent_question = question_mapping.get(old_question.parent_question_id)
+                        
+                        # Copy conditional values
+                        trigger_values = old_question.get_show_when_values()
+                        if trigger_values:
+                            new_question.set_show_when_values(trigger_values)
+                        
+                        new_question.save()
+                    
+                    # Duplicate question options
+                    for old_question in original_report_type.questions.all():
+                        new_question = question_mapping[old_question.id]
+                        for old_option in old_question.options.all():
+                            QuestionOption.objects.create(
+                                question=new_question,
+                                text=old_option.text,
+                                value=old_option.value,
+                                is_flag=old_option.is_flag,
+                                additional_instructions=old_option.additional_instructions,
+                                order=old_option.order
+                                # Note: attached_pdf is not copied to avoid file duplication issues
+                            )
+                    
+                    messages.success(
+                        request, 
+                        f'Report type "{new_report_type.name}" created successfully as a copy of "{original_report_type.name}"! '
+                        f'Copied {len(section_mapping)} sections, {len(question_mapping)} questions, and their options.'
+                    )
+                    return redirect('reports:report_type_detail', pk=new_report_type.pk)
+                    
+            except Exception as e:
+                messages.error(request, f'Error duplicating report type: {str(e)}')
+                
+    else:
+        # Pre-populate form with original data but change the name
+        initial_data = {
+            'name': f"{original_report_type.name} (Copy)",
+            'description': original_report_type.description,
+            'auto_number_prefix': f"{original_report_type.auto_number_prefix}C" if original_report_type.auto_number_prefix else None,
+            'is_active': original_report_type.is_active
+        }
+        form = ReportTypeForm(initial=initial_data)
+    
+    context = {
+        'form': form,
+        'original_report_type': original_report_type,
+        'title': f'Duplicate: {original_report_type.name}'
+    }
+    return render(request, 'reports/report_type_duplicate.html', context)
+
+
+@login_required
 def section_create(request, report_type_id):
     """Create a new section"""
     report_type = get_object_or_404(ReportType, pk=report_type_id)
@@ -171,6 +270,96 @@ def section_delete(request, pk):
         'title': f'Delete Section: {section.name}'
     }
     return render(request, 'reports/section_confirm_delete.html', context)
+
+
+@login_required
+def section_duplicate(request, pk):
+    """Duplicate a section with all its questions"""
+    original_section = get_object_or_404(ReportSection, pk=pk)
+    report_type = original_section.report_type
+    
+    if request.method == 'POST':
+        form = ReportSectionForm(request.POST)
+        if form.is_valid():
+            try:
+                with transaction.atomic():
+                    # Create new section
+                    new_section = form.save(commit=False)
+                    new_section.report_type = report_type
+                    new_section.save()
+                    
+                    # Get all questions in the original section
+                    original_questions = original_section.questions.all()
+                    
+                    # Create mapping for question relationships
+                    question_mapping = {}
+                    
+                    # First pass: Duplicate questions without parent relationships
+                    for old_question in original_questions:
+                        new_question = Question.objects.create(
+                            report_type=report_type,
+                            section=new_section,
+                            question_text=old_question.question_text,
+                            question_type=old_question.question_type,
+                            help_text=old_question.help_text,
+                            is_required=old_question.is_required,
+                            order=old_question.order
+                        )
+                        question_mapping[old_question.id] = new_question
+                    
+                    # Second pass: Establish parent-child relationships within duplicated questions
+                    for old_question in original_questions:
+                        new_question = question_mapping[old_question.id]
+                        if old_question.parent_question_id and old_question.parent_question_id in question_mapping:
+                            # Only set parent if the parent is also in this section
+                            new_question.parent_question = question_mapping[old_question.parent_question_id]
+                            
+                            # Copy conditional values
+                            trigger_values = old_question.get_show_when_values()
+                            if trigger_values:
+                                new_question.set_show_when_values(trigger_values)
+                            
+                            new_question.save()
+                    
+                    # Duplicate question options
+                    for old_question in original_questions:
+                        new_question = question_mapping[old_question.id]
+                        for old_option in old_question.options.all():
+                            QuestionOption.objects.create(
+                                question=new_question,
+                                text=old_option.text,
+                                value=old_option.value,
+                                is_flag=old_option.is_flag,
+                                additional_instructions=old_option.additional_instructions,
+                                order=old_option.order
+                            )
+                    
+                    messages.success(
+                        request, 
+                        f'Section "{new_section.name}" created successfully as a copy of "{original_section.name}"! '
+                        f'Copied {len(question_mapping)} questions and their options.'
+                    )
+                    return redirect('reports:report_type_detail', pk=report_type.pk)
+                    
+            except Exception as e:
+                messages.error(request, f'Error duplicating section: {str(e)}')
+    
+    else:
+        # Pre-populate form with original data but change the name
+        initial_data = {
+            'name': f"{original_section.name} (Copy)",
+            'description': original_section.description,
+            'order': original_section.order + 1  # Place it after the original
+        }
+        form = ReportSectionForm(initial=initial_data)
+    
+    context = {
+        'form': form,
+        'original_section': original_section,
+        'report_type': report_type,
+        'title': f'Duplicate Section: {original_section.name}'
+    }
+    return render(request, 'reports/section_duplicate.html', context)
 
 
 @login_required
@@ -406,20 +595,20 @@ def report_fill(request, pk):
                     date_str = request.POST.get(f'question_{question.id}', '')
                     answer.date_answer = parse_date(date_str) if date_str else None
                 elif question.question_type in ['select', 'radio']:
-                    option_id = request.POST.get(f'question_{question.id}')
-                    if option_id:
+                    option_value = request.POST.get(f'question_{question.id}')
+                    if option_value:
                         answer.selected_options.clear()
                         try:
-                            option = QuestionOption.objects.get(id=option_id)
+                            option = QuestionOption.objects.get(question=question, value=option_value)
                             answer.selected_options.add(option)
                         except QuestionOption.DoesNotExist:
                             pass
                 elif question.question_type == 'checkbox':
-                    option_ids = request.POST.getlist(f'question_{question.id}')
+                    option_values = request.POST.getlist(f'question_{question.id}')
                     answer.selected_options.clear()
-                    for option_id in option_ids:
+                    for option_value in option_values:
                         try:
-                            option = QuestionOption.objects.get(id=option_id)
+                            option = QuestionOption.objects.get(question=question, value=option_value)
                             answer.selected_options.add(option)
                         except QuestionOption.DoesNotExist:
                             pass

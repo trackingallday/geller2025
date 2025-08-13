@@ -10,6 +10,7 @@ urlpatterns = [
     path('<int:pk>/', views.report_type_detail, name='report_type_detail'),
     path('<int:pk>/edit/', views.report_type_edit, name='report_type_edit'),
     path('<int:pk>/delete/', views.report_type_delete, name='report_type_delete'),
+    path('<int:pk>/duplicate/', views.report_type_duplicate, name='report_type_duplicate'),
     
     # Enhanced Form Builder
     path('builder/wizard/', views_builder.report_builder_wizard, name='report_builder_wizard'),
@@ -32,6 +33,7 @@ urlpatterns = [
     path('<int:report_type_id>/sections/create/', views.section_create, name='section_create'),
     path('sections/<int:pk>/edit/', views.section_edit, name='section_edit'),
     path('sections/<int:pk>/delete/', views.section_delete, name='section_delete'),
+    path('sections/<int:pk>/duplicate/', views.section_duplicate, name='section_duplicate'),
     
     # Question Management
     path('<int:report_type_id>/questions/create/', views.question_create, name='question_create'),

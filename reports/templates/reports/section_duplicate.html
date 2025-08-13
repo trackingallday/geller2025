@@ -1,0 +1,124 @@
+{% extends 'reports/base.html' %}
+
+{% block title %}{{ title }}{% endblock %}
+
+{% block content %}
+    <div class="row justify-content-center">
+        <div class="col-md-8">
+            <!-- Source Section Info -->
+            <div class="card mb-4">
+                <div class="card-header bg-info text-white">
+                    <h6 class="mb-0">
+                        <i class="bi bi-info-circle"></i> Duplicating From
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h5 class="text-primary mb-2">
+                                <i class="bi bi-folder"></i> {{ original_section.name }}
+                            </h5>
+                            <p class="mb-1">{{ original_section.description|default:"No description" }}</p>
+                            <small class="text-muted">Order: {{ original_section.order }}</small>
+                        </div>
+                        <div class="col-md-4 text-end">
+                            <div class="text-muted small">
+                                <div>Questions: <strong>{{ original_section.questions.count }}</strong></div>
+                                <div>Report: <strong>{{ report_type.name }}</strong></div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Duplicate Form -->
+            <div class="card">
+                <div class="card-header">
+                    <h5 class="mb-0">
+                        <i class="bi bi-files"></i> {{ title }}
+                    </h5>
+                </div>
+                <div class="card-body">
+                    <div class="alert alert-info">
+                        <i class="bi bi-info-circle"></i>
+                        <strong>What will be copied:</strong> All questions in this section, including their options and conditional logic, will be duplicated. 
+                        You can modify the section details below.
+                    </div>
+
+                    <form method="post">
+                        {% csrf_token %}
+                        
+                        <div class="mb-3">
+                            <label for="{{ form.name.id_for_label }}" class="form-label">New Section Name *</label>
+                            {{ form.name }}
+                            {% if form.name.errors %}
+                                <div class="text-danger small">{{ form.name.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Give your duplicated section a unique name</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.description.id_for_label }}" class="form-label">Description</label>
+                            {{ form.description }}
+                            {% if form.description.errors %}
+                                <div class="text-danger small">{{ form.description.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Update the description if needed</div>
+                        </div>
+
+                        <div class="mb-3">
+                            <label for="{{ form.order.id_for_label }}" class="form-label">Order</label>
+                            {{ form.order }}
+                            {% if form.order.errors %}
+                                <div class="text-danger small">{{ form.order.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Position in the form (automatically set to appear after original)</div>
+                        </div>
+
+                        <div class="d-flex justify-content-between">
+                            <a href="{% url 'reports:report_type_detail' report_type.pk %}" class="btn btn-secondary">
+                                <i class="bi bi-arrow-left"></i> Cancel
+                            </a>
+                            <button type="submit" class="btn btn-primary btn-lg">
+                                <i class="bi bi-files"></i> Create Duplicate Section
+                            </button>
+                        </div>
+                    </form>
+                </div>
+            </div>
+
+            <!-- What will be duplicated info -->
+            <div class="card mt-4">
+                <div class="card-header">
+                    <h6 class="mb-0">
+                        <i class="bi bi-list-check"></i> What Gets Copied
+                    </h6>
+                </div>
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-6">
+                            <h6 class="text-success">✓ Included</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>All questions in this section</li>
+                                <li>Question types and validation</li>
+                                <li>Multiple choice options</li>
+                                <li>Conditional logic (within section)</li>
+                                <li>Help text and instructions</li>
+                                <li>Question ordering</li>
+                                <li>Required field settings</li>
+                            </ul>
+                        </div>
+                        <div class="col-md-6">
+                            <h6 class="text-warning">⚠ Note</h6>
+                            <ul class="small text-muted mb-0">
+                                <li>Cross-section conditional logic may need adjustment</li>
+                                <li>Questions will keep their original order numbers</li>
+                                <li>You can edit questions individually after duplication</li>
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+{% endblock %}

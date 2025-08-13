@@ -97,7 +97,7 @@
                              data-question-id="{{ question.id }}"
                              {% if question.parent_question %}
                                  data-parent-question="{{ question.parent_question.id }}"
-                                 data-show-when-value="{{ question.show_when_parent_value }}"
+                                 data-show-when-values="{{ question.get_show_when_values|join:',' }}"
                                  style="display: none;"
                              {% endif %}>
                             <div class="card-body">
@@ -170,7 +170,7 @@
                                                     {% if question.is_required %}required{% endif %}>
                                                 <option value="">-- Select an option --</option>
                                                 {% for option in question.options.all %}
-                                                    <option value="{{ option.id }}" 
+                                                    <option value="{{ option.value }}" 
                                                             {% for answer in report.answers.all %}{% if answer.question.id == question.id %}{% if option in answer.selected_options.all %}selected{% endif %}{% endif %}{% endfor %}>
                                                         {{ option.text }}
                                                     </option>
@@ -180,8 +180,9 @@
                                         {% elif question.question_type == 'radio' %}
                                             {% for option in question.options.all %}
                                                 <div class="form-check">
-                                                    <input class="form-check-input" type="radio" 
-                                                           name="question_{{ question.id }}" value="{{ option.id }}" 
+                                                    <input class="form-check-input" type="radio"
+                                                           data-text="{{ option.text }}"
+                                                           name="question_{{ question.id }}" value="{{ option.value }}" 
                                                            id="q{{ question.id }}_{{ option.id }}"
                                                            {% for answer in report.answers.all %}{% if answer.question.id == question.id %}{% if option in answer.selected_options.all %}checked{% endif %}{% endif %}{% endfor %}
                                                            {% if question.is_required %}required{% endif %}>
@@ -201,7 +202,7 @@
                                             {% for option in question.options.all %}
                                                 <div class="form-check">
                                                     <input class="form-check-input" type="checkbox" 
-                                                           name="question_{{ question.id }}" value="{{ option.id }}" 
+                                                           name="question_{{ question.id }}" value="{{ option.value }}" 
                                                            id="q{{ question.id }}_{{ option.id }}"
                                                            {% for answer in report.answers.all %}{% if answer.question.id == question.id %}{% if option in answer.selected_options.all %}checked{% endif %}{% endif %}{% endfor %}>
                                                     <label class="form-check-label" for="q{{ question.id }}_{{ option.id }}">
@@ -297,18 +298,26 @@
             // Get all questions with conditional logic
             const conditionalQuestions = document.querySelectorAll('[data-parent-question]');
             
-            conditionalQuestions.forEach(question => {
+            /*conditionalQuestions.forEach(question => {
                 const parentQuestionId = question.dataset.parentQuestion;
                 const showWhenValue = question.dataset.showWhenValue;
                 const parentInputs = document.querySelectorAll(`input[name="question_${parentQuestionId}"]`);
+                const parentSelect = document.querySelector(`select[name="question_${parentQuestionId}"]`);
                 
                 function checkVisibility() {
                     let shouldShow = false;
+                    
+                    // Check radio buttons and checkboxes
                     parentInputs.forEach(input => {
                         if (input.checked && input.value === showWhenValue) {
                             shouldShow = true;
                         }
                     });
+                    
+                    // Check select dropdown
+                    if (parentSelect && parentSelect.value === showWhenValue) {
+                        shouldShow = true;
+                    }
                     
                     if (shouldShow) {
                         question.style.display = 'block';
@@ -337,7 +346,87 @@
                 parentInputs.forEach(input => {
                     input.addEventListener('change', checkVisibility);
                 });
+                
+                // Add event listener to parent select dropdown
+                if (parentSelect) {
+                    parentSelect.addEventListener('change', checkVisibility);
+                }
+            });*/
+
+            console.log('Initializing conditional logic for multiple values');
+            conditionalQuestions.forEach(question => {
+                const parentQuestionId = question.dataset.parentQuestion;
+                const showWhenValuesStr = question.dataset.showWhenValues || '';
+                const showWhenValues = showWhenValuesStr ? showWhenValuesStr.toLowerCase().split(',').map(v => v.trim()) : [];
+                const parentInputs = document.querySelectorAll(`input[name="question_${parentQuestionId}"]`);
+                const parentSelect = document.querySelector(`select[name="question_${parentQuestionId}"]`);
+
+                function checkVisibility() {
+                    let shouldShow = false;
+
+                    // Check radio buttons and checkboxes
+                    parentInputs.forEach(input => {
+                        if (input.checked) {
+                            // First check if input value matches any trigger value
+                            const inputValue = input.value.toLowerCase().trim();
+                            if (showWhenValues.includes(inputValue)) {
+                                shouldShow = true;
+                                return;
+                            }
+                            
+                            // Also check label text for backward compatibility
+                            const label = document.querySelector(`label[for="${input.id}"]`);
+                            if (label) {
+                                const labelText = label.textContent.trim().toLowerCase();
+                                if (showWhenValues.includes(labelText)) {
+                                    shouldShow = true;
+                                }
+                            }
+                        }
+                    });
+                    
+                    // Check select dropdown
+                    if (parentSelect && parentSelect.value) {
+                        const selectValue = parentSelect.value.toLowerCase().trim();
+                        if (showWhenValues.includes(selectValue)) {
+                            shouldShow = true;
+                        }
+                    }
+
+                    if (shouldShow) {
+                        question.style.display = 'block';
+                        // Enable required validation
+                        const requiredInputs = question.querySelectorAll('[data-required="true"]');
+                        requiredInputs.forEach(input => input.setAttribute('required', 'required'));
+                    } else {
+                        question.style.display = 'none';
+                        // Clear values and disable validation
+                        const inputs = question.querySelectorAll('input, select, textarea');
+                        inputs.forEach(input => {
+                            if (input.type === 'checkbox' || input.type === 'radio') {
+                                input.checked = false;
+                            } else {
+                                input.value = '';
+                            }
+                            input.removeAttribute('required');
+                        });
+                    }
+                }
+
+                // Initial check
+                checkVisibility();
+
+                // Watch for changes on parent inputs
+                parentInputs.forEach(input => {
+                    input.addEventListener('change', checkVisibility);
+                });
+                
+                // Watch for changes on parent select
+                if (parentSelect) {
+                    parentSelect.addEventListener('change', checkVisibility);
+                }
             });
+
         }
         
         // Initialize conditional logic

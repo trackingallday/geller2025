@@ -7,6 +7,9 @@
         <a href="{% url 'reports:report_type_edit' report_type.pk %}" class="btn btn-outline-warning">
             <i class="bi bi-pencil"></i> Edit
         </a>
+        <a href="{% url 'reports:report_type_duplicate' report_type.pk %}" class="btn btn-outline-info">
+            <i class="bi bi-files"></i> Duplicate
+        </a>
         <a href="{% url 'reports:section_create' report_type.pk %}" class="btn btn-outline-primary">
             <i class="bi bi-plus-lg"></i> Add Section
         </a>
@@ -108,10 +111,13 @@
                                 <small class="text-muted">(Order: {{ section.order }})</small>
                             </h6>
                             <div class="btn-group btn-group-sm" role="group">
-                                <a href="{% url 'reports:section_edit' section.pk %}" class="btn btn-outline-warning btn-sm">
+                                <a href="{% url 'reports:section_edit' section.pk %}" class="btn btn-outline-warning btn-sm" title="Edit section">
                                     <i class="bi bi-pencil"></i>
                                 </a>
-                                <a href="{% url 'reports:section_delete' section.pk %}" class="btn btn-outline-danger btn-sm">
+                                <a href="{% url 'reports:section_duplicate' section.pk %}" class="btn btn-outline-info btn-sm" title="Duplicate section">
+                                    <i class="bi bi-files"></i>
+                                </a>
+                                <a href="{% url 'reports:section_delete' section.pk %}" class="btn btn-outline-danger btn-sm" title="Delete section">
                                     <i class="bi bi-trash"></i>
                                 </a>
                             </div>

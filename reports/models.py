@@ -118,13 +118,35 @@ class Question(MyBaseModel):
     
     # For conditional logic
     parent_question = models.ForeignKey('self', on_delete=models.CASCADE, blank=True, null=True, related_name='child_questions')
-    show_when_parent_value = models.CharField(max_length=255, blank=True, null=True, help_text="Show this question when parent has this value")
+    show_when_parent_values = models.JSONField(default=list, blank=True, help_text="Show this question when parent has any of these values")
+    
+    # Backward compatibility field (deprecated)
+    show_when_parent_value = models.CharField(max_length=255, blank=True, null=True, help_text="DEPRECATED: Use show_when_parent_values instead")
     
     class Meta:
         ordering = ['order', 'question_text']
     
     def __str__(self):
         return f"{self.report_type.name} - {self.question_text[:50]}..."
+    
+    def get_show_when_values(self):
+        """Get the list of values that should trigger this question to show"""
+        if self.show_when_parent_values:
+            return self.show_when_parent_values
+        elif self.show_when_parent_value:
+            # Backward compatibility - convert single value to list
+            return [self.show_when_parent_value]
+        return []
+    
+    def set_show_when_values(self, values):
+        """Set the list of values that should trigger this question to show"""
+        if isinstance(values, (list, tuple)):
+            self.show_when_parent_values = list(values)
+        else:
+            # Single value provided
+            self.show_when_parent_values = [values]
+        # Clear the deprecated field
+        self.show_when_parent_value = None
 
 
 class QuestionOption(MyBaseModel):

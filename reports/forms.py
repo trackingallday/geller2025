@@ -30,10 +30,34 @@ class ReportSectionForm(forms.ModelForm):
         }
 
 
+class BootstrapCheckboxSelectMultiple(forms.CheckboxSelectMultiple):
+    """Custom checkbox widget with proper Bootstrap styling"""
+    
+    def create_option(self, name, value, label, selected, index, subindex=None, attrs=None):
+        option = super().create_option(name, value, label, selected, index, subindex, attrs)
+        # Add Bootstrap classes to each checkbox
+        if attrs is None:
+            attrs = {}
+        attrs.update({'class': 'form-check-input'})
+        option['attrs'] = attrs
+        return option
+    
+    class Media:
+        css = {
+            'all': ('reports/css/custom-checkboxes.css',)
+        }
+
+
 class QuestionForm(forms.ModelForm):
+    show_when_parent_values = forms.MultipleChoiceField(
+        required=False,
+        widget=BootstrapCheckboxSelectMultiple(),
+        help_text="Select one or more values that should trigger this question to show"
+    )
+    
     class Meta:
         model = Question
-        fields = ['question_text', 'question_type', 'section', 'help_text', 'is_required', 'order', 'parent_question', 'show_when_parent_value']
+        fields = ['question_text', 'question_type', 'section', 'help_text', 'is_required', 'order', 'parent_question', 'show_when_parent_values']
         widgets = {
             'question_text': forms.Textarea(attrs={'class': 'form-control', 'rows': 2, 'placeholder': 'Enter your question here...'}),
             'question_type': forms.Select(attrs={'class': 'form-select'}),
@@ -42,7 +66,6 @@ class QuestionForm(forms.ModelForm):
             'is_required': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
             'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),
             'parent_question': forms.Select(attrs={'class': 'form-select'}),
-            'show_when_parent_value': forms.Select(attrs={'class': 'form-select'}),
         }
     
     def __init__(self, *args, report_type=None, **kwargs):
@@ -59,28 +82,41 @@ class QuestionForm(forms.ModelForm):
         
         # Update help text to clarify parent question restriction
         self.fields['parent_question'].help_text = "Select a Yes/No or multiple choice question to use as parent"
-        self.fields['show_when_parent_value'].help_text = "Select when this question should appear based on the parent question's value"
         
-        # Set up initial choices for show_when_parent_value
+        # Set up initial choices for show_when_parent_values
         self._setup_parent_value_choices()
+        
+        # Load existing values for the multiple choice field
+        if self.instance and self.instance.pk:
+            existing_values = self.instance.get_show_when_values()
+            self.fields['show_when_parent_values'].initial = existing_values
     
     def _setup_parent_value_choices(self):
-        """Set up choices for show_when_parent_value based on the parent question"""
-        choices = [('', '-- Select when to show --')]
+        """Set up choices for show_when_parent_values based on the parent question"""
+        choices = []
+        parent_question = None
         
-        # If we have an instance (editing existing question)
-        if self.instance and self.instance.pk and self.instance.parent_question:
+        # Priority order: data from POST > instance parent > initial data
+        if hasattr(self, 'data') and self.data.get('parent_question'):
+            try:
+                parent_question = Question.objects.get(pk=self.data['parent_question'])
+            except (Question.DoesNotExist, ValueError):
+                pass
+        elif self.instance and self.instance.pk and self.instance.parent_question:
             parent_question = self.instance.parent_question
-            choices.extend(self._get_question_choices(parent_question))
-        # If we have initial data with parent_question
         elif self.initial.get('parent_question'):
             try:
                 parent_question = Question.objects.get(pk=self.initial['parent_question'])
-                choices.extend(self._get_question_choices(parent_question))
             except Question.DoesNotExist:
                 pass
         
-        self.fields['show_when_parent_value'].choices = choices
+        if parent_question:
+            choices.extend(self._get_question_choices(parent_question))
+        else:
+            # If no parent question is selected, show a helpful message
+            choices = [('', 'Select a parent question first')]
+        
+        self.fields['show_when_parent_values'].choices = choices
     
     def _get_question_choices(self, question):
         """Get available choices for a given question"""
@@ -93,25 +129,38 @@ class QuestionForm(forms.ModelForm):
     def clean(self):
         cleaned_data = super().clean()
         parent_question = cleaned_data.get('parent_question')
-        show_when_parent_value = cleaned_data.get('show_when_parent_value')
+        show_when_parent_values = cleaned_data.get('show_when_parent_values')
         
-        # If parent question is set, validate the trigger value
-        if parent_question and show_when_parent_value:
+        # If parent question is set, validate the trigger values
+        if parent_question and show_when_parent_values:
             valid_choices = self._get_question_choices(parent_question)
             valid_values = [choice[0] for choice in valid_choices]
             
-            if show_when_parent_value not in valid_values:
-                question_type_display = parent_question.get_question_type_display()
-                self.add_error('show_when_parent_value', 
-                             f"Invalid value for {question_type_display} question. "
-                             f"Valid options: {', '.join(valid_values)}")
+            for value in show_when_parent_values:
+                if value not in valid_values:
+                    question_type_display = parent_question.get_question_type_display()
+                    self.add_error('show_when_parent_values', 
+                                 f"Invalid value '{value}' for {question_type_display} question. "
+                                 f"Valid options: {', '.join(valid_values)}")
         
-        # If parent question is set, show_when_parent_value is required
-        if parent_question and not show_when_parent_value:
-            self.add_error('show_when_parent_value', 
-                         "This field is required when a parent question is selected")
+        # If parent question is set, at least one trigger value is required
+        if parent_question and not show_when_parent_values:
+            self.add_error('show_when_parent_values', 
+                         "Select at least one value when a parent question is selected")
         
         return cleaned_data
+    
+    def save(self, commit=True):
+        instance = super().save(commit=False)
+        
+        # Set the show_when_parent_values using our model method
+        show_when_parent_values = self.cleaned_data.get('show_when_parent_values', [])
+        if show_when_parent_values:
+            instance.set_show_when_values(show_when_parent_values)
+        
+        if commit:
+            instance.save()
+        return instance
 
 
 class QuestionOptionForm(forms.ModelForm):

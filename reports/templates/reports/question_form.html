@@ -14,6 +14,75 @@
     .preview-hidden {
         display: none;
     }
+    
+    /* Enhanced styling for conditional logic checkboxes */
+    #id_show_when_parent_values {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+        border: 1px solid #ced4da;
+        border-radius: 0.375rem;
+        background-color: #fff;
+        max-height: 200px;
+        overflow-y: auto;
+    }
+    
+    #id_show_when_parent_values li {
+        padding: 0;
+        margin: 0;
+        border-bottom: 1px solid #e9ecef;
+    }
+    
+    #id_show_when_parent_values li:last-child {
+        border-bottom: none;
+    }
+    
+    #id_show_when_parent_values label {
+        display: flex;
+        align-items: center;
+        width: 100%;
+        padding: 10px 12px;
+        margin: 0;
+        cursor: pointer;
+        transition: background-color 0.15s ease-in-out;
+        font-weight: normal;
+        user-select: none;
+    }
+    
+    #id_show_when_parent_values label:hover {
+        background-color: #f8f9fa;
+    }
+    
+    #id_show_when_parent_values input[type="checkbox"] {
+        margin-right: 10px;
+        margin-top: 0;
+        flex-shrink: 0;
+    }
+    
+    #id_show_when_parent_values input[type="checkbox"]:checked {
+        background-color: #0d6efd;
+        border-color: #0d6efd;
+    }
+    
+    /* Highlight selected items */
+    #id_show_when_parent_values label:has(input[type="checkbox"]:checked) {
+        background-color: #e7f3ff;
+        font-weight: 500;
+    }
+    
+    /* Empty/loading states */
+    #id_show_when_parent_values .empty-state,
+    #id_show_when_parent_values .loading-state {
+        text-align: center;
+        color: #6c757d;
+        font-style: italic;
+        padding: 20px 12px;
+    }
+    
+    /* Focus states */
+    #id_show_when_parent_values input[type="checkbox"]:focus {
+        box-shadow: 0 0 0 0.25rem rgba(13, 110, 253, 0.25);
+    }
 </style>
 {% endblock %}
 
@@ -106,12 +175,12 @@
                                 </div>
 
                                 <div class="mb-3">
-                                    <label for="{{ form.show_when_parent_value.id_for_label }}" class="form-label">Show When Parent Value</label>
-                                    {{ form.show_when_parent_value }}
-                                    {% if form.show_when_parent_value.errors %}
-                                        <div class="text-danger small">{{ form.show_when_parent_value.errors.0 }}</div>
+                                    <label for="{{ form.show_when_parent_values.id_for_label }}" class="form-label">Show When Parent Values</label>
+                                    {{ form.show_when_parent_values }}
+                                    {% if form.show_when_parent_values.errors %}
+                                        <div class="text-danger small">{{ form.show_when_parent_values.errors.0 }}</div>
                                     {% endif %}
-                                    <div class="form-text">Select when this question should appear based on the parent question's value</div>
+                                    <div class="form-text">Select one or more values that should trigger this question to show. Child question will appear when ANY of these values are selected.</div>
                                 </div>
                             </div>
                         </div>
@@ -204,48 +273,65 @@
 <script>
 document.addEventListener('DOMContentLoaded', function() {
     const parentQuestionSelect = document.getElementById('{{ form.parent_question.id_for_label }}');
-    const showWhenValueSelect = document.getElementById('{{ form.show_when_parent_value.id_for_label }}');
+    const showWhenValuesContainer = document.querySelector('[id*="show_when_parent_values"]').closest('.mb-3');
     
-    if (parentQuestionSelect && showWhenValueSelect) {
-        // Handle parent question change
+    if (parentQuestionSelect && showWhenValuesContainer) {
+        // Handle parent question change - need to dynamically update checkbox choices
         parentQuestionSelect.addEventListener('change', function() {
             const questionId = this.value;
+            const checkboxContainer = showWhenValuesContainer.querySelector('ul, div');
             
             if (questionId) {
-                // Clear current options and show loading
-                showWhenValueSelect.innerHTML = '<option value="">Loading...</option>';
-                showWhenValueSelect.disabled = true;
+                // Show loading state
+                if (checkboxContainer) {
+                    checkboxContainer.innerHTML = '<li class="loading-state">Loading options...</li>';
+                }
                 
                 // Fetch options for the selected question
                 fetch(`{% url 'reports:ajax_get_question_options' 0 %}`.replace('0', questionId))
                     .then(response => response.json())
                     .then(data => {
-                        if (data.success) {
+                        if (data.success && checkboxContainer) {
                             // Clear loading message
-                            showWhenValueSelect.innerHTML = '<option value="">-- Select when to show --</option>';
+                            checkboxContainer.innerHTML = '';
                             
-                            // Add options
-                            data.options.forEach(option => {
-                                const optionElement = document.createElement('option');
-                                optionElement.value = option.value;
-                                optionElement.textContent = option.text;
-                                showWhenValueSelect.appendChild(optionElement);
+                            // Add checkbox options
+                            data.options.forEach((option, index) => {
+                                const li = document.createElement('li');
+                                const inputId = `id_show_when_parent_values_${index}`;
+                                
+                                const label = document.createElement('label');
+                                label.setAttribute('for', inputId);
+                                
+                                const checkbox = document.createElement('input');
+                                checkbox.type = 'checkbox';
+                                checkbox.name = 'show_when_parent_values';
+                                checkbox.value = option.value;
+                                checkbox.id = inputId;
+                                checkbox.classList.add('form-check-input');
+                                
+                                const textSpan = document.createElement('span');
+                                textSpan.textContent = option.text;
+                                
+                                label.appendChild(checkbox);
+                                label.appendChild(textSpan);
+                                li.appendChild(label);
+                                checkboxContainer.appendChild(li);
                             });
-                            
-                            showWhenValueSelect.disabled = false;
-                        } else {
-                            showWhenValueSelect.innerHTML = '<option value="">Error loading options</option>';
+                        } else if (checkboxContainer) {
+                            checkboxContainer.innerHTML = '<li class="text-danger">Error loading options</li>';
                             console.error('Error fetching question options:', data.error);
                         }
                     })
                     .catch(error => {
-                        showWhenValueSelect.innerHTML = '<option value="">Error loading options</option>';
+                        if (checkboxContainer) {
+                            checkboxContainer.innerHTML = '<li class="text-danger">Error loading options</li>';
+                        }
                         console.error('Error fetching question options:', error);
                     });
-            } else {
-                // Reset to default if no parent question selected
-                showWhenValueSelect.innerHTML = '<option value="">-- Select when to show --</option>';
-                showWhenValueSelect.disabled = false;
+            } else if (checkboxContainer) {
+                // Clear checkboxes if no parent question selected
+                checkboxContainer.innerHTML = '<li class="empty-state">Select a parent question first</li>';
             }
         });
         

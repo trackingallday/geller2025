@@ -48,7 +48,7 @@
                     <div class="conditional-info mt-2">
                         <small class="text-info">
                             <i class="bi bi-diagram-3"></i> 
-                            Shows when "{{ question.parent_question.question_text|truncatechars:30 }}" = "{{ question.show_when_parent_value }}"
+                            Shows when "{{ question.parent_question.question_text|truncatechars:30 }}" = any of [{{ question.get_show_when_values|join:", " }}]
                         </small>
                     </div>
                 {% endif %}
