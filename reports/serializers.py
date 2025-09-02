@@ -103,7 +103,8 @@ class AnswerSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'question', 'question_id', 'text_answer', 'number_answer',
             'date_answer', 'file_answer', 'signature_answer', 
-            'selected_options', 'selected_option_ids', 'display_value'
+            'selected_options', 'selected_option_ids', 'display_value',
+            'notes', 'attachment'
         ]
     
     def create(self, validated_data):

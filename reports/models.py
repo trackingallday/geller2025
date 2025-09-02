@@ -211,6 +211,10 @@ class Answer(MyBaseModel):
     date_answer = models.DateField(blank=True, null=True)
     number_answer = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
     
+    # Additional fields for notes and attachments
+    notes = models.TextField(blank=True, null=True, help_text="Additional notes or comments for this answer")
+    attachment = models.FileField(upload_to='answer_attachments/', blank=True, null=True, help_text="Optional file attachment (photo, document, etc.)")
+    
     class Meta:
         unique_together = ['report', 'question']
     

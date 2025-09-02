@@ -197,11 +197,13 @@ class ReportForm(forms.ModelForm):
 class AnswerForm(forms.ModelForm):
     class Meta:
         model = Answer
-        fields = ['text_answer', 'number_answer', 'date_answer', 'file_answer', 'signature_answer']
+        fields = ['text_answer', 'number_answer', 'date_answer', 'file_answer', 'signature_answer', 'notes', 'attachment']
         widgets = {
             'text_answer': forms.Textarea(attrs={'class': 'form-control', 'rows': 2}),
             'number_answer': forms.NumberInput(attrs={'class': 'form-control'}),
             'date_answer': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
             'file_answer': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'signature_answer': forms.ClearableFileInput(attrs={'class': 'form-control'}),
+            'notes': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Add notes or comments for this answer...'}),
+            'attachment': forms.ClearableFileInput(attrs={'class': 'form-control', 'accept': 'image/*,.pdf,.doc,.docx'}),
         }
