@@ -48,6 +48,22 @@ class ReportListAPIView(generics.ListAPIView):
         ).order_by('-created_at')
 
 
+class ReportTypeListAPIView(generics.ListAPIView):
+    """
+    API view to list all available report types.
+    
+    GET /reports/api/report-types/
+    """
+    serializer_class = ReportTypeSerializer
+    permission_classes = [IsAuthenticated]
+    
+    def get_queryset(self):
+        return ReportType.objects.filter(is_active=True).prefetch_related(
+            'sections__questions__options',
+            'questions__options'
+        ).order_by('name')
+
+
 class ReportTypeDetailAPIView(generics.RetrieveAPIView):
     """
     API view to retrieve a report type structure for creating new reports.
