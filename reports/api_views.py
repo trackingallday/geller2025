@@ -296,6 +296,86 @@ def submit_report_api(request, report_id):
 
 @api_view(['GET'])
 @permission_classes([IsAuthenticated])
+def get_user_profile_api(request):
+    """
+    API endpoint to get the current user's customer ID and distributor ID.
+    
+    GET /reports/api/user/profile/
+    
+    Returns:
+    {
+        "success": true,
+        "user_id": 123,
+        "customer_id": 456,
+        "distributor_id": 789,
+        "customer_name": "ABC Store",
+        "distributor_name": "XYZ Distribution"
+    }
+    """
+    try:
+        user = request.user
+        
+        # Check if user has a profile
+        if not hasattr(user, 'profile'):
+            return Response(
+                {
+                    'success': False,
+                    'error': 'User has no profile'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        profile = user.profile
+        
+        # Check if the profile is a Customer
+        try:
+            from chemsapp.models import Customer
+            customer = Customer.objects.get(user=user)
+        except Customer.DoesNotExist:
+            return Response(
+                {
+                    'success': False,
+                    'error': 'User is not associated with a customer'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        # Check if customer has a distributor
+        if not customer.distributorParent:
+            return Response(
+                {
+                    'success': False,
+                    'error': 'Customer has no associated distributor'
+                },
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        
+        distributor = customer.distributorParent
+        
+        return Response(
+            {
+                'success': True,
+                'user_id': user.id,
+                'customer_id': customer.id,
+                'distributor_id': distributor.id,
+                'customer_name': customer.businessName,
+                'distributor_name': distributor.businessName
+            },
+            status=status.HTTP_200_OK
+        )
+        
+    except Exception as e:
+        return Response(
+            {
+                'success': False,
+                'error': str(e)
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
 def report_questions_api(request, report_type_id):
     """
     API endpoint to get all questions for a report type (useful for building forms).

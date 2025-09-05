@@ -65,4 +65,5 @@ urlpatterns = [
     path('api/report-types/<int:pk>/', api_views.ReportTypeDetailAPIView.as_view(), name='api_report_type_detail'),
     path('api/report-types/<int:report_type_id>/create/', api_views.create_report_api, name='api_report_create'),
     path('api/report-types/<int:report_type_id>/questions/', api_views.report_questions_api, name='api_report_questions'),
+    path('api/user/profile/', api_views.get_user_profile_api, name='api_user_profile'),
 ]
