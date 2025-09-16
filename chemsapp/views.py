@@ -26,6 +26,8 @@ from django.core import serializers
 import json
 from django.core.mail import EmailMessage
 import time
+import subprocess
+import sys
 from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger('django')
@@ -111,6 +113,26 @@ def mail_admin(subject, content, reply_to=None):
         reply_to=[reply_to or settings.EMAIL_ADMIN]
     )
     return msg.send()
+
+def mail_admin_async(subject, content, reply_to=None):
+    """Send email asynchronously using management command"""
+    try:
+        cmd = [
+            sys.executable, 'manage.py', 'send_email',
+            '--subject', subject,
+            '--body', content,
+            '--to', settings.EMAIL_ADMIN,
+            '--from-email', settings.EMAIL_FROM
+        ]
+        
+        if reply_to:
+            cmd.extend(['--reply-to', reply_to])
+        
+        # Run command in background without waiting for completion
+        subprocess.Popen(cmd, cwd=settings.BASE_DIR)
+        
+    except Exception as e:
+        logger.error(f"Failed to start async email process: {e}")
 
 def mail_customer(subject, content, customer_email, reply_to=None):
     msg = EmailMessage(
@@ -617,7 +639,7 @@ def create_contact(request):
     c.is_valid()
     a = c.validated_data
     c.create(a)
-    mail_admin('Contact from Geller.co.nz',
+    mail_admin_async('Contact from Geller.co.nz',
         b['nameFrom'] + '\n' + b['emailFrom'] + '\nMessage:\n' + b['content'],
         reply_to=b['emailFrom']
     )
@@ -649,7 +671,7 @@ def sds_enquire(request):
         a = c.validated_data
         c.create(a)
 
-        mail_admin(
+        mail_admin_async(
             'Contact from Geller.co.nz',
             """A customer has downloaded an SDS for a product.
 Name: {nameFrom}
