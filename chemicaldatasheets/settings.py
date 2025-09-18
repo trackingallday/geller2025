@@ -71,6 +71,7 @@ INSTALLED_APPS = [
 MIDDLEWARE = [
     'corsheaders.middleware.CorsMiddleware',
     'django.middleware.security.SecurityMiddleware',
+    'whitenoise.middleware.WhiteNoiseMiddleware',
     'django.contrib.sessions.middleware.SessionMiddleware',
     'django.middleware.common.CommonMiddleware',
     'django.middleware.csrf.CsrfViewMiddleware',
@@ -111,20 +112,25 @@ APPEND_SLASH=True
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': os.path.join(BASE_DIR, 'db.sqlite3'),
-    }
-}
-DATABASES = {
-    'default': {
         'ENGINE': 'django.db.backends.postgresql',
-        'NAME': os.getenv('PGDATABASE', 'railway'),
-        'USER': os.getenv('PGUSER', 'postgres'),
-        'PASSWORD': os.getenv('PGPASSWORD', 'PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS'),
-        'HOST': os.getenv('PGHOST', 'postgres.railway.internal'),#'switchyard.proxy.rlwy.net'),  # Use Railway internal host.
-        'PORT': os.getenv('PGPORT', '41935'),
+        'NAME': 'geller_db',
+        'USER': 'postgres',
+        'PASSWORD': 'postgres',
+        'HOST': 'localhost',
+        'PORT': '5432',
     }
 }
+# DATABASES = {
+#     'default': {
+#         'ENGINE': 'django.db.backends.postgresql',
+#         'NAME': os.getenv('PGDATABASE', 'railway'),
+#         'USER': os.getenv('PGUSER', 'postgres'),
+#         'PASSWORD': os.getenv('PGPASSWORD', 'PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS'),
+#         'HOST': os.getenv('PGHOST', 'switchyard.proxy.rlwy.net'),  # Use Railway internal host.
+#         'PORT': os.getenv('PGPORT', '41935'),
+#         #postgresql://postgres:PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS@postgres.railway.internal:5432/railway
+#     }
+# }
 
 # import os
 # from urllib.parse import urlparse
@@ -209,6 +215,10 @@ STATICFILES_DIRS = [
 ]
 PROJECT_DIR = os.path.dirname(os.path.abspath(__file__))
 STATIC_ROOT = os.path.join(BASE_DIR, 'dist_static')
+
+# WhiteNoise settings for serving static files
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
+
 #media files where uploaded files go to
 
 
