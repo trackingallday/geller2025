@@ -48,11 +48,11 @@ class ReportTypeAdmin(admin.ModelAdmin):
     inlines = [ReportSectionInline, QuestionInline, ReportTypeCustomerInline, ReportTypeDistributorInline]
     
     def assigned_customers_count(self, obj):
-        return obj.reporttypecustomer_set.count()
+        return obj.customer_assignments.count()
     assigned_customers_count.short_description = 'Assigned Customers'
 
     def assigned_distributors_count(self, obj):
-        return obj.reporttypedistributor_set.count()
+        return obj.distributor_assignments.count()
     assigned_distributors_count.short_description = 'Assigned Distributors'
 
     def save_model(self, request, obj, form, change):
