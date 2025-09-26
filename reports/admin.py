@@ -106,7 +106,7 @@ class ReportAdmin(admin.ModelAdmin):
     list_display = ('document_number', 'report_type', 'customer', 'distributor', 'status', 'prepared_by', 'inspection_date', 'pdf_status', 'pdf_download_link')
     list_filter = ('status', 'report_type', 'inspection_date', 'created_at', 'pdf_needs_regeneration')
     search_fields = ('document_number', 'customer__businessName', 'distributor__businessName', 'store_compliance_manager')
-    readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button')
+    readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button', 'regenerate_pdf_button')
     inlines = [AnswerInline]
 
     actions = ['generate_pdfs', 'regenerate_pdfs']
@@ -122,7 +122,7 @@ class ReportAdmin(admin.ModelAdmin):
             'fields': ('status', 'submitted_at', 'reviewed_by', 'reviewed_at')
         }),
         ('PDF Generation', {
-            'fields': ('pdf_file', 'pdf_download_button', 'pdf_generated_at', 'pdf_needs_regeneration'),
+            'fields': ('pdf_file', 'pdf_download_button', 'regenerate_pdf_button', 'pdf_generated_at', 'pdf_needs_regeneration'),
             'classes': ('collapse',)
         }),
         ('Timestamps', {
@@ -172,6 +172,16 @@ class ReportAdmin(admin.ModelAdmin):
             )
     pdf_download_button.short_description = 'PDF Download'
 
+    def regenerate_pdf_button(self, obj):
+        from django.utils.html import format_html
+        from django.urls import reverse
+        regenerate_url = reverse('admin:reports_report_regenerate_pdf', args=[obj.pk])
+        return format_html(
+            '<a href="{}" class="button" onclick="return confirm(\'Regenerate PDF for this report?\')">Regenerate PDF</a>',
+            regenerate_url
+        )
+    regenerate_pdf_button.short_description = 'Regenerate PDF'
+
     def generate_pdfs(self, request, queryset):
         generated_count = 0
         error_count = 0
@@ -205,6 +215,7 @@ class ReportAdmin(admin.ModelAdmin):
         urls = super().get_urls()
         custom_urls = [
             path('<int:object_id>/download-pdf/', self.pdf_download_view, name='reports_report_pdf_download'),
+            path('<int:object_id>/regenerate-pdf/', self.regenerate_pdf_view, name='reports_report_regenerate_pdf'),
         ]
         return custom_urls + urls
 
@@ -237,6 +248,31 @@ class ReportAdmin(admin.ModelAdmin):
                 return response
         except IOError:
             raise Http404("Error reading PDF file")
+
+    def regenerate_pdf_view(self, request, object_id):
+        from django.http import HttpResponseRedirect
+        from django.shortcuts import get_object_or_404
+        from django.contrib import messages
+        from django.urls import reverse
+
+        # Get the report object
+        report = get_object_or_404(Report, pk=object_id)
+
+        try:
+            # Force regeneration
+            report.pdf_needs_regeneration = True
+            success = report.generate_pdf()
+
+            if success:
+                messages.success(request, f'PDF successfully regenerated for report {report.document_number}')
+            else:
+                messages.error(request, f'Failed to regenerate PDF for report {report.document_number}')
+
+        except Exception as e:
+            messages.error(request, f'Error regenerating PDF: {str(e)}')
+
+        # Redirect back to the report detail page
+        return HttpResponseRedirect(reverse('admin:reports_report_change', args=[object_id]))
 
 
 @admin.register(Answer)

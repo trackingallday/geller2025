@@ -281,6 +281,13 @@ class Report(MyBaseModel):
     def generate_pdf(self):
         """Generate PDF for this report"""
         from .utils import ReportPDFGenerator
+        from django.conf import settings
+        import os
+
+        # Ensure the PDF directory exists
+        pdf_dir = os.path.join(settings.MEDIA_ROOT, 'report_pdfs')
+        if not os.path.exists(pdf_dir):
+            os.makedirs(pdf_dir, exist_ok=True)
 
         generator = ReportPDFGenerator(self)
         pdf_path = generator.generate()
@@ -288,7 +295,6 @@ class Report(MyBaseModel):
         if pdf_path:
             # Update the model with the generated PDF
             from django.core.files import File
-            import os
 
             with open(pdf_path, 'rb') as pdf_file:
                 self.pdf_file.save(
