@@ -6,6 +6,7 @@ from .models import (
 )
 
 
+
 class ReportSectionInline(admin.TabularInline):
     model = ReportSection
     extra = 0
