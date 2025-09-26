@@ -10,13 +10,18 @@ RUN apt-get update && apt-get install -y \
     build-essential \
     libsqlite3-dev \
     libpq-dev \
-    libgobject-2.0-dev \
-    libglib2.0-dev \
-    libcairo2-dev \
-    libpango1.0-dev \
-    libgdk-pixbuf2.0-dev \
+    python3-cffi \
+    python3-brotli \
+    libpango-1.0-0 \
+    libpangoft2-1.0-0 \
+    libpangocairo-1.0-0 \
+    libharfbuzz-subset0 \
+    libcairo2 \
+    libgdk-pixbuf-2.0-0 \
     libffi-dev \
-    shared-mime-info \
+    libjpeg62-turbo-dev \
+    libopenjp2-7-dev \
+    && apt-get clean \
     && rm -rf /var/lib/apt/lists/*
 
 COPY requirements.txt /app/
