@@ -1,7 +1,7 @@
 from django.contrib import admin
 from .models import (
-    ReportType, ReportSection, Question, QuestionOption, 
-    Report, Answer, ConditionalRule, ReportTypeCustomer, 
+    ReportType, ReportSection, Question, QuestionOption,
+    Report, Answer, ConditionalRule, ReportTypeCustomer, ReportTypeDistributor,
     QuestionTemplate
 )
 
@@ -32,17 +32,28 @@ class ReportTypeCustomerInline(admin.TabularInline):
     readonly_fields = ('assigned_date', 'assigned_by')
 
 
+class ReportTypeDistributorInline(admin.TabularInline):
+    model = ReportTypeDistributor
+    extra = 0
+    fields = ('distributor', 'is_active', 'assigned_date', 'assigned_by')
+    readonly_fields = ('assigned_date', 'assigned_by')
+
+
 @admin.register(ReportType)
 class ReportTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'auto_number_prefix', 'assigned_customers_count', 'is_active', 'created_by', 'created_at')
+    list_display = ('name', 'auto_number_prefix', 'assigned_customers_count', 'assigned_distributors_count', 'is_active', 'created_by', 'created_at')
     list_filter = ('is_active', 'created_at')
     search_fields = ('name', 'description')
-    inlines = [ReportSectionInline, QuestionInline, ReportTypeCustomerInline]
+    inlines = [ReportSectionInline, QuestionInline, ReportTypeCustomerInline, ReportTypeDistributorInline]
     
     def assigned_customers_count(self, obj):
         return obj.reporttypecustomer_set.count()
     assigned_customers_count.short_description = 'Assigned Customers'
-    
+
+    def assigned_distributors_count(self, obj):
+        return obj.reporttypedistributor_set.count()
+    assigned_distributors_count.short_description = 'Assigned Distributors'
+
     def save_model(self, request, obj, form, change):
         if not change:
             obj.created_by = request.user
@@ -91,11 +102,13 @@ class AnswerInline(admin.TabularInline):
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'status', 'prepared_by', 'inspection_date')
-    list_filter = ('status', 'report_type', 'inspection_date', 'created_at')
+    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'status', 'prepared_by', 'inspection_date', 'pdf_status', 'pdf_download_link')
+    list_filter = ('status', 'report_type', 'inspection_date', 'created_at', 'pdf_needs_regeneration')
     search_fields = ('document_number', 'customer__businessName', 'distributor__businessName', 'store_compliance_manager')
-    readonly_fields = ('document_number', 'created_at', 'updated_at')
+    readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button')
     inlines = [AnswerInline]
+
+    actions = ['generate_pdfs', 'regenerate_pdfs']
     
     fieldsets = (
         ('Report Information', {
@@ -107,11 +120,122 @@ class ReportAdmin(admin.ModelAdmin):
         ('Status', {
             'fields': ('status', 'submitted_at', 'reviewed_by', 'reviewed_at')
         }),
+        ('PDF Generation', {
+            'fields': ('pdf_file', 'pdf_download_button', 'pdf_generated_at', 'pdf_needs_regeneration'),
+            'classes': ('collapse',)
+        }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
             'classes': ('collapse',)
         })
     )
+
+    def pdf_status(self, obj):
+        if obj.pdf_file:
+            if obj.pdf_needs_regeneration:
+                return "Available (needs regeneration)"
+            else:
+                return "Available"
+        else:
+            return "Not generated"
+    pdf_status.short_description = 'PDF Status'
+
+    def pdf_download_link(self, obj):
+        if obj.pdf_file:
+            from django.utils.html import format_html
+            from django.urls import reverse
+            download_url = reverse('admin:reports_report_pdf_download', args=[obj.pk])
+            return format_html(
+                '<a href="{}" target="_blank" class="button">Download PDF</a>',
+                download_url
+            )
+        else:
+            return "No PDF"
+    pdf_download_link.short_description = 'Download'
+
+    def pdf_download_button(self, obj):
+        if obj.pdf_file:
+            from django.utils.html import format_html
+            from django.urls import reverse
+            download_url = reverse('admin:reports_report_pdf_download', args=[obj.pk])
+            return format_html(
+                '<a href="{}" target="_blank" class="button default">Download PDF Report</a><br><br>'
+                '<small>File: {}</small>',
+                download_url,
+                obj.pdf_file.name
+            )
+        else:
+            return format_html(
+                '<em>No PDF generated yet.</em><br>'
+                '<small>Save the report and generate PDF using the admin actions above.</small>'
+            )
+    pdf_download_button.short_description = 'PDF Download'
+
+    def generate_pdfs(self, request, queryset):
+        generated_count = 0
+        error_count = 0
+
+        for report in queryset:
+            try:
+                if report.generate_pdf():
+                    generated_count += 1
+                else:
+                    error_count += 1
+            except Exception as e:
+                error_count += 1
+                self.message_user(request, f"Error generating PDF for {report.document_number}: {str(e)}", level='ERROR')
+
+        if generated_count > 0:
+            self.message_user(request, f"Successfully generated {generated_count} PDF(s).")
+        if error_count > 0:
+            self.message_user(request, f"Failed to generate {error_count} PDF(s).", level='WARNING')
+
+    generate_pdfs.short_description = "Generate PDFs for selected reports"
+
+    def regenerate_pdfs(self, request, queryset):
+        # Force regeneration by marking all as needing regeneration
+        queryset.update(pdf_needs_regeneration=True)
+        self.generate_pdfs(request, queryset)
+
+    regenerate_pdfs.short_description = "Regenerate PDFs for selected reports"
+
+    def get_urls(self):
+        from django.urls import path
+        urls = super().get_urls()
+        custom_urls = [
+            path('<int:object_id>/download-pdf/', self.pdf_download_view, name='reports_report_pdf_download'),
+        ]
+        return custom_urls + urls
+
+    def pdf_download_view(self, request, object_id):
+        from django.http import HttpResponse, Http404
+        from django.shortcuts import get_object_or_404
+        import mimetypes
+        import os
+
+        # Get the report object
+        report = get_object_or_404(Report, pk=object_id)
+
+        # Check if PDF exists
+        if not report.pdf_file:
+            # Try to generate PDF if it doesn't exist
+            if report.generate_pdf():
+                report.refresh_from_db()
+            else:
+                raise Http404("PDF not available")
+
+        # Check if file exists on disk
+        if not report.pdf_file or not os.path.exists(report.pdf_file.path):
+            raise Http404("PDF file not found")
+
+        # Serve the PDF file
+        try:
+            with open(report.pdf_file.path, 'rb') as pdf_file:
+                response = HttpResponse(pdf_file.read(), content_type='application/pdf')
+                response['Content-Disposition'] = f'attachment; filename="{report.document_number}.pdf"'
+                return response
+        except IOError:
+            raise Http404("Error reading PDF file")
 
 
 @admin.register(Answer)
@@ -163,6 +287,30 @@ class ReportTypeCustomerAdmin(admin.ModelAdmin):
     customer_email.short_description = 'Customer Email'
     customer_email.admin_order_field = 'customer__email'
     
+    def save_model(self, request, obj, form, change):
+        if not change:
+            obj.assigned_by = request.user
+        super().save_model(request, obj, form, change)
+
+
+@admin.register(ReportTypeDistributor)
+class ReportTypeDistributorAdmin(admin.ModelAdmin):
+    list_display = ('report_type', 'distributor_name', 'distributor_email', 'assigned_date', 'is_active', 'assigned_by')
+    list_filter = ('report_type', 'assigned_date', 'is_active')
+    search_fields = ('distributor__businessName', 'distributor__user__email', 'report_type__name')
+    readonly_fields = ('assigned_date', 'assigned_by')
+    date_hierarchy = 'assigned_date'
+
+    def distributor_name(self, obj):
+        return obj.distributor.businessName or obj.distributor.user.get_full_name()
+    distributor_name.short_description = 'Distributor Name'
+    distributor_name.admin_order_field = 'distributor__businessName'
+
+    def distributor_email(self, obj):
+        return obj.distributor.user.email
+    distributor_email.short_description = 'Distributor Email'
+    distributor_email.admin_order_field = 'distributor__user__email'
+
     def save_model(self, request, obj, form, change):
         if not change:
             obj.assigned_by = request.user

@@ -91,6 +91,37 @@ class ReportType(MyBaseModel):
             assignment.save()
         return assignment
 
+    def is_available_to_distributor(self, distributor):
+        """Check if this report type is available to the specified distributor"""
+        return self.distributor_assignments.filter(
+            distributor=distributor,
+            is_active=True
+        ).exists()
+
+    def get_assigned_distributors(self):
+        """Get all distributors assigned to this report type"""
+        return Distributor.objects.filter(
+            report_type_assignments__report_type=self,
+            report_type_assignments__is_active=True
+        )
+
+    def assign_to_distributor(self, distributor, assigned_by=None, notes=None):
+        """Assign this report type to a distributor"""
+        assignment, created = ReportTypeDistributor.objects.get_or_create(
+            report_type=self,
+            distributor=distributor,
+            defaults={
+                'assigned_by': assigned_by,
+                'notes': notes
+            }
+        )
+        if not created and not assignment.is_active:
+            assignment.is_active = True
+            assignment.assigned_by = assigned_by
+            assignment.notes = notes
+            assignment.save()
+        return assignment
+
 
 class ReportSection(MyBaseModel):
     """Groups related questions within a report type"""
@@ -185,6 +216,11 @@ class Report(MyBaseModel):
     submitted_at = models.DateTimeField(blank=True, null=True)
     reviewed_by = models.ForeignKey(User, on_delete=models.SET_NULL, blank=True, null=True, related_name='reports_reviewed')
     reviewed_at = models.DateTimeField(blank=True, null=True)
+
+    # PDF Generation
+    pdf_file = models.FileField(upload_to='report_pdfs/', blank=True, null=True, help_text="Generated PDF of the report")
+    pdf_generated_at = models.DateTimeField(blank=True, null=True)
+    pdf_needs_regeneration = models.BooleanField(default=True, help_text="True if PDF needs to be regenerated due to changes")
     
     class Meta:
         ordering = ['-created_at']
@@ -195,7 +231,90 @@ class Report(MyBaseModel):
     def save(self, *args, **kwargs):
         if not self.document_number:
             self.document_number = self.report_type.get_next_document_number()
+
+        # Check if this is an update and if key fields have changed
+        if self.pk:
+            old_instance = Report.objects.get(pk=self.pk)
+            # Mark PDF for regeneration if key fields changed
+            if (old_instance.status != self.status or
+                old_instance.inspection_date != self.inspection_date or
+                old_instance.store_compliance_manager != self.store_compliance_manager):
+                self.pdf_needs_regeneration = True
+
         super().save(*args, **kwargs)
+
+    def get_all_answers_with_images(self):
+        """Get all answers for this report, organized by section with image handling"""
+        answers_by_section = {}
+
+        for answer in self.answers.select_related('question', 'question__section').prefetch_related('selected_options'):
+            section_name = answer.question.section.name if answer.question.section else "General"
+
+            if section_name not in answers_by_section:
+                answers_by_section[section_name] = []
+
+            answer_data = {
+                'question': answer.question,
+                'answer': answer,
+                'display_value': answer.get_display_value(),
+                'has_image': bool(answer.file_answer or answer.signature_answer or answer.attachment),
+                'images': []
+            }
+
+            # Collect all images for this answer
+            if answer.file_answer and self._is_image_file(answer.file_answer.name):
+                answer_data['images'].append(answer.file_answer)
+            if answer.signature_answer:
+                answer_data['images'].append(answer.signature_answer)
+            if answer.attachment and self._is_image_file(answer.attachment.name):
+                answer_data['images'].append(answer.attachment)
+
+            answers_by_section[section_name].append(answer_data)
+
+        return answers_by_section
+
+    def _is_image_file(self, filename):
+        """Check if file is an image based on extension"""
+        image_extensions = ['.jpg', '.jpeg', '.png', '.gif', '.bmp', '.tiff', '.webp']
+        return any(filename.lower().endswith(ext) for ext in image_extensions)
+
+    def generate_pdf(self):
+        """Generate PDF for this report"""
+        from .utils import ReportPDFGenerator
+
+        generator = ReportPDFGenerator(self)
+        pdf_path = generator.generate()
+
+        if pdf_path:
+            # Update the model with the generated PDF
+            from django.core.files import File
+            import os
+
+            with open(pdf_path, 'rb') as pdf_file:
+                self.pdf_file.save(
+                    f"{self.document_number}.pdf",
+                    File(pdf_file),
+                    save=False
+                )
+
+            self.pdf_generated_at = timezone.now()
+            self.pdf_needs_regeneration = False
+            self.save(update_fields=['pdf_file', 'pdf_generated_at', 'pdf_needs_regeneration'])
+
+            # Clean up temporary file
+            try:
+                os.remove(pdf_path)
+            except OSError:
+                pass
+
+            return True
+        return False
+
+    def get_or_generate_pdf(self):
+        """Get existing PDF or generate new one if needed"""
+        if not self.pdf_file or self.pdf_needs_regeneration:
+            self.generate_pdf()
+        return self.pdf_file
 
 
 class Answer(MyBaseModel):
@@ -220,6 +339,20 @@ class Answer(MyBaseModel):
     
     def __str__(self):
         return f"{self.report.document_number} - {self.question.question_text[:30]}..."
+
+    def save(self, *args, **kwargs):
+        # Mark the report's PDF for regeneration when an answer changes
+        if self.pk:
+            # This is an update
+            self.report.pdf_needs_regeneration = True
+            self.report.save(update_fields=['pdf_needs_regeneration'])
+
+        super().save(*args, **kwargs)
+
+        # If this is a new answer, also mark for regeneration
+        if not self.pk or 'force_insert' in kwargs:
+            self.report.pdf_needs_regeneration = True
+            self.report.save(update_fields=['pdf_needs_regeneration'])
     
     def get_display_value(self):
         """Get the display value for this answer"""
@@ -254,6 +387,23 @@ class ReportTypeCustomer(MyBaseModel):
     
     def __str__(self):
         return f"{self.report_type.name} -> {self.customer.businessName}"
+
+
+class ReportTypeDistributor(MyBaseModel):
+    """Links report types to specific distributors who can access them"""
+    report_type = models.ForeignKey(ReportType, on_delete=models.CASCADE, related_name='distributor_assignments')
+    distributor = models.ForeignKey(Distributor, on_delete=models.CASCADE, related_name='report_type_assignments')
+    is_active = models.BooleanField(default=True)
+    assigned_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='distributor_report_assignments_made')
+    assigned_date = models.DateTimeField(auto_now_add=True)
+    notes = models.TextField(blank=True, null=True, help_text="Optional notes about this assignment")
+
+    class Meta:
+        unique_together = ['report_type', 'distributor']
+        ordering = ['report_type__name', 'distributor__businessName']
+
+    def __str__(self):
+        return f"{self.report_type.name} -> {self.distributor.businessName}"
 
 
 class QuestionTemplate(MyBaseModel):

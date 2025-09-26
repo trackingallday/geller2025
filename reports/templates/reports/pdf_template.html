@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>{{ report.report_type.name }} - {{ report.document_number }}</title>
+</head>
+<body>
+    <!-- Header Section -->
+    <div class="header">
+        <div class="header-left">
+            <h1 class="report-title">{{ report.report_type.name }}</h1>
+            <div class="company-info">
+                <strong>{{ company_name }}</strong><br>
+                {{ company_website }}
+            </div>
+        </div>
+        <div class="header-right">
+            {% if customer_logo %}
+                <img src="{{ customer_logo }}" alt="Customer Logo" class="logo">
+            {% endif %}
+            {% if distributor_logo %}
+                <img src="{{ distributor_logo }}" alt="Distributor Logo" class="logo">
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Report Metadata -->
+    <div class="report-meta">
+        <table>
+            <tr>
+                <td class="label">Document Number:</td>
+                <td>{{ report.document_number }}</td>
+                <td class="label">Status:</td>
+                <td class="status-{{ report.status }}">{{ report.get_status_display }}</td>
+            </tr>
+            <tr>
+                <td class="label">Inspection Date:</td>
+                <td>{{ report.inspection_date|date:"F d, Y" }}</td>
+                <td class="label">Prepared By:</td>
+                <td>{{ report.prepared_by.get_full_name|default:report.prepared_by.username }}</td>
+            </tr>
+            {% if report.customer %}
+            <tr>
+                <td class="label">Customer:</td>
+                <td>{{ report.customer.businessName }}</td>
+                <td class="label">Customer Contact:</td>
+                <td>{{ report.customer.user.email }}</td>
+            </tr>
+            {% endif %}
+            {% if report.distributor %}
+            <tr>
+                <td class="label">Distributor:</td>
+                <td>{{ report.distributor.businessName }}</td>
+                <td class="label">Distributor Contact:</td>
+                <td>{{ report.distributor.user.email }}</td>
+            </tr>
+            {% endif %}
+            {% if report.store_compliance_manager %}
+            <tr>
+                <td class="label">Store Compliance Manager:</td>
+                <td colspan="3">{{ report.store_compliance_manager }}</td>
+            </tr>
+            {% endif %}
+        </table>
+    </div>
+
+    <!-- Report Sections and Answers -->
+    {% for section_name, section_answers in answers_by_section.items %}
+        <div class="section">
+            <h2 class="section-title">{{ section_name }}</h2>
+
+            {% for answer_data in section_answers %}
+                <div class="question-block">
+                    <div class="question">
+                        {{ answer_data.question.question_text }}
+                        {% if answer_data.question.is_required %}
+                            <span style="color: #dc3545;">*</span>
+                        {% endif %}
+                    </div>
+
+                    {% if answer_data.question.help_text %}
+                        <div style="font-size: 10px; color: #666; font-style: italic; margin-bottom: 8px;">
+                            {{ answer_data.question.help_text }}
+                        </div>
+                    {% endif %}
+
+                    <div class="answer">
+                        <div class="answer-text">
+                            {% if answer_data.display_value != "No answer" %}
+                                {{ answer_data.display_value|linebreaks }}
+                            {% else %}
+                                <em style="color: #999;">No answer provided</em>
+                            {% endif %}
+                        </div>
+                    </div>
+
+                    <!-- Display images if any -->
+                    {% if answer_data.processed_images %}
+                        {% for image in answer_data.processed_images %}
+                            <div class="image-container">
+                                <img src="{{ image.url }}"
+                                     alt="Answer attachment"
+                                     class="report-image"
+                                     style="width: {{ image.width }}px; height: {{ image.height }}px;">
+                                <div class="image-caption">
+                                    Attachment - Original size: {{ image.original_width|default:"Unknown" }}×{{ image.original_height|default:"Unknown" }}px
+                                </div>
+                            </div>
+                        {% endfor %}
+                    {% endif %}
+
+                    <!-- Display additional notes if any -->
+                    {% if answer_data.answer.notes %}
+                        <div style="margin-top: 10px; padding: 8px; background-color: #fff3cd; border-left: 3px solid #ffc107;">
+                            <strong style="font-size: 10px; color: #856404;">Notes:</strong><br>
+                            <span style="font-size: 10px;">{{ answer_data.answer.notes|linebreaks }}</span>
+                        </div>
+                    {% endif %}
+                </div>
+            {% empty %}
+                <div style="padding: 20px; text-align: center; color: #666; font-style: italic;">
+                    No answers recorded for this section.
+                </div>
+            {% endfor %}
+        </div>
+
+        <!-- Add page break after each section except the last one -->
+        {% if not forloop.last %}
+            <div class="page-break"></div>
+        {% endif %}
+    {% empty %}
+        <div class="section">
+            <div style="padding: 40px; text-align: center; color: #666; font-style: italic;">
+                This report contains no answered questions.
+            </div>
+        </div>
+    {% endfor %}
+
+    <!-- Report Status and Review Information -->
+    {% if report.status != 'draft' %}
+        <div class="section">
+            <h2 class="section-title">Report Status Information</h2>
+            <div class="report-meta">
+                <table>
+                    {% if report.submitted_at %}
+                    <tr>
+                        <td class="label">Submitted:</td>
+                        <td colspan="3">{{ report.submitted_at|date:"F d, Y g:i A" }}</td>
+                    </tr>
+                    {% endif %}
+                    {% if report.reviewed_by %}
+                    <tr>
+                        <td class="label">Reviewed By:</td>
+                        <td>{{ report.reviewed_by.get_full_name|default:report.reviewed_by.username }}</td>
+                        <td class="label">Reviewed:</td>
+                        <td>{{ report.reviewed_at|date:"F d, Y g:i A" }}</td>
+                    </tr>
+                    {% endif %}
+                </table>
+            </div>
+        </div>
+    {% endif %}
+
+    <!-- Footer Information -->
+    <div class="footer-info">
+        <p>
+            Report generated on {{ generated_at|date:"F d, Y g:i A" }}<br>
+            This is an automatically generated report from {{ company_website }}<br>
+            <strong>{{ company_name }}</strong>
+        </p>
+    </div>
+</body>
+</html>
