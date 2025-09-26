@@ -26,6 +26,7 @@ from chemsapp.views import upload_file
 
 
 urlpatterns = [
+    re_path(r'^$', RedirectView.as_view(url='/admin/', permanent=True), name='home'),
     re_path(r'^admin/', admin.site.urls, name='admin'),
     re_path(r'^admin$', RedirectView.as_view(url='/admin/', permanent=True)),
     re_path(r'^get_auth_token/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
