@@ -110,27 +110,27 @@ APPEND_SLASH=True
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
-DATABASES = {
-    'default': {
-        'ENGINE': 'django.db.backends.postgresql',
-        'NAME': 'geller_db',
-        'USER': 'postgres',
-        'PASSWORD': 'postgres',
-        'HOST': 'localhost',
-        'PORT': '5432',
-    }
-}
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': os.getenv('PGDATABASE', 'railway'),
-#         'USER': os.getenv('PGUSER', 'postgres'),
-#         'PASSWORD': os.getenv('PGPASSWORD', 'PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS'),
-#         'HOST': os.getenv('PGHOST', 'switchyard.proxy.rlwy.net'),  # Use Railway internal host.
-#         'PORT': os.getenv('PGPORT', '41935'),
-#         #postgresql://postgres:PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS@postgres.railway.internal:5432/railway
+#         'NAME': 'geller_db',
+#         'USER': 'postgres',
+#         'PASSWORD': 'postgres',
+#         'HOST': 'localhost',
+#         'PORT': '5432',
 #     }
 # }
+DATABASES = {
+    'default': {
+        'ENGINE': 'django.db.backends.postgresql',
+        'NAME': os.getenv('PGDATABASE', 'railway'),
+        'USER': os.getenv('PGUSER', 'postgres'),
+        'PASSWORD': os.getenv('PGPASSWORD', 'PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS'),
+        'HOST': os.getenv('PGHOST', 'switchyard.proxy.rlwy.net'),  # Use Railway internal host.
+        'PORT': os.getenv('PGPORT', '41935'),
+        #postgresql://postgres:PWYTQNKQXOJoTsQmVljvcyJFtEICRyeS@postgres.railway.internal:5432/railway
+    }
+}
 
 # import os
 # from urllib.parse import urlparse
@@ -205,9 +205,9 @@ USE_TZ = True
 STATIC_URL = '/static/'
 MEDIA_URL = '/media/'
 # Server deployment media root
-# MEDIA_ROOT = '/data'
+MEDIA_ROOT = '/data'
 # Development media root
-MEDIA_ROOT = '/Users/rimu/Documents/GitHub/geller.website/media'
+#MEDIA_ROOT = '/Users/rimu/Documents/GitHub/geller.website/media'
 
 CHEMS_APP_DIR = os.path.join(BASE_DIR, 'chemsapp')
 MAIN_DIR = os.path.join(BASE_DIR, 'chemicaldatasheets')
