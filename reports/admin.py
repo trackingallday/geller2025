@@ -1,4 +1,9 @@
 from django.contrib import admin
+from django.utils.html import format_html
+from django.urls import reverse
+from django.http import HttpResponse, Http404, HttpResponseRedirect
+from django.shortcuts import get_object_or_404
+from django.contrib import messages
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
     Report, Answer, ConditionalRule, ReportTypeCustomer, ReportTypeDistributor,
@@ -97,16 +102,54 @@ class QuestionOptionAdmin(admin.ModelAdmin):
 class AnswerInline(admin.TabularInline):
     model = Answer
     extra = 0
-    fields = ('question', 'text_answer', 'file_answer', 'signature_answer')
-    readonly_fields = ('question',)
+    fields = ('question', 'text_answer', 'file_answer', 'file_image_preview', 'signature_answer', 'signature_image_preview', 'attachment', 'attachment_image_preview')
+    readonly_fields = ('question', 'file_image_preview', 'signature_image_preview', 'attachment_image_preview')
+
+    def file_image_preview(self, obj):
+        if obj.file_answer:
+            file_url = obj.file_answer.url
+            file_name = obj.file_answer.name.lower()
+            if any(ext in file_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                return format_html(
+                    '<img src="{}" style="max-height: 100px; max-width: 150px;" /><br><small><a href="{}" target="_blank">{}</a></small>',
+                    file_url, file_url, obj.file_answer.name
+                )
+            else:
+                return format_html('<a href="{}" target="_blank">{}</a>', file_url, obj.file_answer.name)
+        return "No file"
+    file_image_preview.short_description = 'File Preview'
+
+    def signature_image_preview(self, obj):
+        if obj.signature_answer:
+            file_url = obj.signature_answer.url
+            return format_html(
+                '<img src="{}" style="max-height: 100px; max-width: 150px;" /><br><small><a href="{}" target="_blank">{}</a></small>',
+                file_url, file_url, obj.signature_answer.name
+            )
+        return "No signature"
+    signature_image_preview.short_description = 'Signature Preview'
+
+    def attachment_image_preview(self, obj):
+        if obj.attachment:
+            file_url = obj.attachment.url
+            file_name = obj.attachment.name.lower()
+            if any(ext in file_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                return format_html(
+                    '<img src="{}" style="max-height: 100px; max-width: 150px;" /><br><small><a href="{}" target="_blank">{}</a></small>',
+                    file_url, file_url, obj.attachment.name
+                )
+            else:
+                return format_html('<a href="{}" target="_blank">{}</a>', file_url, obj.attachment.name)
+        return "No attachment"
+    attachment_image_preview.short_description = 'Attachment Preview'
 
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'status', 'prepared_by', 'inspection_date', 'pdf_status', 'pdf_download_link')
+    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'status', 'prepared_by', 'inspection_date', 'images_count', 'pdf_status', 'pdf_download_link')
     list_filter = ('status', 'report_type', 'inspection_date', 'created_at', 'pdf_needs_regeneration')
     search_fields = ('document_number', 'customer__businessName', 'distributor__businessName', 'store_compliance_manager')
-    readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button', 'regenerate_pdf_button')
+    readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button', 'regenerate_pdf_button', 'images_summary')
     inlines = [AnswerInline]
 
     actions = ['generate_pdfs', 'regenerate_pdfs']
@@ -123,6 +166,10 @@ class ReportAdmin(admin.ModelAdmin):
         }),
         ('PDF Generation', {
             'fields': ('pdf_file', 'pdf_download_button', 'regenerate_pdf_button', 'pdf_generated_at', 'pdf_needs_regeneration'),
+            'classes': ('collapse',)
+        }),
+        ('Images Summary', {
+            'fields': ('images_summary',),
             'classes': ('collapse',)
         }),
         ('Timestamps', {
@@ -143,8 +190,6 @@ class ReportAdmin(admin.ModelAdmin):
 
     def pdf_download_link(self, obj):
         if obj.pdf_file:
-            from django.utils.html import format_html
-            from django.urls import reverse
             download_url = reverse('admin:reports_report_pdf_download', args=[obj.pk])
             return format_html(
                 '<a href="{}" target="_blank" class="button">Download PDF</a>',
@@ -156,8 +201,6 @@ class ReportAdmin(admin.ModelAdmin):
 
     def pdf_download_button(self, obj):
         if obj.pdf_file:
-            from django.utils.html import format_html
-            from django.urls import reverse
             download_url = reverse('admin:reports_report_pdf_download', args=[obj.pk])
             return format_html(
                 '<a href="{}" target="_blank" class="button default">Download PDF Report</a><br><br>'
@@ -173,8 +216,6 @@ class ReportAdmin(admin.ModelAdmin):
     pdf_download_button.short_description = 'PDF Download'
 
     def regenerate_pdf_button(self, obj):
-        from django.utils.html import format_html
-        from django.urls import reverse
         regenerate_url = reverse('admin:reports_report_regenerate_pdf', args=[obj.pk])
         return format_html(
             '<a href="{}" class="button" onclick="return confirm(\'Regenerate PDF for this report?\')">Regenerate PDF</a>',
@@ -220,8 +261,6 @@ class ReportAdmin(admin.ModelAdmin):
         return custom_urls + urls
 
     def pdf_download_view(self, request, object_id):
-        from django.http import HttpResponse, Http404
-        from django.shortcuts import get_object_or_404
         import mimetypes
         import os
 
@@ -250,10 +289,6 @@ class ReportAdmin(admin.ModelAdmin):
             raise Http404("Error reading PDF file")
 
     def regenerate_pdf_view(self, request, object_id):
-        from django.http import HttpResponseRedirect
-        from django.shortcuts import get_object_or_404
-        from django.contrib import messages
-        from django.urls import reverse
 
         # Get the report object
         report = get_object_or_404(Report, pk=object_id)
@@ -274,21 +309,147 @@ class ReportAdmin(admin.ModelAdmin):
         # Redirect back to the report detail page
         return HttpResponseRedirect(reverse('admin:reports_report_change', args=[object_id]))
 
+    def images_count(self, obj):
+        """Count total images/files in the report"""
+        from django.db.models import Q
+        count = obj.answers.filter(
+            Q(file_answer__isnull=False) |
+            Q(signature_answer__isnull=False) |
+            Q(attachment__isnull=False)
+        ).count()
+        if count > 0:
+            return f"{count} 📷"
+        return "—"
+    images_count.short_description = 'Images'
+    images_count.admin_order_field = 'answers__file_answer'
+
+    def images_summary(self, obj):
+        """Show detailed summary of all images in the report"""
+        from django.db.models import Q
+
+        answers_with_files = obj.answers.filter(
+            Q(file_answer__isnull=False) |
+            Q(signature_answer__isnull=False) |
+            Q(attachment__isnull=False)
+        ).select_related('question')
+
+        if not answers_with_files:
+            return format_html('<em>No images in this report</em>')
+
+        html_parts = ['<div style="max-width: 800px;">']
+        html_parts.append('<h4>Images in this Report:</h4>')
+
+        for answer in answers_with_files:
+            html_parts.append(f'<div style="margin-bottom: 20px; border: 1px solid #ddd; padding: 10px;">')
+            html_parts.append(f'<strong>Question:</strong> {answer.question.question_text[:80]}...<br>')
+
+            if answer.file_answer:
+                file_url = answer.file_answer.url
+                file_name = answer.file_answer.name.lower()
+                if any(ext in file_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                    html_parts.append(f'<strong>File Answer:</strong><br>')
+                    html_parts.append(f'<img src="{file_url}" style="max-height: 150px; max-width: 200px; margin: 5px 0;" /><br>')
+                    html_parts.append(f'<small><a href="{file_url}" target="_blank">{answer.file_answer.name}</a></small><br>')
+                else:
+                    html_parts.append(f'<strong>File Answer:</strong> <a href="{file_url}" target="_blank">{answer.file_answer.name}</a><br>')
+
+            if answer.signature_answer:
+                sig_url = answer.signature_answer.url
+                html_parts.append(f'<strong>Signature:</strong><br>')
+                html_parts.append(f'<img src="{sig_url}" style="max-height: 100px; max-width: 200px; margin: 5px 0;" /><br>')
+                html_parts.append(f'<small><a href="{sig_url}" target="_blank">{answer.signature_answer.name}</a></small><br>')
+
+            if answer.attachment:
+                att_url = answer.attachment.url
+                att_name = answer.attachment.name.lower()
+                if any(ext in att_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                    html_parts.append(f'<strong>Attachment:</strong><br>')
+                    html_parts.append(f'<img src="{att_url}" style="max-height: 150px; max-width: 200px; margin: 5px 0;" /><br>')
+                    html_parts.append(f'<small><a href="{att_url}" target="_blank">{answer.attachment.name}</a></small><br>')
+                else:
+                    html_parts.append(f'<strong>Attachment:</strong> <a href="{att_url}" target="_blank">{answer.attachment.name}</a><br>')
+
+            html_parts.append('</div>')
+
+        html_parts.append('</div>')
+        return format_html(''.join(html_parts))
+    images_summary.short_description = 'All Images in Report'
+
 
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
-    list_display = ('report', 'question_short', 'answer_display', 'created_at')
+    list_display = ('report', 'question_short', 'answer_display', 'has_images', 'created_at')
     list_filter = ('report__report_type', 'question__question_type', 'created_at')
     search_fields = ('report__document_number', 'question__question_text', 'text_answer')
-    readonly_fields = ('created_at', 'updated_at')
-    
+    readonly_fields = ('created_at', 'updated_at', 'file_image_preview', 'signature_image_preview', 'attachment_image_preview')
+
+    fieldsets = (
+        ('Answer Information', {
+            'fields': ('report', 'question', 'text_answer', 'date_answer', 'number_answer')
+        }),
+        ('File Uploads', {
+            'fields': ('file_answer', 'file_image_preview', 'signature_answer', 'signature_image_preview', 'attachment', 'attachment_image_preview')
+        }),
+        ('Selected Options', {
+            'fields': ('selected_options',)
+        }),
+        ('Additional Info', {
+            'fields': ('notes', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+
     def question_short(self, obj):
         return obj.question.question_text[:40] + "..." if len(obj.question.question_text) > 40 else obj.question.question_text
     question_short.short_description = 'Question'
-    
+
     def answer_display(self, obj):
         return obj.get_display_value()
     answer_display.short_description = 'Answer'
+
+    def has_images(self, obj):
+        has_files = bool(obj.file_answer or obj.signature_answer or obj.attachment)
+        return "✓" if has_files else "—"
+    has_images.short_description = 'Images'
+    has_images.admin_order_field = 'file_answer'
+
+    def file_image_preview(self, obj):
+        if obj.file_answer:
+            file_url = obj.file_answer.url
+            file_name = obj.file_answer.name.lower()
+            if any(ext in file_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                return format_html(
+                    '<img src="{}" style="max-height: 200px; max-width: 300px; border: 1px solid #ddd;" /><br><small><a href="{}" target="_blank">{}</a></small>',
+                    file_url, file_url, obj.file_answer.name
+                )
+            else:
+                return format_html('<a href="{}" target="_blank">{}</a>', file_url, obj.file_answer.name)
+        return "No file"
+    file_image_preview.short_description = 'File Preview'
+
+    def signature_image_preview(self, obj):
+        if obj.signature_answer:
+            file_url = obj.signature_answer.url
+            return format_html(
+                '<img src="{}" style="max-height: 200px; max-width: 300px; border: 1px solid #ddd;" /><br><small><a href="{}" target="_blank">{}</a></small>',
+                file_url, file_url, obj.signature_answer.name
+            )
+        return "No signature"
+    signature_image_preview.short_description = 'Signature Preview'
+
+    def attachment_image_preview(self, obj):
+        if obj.attachment:
+            file_url = obj.attachment.url
+            file_name = obj.attachment.name.lower()
+            if any(ext in file_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                return format_html(
+                    '<img src="{}" style="max-height: 200px; max-width: 300px; border: 1px solid #ddd;" /><br><small><a href="{}" target="_blank">{}</a></small>',
+                    file_url, file_url, obj.attachment.name
+                )
+            else:
+                return format_html('<a href="{}" target="_blank">{}</a>', file_url, obj.attachment.name)
+        return "No attachment"
+    attachment_image_preview.short_description = 'Attachment Preview'
 
 
 @admin.register(ConditionalRule)

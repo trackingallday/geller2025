@@ -64,6 +64,60 @@
         </table>
     </div>
 
+    <!-- Executive Summary Table -->
+    <div class="executive-summary">
+        <h2 class="summary-title">Executive Summary</h2>
+        <table class="summary-table">
+            <thead>
+                <tr>
+                    <th class="summary-section">Section</th>
+                    <th class="summary-question">Question</th>
+                    <th class="summary-answer">Answer</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for section_name, section_answers in answers_by_section.items %}
+                    {% for answer_data in section_answers %}
+                        <tr class="summary-row">
+                            <td class="summary-section-cell">
+                                {% if forloop.first %}{{ section_name }}{% endif %}
+                            </td>
+                            <td class="summary-question-cell">
+                                {{ answer_data.question.question_text|truncatechars:60 }}
+                                {% if answer_data.question.is_required %}
+                                    <span class="required-marker">*</span>
+                                {% endif %}
+                            </td>
+                            <td class="summary-answer-cell">
+                                {% if answer_data.display_value != "No answer" %}
+                                    {{ answer_data.display_value|truncatechars:40|linebreaksbr }}
+                                {% else %}
+                                    <em class="no-answer">No answer</em>
+                                {% endif %}
+                            </td>
+                            <td class="summary-status-cell">
+                                {% if answer_data.display_value == "No answer" %}
+                                    <span class="status-missing">Missing</span>
+                                {% elif answer_data.question.is_required %}
+                                    <span class="status-complete">Complete</span>
+                                {% else %}
+                                    <span class="status-optional">Optional</span>
+                                {% endif %}
+                            </td>
+                        </tr>
+                    {% endfor %}
+                {% empty %}
+                    <tr>
+                        <td colspan="4" class="no-data">No questions answered in this report.</td>
+                    </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+    <!-- Page break after summary -->
+    <div class="page-break"></div>
+
     <!-- Report Sections and Answers -->
     {% for section_name, section_answers in answers_by_section.items %}
         <div class="section">

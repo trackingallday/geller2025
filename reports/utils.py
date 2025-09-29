@@ -33,8 +33,14 @@ class ReportPDFGenerator:
             context = self._get_context_data()
             html_content = template.render(context)
 
-            # Generate PDF
-            html = HTML(string=html_content, base_url=settings.MEDIA_URL)
+            # Generate PDF with proper base URL for media files
+            # Convert relative MEDIA_URL to absolute path for WeasyPrint
+            if hasattr(settings, 'MEDIA_ROOT') and settings.MEDIA_ROOT:
+                base_url = f"file://{settings.MEDIA_ROOT}/"
+            else:
+                # Fallback to relative URL
+                base_url = settings.MEDIA_URL
+            html = HTML(string=html_content, base_url=base_url)
             css = self._get_css_styles()
 
             # Create temporary file
@@ -94,18 +100,38 @@ class ReportPDFGenerator:
                 continue
 
             try:
-                # Get image path
+                # Get image path and URL
                 if hasattr(image_field, 'path') and os.path.exists(image_field.path):
                     image_path = image_field.path
+                    # Use file:// URL for local files
+                    image_url = f"file://{image_field.path}" if hasattr(image_field, 'path') else getattr(image_field, 'url', '')
                 elif hasattr(image_field, 'url'):
-                    # For images served via URL, we'll use the URL directly
-                    processed_images.append({
-                        'url': image_field.url,
-                        'is_portrait': True,  # Default assumption
-                        'width': self.portrait_width,
-                        'height': self.portrait_height
-                    })
-                    continue
+                    # For images served via URL, convert to file path if possible
+                    image_url = image_field.url
+                    # Try to convert URL to local file path
+                    if settings.MEDIA_URL in image_url and hasattr(settings, 'MEDIA_ROOT'):
+                        relative_path = image_url.replace(settings.MEDIA_URL, '')
+                        potential_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+                        if os.path.exists(potential_path):
+                            image_path = potential_path
+                            image_url = f"file://{potential_path}"
+                        else:
+                            # Use original URL as fallback
+                            processed_images.append({
+                                'url': image_url,
+                                'is_portrait': True,  # Default assumption
+                                'width': self.portrait_width,
+                                'height': self.portrait_height
+                            })
+                            continue
+                    else:
+                        processed_images.append({
+                            'url': image_url,
+                            'is_portrait': True,  # Default assumption
+                            'width': self.portrait_width,
+                            'height': self.portrait_height
+                        })
+                        continue
                 else:
                     continue
 
@@ -131,7 +157,7 @@ class ReportPDFGenerator:
                     final_height = int(original_height * scale_ratio)
 
                     processed_images.append({
-                        'url': image_field.url,
+                        'url': image_url,
                         'is_portrait': is_portrait,
                         'width': final_width,
                         'height': final_height,
@@ -141,9 +167,18 @@ class ReportPDFGenerator:
 
             except Exception as e:
                 logger.warning(f"Error processing image {image_field}: {str(e)}")
-                # Add image anyway with default dimensions
+                # Add image anyway with default dimensions, using file:// URL if possible
+                fallback_url = getattr(image_field, 'url', '')
+                if hasattr(image_field, 'path') and os.path.exists(image_field.path):
+                    fallback_url = f"file://{image_field.path}"
+                elif settings.MEDIA_URL in fallback_url and hasattr(settings, 'MEDIA_ROOT'):
+                    relative_path = fallback_url.replace(settings.MEDIA_URL, '')
+                    potential_path = os.path.join(settings.MEDIA_ROOT, relative_path)
+                    if os.path.exists(potential_path):
+                        fallback_url = f"file://{potential_path}"
+
                 processed_images.append({
-                    'url': getattr(image_field, 'url', ''),
+                    'url': fallback_url,
                     'is_portrait': True,
                     'width': self.portrait_width,
                     'height': self.portrait_height
@@ -308,6 +343,150 @@ class ReportPDFGenerator:
             font-size: 10px;
             color: #666;
             text-align: center;
+        }
+
+        /* Executive Summary Styles */
+        .executive-summary {
+            margin: 25px 0 30px 0;
+            page-break-inside: avoid;
+        }
+
+        .summary-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #0066cc;
+            margin: 0 0 15px 0;
+            padding: 8px 12px;
+            background-color: #e6f2ff;
+            border-left: 4px solid #0066cc;
+        }
+
+        .summary-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 10px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+        }
+
+        .summary-table thead {
+            background-color: #0066cc;
+            color: white;
+        }
+
+        .summary-table th {
+            padding: 8px 6px;
+            text-align: left;
+            font-weight: bold;
+            border-right: 1px solid rgba(255,255,255,0.3);
+        }
+
+        .summary-table th:last-child {
+            border-right: none;
+        }
+
+        .summary-table th.summary-section {
+            width: 18%;
+        }
+
+        .summary-table th.summary-question {
+            width: 40%;
+        }
+
+        .summary-table th.summary-answer {
+            width: 30%;
+        }
+
+        .summary-table th.summary-status {
+            width: 12%;
+            text-align: center;
+        }
+
+        .summary-row {
+            border-bottom: 1px solid #e9ecef;
+        }
+
+        .summary-row:nth-child(even) {
+            background-color: #f8f9fa;
+        }
+
+        .summary-row:hover {
+            background-color: #e6f2ff;
+        }
+
+        .summary-table td {
+            padding: 6px;
+            vertical-align: top;
+            border-right: 1px solid #e9ecef;
+            line-height: 1.3;
+        }
+
+        .summary-table td:last-child {
+            border-right: none;
+        }
+
+        .summary-section-cell {
+            font-weight: bold;
+            color: #495057;
+            background-color: #f1f3f4;
+        }
+
+        .summary-question-cell {
+            color: #333;
+        }
+
+        .summary-answer-cell {
+            color: #495057;
+            word-wrap: break-word;
+        }
+
+        .summary-status-cell {
+            text-align: center;
+        }
+
+        .required-marker {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+
+        .no-answer {
+            color: #6c757d;
+            font-style: italic;
+        }
+
+        .status-complete {
+            background-color: #28a745;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .status-missing {
+            background-color: #dc3545;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .status-optional {
+            background-color: #6c757d;
+            color: white;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+        }
+
+        .no-data {
+            text-align: center;
+            color: #6c757d;
+            font-style: italic;
+            padding: 20px;
         }
 
         /* Page break handling */

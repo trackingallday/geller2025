@@ -19,6 +19,19 @@ def create_auth_token(sender, instance=None, created=False, **kwargs):
         Token.objects.create(user=instance)
 
 
+@receiver(post_save, sender=settings.AUTH_USER_MODEL)
+def create_user_profile(sender, instance=None, created=False, **kwargs):
+    if created and not hasattr(instance, 'profile'):
+        # Create a basic profile for new users
+        Profile.objects.create(
+            user=instance,
+            phoneNumber='',
+            businessName=instance.get_full_name() or instance.username,
+            address='',
+            profileType='customer'  # Default to customer, can be changed later
+        )
+
+
 class MyBaseModel(models.Model):
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

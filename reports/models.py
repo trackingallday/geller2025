@@ -243,6 +243,41 @@ class Report(MyBaseModel):
 
         super().save(*args, **kwargs)
 
+    def log_all_images(self):
+        """Log all images in this report to console"""
+        import logging
+        logger = logging.getLogger('django')
+
+        logger.info(f"=== IMAGE LOGGING FOR REPORT: {self.document_number} ===")
+
+        # Get all answers with images
+        answers_with_files = self.answers.filter(
+            models.Q(file_answer__isnull=False) |
+            models.Q(signature_answer__isnull=False) |
+            models.Q(attachment__isnull=False)
+        )
+
+        if not answers_with_files.exists():
+            logger.info(f"Report {self.document_number}: No images found")
+            return
+
+        for answer in answers_with_files:
+            logger.info(f"Question: {answer.question.question_text[:50]}...")
+
+            if answer.file_answer:
+                logger.info(f"  - File Answer: {answer.file_answer.name}")
+                logger.info(f"    URL: {answer.file_answer.url}")
+
+            if answer.signature_answer:
+                logger.info(f"  - Signature: {answer.signature_answer.name}")
+                logger.info(f"    URL: {answer.signature_answer.url}")
+
+            if answer.attachment:
+                logger.info(f"  - Attachment: {answer.attachment.name}")
+                logger.info(f"    URL: {answer.attachment.url}")
+
+        logger.info(f"=== END IMAGE LOGGING FOR REPORT: {self.document_number} ===")
+
     def get_all_answers_with_images(self):
         """Get all answers for this report, organized by section with image handling"""
         answers_by_section = {}

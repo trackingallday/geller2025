@@ -485,9 +485,16 @@ def edit_product(request):
 @csrf_exempt
 @api_view(['POST', 'GET'])
 def user_details(request):
-    data = UserSerializer(request.user).data
-    data['emails'] = [u.email for u in User.objects.all()]
-    return JsonResponse(data)
+    try:
+        # Check if user has a profile
+        if not hasattr(request.user, 'profile'):
+            return JsonResponse({'error': 'User has no profile'}, status=400)
+
+        data = UserSerializer(request.user).data
+        data['emails'] = [u.email for u in User.objects.all()]
+        return JsonResponse(data)
+    except Exception as e:
+        return JsonResponse({'error': f'Error fetching user details: {str(e)}'}, status=500)
 
 
 @csrf_exempt

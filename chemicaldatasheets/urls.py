@@ -18,6 +18,7 @@ from django.urls import re_path
 from django.contrib import admin
 from django.conf.urls import include
 from rest_framework.authtoken import views as rest_framework_views
+from chemsapp.auth_views import CustomAuthToken
 from django.conf.urls.static import static
 from django.conf import settings
 from django.views.generic.base import RedirectView
@@ -29,7 +30,7 @@ urlpatterns = [
     re_path(r'^$', RedirectView.as_view(url='/admin/', permanent=True), name='home'),
     re_path(r'^admin/', admin.site.urls, name='admin'),
     re_path(r'^admin$', RedirectView.as_view(url='/admin/', permanent=True)),
-    re_path(r'^get_auth_token/$', rest_framework_views.obtain_auth_token, name='get_auth_token'),
+    re_path(r'^get_auth_token/$', CustomAuthToken.as_view(), name='get_auth_token'),
     re_path(r'^accounts/', include('django.contrib.auth.urls')),
     re_path(r'^upload_file/', upload_file, name='upload_file'),
     re_path(r'^reports/', include('reports.urls')),

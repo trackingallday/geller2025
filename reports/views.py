@@ -646,6 +646,10 @@ def report_submit(request, pk):
         from django.utils import timezone
         report.submitted_at = timezone.now()
         report.save()
+
+        # Log all images in this report to console
+        report.log_all_images()
+
         messages.success(request, f'Report "{report.document_number}" submitted for review!')
         return redirect('reports:report_detail', pk=report.pk)
     
