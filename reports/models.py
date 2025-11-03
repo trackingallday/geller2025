@@ -16,7 +16,6 @@ QUESTION_TYPES = [
     ('signature', 'Digital Signature'),
     ('date', 'Date'),
     ('number', 'Number'),
-    ('client_select', 'Client Select'),
 ]
 
 REPORT_STATUS = [

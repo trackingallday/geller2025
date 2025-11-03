@@ -116,13 +116,26 @@ class ReportTypeSerializer(serializers.ModelSerializer):
     sections = ReportSectionSerializer(many=True, read_only=True)
     questions = QuestionSerializer(many=True, read_only=True)
     created_by = UserSerializer(read_only=True)
-    
+    assigned_customers = serializers.SerializerMethodField()
+    assigned_distributors = serializers.SerializerMethodField()
+
     class Meta:
         model = ReportType
         fields = [
             'id', 'name', 'description', 'auto_number_prefix', 'is_active',
-            'created_by', 'created_at', 'sections', 'questions'
+            'created_by', 'created_at', 'sections', 'questions',
+            'assigned_customers', 'assigned_distributors'
         ]
+
+    def get_assigned_customers(self, obj):
+        """Get all customers assigned to this report type"""
+        customers = obj.get_assigned_customers()
+        return CustomerSerializer(customers, many=True).data
+
+    def get_assigned_distributors(self, obj):
+        """Get all distributors assigned to this report type"""
+        distributors = obj.get_assigned_distributors()
+        return DistributorSerializer(distributors, many=True).data
 
 
 class AnswerSerializer(serializers.ModelSerializer):
