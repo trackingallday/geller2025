@@ -8,7 +8,7 @@ from django.utils import timezone
 
 from .models import Report, ReportType, Answer, QuestionOption
 from .serializers import (
-    ReportSerializer, ReportSubmissionSerializer,
+    ReportSerializer, ReportListSerializer, ReportSubmissionSerializer,
     ReportTypeSerializer, CustomerSerializer, DistributorSerializer
 )
 
@@ -36,12 +36,13 @@ class ReportDetailAPIView(generics.RetrieveAPIView):
 class ReportListAPIView(generics.ListAPIView):
     """
     API view to list all reports with basic info.
-    
+    Uses lightweight serializer with only report type name instead of full nested object.
+
     GET /reports/api/reports/
     """
-    serializer_class = ReportSerializer
+    serializer_class = ReportListSerializer
     permission_classes = [IsAuthenticated]
-    
+
     def get_queryset(self):
         return Report.objects.select_related(
             'report_type', 'customer', 'distributor', 'prepared_by'

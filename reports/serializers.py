@@ -205,6 +205,33 @@ class AnswerSerializer(serializers.ModelSerializer):
         return instance
 
 
+class ReportListSerializer(serializers.ModelSerializer):
+    """Lightweight serializer for report list view"""
+    report_type_name = serializers.CharField(source='report_type.name', read_only=True)
+    customer_name = serializers.CharField(source='customer.businessName', read_only=True)
+    distributor_name = serializers.CharField(source='distributor.businessName', read_only=True)
+    prepared_by_name = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = Report
+        fields = [
+            'id', 'document_number', 'report_type_name', 'customer_name', 'distributor_name',
+            'store_compliance_manager', 'inspection_date', 'prepared_by_name',
+            'status', 'status_display', 'submitted_at',
+            'created_at', 'updated_at',
+            'pdf_file', 'pdf_generated_at', 'pdf_needs_regeneration'
+        ]
+
+    def get_prepared_by_name(self, obj):
+        """Get full name or username of preparer"""
+        if obj.prepared_by:
+            if obj.prepared_by.first_name and obj.prepared_by.last_name:
+                return f"{obj.prepared_by.first_name} {obj.prepared_by.last_name}"
+            return obj.prepared_by.username
+        return None
+
+
 class ReportSerializer(serializers.ModelSerializer):
     """Full report serializer with all data"""
     report_type = ReportTypeSerializer(read_only=True)
@@ -214,14 +241,15 @@ class ReportSerializer(serializers.ModelSerializer):
     reviewed_by = UserSerializer(read_only=True)
     answers = AnswerSerializer(many=True, read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
-    
+
     class Meta:
         model = Report
         fields = [
             'id', 'document_number', 'report_type', 'customer', 'distributor',
             'store_compliance_manager', 'inspection_date', 'prepared_by',
-            'status', 'status_display', 'submitted_at', 'reviewed_by', 
-            'reviewed_at', 'created_at', 'updated_at', 'answers'
+            'status', 'status_display', 'submitted_at', 'reviewed_by',
+            'reviewed_at', 'created_at', 'updated_at', 'answers',
+            'pdf_file', 'pdf_generated_at', 'pdf_needs_regeneration'
         ]
 
 
