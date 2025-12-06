@@ -1,0 +1,10 @@
+{% extends "admin/change_list.html" %}
+
+{% block object-tools-items %}
+    <li>
+        <a href="{{ special_posts_url }}" class="button" style="background: #417690; color: white; padding: 10px 15px;">
+            Manage Special Posts (Home/About/Support)
+        </a>
+    </li>
+    {{ block.super }}
+{% endblock %}

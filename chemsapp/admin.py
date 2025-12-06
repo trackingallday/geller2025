@@ -6,7 +6,11 @@ from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     MarketSector, MarketSectorSection, NewsArticle
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
-from .forms import ProductCategoryForm, PostForm
+from .forms import ProductCategoryForm, PostForm, SpecialPostForm
+from django.urls import path, reverse
+from django.shortcuts import render, redirect, get_object_or_404
+from django.contrib import messages
+from django.utils.html import format_html
 
 
 class SafetyWearResource(resources.ModelResource):
@@ -74,7 +78,70 @@ class CategoryAdmin(ImportExportModelAdmin):
 
 class PostAdmin(ImportExportModelAdmin):
     form = PostForm
-    pass
+    list_display = ['name', 'page', 'title', 'created_at']
+    list_filter = ['page']
+    search_fields = ['name', 'title', 'page']
+
+    class Media:
+        css = {
+            'all': ('admin/css/changelists.css',)
+        }
+
+    def changelist_view(self, request, extra_context=None):
+        """Add link to special posts view"""
+        extra_context = extra_context or {}
+        extra_context['special_posts_url'] = reverse('admin:chemsapp_post_special')
+        return super().changelist_view(request, extra_context=extra_context)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('special-posts/', self.admin_site.admin_view(self.special_posts_view), name='chemsapp_post_special'),
+            path('special-posts/<int:post_id>/edit/', self.admin_site.admin_view(self.edit_special_post_view), name='chemsapp_post_special_edit'),
+        ]
+        return custom_urls + urls
+
+    def special_posts_view(self, request):
+        """View to display special posts grouped by page type"""
+        # Define the special posts that must exist (case-insensitive filtering)
+        home_posts = Post.objects.filter(page__iexact='Home').exclude(name__isnull=True).exclude(name='').order_by('name')
+        about_posts = Post.objects.filter(page__iexact='About').exclude(name__isnull=True).exclude(name='').order_by('name')
+        support_posts = Post.objects.filter(page__iexact='Support').exclude(name__isnull=True).exclude(name='').order_by('name')
+
+        context = {
+            'title': 'Manage Special Posts',
+            'home_posts': home_posts,
+            'about_posts': about_posts,
+            'support_posts': support_posts,
+            'site_header': self.admin_site.site_header,
+            'site_title': self.admin_site.site_title,
+            'has_permission': True,
+        }
+        return render(request, 'admin/chemsapp/post/special_posts.html', context)
+
+    def edit_special_post_view(self, request, post_id):
+        """View to edit a special post with readonly name field"""
+        post = get_object_or_404(Post, pk=post_id)
+
+        if request.method == 'POST':
+            form = SpecialPostForm(request.POST, request.FILES, instance=post)
+            if form.is_valid():
+                form.save()
+                messages.success(request, f'Post "{post.name}" updated successfully.')
+                return redirect('admin:chemsapp_post_special')
+        else:
+            form = SpecialPostForm(instance=post)
+
+        context = {
+            'title': f'Edit Special Post: {post.name}',
+            'form': form,
+            'post': post,
+            'opts': self.model._meta,
+            'has_permission': True,
+            'site_header': self.admin_site.site_header,
+            'site_title': self.admin_site.site_title,
+        }
+        return render(request, 'admin/chemsapp/post/edit_special_post.html', context)
 
 class MarketAdmin(ImportExportModelAdmin):
     pass

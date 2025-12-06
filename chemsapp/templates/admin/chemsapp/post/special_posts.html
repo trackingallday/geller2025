@@ -1,0 +1,149 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+<style>
+    .special-posts-section {
+        margin: 20px 0;
+        background: white;
+        padding: 20px;
+        border-radius: 5px;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    .special-posts-section h2 {
+        color: #417690;
+        border-bottom: 2px solid #417690;
+        padding-bottom: 10px;
+        margin-bottom: 15px;
+    }
+    .post-list {
+        list-style: none;
+        padding: 0;
+    }
+    .post-item {
+        padding: 12px;
+        border-bottom: 1px solid #eee;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+    }
+    .post-item:hover {
+        background: #f8f9fa;
+    }
+    .post-info {
+        flex-grow: 1;
+    }
+    .post-name {
+        font-weight: bold;
+        color: #333;
+        font-size: 14px;
+    }
+    .post-title {
+        color: #666;
+        font-size: 13px;
+        margin-top: 3px;
+    }
+    .post-actions a {
+        padding: 6px 12px;
+        background: #417690;
+        color: white;
+        text-decoration: none;
+        border-radius: 3px;
+        font-size: 13px;
+    }
+    .post-actions a:hover {
+        background: #305d75;
+    }
+    .no-posts {
+        color: #999;
+        font-style: italic;
+        padding: 10px;
+    }
+    .breadcrumbs {
+        margin: 10px 0;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:chemsapp_post_changelist' %}">Posts</a>
+    &rsaquo; Special Posts
+</div>
+{% endblock %}
+
+{% block content %}
+<p style="margin: 15px 0; color: #666;">
+    These posts are used in specific locations on the website. The "Name" field is readonly to ensure proper display. You can edit all other fields.
+</p>
+
+<div class="special-posts-section">
+    <h2>Home Page Posts</h2>
+    {% if home_posts %}
+        <ul class="post-list">
+            {% for post in home_posts %}
+            <li class="post-item">
+                <div class="post-info">
+                    <div class="post-name">{{ post.name }}</div>
+                    <div class="post-title">{{ post.title|default:"No title" }}</div>
+                </div>
+                <div class="post-actions">
+                    <a href="{% url 'admin:chemsapp_post_special_edit' post.id %}">Edit</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="no-posts">No home page posts found</div>
+    {% endif %}
+</div>
+
+<div class="special-posts-section">
+    <h2>About Page Posts</h2>
+    {% if about_posts %}
+        <ul class="post-list">
+            {% for post in about_posts %}
+            <li class="post-item">
+                <div class="post-info">
+                    <div class="post-name">{{ post.name }}</div>
+                    <div class="post-title">{{ post.title|default:"No title" }}</div>
+                </div>
+                <div class="post-actions">
+                    <a href="{% url 'admin:chemsapp_post_special_edit' post.id %}">Edit</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="no-posts">No about page posts found</div>
+    {% endif %}
+</div>
+
+<div class="special-posts-section">
+    <h2>Support Page Posts</h2>
+    {% if support_posts %}
+        <ul class="post-list">
+            {% for post in support_posts %}
+            <li class="post-item">
+                <div class="post-info">
+                    <div class="post-name">{{ post.name }}</div>
+                    <div class="post-title">{{ post.title|default:"No title" }}</div>
+                </div>
+                <div class="post-actions">
+                    <a href="{% url 'admin:chemsapp_post_special_edit' post.id %}">Edit</a>
+                </div>
+            </li>
+            {% endfor %}
+        </ul>
+    {% else %}
+        <div class="no-posts">No support page posts found</div>
+    {% endif %}
+</div>
+
+<div style="margin-top: 20px;">
+    <a href="{% url 'admin:chemsapp_post_changelist' %}" class="button">View All Posts</a>
+    <a href="{% url 'admin:chemsapp_newsarticle_changelist' %}" class="button" style="margin-left: 10px;">Manage News Posts</a>
+</div>
+
+{% endblock %}
