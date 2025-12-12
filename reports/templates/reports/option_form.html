@@ -48,6 +48,25 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="{{ form.badge_type.id_for_label }}" class="form-label">Badge Type (PDF Display)</label>
+                            {{ form.badge_type }}
+                            {% if form.badge_type.errors %}
+                                <div class="text-danger small">{{ form.badge_type.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">
+                                Color badge to display in PDF reports:
+                                <ul class="small mb-0 mt-1">
+                                    <li><strong>Pass (Green)</strong> - Successful/compliant results</li>
+                                    <li><strong>Fail (Red)</strong> - Failed/non-compliant results</li>
+                                    <li><strong>Warning (Orange)</strong> - Needs attention/descaling/reminders</li>
+                                    <li><strong>Info (Blue)</strong> - Informational (Yes/No/N/A)</li>
+                                    <li><strong>Data (Gray)</strong> - Data values (temperatures, PPM)</li>
+                                    <li><strong>Default</strong> - No badge (plain text)</li>
+                                </ul>
+                            </div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="{{ form.additional_instructions.id_for_label }}" class="form-label">Additional Instructions</label>
                             {{ form.additional_instructions }}
                             {% if form.additional_instructions.errors %}

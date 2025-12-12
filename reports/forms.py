@@ -166,11 +166,12 @@ class QuestionForm(forms.ModelForm):
 class QuestionOptionForm(forms.ModelForm):
     class Meta:
         model = QuestionOption
-        fields = ['text', 'value', 'is_flag', 'additional_instructions', 'attached_pdf', 'order']
+        fields = ['text', 'value', 'is_flag', 'badge_type', 'additional_instructions', 'attached_pdf', 'order']
         widgets = {
             'text': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'PASS / FAIL / N/A'}),
             'value': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'pass / fail / na'}),
             'is_flag': forms.CheckboxInput(attrs={'class': 'form-check-input'}),
+            'badge_type': forms.Select(attrs={'class': 'form-control'}),
             'additional_instructions': forms.Textarea(attrs={'class': 'form-control', 'rows': 3, 'placeholder': 'Instructions when this option is selected...'}),
             'attached_pdf': forms.ClearableFileInput(attrs={'class': 'form-control'}),
             'order': forms.NumberInput(attrs={'class': 'form-control', 'min': 0}),

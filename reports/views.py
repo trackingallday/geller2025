@@ -476,7 +476,7 @@ def option_create(request, question_id):
 def option_edit(request, pk):
     """Edit an option"""
     option = get_object_or_404(QuestionOption, pk=pk)
-    
+
     if request.method == 'POST':
         form = QuestionOptionForm(request.POST, request.FILES, instance=option)
         if form.is_valid():
@@ -485,10 +485,11 @@ def option_edit(request, pk):
             return redirect('reports:question_options', pk=option.question.pk)
     else:
         form = QuestionOptionForm(instance=option)
-    
+
     context = {
         'form': form,
         'option': option,
+        'question': option.question,
         'title': f'Edit Option: {option.text}'
     }
     return render(request, 'reports/option_form.html', context)

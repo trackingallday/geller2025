@@ -170,6 +170,7 @@ def ajax_create_question(request, report_type_id):
                     question=question,
                     text=option_text,
                     value=option_text.lower().replace(' ', '_'),
+                    badge_type='default',
                     order=i
                 )
         
@@ -221,16 +222,19 @@ def ajax_create_from_template(request, report_type_id):
                     option_text = option_data
                     option_value = option_data.lower().replace(' ', '_')
                     is_flag = False
+                    badge_type = 'default'
                 else:
                     option_text = option_data.get('text', '')
                     option_value = option_data.get('value', option_text.lower().replace(' ', '_'))
                     is_flag = option_data.get('is_flag', False)
-                
+                    badge_type = option_data.get('badge_type', 'default')
+
                 QuestionOption.objects.create(
                     question=question,
                     text=option_text,
                     value=option_value,
                     is_flag=is_flag,
+                    badge_type=badge_type,
                     order=i
                 )
         

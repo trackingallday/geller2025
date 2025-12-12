@@ -5,180 +5,188 @@
     <title>{{ report.report_type.name }} - {{ report.document_number }}</title>
 </head>
 <body>
-    <!-- Header Section -->
-    <div class="header">
-        <div class="header-left">
-            <h1 class="report-title">{{ report.report_type.name }}</h1>
-            <div class="company-info">
-                <strong>{{ company_name }}</strong><br>
-                {{ company_website }}
+    <!-- PAGE 1: COVER PAGE -->
+    <div class="cover-header">
+        <!-- Logo Section -->
+        <div class="logo-section">
+            {% if customer_logo %}
+                <img src="{{ customer_logo }}" alt="Logo" class="logo">
+            {% elif distributor_logo %}
+                <img src="{{ distributor_logo }}" alt="Logo" class="logo">
+            {% endif %}
+        </div>
+
+        <!-- Report Title -->
+        <h1 class="report-title-main">{{ report.report_type.name }}</h1>
+        <div class="report-subtitle">
+            {% if report.customer %}
+                {{ report.customer.businessName }} / {{ report.report_type.name }}
+            {% elif report.distributor %}
+                {{ report.distributor.businessName }} / {{ report.report_type.name }}
+            {% endif %}
+        </div>
+
+        <!-- Status Badge -->
+        <div class="status-badge-line">
+            <span class="badge badge-complete">{{ report.get_status_display }}</span>
+        </div>
+
+        <!-- Summary Statistics -->
+        <div class="summary-stats">
+            <div class="stat-item">
+                <span class="stat-label">Flagged items</span>
+                <span class="stat-value">{{ flagged_statistics.flagged_count }}</span>
+            </div>
+            <div class="stat-item">
+                <span class="stat-label">Actions</span>
+                <span class="stat-value">{{ flagged_statistics.action_count }}</span>
             </div>
         </div>
-        <div class="header-right">
-            {% if customer_logo %}
-                <img src="{{ customer_logo }}" alt="Customer Logo" class="logo">
-            {% endif %}
-            {% if distributor_logo %}
-                <img src="{{ distributor_logo }}" alt="Distributor Logo" class="logo">
-            {% endif %}
-        </div>
-    </div>
 
-    <!-- Report Metadata -->
-    <div class="report-meta">
-        <table>
+        <!-- Metadata Table -->
+        <table class="metadata-table">
             <tr>
-                <td class="label">Document Number:</td>
-                <td>{{ report.document_number }}</td>
-                <td class="label">Status:</td>
-                <td class="status-{{ report.status }}">{{ report.get_status_display }}</td>
+                <td class="label">Account</td>
+                <td class="value">
+                    {% if report.customer %}
+                        {{ report.customer.businessName }}
+                    {% elif report.distributor %}
+                        {{ report.distributor.businessName }}
+                    {% else %}
+                        N/A
+                    {% endif %}
+                </td>
             </tr>
-            <tr>
-                <td class="label">Inspection Date:</td>
-                <td>{{ report.inspection_date|date:"F d, Y" }}</td>
-                <td class="label">Prepared By:</td>
-                <td>{{ report.prepared_by.get_full_name|default:report.prepared_by.username }}</td>
-            </tr>
-            {% if report.customer %}
-            <tr>
-                <td class="label">Customer:</td>
-                <td>{{ report.customer.businessName }}</td>
-                <td class="label">Customer Contact:</td>
-                <td>{{ report.customer.user.email }}</td>
-            </tr>
-            {% endif %}
-            {% if report.distributor %}
-            <tr>
-                <td class="label">Distributor:</td>
-                <td>{{ report.distributor.businessName }}</td>
-                <td class="label">Distributor Contact:</td>
-                <td>{{ report.distributor.user.email }}</td>
-            </tr>
-            {% endif %}
             {% if report.store_compliance_manager %}
             <tr>
-                <td class="label">Store Compliance Manager:</td>
-                <td colspan="3">{{ report.store_compliance_manager }}</td>
+                <td class="label">Store Compliance Manager</td>
+                <td class="value">{{ report.store_compliance_manager }}</td>
             </tr>
             {% endif %}
+            <tr>
+                <td class="label">Report Type</td>
+                <td class="value">
+                    <span class="value-highlight">{{ report.report_type.name }}</span>
+                </td>
+            </tr>
+            <tr>
+                <td class="label">Document No</td>
+                <td class="value">{{ report.document_number }}</td>
+            </tr>
+            <tr>
+                <td class="label">Inspection Date</td>
+                <td class="value">{{ report.inspection_date|date:"d.m.Y" }} {{ generated_at|date:"H:i" }} NZST</td>
+            </tr>
+            <tr>
+                <td class="label">Ultimo Report Prepared By:</td>
+                <td class="value">{{ report.prepared_by.get_full_name|default:report.prepared_by.username }}</td>
+            </tr>
         </table>
     </div>
 
-    <!-- Executive Summary Table -->
-    <div class="executive-summary">
-        <h2 class="summary-title">Executive Summary</h2>
-        <table class="summary-table">
-            <thead>
-                <tr>
-                    <th class="summary-section">Section</th>
-                    <th class="summary-question">Question</th>
-                    <th class="summary-answer">Answer</th>
-                </tr>
-            </thead>
-            <tbody>
-                {% for section_name, section_answers in answers_by_section.items %}
-                    {% for answer_data in section_answers %}
-                        <tr class="summary-row">
-                            <td class="summary-section-cell">
-                                {% if forloop.first %}{{ section_name }}{% endif %}
-                            </td>
-                            <td class="summary-question-cell">
-                                {{ answer_data.question.question_text|truncatechars:60 }}
-                                {% if answer_data.question.is_required %}
-                                    <span class="required-marker">*</span>
-                                {% endif %}
-                            </td>
-                            <td class="summary-answer-cell">
-                                {% if answer_data.display_value != "No answer" %}
-                                    {{ answer_data.display_value|truncatechars:40|linebreaksbr }}
-                                {% else %}
-                                    <em class="no-answer">No answer</em>
-                                {% endif %}
-                            </td>
-                            <td class="summary-status-cell">
-                                {% if answer_data.display_value == "No answer" %}
-                                    <span class="status-missing">Missing</span>
-                                {% elif answer_data.question.is_required %}
-                                    <span class="status-complete">Complete</span>
-                                {% else %}
-                                    <span class="status-optional">Optional</span>
-                                {% endif %}
-                            </td>
-                        </tr>
-                    {% endfor %}
-                {% empty %}
-                    <tr>
-                        <td colspan="4" class="no-data">No questions answered in this report.</td>
-                    </tr>
-                {% endfor %}
-            </tbody>
-        </table>
+    <!-- PAGE 2: FLAGGED ITEMS -->
+    {% if flagged_answers %}
+    <div class="flagged-items-page">
+        <h2 class="flagged-title">Flagged items</h2>
+        <div class="flagged-count">{{ flagged_answers|length }} flagged</div>
+
+        {% for flagged in flagged_answers %}
+            <div class="flagged-item">
+                <div class="flagged-item-header">{{ flagged.section }} :</div>
+                <div class="flagged-item-question">{{ flagged.question.question_text }}</div>
+                <div class="flagged-item-answer">
+                    <span class="badge badge-fail">{{ flagged.flag_reason|truncatewords:10 }}</span>
+                </div>
+
+                <!-- Display image if exists -->
+                {% if flagged.answer.file_answer or flagged.answer.attachment %}
+                    <div class="flagged-notes">
+                        <strong>NOTES</strong><br>
+                        {% if flagged.answer.file_answer %}
+                            <img src="{{ flagged.answer.file_answer.url }}" alt="Photo" style="max-width: 200px; max-height: 150px; margin-top: 8px;">
+                        {% elif flagged.answer.attachment %}
+                            <img src="{{ flagged.answer.attachment.url }}" alt="Photo" style="max-width: 200px; max-height: 150px; margin-top: 8px;">
+                        {% endif %}
+                    </div>
+                {% endif %}
+            </div>
+        {% endfor %}
     </div>
+    {% endif %}
 
-    <!-- Page break after summary -->
-    <div class="page-break"></div>
-
-    <!-- Report Sections and Answers -->
+    <!-- DETAILED SECTIONS -->
     {% for section_name, section_answers in answers_by_section.items %}
         <div class="section">
-            <h2 class="section-title">{{ section_name }}</h2>
+            <!-- Section Header with Flagged Count -->
+            <div class="section-header">
+                <div class="section-title">{{ section_name }} :</div>
+            </div>
 
             {% for answer_data in section_answers %}
                 <div class="question-block">
-                    <div class="question">
-                        {{ answer_data.question.question_text }}
-                        {% if answer_data.question.is_required %}
-                            <span style="color: #dc3545;">*</span>
-                        {% endif %}
-                    </div>
+                    <div class="question">{{ answer_data.question.question_text }}</div>
 
-                    {% if answer_data.question.help_text %}
-                        <div style="font-size: 10px; color: #666; font-style: italic; margin-bottom: 8px;">
-                            {{ answer_data.question.help_text }}
-                        </div>
-                    {% endif %}
-
-                    <div class="answer">
-                        <div class="answer-text">
-                            {% if answer_data.display_value != "No answer" %}
-                                {{ answer_data.display_value|linebreaks }}
+                    <!-- Answer with Badge -->
+                    <div class="answer-row">
+                        <div class="answer-label">{{ answer_data.question.question_text|truncatewords:5 }}</div>
+                        <div class="answer-value">
+                            {% if answer_data.badge_type == 'fail' %}
+                                <span class="badge badge-fail">{{ answer_data.display_value }}</span>
+                            {% elif answer_data.badge_type == 'pass' %}
+                                <span class="badge badge-pass">{{ answer_data.display_value }}</span>
+                            {% elif answer_data.badge_type == 'warning' %}
+                                <span class="badge badge-warning">{{ answer_data.display_value }}</span>
+                            {% elif answer_data.badge_type == 'info' %}
+                                <span class="badge badge-info">{{ answer_data.display_value }}</span>
+                            {% elif answer_data.badge_type == 'data' %}
+                                <span class="badge badge-data">{{ answer_data.display_value }}</span>
                             {% else %}
-                                <em style="color: #999;">No answer provided</em>
+                                {{ answer_data.display_value }}
                             {% endif %}
                         </div>
                     </div>
 
-                    <!-- Display images if any -->
+                    <!-- Notes/Instructions -->
+                    {% if answer_data.answer.notes %}
+                        <div class="notes-section">
+                            <div class="notes-label">Comments / Resolution:</div>
+                            {{ answer_data.answer.notes|linebreaks }}
+                        </div>
+                    {% endif %}
+
+                    <!-- Inline Signature -->
+                    {% if answer_data.answer.signature_answer %}
+                        <div class="signature-section">
+                            <div class="signature-label">Conducted coaching and training session with the staff member/s in the department to ensure adherence to the correct procedures. Subsequently, implemented corrective actions to address any identified areas of improvement.</div>
+                            <img src="{{ answer_data.answer.signature_answer.url }}" alt="Signature" class="signature-image">
+                            <div class="signature-info">
+                                {{ report.prepared_by.get_full_name|default:report.prepared_by.username }}<br>
+                                {{ generated_at|date:"d.m.Y H:i" }} NZST
+                            </div>
+                        </div>
+                    {% endif %}
+
+                    <!-- Images -->
                     {% if answer_data.processed_images %}
                         {% for image in answer_data.processed_images %}
                             <div class="image-container">
-                                <img src="{{ image.url }}"
-                                     alt="Answer attachment"
-                                     class="report-image"
+                                <img src="{{ image.url }}" alt="Photo" class="report-image"
                                      style="width: {{ image.width }}px; height: {{ image.height }}px;">
                                 <div class="image-caption">
-                                    Attachment - Original size: {{ image.original_width|default:"Unknown" }}×{{ image.original_height|default:"Unknown" }}px
+                                    Photo {{ forloop.counter }}
                                 </div>
                             </div>
                         {% endfor %}
                     {% endif %}
-
-                    <!-- Display additional notes if any -->
-                    {% if answer_data.answer.notes %}
-                        <div style="margin-top: 10px; padding: 8px; background-color: #fff3cd; border-left: 3px solid #ffc107;">
-                            <strong style="font-size: 10px; color: #856404;">Notes:</strong><br>
-                            <span style="font-size: 10px;">{{ answer_data.answer.notes|linebreaks }}</span>
-                        </div>
-                    {% endif %}
                 </div>
             {% empty %}
-                <div style="padding: 20px; text-align: center; color: #666; font-style: italic;">
+                <p style="padding: 20px; text-align: center; color: #666; font-style: italic;">
                     No answers recorded for this section.
-                </div>
+                </p>
             {% endfor %}
         </div>
 
-        <!-- Add page break after each section except the last one -->
+        <!-- Add page break after each major section -->
         {% if not forloop.last %}
             <div class="page-break"></div>
         {% endif %}
@@ -190,38 +198,57 @@
         </div>
     {% endfor %}
 
-    <!-- Report Status and Review Information -->
+    <!-- REPORT SIGN-OFF (if signatures exist) -->
     {% if report.status != 'draft' %}
+        <div class="page-break"></div>
         <div class="section">
-            <h2 class="section-title">Report Status Information</h2>
-            <div class="report-meta">
-                <table>
-                    {% if report.submitted_at %}
-                    <tr>
-                        <td class="label">Submitted:</td>
-                        <td colspan="3">{{ report.submitted_at|date:"F d, Y g:i A" }}</td>
-                    </tr>
-                    {% endif %}
-                    {% if report.reviewed_by %}
-                    <tr>
-                        <td class="label">Reviewed By:</td>
-                        <td>{{ report.reviewed_by.get_full_name|default:report.reviewed_by.username }}</td>
-                        <td class="label">Reviewed:</td>
-                        <td>{{ report.reviewed_at|date:"F d, Y g:i A" }}</td>
-                    </tr>
-                    {% endif %}
-                </table>
+            <h2 class="section-title">Report Sign Off</h2>
+
+            {% if report.submitted_at %}
+            <div style="margin-bottom: 20px;">
+                <strong>Any Comments Noted During Store Visit to be actioned:</strong>
+                <p style="margin: 10px 0;">Top Tip:</p>
+            </div>
+            {% endif %}
+
+            <!-- Store Representative Signature -->
+            <div class="signature-section" style="margin-bottom: 30px;">
+                <div class="signature-label">Store Representative</div>
+                <div style="font-weight: bold; margin-top: 10px;">Sign</div>
+                {% if report.customer %}
+                    <div class="signature-info" style="margin-top: 20px;">
+                        {{ report.customer.businessName }}<br>
+                        {{ report.submitted_at|date:"d.m.Y H:i" }} NZST
+                    </div>
+                {% endif %}
+            </div>
+
+            <!-- Ultimo Representative Signature -->
+            <div class="signature-section">
+                <div class="signature-label">Ultimo Representative</div>
+                <div style="font-weight: bold; margin-top: 10px;">Sign</div>
+                <div class="signature-info" style="margin-top: 20px;">
+                    {{ report.prepared_by.get_full_name|default:report.prepared_by.username }}<br>
+                    {{ generated_at|date:"d.m.Y H:i" }} NZST
+                </div>
             </div>
         </div>
     {% endif %}
 
-    <!-- Footer Information -->
-    <div class="footer-info">
-        <p>
-            Report generated on {{ generated_at|date:"F d, Y g:i A" }}<br>
-            This is an automatically generated report from {{ company_website }}<br>
-            <strong>{{ company_name }}</strong>
-        </p>
-    </div>
+    <!-- MEDIA SUMMARY PAGE -->
+    {% if all_images %}
+        <div class="media-summary-page">
+            <h2 class="media-title">Media summary</h2>
+            <div class="media-grid">
+                {% for image in all_images %}
+                    <div class="media-item">
+                        <img src="{{ image.url }}" alt="Photo {{ forloop.counter }}">
+                        <div class="media-item-caption">Photo {{ forloop.counter }}</div>
+                    </div>
+                {% endfor %}
+            </div>
+        </div>
+    {% endif %}
+
 </body>
 </html>

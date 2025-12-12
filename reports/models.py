@@ -181,17 +181,28 @@ class Question(MyBaseModel):
 
 class QuestionOption(MyBaseModel):
     """Options for select/radio/checkbox questions"""
+
+    BADGE_TYPE_CHOICES = [
+        ('default', 'Default (No Badge)'),
+        ('pass', 'Pass (Green)'),
+        ('fail', 'Fail (Red)'),
+        ('warning', 'Warning (Orange)'),
+        ('info', 'Info (Blue)'),
+        ('data', 'Data (Gray)'),
+    ]
+
     question = models.ForeignKey(Question, on_delete=models.CASCADE, related_name='options')
     text = models.CharField(max_length=255)
     value = models.CharField(max_length=255)
-    is_flag = models.BooleanField(default=False, help_text="Mark this option as requiring attention")
+    is_flag = models.BooleanField(default=False, help_text="Mark this option as requiring attention (will appear in Flagged Items page)")
+    badge_type = models.CharField(max_length=20, choices=BADGE_TYPE_CHOICES, default='default', help_text="Badge color to display in PDF report")
     additional_instructions = models.TextField(blank=True, null=True)
     attached_pdf = models.FileField(upload_to='report_attachments/', blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
-    
+
     class Meta:
         ordering = ['order', 'text']
-    
+
     def __str__(self):
         return f"{self.question.question_text[:30]}... - {self.text}"
 
@@ -355,6 +366,62 @@ class Report(MyBaseModel):
         if not self.pdf_file or self.pdf_needs_regeneration:
             self.generate_pdf()
         return self.pdf_file
+
+    def get_flagged_statistics(self):
+        """Calculate statistics for flagged items in this report"""
+        flagged_count = 0
+        action_count = 0
+
+        for answer in self.answers.all():
+            # Check if any selected options are flagged
+            if answer.selected_options.filter(is_flag=True).exists():
+                flagged_count += 1
+
+            # Check if text answer contains failure/warning keywords
+            if answer.text_answer:
+                text_lower = answer.text_answer.lower()
+                if any(keyword in text_lower for keyword in ['fail', 'incorrect', 'needs attention', 'needs descaling', 'unapproved', 'issue']):
+                    flagged_count += 1
+
+        return {
+            'flagged_count': flagged_count,
+            'action_count': action_count  # Can be enhanced later to track action items
+        }
+
+    def get_flagged_answers(self):
+        """Get all answers that are flagged or contain issues"""
+        flagged_answers = []
+
+        for answer in self.answers.select_related('question', 'question__section').prefetch_related('selected_options'):
+            is_flagged = False
+            flag_reason = None
+
+            # Check if any selected options are flagged
+            flagged_options = answer.selected_options.filter(is_flag=True)
+            if flagged_options.exists():
+                is_flagged = True
+                flag_reason = ', '.join([opt.text for opt in flagged_options])
+
+            # Check text answer for failure/warning keywords
+            if answer.text_answer:
+                text_lower = answer.text_answer.lower()
+                if 'fail' in text_lower:
+                    is_flagged = True
+                    flag_reason = answer.text_answer
+                elif any(keyword in text_lower for keyword in ['incorrect', 'needs attention', 'needs descaling', 'unapproved', 'issue', 'dirty']):
+                    is_flagged = True
+                    flag_reason = answer.text_answer
+
+            if is_flagged:
+                flagged_answers.append({
+                    'answer': answer,
+                    'question': answer.question,
+                    'section': answer.question.section.name if answer.question.section else 'General',
+                    'flag_reason': flag_reason,
+                    'display_value': answer.get_display_value()
+                })
+
+        return flagged_answers
 
 
 class Answer(MyBaseModel):

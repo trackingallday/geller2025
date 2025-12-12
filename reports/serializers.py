@@ -73,12 +73,13 @@ class DistributorSerializer(serializers.ModelSerializer):
 
 class QuestionOptionSerializer(serializers.ModelSerializer):
     """Serializer for question options"""
-    
+    badge_type_display = serializers.CharField(source='get_badge_type_display', read_only=True)
+
     class Meta:
         model = QuestionOption
         fields = [
-            'id', 'text', 'value', 'is_flag', 'additional_instructions', 
-            'attached_pdf', 'order'
+            'id', 'text', 'value', 'is_flag', 'badge_type', 'badge_type_display',
+            'additional_instructions', 'attached_pdf', 'order'
         ]
 
 

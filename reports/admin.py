@@ -28,7 +28,7 @@ class QuestionInline(admin.TabularInline):
 class QuestionOptionInline(admin.TabularInline):
     model = QuestionOption
     extra = 0
-    fields = ('text', 'value', 'is_flag', 'order')
+    fields = ('text', 'value', 'is_flag', 'badge_type', 'order')
 
 
 class ReportTypeCustomerInline(admin.TabularInline):
@@ -89,11 +89,12 @@ class QuestionAdmin(admin.ModelAdmin):
 
 @admin.register(QuestionOption)
 class QuestionOptionAdmin(admin.ModelAdmin):
-    list_display = ('text', 'question_short', 'value', 'is_flag', 'order')
-    list_filter = ('is_flag', 'question__report_type')
+    list_display = ('text', 'question_short', 'value', 'is_flag', 'badge_type', 'order')
+    list_filter = ('is_flag', 'badge_type', 'question__report_type')
     search_fields = ('text', 'value', 'question__question_text')
     ordering = ('question', 'order')
-    
+    fields = ('question', 'text', 'value', 'is_flag', 'badge_type', 'additional_instructions', 'attached_pdf', 'order')
+
     def question_short(self, obj):
         return obj.question.question_text[:30] + "..." if len(obj.question.question_text) > 30 else obj.question.question_text
     question_short.short_description = 'Question'
@@ -146,17 +147,17 @@ class AnswerInline(admin.TabularInline):
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'status', 'prepared_by', 'inspection_date', 'images_count', 'pdf_status', 'pdf_download_link')
+    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'status', 'prepared_by', 'inspection_date', 'images_count', 'pdf_status', 'pdf_download_link', 'completed_reports_link')
     list_filter = ('status', 'report_type', 'inspection_date', 'created_at', 'pdf_needs_regeneration')
     search_fields = ('document_number', 'customer__businessName', 'distributor__businessName', 'store_compliance_manager')
-    readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button', 'regenerate_pdf_button', 'images_summary')
+    readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button', 'regenerate_pdf_button', 'images_summary', 'completed_reports_view_button')
     inlines = [AnswerInline]
 
     actions = ['generate_pdfs', 'regenerate_pdfs']
     
     fieldsets = (
         ('Report Information', {
-            'fields': ('document_number', 'report_type', 'customer', 'distributor')
+            'fields': ('document_number', 'report_type', 'customer', 'distributor', 'completed_reports_view_button')
         }),
         ('Report Details', {
             'fields': ('store_compliance_manager', 'inspection_date', 'prepared_by')
@@ -199,6 +200,15 @@ class ReportAdmin(admin.ModelAdmin):
             return "No PDF"
     pdf_download_link.short_description = 'Download'
 
+    def completed_reports_link(self, obj):
+        """Link to view this report in the Completed Reports interface"""
+        completed_url = reverse('reports:completed_report_detail', args=[obj.pk])
+        return format_html(
+            '<a href="{}" target="_blank" class="button">View Report</a>',
+            completed_url
+        )
+    completed_reports_link.short_description = 'View'
+
     def pdf_download_button(self, obj):
         if obj.pdf_file:
             download_url = reverse('admin:reports_report_pdf_download', args=[obj.pk])
@@ -222,6 +232,17 @@ class ReportAdmin(admin.ModelAdmin):
             regenerate_url
         )
     regenerate_pdf_button.short_description = 'Regenerate PDF'
+
+    def completed_reports_view_button(self, obj):
+        """Large button to view report in Completed Reports interface"""
+        completed_url = reverse('reports:completed_report_detail', args=[obj.pk])
+        return format_html(
+            '<a href="{}" target="_blank" class="button default" style="font-size: 14px; padding: 10px 20px;">'
+            '<strong>📋 View in Completed Reports Interface</strong></a><br><br>'
+            '<small>Opens the report in the customer-facing completed reports view</small>',
+            completed_url
+        )
+    completed_reports_view_button.short_description = 'Completed Reports View'
 
     def generate_pdfs(self, request, queryset):
         generated_count = 0

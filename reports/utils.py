@@ -25,6 +25,46 @@ class ReportPDFGenerator:
         self.landscape_width = 900
         self.landscape_height = 600
 
+    def get_answer_badge_type(self, answer):
+        """Determine the badge type/color for an answer based on QuestionOption badge_type or content"""
+        # First, check if answer has selected options with explicit badge_type
+        selected_options = list(answer.selected_options.all())
+        if selected_options:
+            # Use the first option's badge_type if it's not 'default'
+            for opt in selected_options:
+                if hasattr(opt, 'badge_type') and opt.badge_type != 'default':
+                    return opt.badge_type
+
+        # Fallback to text-based detection for text answers or when no badge_type is set
+        if answer.text_answer:
+            text_lower = answer.text_answer.lower()
+
+            # Red - Failures
+            if any(keyword in text_lower for keyword in ['fail', 'incorrect', '0 ppm', 'unapproved', 'dirty floors']):
+                return 'fail'
+
+            # Green - Pass/OK
+            if any(keyword in text_lower for keyword in ['pass', 'good retail practice', 'ok']):
+                return 'pass'
+
+            # Orange - Warnings
+            if any(keyword in text_lower for keyword in ['needs attention', 'needs descaling', 'reminder', 'issue']):
+                return 'warning'
+
+            # Blue - Info/Neutral (Yes, No, N/A)
+            if text_lower.strip() in ['yes', 'no', 'n/a']:
+                return 'info'
+
+            # Gray - Data fields (PPM, temperature, etc.)
+            if any(unit in text_lower for unit in ['ppm', 'degrees', '°c', 'temp']):
+                return 'data'
+
+        # Gray - Number answers (like PPM values, temperatures)
+        if answer.number_answer is not None:
+            return 'data'
+
+        return 'default'
+
     def generate(self):
         """Generate PDF and return path to temporary file"""
         try:
@@ -63,13 +103,31 @@ class ReportPDFGenerator:
 
     def _get_context_data(self):
         """Prepare context data for PDF template"""
-        answers_by_section = self.report.get_all_answers_with_images()
+        import pytz
 
-        # Process images for each answer
+        answers_by_section = self.report.get_all_answers_with_images()
+        all_images = []
+
+        # Process images for each answer and collect for media summary
         for section_answers in answers_by_section.values():
             for answer_data in section_answers:
+                # Add badge type for styling
+                answer_data['badge_type'] = self.get_answer_badge_type(answer_data['answer'])
+
                 if answer_data['images']:
                     answer_data['processed_images'] = self._process_images(answer_data['images'])
+                    # Collect all images for media summary
+                    all_images.extend(answer_data['processed_images'])
+
+                # Count flagged items per section
+                if 'section_flagged_count' not in answer_data:
+                    answer_data['section_flagged_count'] = 0
+
+        # Calculate section-level flagged counts
+        section_flagged_counts = {}
+        for section_name, section_answers in answers_by_section.items():
+            flagged_in_section = sum(1 for ad in section_answers if ad['badge_type'] in ['fail', 'warning'])
+            section_flagged_counts[section_name] = flagged_in_section
 
         # Get logos
         customer_logo = None
@@ -81,14 +139,26 @@ class ReportPDFGenerator:
         if self.report.distributor and self.report.distributor.primaryImageLink:
             distributor_logo = self.report.distributor.primaryImageLink.url
 
+        # Get flagged items and statistics
+        flagged_statistics = self.report.get_flagged_statistics()
+        flagged_answers = self.report.get_flagged_answers()
+
+        # Format timestamp in New Zealand time
+        nz_tz = pytz.timezone('Pacific/Auckland')
+        generated_at_nz = timezone.now().astimezone(nz_tz)
+
         return {
             'report': self.report,
             'answers_by_section': answers_by_section,
+            'section_flagged_counts': section_flagged_counts,
             'customer_logo': customer_logo,
             'distributor_logo': distributor_logo,
-            'generated_at': timezone.now(),
+            'generated_at': generated_at_nz,
             'company_name': 'Geller & Co',
             'company_website': 'geller.co.nz',
+            'flagged_statistics': flagged_statistics,
+            'flagged_answers': flagged_answers,
+            'all_images': all_images,
         }
 
     def _process_images(self, images):
@@ -191,130 +261,313 @@ class ReportPDFGenerator:
         css_content = """
         @page {
             size: A4 portrait;
-            margin: 2cm 1.5cm 2cm 1.5cm;
-            @bottom-center {
-                content: "geller.co.nz";
+            margin: 1.5cm 1.5cm 2.5cm 1.5cm;
+            @bottom-left {
+                content: "Private & confidential";
                 font-family: Arial, sans-serif;
-                font-size: 10px;
+                font-size: 9px;
                 color: #666;
             }
             @bottom-right {
-                content: "Page " counter(page) " of " counter(pages);
+                content: counter(page) "/" counter(pages);
                 font-family: Arial, sans-serif;
-                font-size: 10px;
+                font-size: 9px;
                 color: #666;
             }
         }
 
         body {
             font-family: Arial, sans-serif;
-            font-size: 11px;
+            font-size: 10px;
             line-height: 1.4;
             color: #333;
             margin: 0;
             padding: 0;
         }
 
-        .header {
-            display: flex;
-            justify-content: space-between;
-            align-items: flex-start;
+        /* Badge Styles - Color coded answer indicators */
+        .badge {
+            display: inline-block;
+            padding: 4px 12px;
+            border-radius: 3px;
+            font-size: 11px;
+            font-weight: 500;
+            color: white;
+            text-align: center;
+        }
+
+        .badge-fail {
+            background-color: #dc3545;
+            color: white;
+        }
+
+        .badge-pass {
+            background-color: #28a745;
+            color: white;
+        }
+
+        .badge-warning {
+            background-color: #ff8c00;
+            color: white;
+        }
+
+        .badge-info {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .badge-data {
+            background-color: #6c757d;
+            color: white;
+        }
+
+        .badge-complete {
+            background-color: #0d6efd;
+            color: white;
+            padding: 6px 16px;
+            font-size: 12px;
+        }
+
+        /* Cover Page Styles */
+        .cover-header {
             margin-bottom: 30px;
-            padding-bottom: 15px;
-            border-bottom: 2px solid #0066cc;
         }
 
-        .header-left {
-            flex: 1;
-        }
-
-        .header-right {
-            flex: 0 0 auto;
-            text-align: right;
+        .logo-section {
+            text-align: left;
+            margin-bottom: 20px;
         }
 
         .logo {
-            max-height: 60px;
-            max-width: 150px;
+            max-height: 70px;
+            max-width: 200px;
+        }
+
+        .report-title-main {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin: 30px 0 10px 0;
+        }
+
+        .report-subtitle {
+            font-size: 13px;
+            color: #666;
+            margin: 0 0 20px 0;
+        }
+
+        .status-badge-line {
+            text-align: right;
+            margin-bottom: 20px;
+        }
+
+        /* Summary Statistics Box */
+        .summary-stats {
+            display: flex;
+            justify-content: space-between;
+            background-color: #e9ecef;
+            padding: 12px 15px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+
+        .stat-item {
+            display: flex;
+            align-items: center;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            margin-right: 10px;
+            color: #333;
+        }
+
+        .stat-value {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+        }
+
+        /* Metadata Table */
+        .metadata-table {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 30px;
+            font-size: 11px;
+        }
+
+        .metadata-table tr {
+            border-bottom: 1px solid #dee2e6;
+        }
+
+        .metadata-table td {
+            padding: 10px 15px;
+            vertical-align: top;
+        }
+
+        .metadata-table .label {
+            font-weight: bold;
+            color: #333;
+            width: 35%;
+            background-color: #f8f9fa;
+        }
+
+        .metadata-table .value {
+            color: #666;
+            background-color: white;
+        }
+
+        .metadata-table .value-highlight {
+            background-color: #6c757d;
+            color: white;
+            padding: 4px 8px;
+            border-radius: 3px;
+        }
+
+        /* Flagged Items Page */
+        .flagged-items-page {
+            page-break-before: always;
+            margin-bottom: 30px;
+        }
+
+        .flagged-title {
+            font-size: 16px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 5px 0;
+            padding: 10px 0;
+        }
+
+        .flagged-count {
+            font-size: 11px;
+            color: #666;
+            margin-bottom: 20px;
+        }
+
+        .flagged-item {
+            margin-bottom: 20px;
+            padding: 12px;
+            border-left: 4px solid #dc3545;
+            background-color: #f8f9fa;
+        }
+
+        .flagged-item-header {
+            font-weight: bold;
+            color: #333;
+            margin-bottom: 8px;
+            font-size: 11px;
+        }
+
+        .flagged-item-question {
+            color: #666;
+            margin-bottom: 8px;
+            font-size: 10px;
+        }
+
+        .flagged-item-answer {
             margin-bottom: 10px;
         }
 
-        .company-info {
-            font-size: 10px;
-            color: #666;
-            margin-top: 5px;
+        .flagged-notes {
+            background-color: white;
+            padding: 8px;
+            margin-top: 10px;
+            border-radius: 3px;
+            font-size: 9px;
         }
 
-        .report-title {
-            font-size: 18px;
-            font-weight: bold;
-            color: #0066cc;
-            margin: 0 0 10px 0;
-        }
-
-        .report-meta {
-            font-size: 12px;
-            background-color: #f8f9fa;
-            padding: 15px;
-            border-radius: 5px;
-            margin-bottom: 25px;
-        }
-
-        .report-meta table {
-            width: 100%;
-            border-collapse: collapse;
-        }
-
-        .report-meta td {
-            padding: 5px;
-            border: none;
-        }
-
-        .report-meta .label {
-            font-weight: bold;
-            color: #555;
-            width: 30%;
-        }
-
+        /* Section Styles */
         .section {
             margin-bottom: 30px;
             page-break-inside: avoid;
         }
 
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+
         .section-title {
-            font-size: 14px;
+            font-size: 13px;
             font-weight: bold;
-            color: #0066cc;
-            margin: 0 0 15px 0;
+            color: #333;
+            margin: 0;
             padding: 8px 12px;
-            background-color: #e6f2ff;
-            border-left: 4px solid #0066cc;
+            background-color: #e9ecef;
+            flex-grow: 1;
+        }
+
+        .section-flagged-badge {
+            background-color: #dc3545;
+            color: white;
+            padding: 4px 10px;
+            border-radius: 3px;
+            font-size: 10px;
+            font-weight: bold;
+            margin-left: 10px;
         }
 
         .question-block {
-            margin-bottom: 20px;
+            margin-bottom: 18px;
             page-break-inside: avoid;
         }
 
         .question {
             font-weight: bold;
-            color: #444;
-            margin-bottom: 8px;
+            color: #333;
+            margin-bottom: 6px;
             line-height: 1.3;
+            font-size: 10px;
         }
 
-        .answer {
-            background-color: #f8f9fa;
-            padding: 10px;
-            border-left: 3px solid #28a745;
+        .answer-row {
+            display: flex;
+            align-items: flex-start;
             margin-bottom: 10px;
         }
 
-        .answer-text {
-            font-size: 11px;
-            line-height: 1.4;
+        .answer-label {
+            min-width: 200px;
+            font-weight: normal;
+            color: #666;
+            font-size: 10px;
         }
 
+        .answer-value {
+            flex-grow: 1;
+        }
+
+        /* Signature Styles */
+        .signature-section {
+            margin-top: 15px;
+            padding: 10px;
+            background-color: #f8f9fa;
+            border-radius: 3px;
+        }
+
+        .signature-label {
+            font-weight: bold;
+            font-size: 10px;
+            margin-bottom: 8px;
+        }
+
+        .signature-image {
+            max-width: 200px;
+            max-height: 80px;
+            border: 1px solid #dee2e6;
+            background-color: white;
+            padding: 5px;
+        }
+
+        .signature-info {
+            margin-top: 5px;
+            font-size: 9px;
+            color: #666;
+        }
+
+        /* Image Styles */
         .image-container {
             margin: 15px 0;
             text-align: center;
@@ -325,168 +578,53 @@ class ReportPDFGenerator:
             max-width: 100%;
             height: auto;
             border: 1px solid #ddd;
-            border-radius: 4px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            border-radius: 3px;
         }
 
         .image-caption {
-            font-size: 9px;
+            font-size: 8px;
             color: #666;
             margin-top: 5px;
-            font-style: italic;
         }
 
-        .footer-info {
-            margin-top: 40px;
-            padding-top: 20px;
-            border-top: 1px solid #ddd;
-            font-size: 10px;
-            color: #666;
+        /* Media Summary Page */
+        .media-summary-page {
+            page-break-before: always;
+        }
+
+        .media-title {
+            font-size: 14px;
+            font-weight: bold;
+            color: #333;
+            margin: 0 0 20px 0;
+            padding: 10px 12px;
+            background-color: #e9ecef;
+        }
+
+        .media-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .media-item {
             text-align: center;
-        }
-
-        /* Executive Summary Styles */
-        .executive-summary {
-            margin: 25px 0 30px 0;
             page-break-inside: avoid;
         }
 
-        .summary-title {
-            font-size: 16px;
-            font-weight: bold;
-            color: #0066cc;
-            margin: 0 0 15px 0;
-            padding: 8px 12px;
-            background-color: #e6f2ff;
-            border-left: 4px solid #0066cc;
+        .media-item img {
+            max-width: 100%;
+            max-height: 250px;
+            border: 1px solid #ddd;
+            border-radius: 3px;
         }
 
-        .summary-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 10px;
-            margin-bottom: 20px;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-        }
-
-        .summary-table thead {
-            background-color: #0066cc;
-            color: white;
-        }
-
-        .summary-table th {
-            padding: 8px 6px;
-            text-align: left;
-            font-weight: bold;
-            border-right: 1px solid rgba(255,255,255,0.3);
-        }
-
-        .summary-table th:last-child {
-            border-right: none;
-        }
-
-        .summary-table th.summary-section {
-            width: 18%;
-        }
-
-        .summary-table th.summary-question {
-            width: 40%;
-        }
-
-        .summary-table th.summary-answer {
-            width: 30%;
-        }
-
-        .summary-table th.summary-status {
-            width: 12%;
-            text-align: center;
-        }
-
-        .summary-row {
-            border-bottom: 1px solid #e9ecef;
-        }
-
-        .summary-row:nth-child(even) {
-            background-color: #f8f9fa;
-        }
-
-        .summary-row:hover {
-            background-color: #e6f2ff;
-        }
-
-        .summary-table td {
-            padding: 6px;
-            vertical-align: top;
-            border-right: 1px solid #e9ecef;
-            line-height: 1.3;
-        }
-
-        .summary-table td:last-child {
-            border-right: none;
-        }
-
-        .summary-section-cell {
-            font-weight: bold;
-            color: #495057;
-            background-color: #f1f3f4;
-        }
-
-        .summary-question-cell {
+        .media-item-caption {
+            font-size: 9px;
             color: #333;
-        }
-
-        .summary-answer-cell {
-            color: #495057;
-            word-wrap: break-word;
-        }
-
-        .summary-status-cell {
-            text-align: center;
-        }
-
-        .required-marker {
-            color: #dc3545;
-            font-weight: bold;
-        }
-
-
-        .no-answer {
-            color: #6c757d;
-            font-style: italic;
-        }
-
-        .status-complete {
-            background-color: #28a745;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 9px;
-            font-weight: bold;
-        }
-
-        .status-missing {
-            background-color: #dc3545;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 9px;
-            font-weight: bold;
-        }
-
-        .status-optional {
-            background-color: #6c757d;
-            color: white;
-            padding: 2px 6px;
-            border-radius: 3px;
-            font-size: 9px;
-            font-weight: bold;
-        }
-
-        .no-data {
-            text-align: center;
-            color: #6c757d;
-            font-style: italic;
-            padding: 20px;
+            margin-top: 8px;
+            font-weight: 500;
         }
 
         /* Page break handling */
@@ -500,17 +638,52 @@ class ReportPDFGenerator:
             page-break-inside: avoid;
         }
 
-        /* Status styling */
-        .status-draft { color: #856404; }
-        .status-submitted { color: #0066cc; }
-        .status-approved { color: #28a745; }
-        .status-rejected { color: #dc3545; }
+        /* Notes and comments */
+        .notes-section {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #fff3cd;
+            border-left: 3px solid #ffc107;
+            font-size: 9px;
+        }
 
-        /* Responsive image handling */
-        @media print {
-            .report-image {
-                max-height: 400px;
-            }
+        .notes-label {
+            font-weight: bold;
+            color: #856404;
+            margin-bottom: 5px;
+        }
+
+        /* PDF attachments */
+        .pdf-attachment {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #e7f3ff;
+            border-radius: 3px;
+            font-size: 9px;
+        }
+
+        .pdf-link {
+            color: #0066cc;
+            text-decoration: underline;
+        }
+
+        /* Miscellaneous */
+        .required-marker {
+            color: #dc3545;
+            font-weight: bold;
+        }
+
+        .no-answer {
+            color: #999;
+            font-style: italic;
+        }
+
+        strong {
+            font-weight: 600;
+        }
+
+        em {
+            font-style: italic;
         }
         """
 

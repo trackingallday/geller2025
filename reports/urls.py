@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, views_builder, api_views
+from . import views, views_builder, api_views, completed_reports
 
 app_name = 'reports'
 
@@ -55,7 +55,14 @@ urlpatterns = [
     
     # Sample Data
     path('create-sample/', views.create_sample_grocery_report, name='create_sample_grocery_report'),
-    
+
+    # Completed Reports Views
+    path('completed/', completed_reports.completed_reports_list, name='completed_reports_list'),
+    path('completed/<int:pk>/', completed_reports.completed_report_detail, name='completed_report_detail'),
+    path('completed/<int:pk>/generate-pdf/', completed_reports.generate_pdf_view, name='generate_pdf'),
+    path('completed/<int:pk>/view-pdf/', completed_reports.view_pdf, name='view_pdf'),
+    path('completed/browse-pdfs/', completed_reports.browse_pdfs, name='browse_pdfs'),
+
     # API Endpoints
     path('api/reports/', api_views.ReportListAPIView.as_view(), name='api_report_list'),
     path('api/reports/<int:pk>/', api_views.ReportDetailAPIView.as_view(), name='api_report_detail'),
