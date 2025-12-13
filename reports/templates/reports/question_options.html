@@ -64,6 +64,7 @@
                                 <th>Order</th>
                                 <th>Display Text</th>
                                 <th>Value</th>
+                                <th>Badge Type</th>
                                 <th>Flag</th>
                                 <th>Instructions</th>
                                 <th>Actions</th>
@@ -80,6 +81,33 @@
                                         {% endif %}
                                     </td>
                                     <td><code>{{ option.value }}</code></td>
+                                    <td>
+                                        {% if option.badge_type == 'pass' %}
+                                            <span class="badge" style="background-color: #28a745; color: white;">
+                                                <i class="bi bi-check-circle"></i> Pass
+                                            </span>
+                                        {% elif option.badge_type == 'fail' %}
+                                            <span class="badge" style="background-color: #dc3545; color: white;">
+                                                <i class="bi bi-x-circle"></i> Fail
+                                            </span>
+                                        {% elif option.badge_type == 'warning' %}
+                                            <span class="badge" style="background-color: #ff8c00; color: white;">
+                                                <i class="bi bi-exclamation-triangle"></i> Warning
+                                            </span>
+                                        {% elif option.badge_type == 'info' %}
+                                            <span class="badge" style="background-color: #6c757d; color: white;">
+                                                <i class="bi bi-info-circle"></i> Info
+                                            </span>
+                                        {% elif option.badge_type == 'data' %}
+                                            <span class="badge" style="background-color: #6c757d; color: white;">
+                                                <i class="bi bi-clipboard-data"></i> Data
+                                            </span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark">
+                                                <i class="bi bi-dash"></i> Default
+                                            </span>
+                                        {% endif %}
+                                    </td>
                                     <td>
                                         {% if option.is_flag %}
                                             <span class="badge bg-danger">Flagged</span>

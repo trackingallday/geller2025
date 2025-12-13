@@ -5,8 +5,8 @@ from django.http import JsonResponse
 from django.core.paginator import Paginator
 from django.db import transaction
 from .models import (
-    ReportType, ReportSection, Question, QuestionOption, 
-    Report, Answer, QUESTION_TYPES
+    ReportType, ReportSection, Question, QuestionOption,
+    Report, Answer, QUESTION_TYPES, REPORT_STATUS
 )
 from .forms import (
     ReportTypeForm, ReportSectionForm, QuestionForm, 
@@ -533,19 +533,22 @@ def report_list(request):
 def report_create(request, report_type_id):
     """Create a new report instance"""
     report_type = get_object_or_404(ReportType, pk=report_type_id)
-    
+
     if request.method == 'POST':
         form = ReportForm(request.POST, report_type=report_type)
         if form.is_valid():
             report = form.save(commit=False)
             report.report_type = report_type
             report.prepared_by = request.user
+            # Set status to submitted using the REPORT_STATUS choices
+            submitted_status = [status[0] for status in REPORT_STATUS if status[1] == 'Submitted'][0]
+            report.status = submitted_status
             report.save()
             messages.success(request, f'Report "{report.document_number}" created successfully!')
             return redirect('reports:report_fill', pk=report.pk)
     else:
         form = ReportForm(report_type=report_type)
-    
+
     context = {
         'form': form,
         'report_type': report_type,
