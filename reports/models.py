@@ -395,12 +395,17 @@ class Report(MyBaseModel):
         for answer in self.answers.select_related('question', 'question__section').prefetch_related('selected_options'):
             is_flagged = False
             flag_reason = None
+            badge_type = 'default'
 
             # Check if any selected options are flagged
             flagged_options = answer.selected_options.filter(is_flag=True)
             if flagged_options.exists():
                 is_flagged = True
                 flag_reason = ', '.join([opt.text for opt in flagged_options])
+                # Get badge_type from the first flagged option
+                first_flagged = flagged_options.first()
+                if hasattr(first_flagged, 'badge_type') and first_flagged.badge_type != 'default':
+                    badge_type = first_flagged.badge_type
 
             # Check text answer for failure/warning keywords
             if answer.text_answer:
@@ -408,9 +413,11 @@ class Report(MyBaseModel):
                 if 'fail' in text_lower:
                     is_flagged = True
                     flag_reason = answer.text_answer
+                    badge_type = 'fail'
                 elif any(keyword in text_lower for keyword in ['incorrect', 'needs attention', 'needs descaling', 'unapproved', 'issue', 'dirty']):
                     is_flagged = True
                     flag_reason = answer.text_answer
+                    badge_type = 'warning'
 
             if is_flagged:
                 flagged_answers.append({
@@ -418,7 +425,8 @@ class Report(MyBaseModel):
                     'question': answer.question,
                     'section': answer.question.section.name if answer.question.section else 'General',
                     'flag_reason': flag_reason,
-                    'display_value': answer.get_display_value()
+                    'display_value': answer.get_display_value(),
+                    'badge_type': badge_type
                 })
 
         return flagged_answers

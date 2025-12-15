@@ -95,7 +95,19 @@
                 <div class="flagged-item-header">{{ flagged.section }} :</div>
                 <div class="flagged-item-question">{{ flagged.question.question_text }}</div>
                 <div class="flagged-item-answer">
-                    <span class="badge badge-fail">{{ flagged.flag_reason|truncatewords:10 }}</span>
+                    {% if flagged.badge_type == 'fail' %}
+                        <span class="badge badge-fail">{{ flagged.flag_reason|truncatewords:10 }}</span>
+                    {% elif flagged.badge_type == 'pass' %}
+                        <span class="badge badge-pass">{{ flagged.flag_reason|truncatewords:10 }}</span>
+                    {% elif flagged.badge_type == 'warning' %}
+                        <span class="badge badge-warning">{{ flagged.flag_reason|truncatewords:10 }}</span>
+                    {% elif flagged.badge_type == 'info' %}
+                        <span class="badge badge-info">{{ flagged.flag_reason|truncatewords:10 }}</span>
+                    {% elif flagged.badge_type == 'data' %}
+                        <span class="badge badge-data">{{ flagged.flag_reason|truncatewords:10 }}</span>
+                    {% else %}
+                        <span class="badge badge-fail">{{ flagged.flag_reason|truncatewords:10 }}</span>
+                    {% endif %}
                 </div>
 
                 <!-- Display image if exists -->
@@ -185,11 +197,6 @@
                 </p>
             {% endfor %}
         </div>
-
-        <!-- Add page break after each major section -->
-        {% if not forloop.last %}
-            <div class="page-break"></div>
-        {% endif %}
     {% empty %}
         <div class="section">
             <div style="padding: 40px; text-align: center; color: #666; font-style: italic;">

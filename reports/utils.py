@@ -20,10 +20,12 @@ class ReportPDFGenerator:
         self.font_config = FontConfiguration()
 
         # Page dimensions for image sizing (in pixels at 96 DPI)
-        self.portrait_width = 600
-        self.portrait_height = 900
-        self.landscape_width = 900
-        self.landscape_height = 600
+        # Sized to match iPhone 11 proportions (828x1792 portrait)
+        # Scaled to ~42% for good PDF size
+        self.portrait_width = 350
+        self.portrait_height = 758
+        self.landscape_width = 758
+        self.landscape_height = 350
 
     def get_answer_badge_type(self, answer):
         """Determine the badge type/color for an answer based on QuestionOption badge_type or content"""
@@ -283,6 +285,8 @@ class ReportPDFGenerator:
             color: #333;
             margin: 0;
             padding: 0;
+            orphans: 3;
+            widows: 3;
         }
 
         /* Badge Styles - Color coded answer indicators */
@@ -449,6 +453,7 @@ class ReportPDFGenerator:
             padding: 12px;
             border-left: 4px solid #dc3545;
             background-color: #f8f9fa;
+            page-break-inside: avoid;
         }
 
         .flagged-item-header {
@@ -479,7 +484,6 @@ class ReportPDFGenerator:
         /* Section Styles */
         .section {
             margin-bottom: 30px;
-            page-break-inside: avoid;
         }
 
         .section-header {
@@ -487,6 +491,7 @@ class ReportPDFGenerator:
             justify-content: space-between;
             align-items: center;
             margin-bottom: 15px;
+            page-break-after: avoid;
         }
 
         .section-title {
@@ -512,6 +517,8 @@ class ReportPDFGenerator:
         .question-block {
             margin-bottom: 18px;
             page-break-inside: avoid;
+            orphans: 2;
+            widows: 2;
         }
 
         .question {
@@ -545,6 +552,7 @@ class ReportPDFGenerator:
             padding: 10px;
             background-color: #f8f9fa;
             border-radius: 3px;
+            page-break-inside: avoid;
         }
 
         .signature-label {
@@ -572,6 +580,8 @@ class ReportPDFGenerator:
             margin: 15px 0;
             text-align: center;
             page-break-inside: avoid;
+            page-break-before: auto;
+            page-break-after: auto;
         }
 
         .report-image {
@@ -645,6 +655,7 @@ class ReportPDFGenerator:
             background-color: #fff3cd;
             border-left: 3px solid #ffc107;
             font-size: 9px;
+            page-break-inside: avoid;
         }
 
         .notes-label {
