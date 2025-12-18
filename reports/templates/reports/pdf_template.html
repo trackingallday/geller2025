@@ -9,10 +9,13 @@
     <div class="cover-header">
         <!-- Logo Section -->
         <div class="logo-section">
+            {% if geller_logo %}
+                <img src="{{ geller_logo }}" alt="Geller Logo" class="geller-logo">
+            {% endif %}
             {% if customer_logo %}
-                <img src="{{ customer_logo }}" alt="Logo" class="logo">
+                <img src="{{ customer_logo }}" alt="Customer Logo" class="customer-logo">
             {% elif distributor_logo %}
-                <img src="{{ distributor_logo }}" alt="Logo" class="logo">
+                <img src="{{ distributor_logo }}" alt="Distributor Logo" class="customer-logo">
             {% endif %}
         </div>
 
@@ -170,7 +173,12 @@
                     {% if answer_data.answer.signature_answer %}
                         <div class="signature-section">
                             <div class="signature-label">Conducted coaching and training session with the staff member/s in the department to ensure adherence to the correct procedures. Subsequently, implemented corrective actions to address any identified areas of improvement.</div>
-                            <img src="{{ answer_data.answer.signature_answer.url }}" alt="Signature" class="signature-image">
+                            {% if answer_data.processed_signature %}
+                                <img src="{{ answer_data.processed_signature.url }}" alt="Signature" class="signature-image"
+                                     style="width: {{ answer_data.processed_signature.width }}px; height: {{ answer_data.processed_signature.height }}px;">
+                            {% else %}
+                                <img src="{{ answer_data.answer.signature_answer.url }}" alt="Signature" class="signature-image">
+                            {% endif %}
                             <div class="signature-info">
                                 {{ report.prepared_by.get_full_name|default:report.prepared_by.username }}<br>
                                 {{ generated_at|date:"d.m.Y H:i" }} NZST

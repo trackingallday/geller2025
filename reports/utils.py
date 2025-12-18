@@ -20,12 +20,21 @@ class ReportPDFGenerator:
         self.font_config = FontConfiguration()
 
         # Page dimensions for image sizing (in pixels at 96 DPI)
-        # Sized to match iPhone 11 proportions (828x1792 portrait)
-        # Scaled to ~42% for good PDF size
-        self.portrait_width = 350
-        self.portrait_height = 758
-        self.landscape_width = 758
-        self.landscape_height = 350
+        # Small size for inline images (with questions)
+        self.small_portrait_width = 200
+        self.small_portrait_height = 150
+        self.small_landscape_width = 200
+        self.small_landscape_height = 150
+
+        # Large size for media summary images at the end
+        self.large_portrait_width = 350
+        self.large_portrait_height = 758
+        self.large_landscape_width = 758
+        self.large_landscape_height = 350
+
+        # Signature-specific size (small)
+        self.signature_width = 150
+        self.signature_height = 60
 
     def get_answer_badge_type(self, answer):
         """Determine the badge type/color for an answer based on QuestionOption badge_type or content"""
@@ -109,6 +118,7 @@ class ReportPDFGenerator:
 
         answers_by_section = self.report.get_all_answers_with_images()
         all_images = []
+        all_image_fields = []
 
         # Process images for each answer and collect for media summary
         for section_answers in answers_by_section.values():
@@ -116,14 +126,25 @@ class ReportPDFGenerator:
                 # Add badge type for styling
                 answer_data['badge_type'] = self.get_answer_badge_type(answer_data['answer'])
 
+                # Process signature images separately with smaller dimensions
+                if answer_data['answer'].signature_answer:
+                    processed_signature = self._process_images([answer_data['answer'].signature_answer], size='signature')
+                    if processed_signature:
+                        answer_data['processed_signature'] = processed_signature[0]
+
                 if answer_data['images']:
-                    answer_data['processed_images'] = self._process_images(answer_data['images'])
-                    # Collect all images for media summary
-                    all_images.extend(answer_data['processed_images'])
+                    # Process images at small size for inline display
+                    answer_data['processed_images'] = self._process_images(answer_data['images'], size='small')
+                    # Collect raw image fields for later processing at large size
+                    all_image_fields.extend(answer_data['images'])
 
                 # Count flagged items per section
                 if 'section_flagged_count' not in answer_data:
                     answer_data['section_flagged_count'] = 0
+
+        # Process all collected images at large size for media summary
+        if all_image_fields:
+            all_images = self._process_images(all_image_fields, size='large')
 
         # Calculate section-level flagged counts
         section_flagged_counts = {}
@@ -132,6 +153,12 @@ class ReportPDFGenerator:
             section_flagged_counts[section_name] = flagged_in_section
 
         # Get logos
+        # Geller company logo (always shown)
+        geller_logo = os.path.join(settings.STATIC_ROOT or settings.BASE_DIR, 'reports/static/reports/img/report-logo.png')
+        if not os.path.exists(geller_logo):
+            # Fallback to STATIC_ROOT path
+            geller_logo = os.path.join(settings.STATIC_ROOT or '', 'reports/img/report-logo.png')
+
         customer_logo = None
         distributor_logo = None
 
@@ -153,6 +180,7 @@ class ReportPDFGenerator:
             'report': self.report,
             'answers_by_section': answers_by_section,
             'section_flagged_counts': section_flagged_counts,
+            'geller_logo': f"file://{geller_logo}" if os.path.exists(geller_logo) else None,
             'customer_logo': customer_logo,
             'distributor_logo': distributor_logo,
             'generated_at': generated_at_nz,
@@ -163,8 +191,13 @@ class ReportPDFGenerator:
             'all_images': all_images,
         }
 
-    def _process_images(self, images):
-        """Process images to ensure they meet size requirements"""
+    def _process_images(self, images, size='small'):
+        """Process images to ensure they meet size requirements
+
+        Args:
+            images: List of image fields to process
+            size: 'small' for inline images (default), 'large' for media summary, 'signature' for signatures
+        """
         processed_images = []
 
         for image_field in images:
@@ -189,19 +222,21 @@ class ReportPDFGenerator:
                             image_url = f"file://{potential_path}"
                         else:
                             # Use original URL as fallback
+                            width, height = self._get_default_dimensions(size, True)
                             processed_images.append({
                                 'url': image_url,
                                 'is_portrait': True,  # Default assumption
-                                'width': self.portrait_width,
-                                'height': self.portrait_height
+                                'width': width,
+                                'height': height
                             })
                             continue
                     else:
+                        width, height = self._get_default_dimensions(size, True)
                         processed_images.append({
                             'url': image_url,
                             'is_portrait': True,  # Default assumption
-                            'width': self.portrait_width,
-                            'height': self.portrait_height
+                            'width': width,
+                            'height': height
                         })
                         continue
                 else:
@@ -212,13 +247,8 @@ class ReportPDFGenerator:
                     original_width, original_height = img.size
                     is_portrait = original_height >= original_width
 
-                    # Determine target dimensions
-                    if is_portrait:
-                        max_width = self.portrait_width
-                        max_height = self.portrait_height
-                    else:
-                        max_width = self.landscape_width
-                        max_height = self.landscape_height
+                    # Determine target dimensions based on size parameter
+                    max_width, max_height = self._get_max_dimensions(size, is_portrait)
 
                     # Calculate scaling to fit within constraints
                     width_ratio = max_width / original_width
@@ -249,14 +279,39 @@ class ReportPDFGenerator:
                     if os.path.exists(potential_path):
                         fallback_url = f"file://{potential_path}"
 
+                width, height = self._get_default_dimensions(size, True)
                 processed_images.append({
                     'url': fallback_url,
                     'is_portrait': True,
-                    'width': self.portrait_width,
-                    'height': self.portrait_height
+                    'width': width,
+                    'height': height
                 })
 
         return processed_images
+
+    def _get_max_dimensions(self, size, is_portrait):
+        """Get maximum dimensions based on size type and orientation"""
+        if size == 'signature':
+            return self.signature_width, self.signature_height
+        elif size == 'large':
+            if is_portrait:
+                return self.large_portrait_width, self.large_portrait_height
+            else:
+                return self.large_landscape_width, self.large_landscape_height
+        else:  # small
+            if is_portrait:
+                return self.small_portrait_width, self.small_portrait_height
+            else:
+                return self.small_landscape_width, self.small_landscape_height
+
+    def _get_default_dimensions(self, size, is_portrait):
+        """Get default dimensions for fallback cases"""
+        if size == 'signature':
+            return (self.signature_width, self.signature_height)
+        elif size == 'large':
+            return (self.large_portrait_width, self.large_portrait_height) if is_portrait else (self.large_landscape_width, self.large_landscape_height)
+        else:  # small
+            return (self.small_portrait_width, self.small_portrait_height) if is_portrait else (self.small_landscape_width, self.small_landscape_height)
 
     def _get_css_styles(self):
         """Get CSS styles for professional PDF formatting"""
@@ -340,6 +395,19 @@ class ReportPDFGenerator:
         .logo-section {
             text-align: left;
             margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .geller-logo {
+            max-height: 60px;
+            max-width: 220px;
+        }
+
+        .customer-logo {
+            max-height: 50px;
+            max-width: 150px;
         }
 
         .logo {
@@ -562,8 +630,8 @@ class ReportPDFGenerator:
         }
 
         .signature-image {
-            max-width: 200px;
-            max-height: 80px;
+            max-width: 150px;
+            max-height: 60px;
             border: 1px solid #dee2e6;
             background-color: white;
             padding: 5px;
