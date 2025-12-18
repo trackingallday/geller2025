@@ -289,10 +289,23 @@ class Report(MyBaseModel):
         logger.info(f"=== END IMAGE LOGGING FOR REPORT: {self.document_number} ===")
 
     def get_all_answers_with_images(self):
-        """Get all answers for this report, organized by section with image handling"""
-        answers_by_section = {}
+        """Get all answers for this report, organized by section with image handling
+        Orders sections by their order field (0, 1, 2...) and questions within sections by their order field
+        """
+        from collections import OrderedDict
 
-        for answer in self.answers.select_related('question', 'question__section').prefetch_related('selected_options'):
+        answers_by_section = OrderedDict()
+
+        # Order answers by section order (ascending: 0, 1, 2...), then by question order
+        ordered_answers = self.answers.select_related(
+            'question',
+            'question__section'
+        ).prefetch_related('selected_options').order_by(
+            'question__section__order',  # Section order: 0, 1, 2, 3...
+            'question__order'  # Then question order within section: 0, 1, 2, 3...
+        )
+
+        for answer in ordered_answers:
             section_name = answer.question.section.name if answer.question.section else "General"
 
             if section_name not in answers_by_section:
