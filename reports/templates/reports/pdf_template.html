@@ -260,7 +260,8 @@
                     {% for image in all_images %}
                         {% if forloop.counter0|divisibleby:2 %}<tr>{% endif %}
                             <td class="media-cell">
-                                <img src="{{ image.url }}" alt="Photo {{ forloop.counter }}" class="media-image">
+                                <img src="{{ image.url }}" alt="Photo {{ forloop.counter }}" class="media-image"
+                                     style="width: {{ image.width }}px; height: {{ image.height }}px;">
                                 <div class="media-caption">Photo {{ forloop.counter }}</div>
                             </td>
                         {% if forloop.counter|divisibleby:2 or forloop.last %}
@@ -276,7 +277,8 @@
                     {% for image in all_images %}
                         {% if forloop.counter0|divisibleby:3 %}<tr>{% endif %}
                             <td class="media-cell">
-                                <img src="{{ image.url }}" alt="Photo {{ forloop.counter }}" class="media-image">
+                                <img src="{{ image.url }}" alt="Photo {{ forloop.counter }}" class="media-image"
+                                     style="width: {{ image.width }}px; height: {{ image.height }}px;">
                                 <div class="media-caption">Photo {{ forloop.counter }}</div>
                             </td>
                         {% if forloop.counter|divisibleby:3 or forloop.last %}

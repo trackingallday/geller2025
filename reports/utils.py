@@ -26,11 +26,11 @@ class ReportPDFGenerator:
         self.small_landscape_width = 200
         self.small_landscape_height = 150
 
-        # Large size for media summary images at the end
-        self.large_portrait_width = 350
-        self.large_portrait_height = 758
-        self.large_landscape_width = 758
-        self.large_landscape_height = 350
+        # Large size for media summary images at the end (sized for table layout)
+        self.large_portrait_width = 200
+        self.large_portrait_height = 280
+        self.large_landscape_width = 280
+        self.large_landscape_height = 200
 
         # Signature-specific size (small)
         self.signature_width = 150
