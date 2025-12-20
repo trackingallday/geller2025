@@ -253,14 +253,47 @@
     {% if all_images %}
         <div class="media-summary-page">
             <h2 class="media-title">Media summary</h2>
-            <div class="media-grid">
-                {% for image in all_images %}
-                    <div class="media-item">
-                        <img src="{{ image.url }}" alt="Photo {{ forloop.counter }}">
-                        <div class="media-item-caption">Photo {{ forloop.counter }}</div>
-                    </div>
-                {% endfor %}
-            </div>
+
+            {% if has_landscape_images %}
+                <!-- 2 columns for landscape images -->
+                <table class="media-table">
+                    {% for image in all_images %}
+                        {% if forloop.counter0|divisibleby:2 %}<tr>{% endif %}
+                            <td class="media-cell">
+                                <img src="{{ image.url }}" alt="Photo {{ forloop.counter }}" class="media-image">
+                                <div class="media-caption">Photo {{ forloop.counter }}</div>
+                            </td>
+                        {% if forloop.counter|divisibleby:2 or forloop.last %}
+                            {% if forloop.last and not forloop.counter|divisibleby:2 %}
+                                <td class="media-cell"></td>
+                            {% endif %}
+                        </tr>{% endif %}
+                    {% endfor %}
+                </table>
+            {% else %}
+                <!-- 3 columns for portrait images -->
+                <table class="media-table">
+                    {% for image in all_images %}
+                        {% if forloop.counter0|divisibleby:3 %}<tr>{% endif %}
+                            <td class="media-cell">
+                                <img src="{{ image.url }}" alt="Photo {{ forloop.counter }}" class="media-image">
+                                <div class="media-caption">Photo {{ forloop.counter }}</div>
+                            </td>
+                        {% if forloop.counter|divisibleby:3 or forloop.last %}
+                            {% if forloop.last %}
+                                {% with remainder=forloop.counter|add:"2"|divisibleby:3 %}
+                                    {% if not forloop.counter|divisibleby:3 %}
+                                        <td class="media-cell"></td>
+                                        {% if not forloop.counter|add:"1"|divisibleby:3 %}
+                                            <td class="media-cell"></td>
+                                        {% endif %}
+                                    {% endif %}
+                                {% endwith %}
+                            {% endif %}
+                        </tr>{% endif %}
+                    {% endfor %}
+                </table>
+            {% endif %}
         </div>
     {% endif %}
 

@@ -26,11 +26,11 @@ class ReportPDFGenerator:
         self.small_landscape_width = 200
         self.small_landscape_height = 150
 
-        # Large size for media summary images at the end (20% bigger than original)
-        self.large_portrait_width = 420
-        self.large_portrait_height = 910
-        self.large_landscape_width = 910
-        self.large_landscape_height = 420
+        # Large size for media summary images at the end
+        self.large_portrait_width = 350
+        self.large_portrait_height = 758
+        self.large_landscape_width = 758
+        self.large_landscape_height = 350
 
         # Signature-specific size (small)
         self.signature_width = 150
@@ -146,6 +146,9 @@ class ReportPDFGenerator:
         if all_image_fields:
             all_images = self._process_images(all_image_fields, size='large')
 
+        # Check if any images are landscape for grid layout
+        has_landscape_images = any(not img.get('is_portrait', True) for img in all_images)
+
         # Calculate section-level flagged counts
         section_flagged_counts = {}
         for section_name, section_answers in answers_by_section.items():
@@ -189,6 +192,7 @@ class ReportPDFGenerator:
             'flagged_statistics': flagged_statistics,
             'flagged_answers': flagged_answers,
             'all_images': all_images,
+            'has_landscape_images': has_landscape_images,
         }
 
     def _process_images(self, images, size='small'):
@@ -680,29 +684,27 @@ class ReportPDFGenerator:
             background-color: #e9ecef;
         }
 
-        .media-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        .media-table {
+            width: 100%;
+            border-collapse: collapse;
             margin-bottom: 20px;
         }
 
-        .media-item {
+        .media-cell {
             text-align: center;
+            vertical-align: top;
+            padding: 10px;
             page-break-inside: avoid;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
         }
 
-        .media-item img {
+        .media-image {
             max-width: 100%;
             height: auto;
             border: 1px solid #ddd;
             border-radius: 3px;
         }
 
-        .media-item-caption {
+        .media-caption {
             font-size: 9px;
             color: #333;
             margin-top: 8px;
