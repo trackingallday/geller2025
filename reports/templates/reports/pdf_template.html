@@ -143,7 +143,6 @@
 
                     <!-- Answer with Badge -->
                     <div class="answer-row">
-                        <div class="answer-label">{{ answer_data.question.question_text|truncatewords:5 }}</div>
                         <div class="answer-value">
                             {% if answer_data.badge_type == 'fail' %}
                                 <span class="badge badge-fail">{{ answer_data.display_value }}</span>

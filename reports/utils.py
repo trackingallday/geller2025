@@ -26,11 +26,11 @@ class ReportPDFGenerator:
         self.small_landscape_width = 200
         self.small_landscape_height = 150
 
-        # Large size for media summary images at the end
-        self.large_portrait_width = 350
-        self.large_portrait_height = 758
-        self.large_landscape_width = 758
-        self.large_landscape_height = 350
+        # Large size for media summary images at the end (20% bigger than original)
+        self.large_portrait_width = 420
+        self.large_portrait_height = 910
+        self.large_landscape_width = 910
+        self.large_landscape_height = 420
 
         # Signature-specific size (small)
         self.signature_width = 150
@@ -646,7 +646,7 @@ class ReportPDFGenerator:
         /* Image Styles */
         .image-container {
             margin: 15px 0;
-            text-align: center;
+            text-align: left;
             page-break-inside: avoid;
             page-break-before: auto;
             page-break-after: auto;
@@ -663,6 +663,7 @@ class ReportPDFGenerator:
             font-size: 8px;
             color: #666;
             margin-top: 5px;
+            text-align: left;
         }
 
         /* Media Summary Page */
@@ -682,18 +683,21 @@ class ReportPDFGenerator:
         .media-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            gap: 20px;
+            gap: 15px;
             margin-bottom: 20px;
         }
 
         .media-item {
             text-align: center;
             page-break-inside: avoid;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
         }
 
         .media-item img {
             max-width: 100%;
-            max-height: 250px;
+            height: auto;
             border: 1px solid #ddd;
             border-radius: 3px;
         }
