@@ -7,7 +7,6 @@ import django.db.models.deletion
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('chemsapp', '0003_alter_product_description_alter_product_directions'),
         ('reports', '0012_set_all_reports_to_submitted'),
     ]
 
