@@ -217,7 +217,8 @@ class Report(MyBaseModel):
     distributor = models.ForeignKey(Distributor, on_delete=models.CASCADE, related_name='reports', blank=True, null=True)
     
     # Report metadata
-    store_compliance_manager = models.CharField(max_length=255, blank=True, null=True)
+    compliance_manager = models.ForeignKey('ComplianceManager', on_delete=models.SET_NULL, blank=True, null=True, related_name='reports', help_text="Select a compliance manager from the customer's list")
+    store_compliance_manager = models.CharField(max_length=255, blank=True, null=True, help_text="Manual entry for compliance manager name (used if no compliance manager is selected)")
     inspection_date = models.DateField(default=timezone.now)
     prepared_by = models.ForeignKey(User, on_delete=models.CASCADE, related_name='reports_prepared')
     
@@ -248,10 +249,20 @@ class Report(MyBaseModel):
             # Mark PDF for regeneration if key fields changed
             if (old_instance.status != self.status or
                 old_instance.inspection_date != self.inspection_date or
+                old_instance.compliance_manager != self.compliance_manager or
                 old_instance.store_compliance_manager != self.store_compliance_manager):
                 self.pdf_needs_regeneration = True
 
         super().save(*args, **kwargs)
+
+    @property
+    def compliance_manager_name(self):
+        """Get the compliance manager name from either the ForeignKey or the text field"""
+        if self.compliance_manager:
+            return self.compliance_manager.name
+        elif self.store_compliance_manager:
+            return self.store_compliance_manager
+        return None
 
     def log_all_images(self):
         """Log all images in this report to console"""
@@ -412,6 +423,7 @@ class Report(MyBaseModel):
 
             # Check if any selected options are flagged
             flagged_options = answer.selected_options.filter(is_flag=True)
+            additional_instructions = None
             if flagged_options.exists():
                 is_flagged = True
                 flag_reason = ', '.join([opt.text for opt in flagged_options])
@@ -419,6 +431,10 @@ class Report(MyBaseModel):
                 first_flagged = flagged_options.first()
                 if hasattr(first_flagged, 'badge_type') and first_flagged.badge_type != 'default':
                     badge_type = first_flagged.badge_type
+                # Collect additional_instructions from all flagged options
+                instructions_list = [opt.additional_instructions for opt in flagged_options if opt.additional_instructions]
+                if instructions_list:
+                    additional_instructions = '\n\n'.join(instructions_list)
 
             # Check text answer for failure/warning keywords
             if answer.text_answer:
@@ -439,7 +455,8 @@ class Report(MyBaseModel):
                     'section': answer.question.section.name if answer.question.section else 'General',
                     'flag_reason': flag_reason,
                     'display_value': answer.get_display_value(),
-                    'badge_type': badge_type
+                    'badge_type': badge_type,
+                    'additional_instructions': additional_instructions
                 })
 
         return flagged_answers
@@ -634,3 +651,18 @@ class ConditionalRule(MyBaseModel):
             except (ValueError, TypeError):
                 return False
         return False
+
+
+class ComplianceManager(MyBaseModel):
+    """Store compliance managers associated with customers"""
+    customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='compliance_managers')
+    name = models.CharField(max_length=255, help_text="Full name of the compliance manager")
+    phone_number = models.CharField(max_length=50, blank=True, null=True, help_text="Contact phone number")
+
+    class Meta:
+        ordering = ['name']
+        verbose_name = 'Compliance Manager'
+        verbose_name_plural = 'Compliance Managers'
+
+    def __str__(self):
+        return f"{self.name} ({self.customer.businessName})"

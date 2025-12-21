@@ -7,7 +7,7 @@ from django.contrib import messages
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
     Report, Answer, ConditionalRule, ReportTypeCustomer, ReportTypeDistributor,
-    QuestionTemplate
+    QuestionTemplate, ComplianceManager
 )
 
 
@@ -559,8 +559,31 @@ class QuestionTemplateAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         })
     )
-    
+
     def save_model(self, request, obj, form, change):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+
+@admin.register(ComplianceManager)
+class ComplianceManagerAdmin(admin.ModelAdmin):
+    list_display = ('name', 'customer_name', 'phone_number', 'created_at')
+    list_filter = ('customer', 'created_at')
+    search_fields = ('name', 'phone_number', 'customer__businessName')
+    readonly_fields = ('created_at', 'updated_at')
+
+    fieldsets = (
+        ('Manager Information', {
+            'fields': ('customer', 'name', 'phone_number')
+        }),
+        ('Metadata', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',)
+        })
+    )
+
+    def customer_name(self, obj):
+        return obj.customer.businessName
+    customer_name.short_description = 'Customer'
+    customer_name.admin_order_field = 'customer__businessName'

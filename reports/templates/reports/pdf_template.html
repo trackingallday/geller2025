@@ -160,6 +160,14 @@
                         </div>
                     </div>
 
+                    <!-- Additional Instructions from Question Options -->
+                    {% if answer_data.additional_instructions %}
+                        <div class="instructions-section">
+                            <div class="instructions-label">Instructions:</div>
+                            {{ answer_data.additional_instructions|linebreaks }}
+                        </div>
+                    {% endif %}
+
                     <!-- Notes/Instructions -->
                     {% if answer_data.answer.notes %}
                         <div class="notes-section">

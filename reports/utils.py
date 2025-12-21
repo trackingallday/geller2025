@@ -126,6 +126,12 @@ class ReportPDFGenerator:
                 # Add badge type for styling
                 answer_data['badge_type'] = self.get_answer_badge_type(answer_data['answer'])
 
+                # Get additional_instructions from selected options (if any are flagged)
+                answer = answer_data['answer']
+                flagged_options = answer.selected_options.filter(is_flag=True)
+                additional_instructions_list = [opt.additional_instructions for opt in flagged_options if opt.additional_instructions]
+                answer_data['additional_instructions'] = '\n\n'.join(additional_instructions_list) if additional_instructions_list else None
+
                 # Process signature images separately with smaller dimensions
                 if answer_data['answer'].signature_answer:
                     processed_signature = self._process_images([answer_data['answer'].signature_answer], size='signature')
@@ -720,6 +726,22 @@ class ReportPDFGenerator:
         .question-block img,
         .image-container {
             page-break-inside: avoid;
+        }
+
+        /* Additional instructions from flagged options */
+        .instructions-section {
+            margin-top: 10px;
+            padding: 8px;
+            background-color: #e7f3ff;
+            border-left: 3px solid #0066cc;
+            font-size: 9px;
+            page-break-inside: avoid;
+        }
+
+        .instructions-label {
+            font-weight: bold;
+            color: #004085;
+            margin-bottom: 5px;
         }
 
         /* Notes and comments */

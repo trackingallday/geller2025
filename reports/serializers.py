@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from chemsapp.models import Customer, Distributor
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
-    Report, Answer, QUESTION_TYPES
+    Report, Answer, ComplianceManager, QUESTION_TYPES
 )
 import base64
 import io
@@ -55,12 +55,21 @@ class UserSerializer(serializers.ModelSerializer):
         fields = ['id', 'username', 'first_name', 'last_name', 'email']
 
 
+class ComplianceManagerSerializer(serializers.ModelSerializer):
+    """Serializer for compliance managers"""
+
+    class Meta:
+        model = ComplianceManager
+        fields = ['id', 'name', 'phone_number']
+
+
 class CustomerSerializer(serializers.ModelSerializer):
     """Customer info for reports"""
-    
+    compliance_managers = ComplianceManagerSerializer(many=True, read_only=True)
+
     class Meta:
         model = Customer
-        fields = ['id', 'businessName', 'address', 'phoneNumber']
+        fields = ['id', 'businessName', 'address', 'phoneNumber', 'compliance_managers']
 
 
 class DistributorSerializer(serializers.ModelSerializer):
@@ -211,6 +220,7 @@ class ReportListSerializer(serializers.ModelSerializer):
     report_type_name = serializers.CharField(source='report_type.name', read_only=True)
     customer_name = serializers.CharField(source='customer.businessName', read_only=True)
     distributor_name = serializers.CharField(source='distributor.businessName', read_only=True)
+    compliance_manager_name = serializers.CharField(read_only=True)
     prepared_by_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
 
@@ -218,7 +228,8 @@ class ReportListSerializer(serializers.ModelSerializer):
         model = Report
         fields = [
             'id', 'document_number', 'report_type_name', 'customer_name', 'distributor_name',
-            'store_compliance_manager', 'inspection_date', 'prepared_by_name',
+            'compliance_manager', 'store_compliance_manager', 'compliance_manager_name',
+            'inspection_date', 'prepared_by_name',
             'status', 'status_display', 'submitted_at',
             'created_at', 'updated_at',
             'pdf_file', 'pdf_generated_at', 'pdf_needs_regeneration'
@@ -238,6 +249,8 @@ class ReportSerializer(serializers.ModelSerializer):
     report_type = ReportTypeSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
     distributor = DistributorSerializer(read_only=True)
+    compliance_manager_obj = ComplianceManagerSerializer(source='compliance_manager', read_only=True)
+    compliance_manager_name = serializers.CharField(read_only=True)
     prepared_by = UserSerializer(read_only=True)
     reviewed_by = UserSerializer(read_only=True)
     answers = AnswerSerializer(many=True, read_only=True)
@@ -247,7 +260,8 @@ class ReportSerializer(serializers.ModelSerializer):
         model = Report
         fields = [
             'id', 'document_number', 'report_type', 'customer', 'distributor',
-            'store_compliance_manager', 'inspection_date', 'prepared_by',
+            'compliance_manager', 'compliance_manager_obj', 'store_compliance_manager',
+            'compliance_manager_name', 'inspection_date', 'prepared_by',
             'status', 'status_display', 'submitted_at', 'reviewed_by',
             'reviewed_at', 'created_at', 'updated_at', 'answers',
             'pdf_file', 'pdf_generated_at', 'pdf_needs_regeneration'
@@ -257,12 +271,12 @@ class ReportSerializer(serializers.ModelSerializer):
 class ReportSubmissionSerializer(serializers.ModelSerializer):
     """Serializer for submitting complete report with answers"""
     answers = AnswerSerializer(many=True, write_only=True)
-    
+
     class Meta:
         model = Report
         fields = [
-            'id', 'customer', 'distributor', 'store_compliance_manager',
-            'inspection_date', 'answers'
+            'id', 'customer', 'distributor', 'compliance_manager',
+            'store_compliance_manager', 'inspection_date', 'answers'
         ]
         read_only_fields = ['id']
     
