@@ -6,7 +6,7 @@ from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.utils import timezone
 
-from .models import Report, ReportType, Answer, QuestionOption
+from .models import Report, ReportType, Answer, QuestionOption, ReportStatus
 from .serializers import (
     ReportSerializer, ReportListSerializer, ReportSubmissionSerializer,
     ReportTypeSerializer, CustomerSerializer, DistributorSerializer
@@ -87,14 +87,15 @@ class ReportTypeDetailAPIView(generics.RetrieveAPIView):
 def create_report_api(request, report_type_id):
     """
     API endpoint to create a new report instance for a specific report type.
-    
+
     POST /reports/api/report-types/{report_type_id}/create/
-    
+
     Expected JSON structure:
     {
         "customer": 1,
         "distributor": 2,
-        "store_compliance_manager": "John Doe",
+        "compliance_manager": 5,  // Optional: ID of ComplianceManager
+        "store_compliance_manager": "John Doe",  // Optional: Manual entry (fallback if compliance_manager not set)
         "inspection_date": "2024-01-15",
         "answers": [
             {
@@ -129,10 +130,12 @@ def create_report_api(request, report_type_id):
             serializer = ReportSubmissionSerializer(data=report_data)
             
             if serializer.is_valid():
-                # Save the report
+                # Save the report with status set to submitted
                 report = serializer.save(
                     report_type=report_type,
-                    prepared_by=request.user
+                    prepared_by=request.user,
+                    status=ReportStatus.SUBMITTED,
+                    submitted_at=timezone.now()
                 )
                 
                 # Return the complete report data
@@ -169,14 +172,15 @@ def create_report_api(request, report_type_id):
 def update_report_api(request, report_id):
     """
     API endpoint to update an existing report with new answers.
-    
+
     PUT/PATCH /reports/api/reports/{report_id}/update/
-    
+
     Expected JSON structure (same as create_report_api):
     {
         "customer": 1,
         "distributor": 2,
-        "store_compliance_manager": "John Doe Updated",
+        "compliance_manager": 5,  // Optional: ID of ComplianceManager
+        "store_compliance_manager": "John Doe Updated",  // Optional: Manual entry (fallback if compliance_manager not set)
         "inspection_date": "2024-01-16",
         "answers": [
             {
@@ -193,7 +197,7 @@ def update_report_api(request, report_id):
     report = get_object_or_404(Report, pk=report_id)
     
     # Check if user can modify this report
-    if report.status == 'submitted' and request.user != report.prepared_by:
+    if report.status == ReportStatus.SUBMITTED and request.user != report.prepared_by:
         return Response(
             {
                 'success': False,
@@ -252,7 +256,7 @@ def submit_report_api(request, report_id):
     """
     report = get_object_or_404(Report, pk=report_id)
     
-    if report.status != 'draft':
+    if report.status != ReportStatus.DRAFT:
         return Response(
             {
                 'success': False,
@@ -260,7 +264,7 @@ def submit_report_api(request, report_id):
             },
             status=status.HTTP_400_BAD_REQUEST
         )
-    
+
     if report.prepared_by != request.user:
         return Response(
             {
@@ -269,9 +273,9 @@ def submit_report_api(request, report_id):
             },
             status=status.HTTP_403_FORBIDDEN
         )
-    
+
     try:
-        report.status = 'submitted'
+        report.status = ReportStatus.SUBMITTED
         report.submitted_at = timezone.now()
         report.save()
 

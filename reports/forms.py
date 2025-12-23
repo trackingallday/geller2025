@@ -2,7 +2,7 @@ from django import forms
 from django.forms import inlineformset_factory
 from .models import (
     ReportType, ReportSection, Question, QuestionOption, 
-    Report, Answer, QUESTION_TYPES
+    Report, Answer, QUESTION_TYPES, ComplianceManager
 )
 from chemsapp.models import Customer, Distributor
 
@@ -181,18 +181,21 @@ class QuestionOptionForm(forms.ModelForm):
 class ReportForm(forms.ModelForm):
     class Meta:
         model = Report
-        fields = ['customer', 'distributor', 'store_compliance_manager', 'inspection_date']
+        fields = ['customer', 'distributor', 'compliance_manager', 'store_compliance_manager', 'inspection_date']
         widgets = {
             'customer': forms.Select(attrs={'class': 'form-select'}),
             'distributor': forms.Select(attrs={'class': 'form-select'}),
-            'store_compliance_manager': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Manager name'}),
+            'compliance_manager': forms.Select(attrs={'class': 'form-select'}),
+            'store_compliance_manager': forms.TextInput(attrs={'class': 'form-control', 'placeholder': 'Manager name (if not selected above)'}),
             'inspection_date': forms.DateInput(attrs={'class': 'form-control', 'type': 'date'}),
         }
-    
+
     def __init__(self, *args, report_type=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.fields['customer'].queryset = Customer.objects.all()
         self.fields['distributor'].queryset = Distributor.objects.all()
+        self.fields['compliance_manager'].required = False
+        self.fields['compliance_manager'].queryset = ComplianceManager.objects.all()
 
 
 class AnswerForm(forms.ModelForm):

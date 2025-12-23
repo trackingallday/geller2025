@@ -25,6 +25,13 @@ REPORT_STATUS = [
     ('rejected', 'Rejected'),
 ]
 
+# Status constants for easy reference
+class ReportStatus:
+    DRAFT = 'draft'
+    SUBMITTED = 'submitted'
+    APPROVED = 'approved'
+    REJECTED = 'rejected'
+
 
 class ReportType(MyBaseModel):
     """Template for different types of reports (Monthly Audit, Equipment Check, etc.)"""

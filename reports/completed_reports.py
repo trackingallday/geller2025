@@ -5,7 +5,7 @@ from django.http import FileResponse, Http404
 from django.core.paginator import Paginator
 from django.db.models import Q
 from django.utils import timezone
-from .models import Report
+from .models import Report, ReportStatus
 from chemsapp.models import Customer, Distributor
 
 
@@ -17,7 +17,7 @@ def completed_reports_list(request):
     # Base queryset - exclude drafts and rejected by default
     reports = Report.objects.select_related(
         'report_type', 'customer', 'distributor', 'prepared_by'
-    ).exclude(status__in=['draft', 'rejected']).order_by('-inspection_date', '-created_at')
+    ).exclude(status__in=[ReportStatus.DRAFT, ReportStatus.REJECTED]).order_by('-inspection_date', '-created_at')
 
     # Get filter parameters
     distributor_id = request.GET.get('distributor')

@@ -112,6 +112,7 @@
                                         <th>Report Type</th>
                                         <th>Customer</th>
                                         <th>Distributor</th>
+                                        <th>Compliance Manager</th>
                                         <th>Status</th>
                                         <th>Inspection Date</th>
                                         <th>PDF Status</th>
@@ -137,6 +138,13 @@
                                             <td>
                                                 {% if report.distributor %}
                                                     {{ report.distributor.businessName }}
+                                                {% else %}
+                                                    <span class="text-muted">-</span>
+                                                {% endif %}
+                                            </td>
+                                            <td>
+                                                {% if report.compliance_manager_name %}
+                                                    {{ report.compliance_manager_name }}
                                                 {% else %}
                                                     <span class="text-muted">-</span>
                                                 {% endif %}

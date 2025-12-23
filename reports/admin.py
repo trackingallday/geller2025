@@ -147,9 +147,9 @@ class AnswerInline(admin.TabularInline):
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'status', 'prepared_by', 'inspection_date', 'images_count', 'pdf_status', 'pdf_download_link', 'completed_reports_link')
-    list_filter = ('status', 'report_type', 'inspection_date', 'created_at', 'pdf_needs_regeneration')
-    search_fields = ('document_number', 'customer__businessName', 'distributor__businessName', 'store_compliance_manager')
+    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'compliance_manager_display', 'status', 'prepared_by', 'inspection_date', 'images_count', 'pdf_status', 'pdf_download_link', 'completed_reports_link')
+    list_filter = ('status', 'report_type', 'inspection_date', 'created_at', 'pdf_needs_regeneration', 'compliance_manager')
+    search_fields = ('document_number', 'customer__businessName', 'distributor__businessName', 'store_compliance_manager', 'compliance_manager__name')
     readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button', 'regenerate_pdf_button', 'images_summary', 'completed_reports_view_button')
     inlines = [AnswerInline]
 
@@ -160,7 +160,7 @@ class ReportAdmin(admin.ModelAdmin):
             'fields': ('document_number', 'report_type', 'customer', 'distributor', 'completed_reports_view_button')
         }),
         ('Report Details', {
-            'fields': ('store_compliance_manager', 'inspection_date', 'prepared_by')
+            'fields': ('compliance_manager', 'store_compliance_manager', 'inspection_date', 'prepared_by')
         }),
         ('Status', {
             'fields': ('status', 'submitted_at', 'reviewed_by', 'reviewed_at')
@@ -178,6 +178,12 @@ class ReportAdmin(admin.ModelAdmin):
             'classes': ('collapse',)
         })
     )
+
+    def compliance_manager_display(self, obj):
+        """Display the compliance manager name from either source"""
+        return obj.compliance_manager_name or '-'
+    compliance_manager_display.short_description = 'Compliance Manager'
+    compliance_manager_display.admin_order_field = 'compliance_manager__name'
 
     def pdf_status(self, obj):
         if obj.pdf_file:
