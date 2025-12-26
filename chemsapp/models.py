@@ -2,7 +2,7 @@
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
-from django.db.models.signals import post_save
+from django.db.models.signals import post_save, pre_save
 from django.dispatch import receiver
 from django.utils.safestring import mark_safe
 from rest_framework.authtoken.models import Token
@@ -28,7 +28,6 @@ def create_user_profile(sender, instance=None, created=False, **kwargs):
             phoneNumber='',
             businessName=instance.get_full_name() or instance.username,
             address='',
-            profileType='customer'  # Default to customer, can be changed later
         )
 
 
@@ -48,6 +47,19 @@ class Profile(MyBaseModel):
     profileType = models.CharField(choices=typeChoices, default="customer",
                                     max_length=255, blank=True, null=True)
     hasSetPassword = models.BooleanField(default=False)
+
+    def save(self, *args, **kwargs):
+        # Delete any existing profiles for this user before saving a new Customer or Distributor
+        if not self.pk and self.user_id and self.__class__.__name__ in ['Customer', 'Distributor']:
+            Profile.objects.filter(user_id=self.user_id).delete()
+        super().save(*args, **kwargs)
+
+    def validate_unique(self, exclude=None):
+        # Skip validation for user uniqueness when creating Customer or Distributor
+        # because we'll delete the old profile in save()
+        if not self.pk and self.__class__.__name__ in ['Customer', 'Distributor']:
+            return
+        super().validate_unique(exclude=exclude)
 
     def __str__(self):
         return "{} {} {} {} {}".format(self.businessName, self.user.first_name, self.user.last_name, self.user.email, self.user.username)
