@@ -373,7 +373,7 @@ def get_user_profile_api(request):
                 )
 
             # Check if customer has a distributor
-            if not customer.distributorParent:
+            if not customer.distributors.exists():
                 return Response(
                     {
                         'success': False,
@@ -382,7 +382,7 @@ def get_user_profile_api(request):
                     status=status.HTTP_400_BAD_REQUEST
                 )
 
-            distributor = customer.distributorParent
+            distributor = customer.distributors.first()
 
             return Response(
                 {
@@ -411,7 +411,7 @@ def get_user_profile_api(request):
                 )
 
             # Get all customers associated with this distributor
-            customers = Customer.objects.filter(distributorParent=distributor)
+            customers = Customer.objects.filter(distributors=distributor)
 
             return Response(
                 {

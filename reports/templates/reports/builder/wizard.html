@@ -194,8 +194,8 @@
                                             {% if customer.user.email %}
                                                 <br><small class="text-muted">{{ customer.user.email }}</small>
                                             {% endif %}
-                                            {% if customer.distributorParent %}
-                                                <br><small class="text-info">via {{ customer.distributorParent.businessName }}</small>
+                                            {% if customer.distributors.all %}
+                                                <br><small class="text-info">via {% for dist in customer.distributors.all %}{{ dist.businessname }}{% if not forloop.last %}, {% endif %}{% endfor %}</small>
                                             {% endif %}
                                         </label>
                                     </div>

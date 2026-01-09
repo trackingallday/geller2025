@@ -155,7 +155,11 @@ class CustomerSheetSerializer(serializers.ModelSerializer):
         )
 
     def distributor_parent(self, obj):
-        return DistributorSerializer(obj.distributorParent, many=False, read_only=True).data
+        # Return the first distributor (for backward compatibility)
+        first_distributor = obj.distributors.first()
+        if first_distributor:
+            return DistributorSerializer(first_distributor, many=False, read_only=True).data
+        return None
 
 
 
@@ -177,9 +181,11 @@ class CustomerSerializer(serializers.ModelSerializer):
         return ProductSerializer(obj.products, many=True).data
 
     def distributor_parent(self, obj):
-        if not obj.distributorParent:
+        # Return comma-separated list of distributor business names
+        distributor_names = [d.businessname for d in obj.distributors.all()]
+        if not distributor_names:
             return "None"
-        return obj.distributorParent.businessName
+        return ", ".join(distributor_names)
 
 
 class CustomerMapSerializer(serializers.ModelSerializer):

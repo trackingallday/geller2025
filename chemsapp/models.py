@@ -201,10 +201,10 @@ class MarketCategory(models.Model):
 class Customer(Profile):
     products = models.ManyToManyField(Product, related_name="customers", blank=True)
     geocodingDetail = models.TextField(max_length=1500, blank=True, null=True)
-    distributorParent = models.ForeignKey('Distributor', blank=True, null=True, on_delete=models.CASCADE, related_name="distributorParent")
 
     def __str__(self):
-        return "{} {} {}".format(self.businessName, self.user.email, self.distributorParent)
+        distributor_names = ", ".join([d.businessname for d in self.distributors.all()[:3]])
+        return "{} {} {}".format(self.businessName, self.user.email, distributor_names if distributor_names else "No distributor")
 
 
 class Distributor(MyBaseModel):

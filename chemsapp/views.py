@@ -222,7 +222,6 @@ def new_customer(request):
     products = Product.objects.filter(pk__in=data.get('products'))
     customer.products.set(products)
     customer.created_at = datetime.datetime.now()
-    customer.distributorParent = request.user.profile.distributor
     customer.profileType = "customer"
     customer.save()
     request.user.profile.distributor.customers.add(customer)
