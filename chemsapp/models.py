@@ -49,17 +49,27 @@ class Profile(MyBaseModel):
     hasSetPassword = models.BooleanField(default=False)
 
     def save(self, *args, **kwargs):
-        # Delete any existing profiles for this user before saving a new Customer or Distributor
-        if not self.pk and self.user_id and self.__class__.__name__ in ['Customer', 'Distributor']:
+        # Delete any existing profiles for this user before saving a new Customer
+        if not self.pk and self.user_id and self.__class__.__name__ in ['Customer']:
             Profile.objects.filter(user_id=self.user_id).delete()
         super().save(*args, **kwargs)
 
     def validate_unique(self, exclude=None):
-        # Skip validation for user uniqueness when creating Customer or Distributor
+        # Skip validation for user uniqueness when creating Customer
         # because we'll delete the old profile in save()
-        if not self.pk and self.__class__.__name__ in ['Customer', 'Distributor']:
+        if not self.pk and self.__class__.__name__ in ['Customer']:
             return
         super().validate_unique(exclude=exclude)
+
+    @property
+    def distributor(self):
+        """
+        Returns the distributor this user belongs to (if any).
+        Maintains backward compatibility with request.user.profile.distributor pattern.
+        """
+        if self.profileType == 'distributor':
+            return self.user.distributors.first()
+        return None
 
     def __str__(self):
         return "{} {} {} {} {}".format(self.businessName, self.user.first_name, self.user.last_name, self.user.email, self.user.username)
@@ -68,7 +78,7 @@ class Profile(MyBaseModel):
 class ProductCategory(models.Model):
     name = models.CharField(max_length=100, unique=True)
     description = models.TextField(max_length=1000)
-    products = models.ManyToManyField('Product', blank=True, null=True, related_name='categories')
+    products = models.ManyToManyField('Product', blank=True, related_name='categories')
     image = models.FileField(upload_to='documents/', blank=True, null=True)
     menu_color = models.CharField(max_length=7, blank=True, null=True, help_text=mark_safe('Choose a color for the category menu. See <a href="https://www.w3schools.com/colors/colors_picker.asp">W3Schools Color Picker</a> for help choosing a color. If black (#000000) is chosen, a default color will be used.'))
     isSubCategory = models.BooleanField(default=False)
@@ -92,9 +102,9 @@ class Product(models.Model):
     sdsSheet = models.FileField(upload_to='documents/', blank=True, null=True)
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
     uploadedBy = models.ForeignKey(User, related_name="products_added", on_delete=models.CASCADE, blank=True, null=True)
-    subCategory = models.ManyToManyField(ProductCategory, blank=True, null=True, related_name='subcategories')
+    subCategory = models.ManyToManyField(ProductCategory, blank=True, related_name='subcategories')
     public = models.BooleanField(default=False)
-    productCategory = models.ManyToManyField(ProductCategory, through=ProductCategory.products.through, blank=True, null=True, related_name='categories')
+    productCategory = models.ManyToManyField(ProductCategory, through=ProductCategory.products.through, blank=True, related_name='categories')
     sizes = models.ManyToManyField("Size", related_name="products", blank=True)
 
     # Unused for marketing frontend
@@ -182,14 +192,14 @@ class SectorSolution(MyBaseModel):
 class MarketCategory(models.Model):
     name = models.CharField(max_length=500, blank=True, null=True)
     image = models.FileField(upload_to='documents/', blank=True, null=True)
-    products = models.ManyToManyField(Product, related_name="markets", blank=True, null=True)
+    products = models.ManyToManyField(Product, related_name="markets", blank=True)
 
     def __str__(self):
         return "{}".format(self.name)
 
 
 class Customer(Profile):
-    products = models.ManyToManyField(Product, related_name="customers", blank=True, null=True)
+    products = models.ManyToManyField(Product, related_name="customers", blank=True)
     geocodingDetail = models.TextField(max_length=1500, blank=True, null=True)
     distributorParent = models.ForeignKey('Distributor', blank=True, null=True, on_delete=models.CASCADE, related_name="distributorParent")
 
@@ -197,10 +207,26 @@ class Customer(Profile):
         return "{} {} {}".format(self.businessName, self.user.email, self.distributorParent)
 
 
-class Distributor(Profile):
-    customers = models.ManyToManyField(Customer, related_name="distributors", blank=True, null=True)
-    geocodingDetail = models.TextField(max_length=1500, blank=True, null=True)
-    primaryImageLink  = models.FileField(upload_to='documents/', blank=True, null=True)
+class Distributor(MyBaseModel):
+    # Multiple users can be associated with one distributor
+    users = models.ManyToManyField(User, related_name='distributors', blank=True)
+
+    # Fields from Profile model
+    phonenumber = models.CharField(max_length=100, default='')
+    cellphonenumber = models.CharField(max_length=100, blank=True, null=True)
+    businessname = models.CharField(max_length=255, default='')
+    address = models.CharField(max_length=500, default='')
+    profiletype = models.CharField(choices=typeChoices, default="distributor",
+                                    max_length=255, blank=True, null=True)
+    hassetpassword = models.BooleanField(default=False)
+
+    # Distributor-specific fields
+    customers = models.ManyToManyField(Customer, related_name="distributors", blank=True)
+    geocodingdetail = models.TextField(max_length=1500, blank=True, null=True)
+    primaryimagelink = models.FileField(upload_to='documents/', blank=True, null=True)
+
+    def __str__(self):
+        return "{} {}".format(self.businessname, self.address)
 
 
 class ProductAdd(models.Model):

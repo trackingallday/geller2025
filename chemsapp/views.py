@@ -312,30 +312,27 @@ def new_distributor(request):
     data = request.data['data']
     try:
         user = create_user(data)
+        # Set the user's profile type to distributor
+        user.profile.profileType = 'distributor'
+        user.profile.save()
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=422)
 
     try:
         distributor = Distributor.objects.create(
-            user=user,
             phoneNumber=data.get('phoneNumber'),
             cellPhoneNumber=data.get('cellPhoneNumber'),
             businessName=data.get('businessName'),
-            profileType=data.get('customer'),
+            profileType='distributor',
             geocodingDetail=data.get('geocodingDetail'),
             address=data.get('address'),
             primaryImageLink=createImage(data.get('primaryImageLink')),
         )
         distributor.save()
+        # Add the user to the distributor's users
+        distributor.users.add(user)
     except Exception as e:
         return JsonResponse({'error': str(e)}, status=422)
-
-    user.save()
-    distributor.user = user
-    distributor.customers = []
-    distributor.profileType = 'distributor'
-    distributor.created_at = datetime.datetime.now()
-    distributor.save()
 
     return JsonResponse({"message": "distributor saved"})
 
@@ -354,11 +351,13 @@ def edit_distributor(request):
     if not distributor:
         return JsonResponse({"error": "evildoer"})
 
-    distributor.user.first_name = data.get('first_name')
-    distributor.user.last_name = data.get('last_name')
-    distributor.user.email = data.get('email')
-
-    distributor.user.save()
+    # Update the first user's details for backward compatibility
+    first_user = distributor.users.first()
+    if first_user:
+        first_user.first_name = data.get('first_name')
+        first_user.last_name = data.get('last_name')
+        first_user.email = data.get('email')
+        first_user.save()
 
     distributor.address = data.get('address')
     distributor.businessName = data.get('businessName')

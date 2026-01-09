@@ -121,13 +121,23 @@ class ProductSheetSerializer(serializers.ModelSerializer):
 
 class DistributorSerializer(serializers.ModelSerializer):
 
-    user = UserSerializer(many=False, read_only=True)
+    # Maintain backward compatibility: return first user as 'user'
+    user = serializers.SerializerMethodField()
+    # New field: return all users
+    users = UserSerializer(many=True, read_only=True)
     customers = serializers.StringRelatedField(many=True, read_only=True)
+
+    def get_user(self, obj):
+        """Return the first user for backward compatibility"""
+        first_user = obj.users.first()
+        if first_user:
+            return UserSerializer(first_user).data
+        return None
 
     class Meta:
         model = Distributor
         fields = (
-            'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
+            'id', 'phoneNumber', 'user', 'users', 'cellPhoneNumber', 'businessName',
             'customers', 'address', 'geocodingDetail', 'primaryImageLink',
         )
 

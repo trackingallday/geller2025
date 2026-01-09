@@ -86,11 +86,11 @@ class ReportsInterfaceTestCase(LiveServerTestCase):
         )
         
         self.distributor = Distributor.objects.create(
-            user=self.distributor_user,
             businessName=f'Test Distributor {test_id}',
             phoneNumber='555-5678',
             address='456 Distributor Ave'
         )
+        self.distributor.users.add(self.distributor_user)
         
         # Create report structure
         self.report_type = ReportType.objects.create(
@@ -475,11 +475,11 @@ class QuickFunctionalTest(LiveServerTestCase):
         )
         
         distributor = Distributor.objects.create(
-            user=distributor_user,
             businessName='Quick Test Distributor',
             phoneNumber='555-5678',
             address='456 Quick Ave'
         )
+        distributor.users.add(distributor_user)
         
         # Create report structure
         report_type = ReportType.objects.create(

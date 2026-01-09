@@ -91,11 +91,11 @@ class ReportBrowserTestCase(StaticLiveServerTestCase):
         )
         
         self.distributor = Distributor.objects.create(
-            user=self.distributor_user,
             businessName='Test Distributor Inc',
             phoneNumber='555-5678',
             address='456 Distributor Ave'
         )
+        self.distributor.users.add(self.distributor_user)
     
     def login_user(self, username=None, password='adminpass123'):
         """Helper method to log in a user."""

@@ -522,19 +522,20 @@ class ReportTypeCustomerAdmin(admin.ModelAdmin):
 class ReportTypeDistributorAdmin(admin.ModelAdmin):
     list_display = ('report_type', 'distributor_name', 'distributor_email', 'assigned_date', 'is_active', 'assigned_by')
     list_filter = ('report_type', 'assigned_date', 'is_active')
-    search_fields = ('distributor__businessName', 'distributor__user__email', 'report_type__name')
+    search_fields = ('distributor__businessName', 'distributor__users__email', 'report_type__name')
     readonly_fields = ('assigned_date', 'assigned_by')
     date_hierarchy = 'assigned_date'
 
     def distributor_name(self, obj):
-        return obj.distributor.businessName or obj.distributor.user.get_full_name()
+        first_user = obj.distributor.users.first()
+        return obj.distributor.businessName or (first_user.get_full_name() if first_user else '')
     distributor_name.short_description = 'Distributor Name'
     distributor_name.admin_order_field = 'distributor__businessName'
 
     def distributor_email(self, obj):
-        return obj.distributor.user.email
+        first_user = obj.distributor.users.first()
+        return first_user.email if first_user else ''
     distributor_email.short_description = 'Distributor Email'
-    distributor_email.admin_order_field = 'distributor__user__email'
 
     def save_model(self, request, obj, form, change):
         if not change:

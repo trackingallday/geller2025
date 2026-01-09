@@ -552,10 +552,10 @@ class ReportTypeDistributor(MyBaseModel):
 
     class Meta:
         unique_together = ['report_type', 'distributor']
-        ordering = ['report_type__name', 'distributor__businessName']
+        ordering = ['report_type__name', 'distributor__businessname']
 
     def __str__(self):
-        return f"{self.report_type.name} -> {self.distributor.businessName}"
+        return f"{self.report_type.name} -> {self.distributor.businessname}"
 
 
 class QuestionTemplate(MyBaseModel):

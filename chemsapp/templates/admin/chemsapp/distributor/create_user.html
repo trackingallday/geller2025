@@ -1,0 +1,252 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block extrastyle %}
+{{ form.media }}
+<style>
+    .form-row {
+        margin-bottom: 15px;
+        padding: 10px;
+        border-bottom: 1px solid #eee;
+    }
+    .form-row label {
+        display: block;
+        font-weight: bold;
+        margin-bottom: 5px;
+        color: #333;
+    }
+    .form-row input[type="text"],
+    .form-row input[type="email"],
+    .form-row input[type="password"],
+    .form-row textarea,
+    .form-row select {
+        width: 100%;
+        padding: 8px;
+        border: 1px solid #ccc;
+        border-radius: 3px;
+        font-size: 14px;
+    }
+    .form-row input[type="checkbox"] {
+        margin-right: 5px;
+    }
+    .form-row .helptext {
+        font-size: 12px;
+        color: #666;
+        margin-top: 5px;
+        display: block;
+    }
+    .submit-row {
+        margin-top: 20px;
+        padding: 15px;
+        background: #f8f9fa;
+        border-radius: 5px;
+    }
+    .submit-row input[type="submit"] {
+        background: #417690;
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 3px;
+        cursor: pointer;
+        font-size: 14px;
+        font-weight: bold;
+    }
+    .submit-row input[type="submit"]:hover {
+        background: #305d75;
+    }
+    .cancel-link {
+        margin-left: 10px;
+        padding: 10px 20px;
+        color: #417690;
+        text-decoration: none;
+    }
+    .cancel-link:hover {
+        text-decoration: underline;
+    }
+    .alert {
+        padding: 12px;
+        margin: 15px 0;
+        border-radius: 3px;
+    }
+    .alert-info {
+        background: #d1ecf1;
+        color: #0c5460;
+        border: 1px solid #bee5eb;
+    }
+    .info-box {
+        background: #e7f3ff;
+        padding: 15px;
+        border: 1px solid #b3d9ff;
+        border-radius: 3px;
+        margin: 15px 0;
+        color: #004085;
+    }
+    .breadcrumbs {
+        margin: 10px 0;
+    }
+    .errorlist {
+        color: #dc3545;
+        list-style: none;
+        padding: 0;
+        margin: 5px 0;
+    }
+    .errorlist li {
+        padding: 5px;
+        background: #f8d7da;
+        border: 1px solid #f5c6cb;
+        border-radius: 3px;
+        margin: 3px 0;
+    }
+    .field-group {
+        background: #f9f9f9;
+        padding: 15px;
+        margin: 15px 0;
+        border-radius: 5px;
+        border-left: 4px solid #417690;
+    }
+    .field-group h3 {
+        margin-top: 0;
+        color: #417690;
+    }
+</style>
+{% endblock %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:chemsapp_distributor_changelist' %}">Distributors</a>
+    &rsaquo; <a href="{% url 'admin:chemsapp_distributor_change' distributor.pk %}">{{ distributor.businessname }}</a>
+    &rsaquo; Create User
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Create User for {{ distributor.businessname }}</h1>
+
+<div class="info-box">
+    <strong>Creating a new user:</strong> Fill in all required fields below. The user will be automatically associated with "{{ distributor.businessname }}" upon creation.
+    You can choose to set a password manually, auto-generate one, or send a password reset email to the user.
+</div>
+
+{% if messages %}
+    {% for message in messages %}
+        <div class="alert alert-{{ message.tags }}">
+            {{ message }}
+        </div>
+    {% endfor %}
+{% endif %}
+
+<form method="post">
+    {% csrf_token %}
+
+    {% if form.non_field_errors %}
+        <div class="errorlist">
+            {{ form.non_field_errors }}
+        </div>
+    {% endif %}
+
+    <div class="field-group">
+        <h3>User Credentials</h3>
+        <div class="form-row">
+            {{ form.username.errors }}
+            <label for="{{ form.username.id_for_label }}">
+                {{ form.username.label }}
+                <span style="color: red;">*</span>
+            </label>
+            {{ form.username }}
+            {% if form.username.help_text %}
+                <span class="helptext">{{ form.username.help_text|safe }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-row">
+            {{ form.email.errors }}
+            <label for="{{ form.email.id_for_label }}">
+                {{ form.email.label }}
+            </label>
+            {{ form.email }}
+            {% if form.email.help_text %}
+                <span class="helptext">{{ form.email.help_text|safe }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="field-group">
+        <h3>Personal Information</h3>
+        <div class="form-row">
+            {{ form.first_name.errors }}
+            <label for="{{ form.first_name.id_for_label }}">
+                {{ form.first_name.label }}
+            </label>
+            {{ form.first_name }}
+            {% if form.first_name.help_text %}
+                <span class="helptext">{{ form.first_name.help_text|safe }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-row">
+            {{ form.last_name.errors }}
+            <label for="{{ form.last_name.id_for_label }}">
+                {{ form.last_name.label }}
+            </label>
+            {{ form.last_name }}
+            {% if form.last_name.help_text %}
+                <span class="helptext">{{ form.last_name.help_text|safe }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-row">
+            {{ form.phone_number.errors }}
+            <label for="{{ form.phone_number.id_for_label }}">
+                {{ form.phone_number.label }}
+            </label>
+            {{ form.phone_number }}
+            {% if form.phone_number.help_text %}
+                <span class="helptext">{{ form.phone_number.help_text|safe }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="field-group">
+        <h3>Password Options</h3>
+        <div class="form-row">
+            {{ form.password.errors }}
+            <label for="{{ form.password.id_for_label }}">
+                {{ form.password.label }}
+            </label>
+            {{ form.password }}
+            {% if form.password.help_text %}
+                <span class="helptext">{{ form.password.help_text|safe }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-row">
+            {{ form.auto_generate_password.errors }}
+            <label for="{{ form.auto_generate_password.id_for_label }}">
+                {{ form.auto_generate_password }}
+                {{ form.auto_generate_password.label }}
+            </label>
+            {% if form.auto_generate_password.help_text %}
+                <span class="helptext">{{ form.auto_generate_password.help_text|safe }}</span>
+            {% endif %}
+        </div>
+
+        <div class="form-row">
+            {{ form.send_password_reset.errors }}
+            <label for="{{ form.send_password_reset.id_for_label }}">
+                {{ form.send_password_reset }}
+                {{ form.send_password_reset.label }}
+            </label>
+            {% if form.send_password_reset.help_text %}
+                <span class="helptext">{{ form.send_password_reset.help_text|safe }}</span>
+            {% endif %}
+        </div>
+    </div>
+
+    <div class="submit-row">
+        <input type="submit" value="Create User" />
+        <a href="{% url 'admin:chemsapp_distributor_change' distributor.pk %}" class="cancel-link">Cancel</a>
+    </div>
+</form>
+
+{% endblock %}

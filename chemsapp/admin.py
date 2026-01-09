@@ -1,16 +1,18 @@
 # -*- coding: utf-8 -*-
 from django.contrib import admin
+from django.contrib.auth.models import User
+from django.contrib.auth.forms import PasswordResetForm
+from django.utils.html import format_html
 import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
     MarketSector, MarketSectorSection, NewsArticle
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
-from .forms import ProductCategoryForm, PostForm, SpecialPostForm
+from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm
 from django.urls import path, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
-from django.utils.html import format_html
 
 
 class SafetyWearResource(resources.ModelResource):
@@ -39,6 +41,186 @@ class SafetyWearAdmin(ImportExportModelAdmin):
 
 class DistributorAdmin(ImportExportModelAdmin):
     resource_class = DistributorResource
+    form = DistributorAdminForm
+
+    # List display
+    list_display = ['businessname', 'address', 'phonenumber', 'users_count', 'customers_count', 'created_at']
+    list_filter = ['created_at', 'updated_at', 'profiletype']
+    search_fields = ['businessname', 'address', 'phonenumber', 'cellphonenumber']
+
+    # Field organization
+    fieldsets = (
+        ('Business Information', {
+            'fields': ('businessname', 'address', 'phonenumber', 'cellphonenumber')
+        }),
+        ('Additional Details', {
+            'fields': ('geocodingdetail', 'primaryimagelink', 'profiletype', 'hassetpassword', 'created_at', 'updated_at'),
+            'classes': ('collapse',)
+        }),
+        ('Relationships', {
+            'fields': ('users', 'customers'),
+            'description': 'Associate existing users and customers with this distributor. To create new users, use the "Quick Actions" box above or the "Create new user for distributor" action.'
+        }),
+    )
+
+    # Use filter_horizontal for better ManyToMany field UX
+    filter_horizontal = ['users', 'customers']
+
+    # Actions
+    actions = ['send_password_reset_emails', 'display_user_info', 'create_user_for_distributor']
+
+    # Read-only fields
+    readonly_fields = ['created_at', 'updated_at']
+
+    def get_urls(self):
+        """Add custom URLs for user creation"""
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:distributor_id>/create-user/',
+                self.admin_site.admin_view(self.create_user_view),
+                name='chemsapp_distributor_create_user'
+            ),
+        ]
+        return custom_urls + urls
+
+    def users_count(self, obj):
+        """Display count of associated users"""
+        count = obj.users.count()
+        if count > 0:
+            user_names = ', '.join([f"{u.username}" for u in obj.users.all()[:3]])
+            if count > 3:
+                user_names += f" (+{count - 3} more)"
+            return format_html('<span title="{}">{}</span>', user_names, count)
+        return '0'
+    users_count.short_description = 'Users'
+
+    def customers_count(self, obj):
+        """Display count of associated customers"""
+        return obj.customers.count()
+    customers_count.short_description = 'Customers'
+
+    def send_password_reset_emails(self, request, queryset):
+        """Send password reset emails to all users associated with selected distributors"""
+        total_sent = 0
+        for distributor in queryset:
+            for user in distributor.users.all():
+                if user.email:
+                    form = PasswordResetForm({'email': user.email})
+                    if form.is_valid():
+                        form.save(
+                            request=request,
+                            use_https=request.is_secure(),
+                            email_template_name='registration/password_reset_email.html',
+                        )
+                        total_sent += 1
+
+        self.message_user(
+            request,
+            f'Password reset emails sent to {total_sent} user(s).',
+            messages.SUCCESS
+        )
+    send_password_reset_emails.short_description = "Send password reset emails to distributor users"
+
+    def display_user_info(self, request, queryset):
+        """Display detailed user information for selected distributors"""
+        info = []
+        for distributor in queryset:
+            users = distributor.users.all()
+            if users:
+                info.append(f"<strong>{distributor.businessname}</strong>:")
+                for user in users:
+                    profile_phone = ''
+                    try:
+                        profile_phone = f" (Phone: {user.profile.phoneNumber})" if user.profile.phoneNumber else ''
+                    except:
+                        pass
+                    info.append(f"  - {user.username} ({user.email}){profile_phone}")
+            else:
+                info.append(f"<strong>{distributor.businessname}</strong>: No users")
+
+        self.message_user(
+            request,
+            format_html('<br>'.join(info)),
+            messages.INFO
+        )
+    display_user_info.short_description = "Display user information"
+
+    def save_model(self, request, obj, form, change):
+        """Save the distributor and handle user relationships"""
+        super().save_model(request, obj, form, change)
+
+        # Save many-to-many relationships
+        form.save_m2m()
+
+    def save_related(self, request, form, formsets, change):
+        """Save related objects"""
+        super().save_related(request, form, formsets, change)
+
+    def create_user_for_distributor(self, request, queryset):
+        """Action to redirect to user creation page for selected distributor"""
+        if queryset.count() != 1:
+            self.message_user(
+                request,
+                'Please select exactly one distributor to create a user for.',
+                messages.ERROR
+            )
+            return
+
+        distributor = queryset.first()
+        url = reverse('admin:chemsapp_distributor_create_user', args=[distributor.pk])
+        return redirect(url)
+    create_user_for_distributor.short_description = "Create new user for distributor"
+
+    def create_user_view(self, request, distributor_id):
+        """Custom view to create a new user and associate with distributor"""
+        distributor = get_object_or_404(Distributor, pk=distributor_id)
+
+        if request.method == 'POST':
+            form = DistributorUserInlineForm(request.POST)
+            if form.is_valid():
+                user = form.save()
+                distributor.users.add(user)
+
+                # Send password reset email if requested
+                if form.cleaned_data.get('send_password_reset') and user.email:
+                    reset_form = PasswordResetForm({'email': user.email})
+                    if reset_form.is_valid():
+                        reset_form.save(
+                            request=request,
+                            use_https=request.is_secure(),
+                            email_template_name='registration/password_reset_email.html',
+                        )
+                        messages.success(
+                            request,
+                            f'User "{user.username}" created and password reset email sent to {user.email}.'
+                        )
+                    else:
+                        messages.success(
+                            request,
+                            f'User "{user.username}" created successfully.'
+                        )
+                else:
+                    messages.success(
+                        request,
+                        f'User "{user.username}" created and associated with "{distributor.businessname}".'
+                    )
+
+                return redirect('admin:chemsapp_distributor_change', distributor.pk)
+        else:
+            form = DistributorUserInlineForm()
+
+        context = {
+            'title': f'Create User for {distributor.businessname}',
+            'form': form,
+            'distributor': distributor,
+            'opts': self.model._meta,
+            'has_permission': True,
+            'site_header': self.admin_site.site_header,
+            'site_title': self.admin_site.site_title,
+            'site_url': self.admin_site.site_url,
+        }
+        return render(request, 'admin/chemsapp/distributor/create_user.html', context)
 
 
 class CustomerAdmin(ImportExportModelAdmin):

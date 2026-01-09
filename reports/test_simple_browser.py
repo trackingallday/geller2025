@@ -54,11 +54,11 @@ class SimpleReportTest(TransactionTestCase):
         )
         
         self.distributor = Distributor.objects.create(
-            user=self.distributor_user,
             businessName='Test Distributor Inc',
             phoneNumber='555-5678',
             address='456 Distributor Ave'
         )
+        self.distributor.users.add(self.distributor_user)
     
     def test_complete_report_workflow(self):
         """Test complete report creation and filling workflow."""
