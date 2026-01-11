@@ -337,7 +337,7 @@ def demo_data_verification(driver, report):
     
     print(f"   📊 Report {report.document_number} details:")
     print(f"      - Customer: {report.customer.businessName}")
-    print(f"      - Distributor: {report.distributor.businessName}")
+    print(f"      - Distributor: {report.distributor.businessname}")
     print(f"      - Manager: {report.store_compliance_manager}")
     print(f"      - Total answers: {report.answers.count()}")
     

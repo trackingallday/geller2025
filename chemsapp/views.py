@@ -359,15 +359,15 @@ def edit_distributor(request):
         first_user.save()
 
     distributor.address = data.get('address')
-    distributor.businessName = data.get('businessName')
-    distributor.phoneNumber = data.get('phoneNumber')
-    distributor.cellPhoneNumber = data.get('cellPhoneNumber')
+    distributor.businessname = data.get('businessName')
+    distributor.phonenumber = data.get('phoneNumber')
+    distributor.cellphonenumber = data.get('cellPhoneNumber')
 
     if data.get('geocodingDetail'):
-        distributor.geocodingDetail = data.get('geocodingDetail')
+        distributor.geocodingdetail = data.get('geocodingDetail')
 
-    if data.get('primaryImageLink') and not distributor.primaryImageLink == data.get('primaryImageLink'):
-        distributor.primaryImageLink = createImage(data.get('primaryImageLink'))
+    if data.get('primaryImageLink') and not distributor.primaryimagelink == data.get('primaryImageLink'):
+        distributor.primaryimagelink = createImage(data.get('primaryImageLink'))
 
     distributor.save()
 

@@ -25,7 +25,7 @@
             {% if report.customer %}
                 {{ report.customer.businessName }} / {{ report.report_type.name }}
             {% elif report.distributor %}
-                {{ report.distributor.businessName }} / {{ report.report_type.name }}
+                {{ report.distributor.businessname }} / {{ report.report_type.name }}
             {% endif %}
         </div>
 
@@ -54,7 +54,7 @@
                     {% if report.customer %}
                         {{ report.customer.businessName }}
                     {% elif report.distributor %}
-                        {{ report.distributor.businessName }}
+                        {{ report.distributor.businessname }}
                     {% else %}
                         N/A
                     {% endif %}

@@ -228,6 +228,42 @@ class Distributor(MyBaseModel):
     def __str__(self):
         return "{} {}".format(self.businessname, self.address)
 
+    # Backward compatibility properties for camelCase access
+    @property
+    def businessName(self):
+        """Backward compatibility for businessName (correct spelling)"""
+        return self.businessname
+
+    @property
+    def phoneNumber(self):
+        """Backward compatibility for phoneNumber"""
+        return self.phonenumber
+
+    @property
+    def cellPhoneNumber(self):
+        """Backward compatibility for cellPhoneNumber"""
+        return self.cellphonenumber
+
+    @property
+    def profileType(self):
+        """Backward compatibility for profileType"""
+        return self.profiletype
+
+    @property
+    def hasSetPassword(self):
+        """Backward compatibility for hasSetPassword"""
+        return self.hassetpassword
+
+    @property
+    def geocodingDetail(self):
+        """Backward compatibility for geocodingDetail"""
+        return self.geocodingdetail
+
+    @property
+    def primaryImageLink(self):
+        """Backward compatibility for primaryImageLink"""
+        return self.primaryimagelink
+
 
 class ProductAdd(models.Model):
     productAdded = models.ForeignKey(Product, related_name="productsAdds", on_delete=models.CASCADE)
@@ -235,7 +271,7 @@ class ProductAdd(models.Model):
     distributor = models.ForeignKey(Distributor, related_name="productAdds", on_delete=models.CASCADE)
 
     def __str__(self):
-        return "{} {} {}".format(self.distributor.businessName, self.customer.businessName, self.productAdded.name)
+        return "{} {} {}".format(self.distributor.businessname, self.customer.businessName, self.productAdded.name)
 
 
 class ProductRemove(models.Model):
@@ -244,7 +280,7 @@ class ProductRemove(models.Model):
     distributor = models.ForeignKey(Distributor, related_name="productRemoves", on_delete=models.CASCADE)
 
     def __str__(self):
-        return "{} {} {}".format(self.distributor.business_name, self.customer.business_name, self.productRemoved.name)
+        return "{} {} {}".format(self.distributor.businessname, self.customer.businessName, self.productRemoved.name)
 
 
 class SafetyWear(models.Model):

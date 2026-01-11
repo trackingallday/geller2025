@@ -24,7 +24,7 @@
                         {% for distributor in distributors %}
                             <option value="{{ distributor.id }}"
                                     {% if selected_distributor == distributor.id|stringformat:"s" %}selected{% endif %}>
-                                {{ distributor.businessName }}
+                                {{ distributor.businessname }}
                             </option>
                         {% endfor %}
                     </select>
@@ -137,7 +137,7 @@
                                             </td>
                                             <td>
                                                 {% if report.distributor %}
-                                                    {{ report.distributor.businessName }}
+                                                    {{ report.distributor.businessname }}
                                                 {% else %}
                                                     <span class="text-muted">-</span>
                                                 {% endif %}

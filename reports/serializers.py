@@ -74,10 +74,10 @@ class CustomerSerializer(serializers.ModelSerializer):
 
 class DistributorSerializer(serializers.ModelSerializer):
     """Distributor info for reports"""
-    
+
     class Meta:
         model = Distributor
-        fields = ['id', 'businessName', 'address', 'phoneNumber']
+        fields = ['id', 'businessname', 'address', 'phonenumber']
 
 
 class QuestionOptionSerializer(serializers.ModelSerializer):
@@ -219,7 +219,7 @@ class ReportListSerializer(serializers.ModelSerializer):
     """Lightweight serializer for report list view"""
     report_type_name = serializers.CharField(source='report_type.name', read_only=True)
     customer_name = serializers.CharField(source='customer.businessName', read_only=True)
-    distributor_name = serializers.CharField(source='distributor.businessName', read_only=True)
+    distributor_name = serializers.CharField(source='distributor.businessname', read_only=True)
     compliance_manager_name = serializers.CharField(read_only=True)
     prepared_by_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)

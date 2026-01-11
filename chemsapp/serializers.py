@@ -137,8 +137,8 @@ class DistributorSerializer(serializers.ModelSerializer):
     class Meta:
         model = Distributor
         fields = (
-            'id', 'phoneNumber', 'user', 'users', 'cellPhoneNumber', 'businessName',
-            'customers', 'address', 'geocodingDetail', 'primaryImageLink',
+            'id', 'phonenumber', 'user', 'users', 'cellphonenumber', 'businessname',
+            'customers', 'address', 'geocodingdetail', 'primaryimagelink',
         )
 
 

@@ -149,7 +149,7 @@ class AnswerInline(admin.TabularInline):
 class ReportAdmin(admin.ModelAdmin):
     list_display = ('document_number', 'report_type', 'customer', 'distributor', 'compliance_manager_display', 'status', 'prepared_by', 'inspection_date', 'images_count', 'pdf_status', 'pdf_download_link', 'completed_reports_link')
     list_filter = ('status', 'report_type', 'inspection_date', 'created_at', 'pdf_needs_regeneration', 'compliance_manager')
-    search_fields = ('document_number', 'customer__businessName', 'distributor__businessName', 'store_compliance_manager', 'compliance_manager__name')
+    search_fields = ('document_number', 'customer__businessName', 'distributor__businessname', 'store_compliance_manager', 'compliance_manager__name')
     readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button', 'regenerate_pdf_button', 'images_summary', 'completed_reports_view_button')
     inlines = [AnswerInline]
 
@@ -522,15 +522,15 @@ class ReportTypeCustomerAdmin(admin.ModelAdmin):
 class ReportTypeDistributorAdmin(admin.ModelAdmin):
     list_display = ('report_type', 'distributor_name', 'distributor_email', 'assigned_date', 'is_active', 'assigned_by')
     list_filter = ('report_type', 'assigned_date', 'is_active')
-    search_fields = ('distributor__businessName', 'distributor__users__email', 'report_type__name')
+    search_fields = ('distributor__businessname', 'distributor__users__email', 'report_type__name')
     readonly_fields = ('assigned_date', 'assigned_by')
     date_hierarchy = 'assigned_date'
 
     def distributor_name(self, obj):
         first_user = obj.distributor.users.first()
-        return obj.distributor.businessName or (first_user.get_full_name() if first_user else '')
+        return obj.distributor.businessname or (first_user.get_full_name() if first_user else '')
     distributor_name.short_description = 'Distributor Name'
-    distributor_name.admin_order_field = 'distributor__businessName'
+    distributor_name.admin_order_field = 'distributor__businessname'
 
     def distributor_email(self, obj):
         first_user = obj.distributor.users.first()

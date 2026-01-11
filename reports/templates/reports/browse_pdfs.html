@@ -24,7 +24,7 @@
                         {% for distributor in distributors %}
                             <option value="{{ distributor.id }}"
                                     {% if selected_distributor == distributor.id|stringformat:"s" %}selected{% endif %}>
-                                {{ distributor.businessName }}
+                                {{ distributor.businessname }}
                             </option>
                         {% endfor %}
                     </select>

@@ -78,3 +78,12 @@ COMPREHENSIVE_API_DEMO.md
 chemsapp/management/commands/create_dummy_data.py
 aaaaa.csv
 /media/answer_attachments
+prod_auth_user.csv
+prod_customer.csv
+prod_distributor.csv
+prod_distributor_customers.csv
+prod_profile.csv
+backups/gellerbackup
+production_backup.sql
+production_backup.json
+production_backup.dump

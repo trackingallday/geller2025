@@ -191,7 +191,7 @@ class ReportsInterfaceTestCase(LiveServerTestCase):
             
             if self.selenium.find_elements(By.NAME, 'distributor'):
                 distributor_select = Select(self.selenium.find_element(By.NAME, 'distributor'))
-                distributor_select.select_by_visible_text(self.distributor.businessName)
+                distributor_select.select_by_visible_text(self.distributor.businessname)
             
             if self.selenium.find_elements(By.NAME, 'store_compliance_manager'):
                 manager_field = self.selenium.find_element(By.NAME, 'store_compliance_manager')
