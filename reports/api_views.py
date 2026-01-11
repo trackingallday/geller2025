@@ -399,9 +399,10 @@ def get_user_profile_api(request):
 
         elif profile_type == 'distributor':
             # Handle distributor profile
-            try:
-                distributor = Distributor.objects.get(user=user)
-            except Distributor.DoesNotExist:
+            # Note: Distributor has a ManyToMany 'users' field, not a OneToOne 'user' field
+            distributor = Distributor.objects.filter(users=user).first()
+
+            if not distributor:
                 return Response(
                     {
                         'success': False,
