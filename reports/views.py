@@ -173,6 +173,7 @@ def report_type_duplicate(request, pk):
                                 text=old_option.text,
                                 value=old_option.value,
                                 is_flag=old_option.is_flag,
+                                badge_type=old_option.badge_type,
                                 additional_instructions=old_option.additional_instructions,
                                 order=old_option.order
                                 # Note: attached_pdf is not copied to avoid file duplication issues
@@ -330,6 +331,7 @@ def section_duplicate(request, pk):
                                 text=old_option.text,
                                 value=old_option.value,
                                 is_flag=old_option.is_flag,
+                                badge_type=old_option.badge_type,
                                 additional_instructions=old_option.additional_instructions,
                                 order=old_option.order
                             )
