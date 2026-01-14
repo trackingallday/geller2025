@@ -55,7 +55,7 @@ def completed_reports_list(request):
     page_obj = paginator.get_page(page_number)
 
     # Get all distributors and customers for filter dropdowns
-    distributors = Distributor.objects.all().order_by('businessName')
+    distributors = Distributor.objects.all().order_by('businessname')
     customers = Customer.objects.all().order_by('businessName')
 
     # Build context with filter preservation
@@ -233,7 +233,7 @@ def browse_pdfs(request):
     page_obj = paginator.get_page(page_number)
 
     # Get all distributors and customers for filters
-    distributors = Distributor.objects.all().order_by('businessName')
+    distributors = Distributor.objects.all().order_by('businessname')
     customers = Customer.objects.all().order_by('businessName')
 
     context = {
