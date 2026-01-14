@@ -423,7 +423,7 @@ class Report(MyBaseModel):
         """Get all answers that are flagged or contain issues"""
         flagged_answers = []
 
-        for answer in self.answers.select_related('question', 'question__section').prefetch_related('selected_options'):
+        for answer in self.answers.select_related('question', 'question__section').prefetch_related('selected_options').order_by('question__section__order', 'question__order'):
             is_flagged = False
             flag_reason = None
             badge_type = 'default'
