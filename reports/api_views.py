@@ -308,18 +308,10 @@ def get_user_profile_api(request):
     """
     API endpoint to get the current user's profile information.
 
-    GET /reports/api/user/profile/
+    IMPORTANT: This endpoint is only available for distributors and admins.
+    Customer users will receive a 403 Forbidden error.
 
-    For Customer users, returns:
-    {
-        "success": true,
-        "user_id": 123,
-        "profileType": "customer",
-        "customer_id": 456,
-        "distributor_id": 789,
-        "customer_data": { ... },
-        "distributor_data": { ... }
-    }
+    GET /reports/api/user/profile/
 
     For Distributor users, returns:
     {
@@ -344,6 +336,28 @@ def get_user_profile_api(request):
     try:
         user = request.user
 
+        from chemsapp.models import Customer, Distributor
+
+        # First check if user belongs to a distributor (via ManyToMany relationship)
+        if user.distributors.exists():
+            # Handle distributor user
+            distributor = user.distributors.first()
+
+            # Get all customers associated with this distributor
+            customers = Customer.objects.filter(distributors=distributor)
+
+            return Response(
+                {
+                    'success': True,
+                    'user_id': user.id,
+                    'profileType': 'distributor',
+                    'distributor_id': distributor.id,
+                    'distributor_data': DistributorSerializer(distributor).data,
+                    'customers': CustomerSerializer(customers, many=True).data
+                },
+                status=status.HTTP_200_OK
+            )
+
         # Check if user has a profile
         if not hasattr(user, 'profile'):
             return Response(
@@ -357,73 +371,14 @@ def get_user_profile_api(request):
         profile = user.profile
         profile_type = profile.profileType
 
-        from chemsapp.models import Customer, Distributor
-
         if profile_type == 'customer':
-            # Handle customer profile
-            try:
-                customer = Customer.objects.get(user=user)
-            except Customer.DoesNotExist:
-                return Response(
-                    {
-                        'success': False,
-                        'error': 'User is not associated with a customer'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Check if customer has a distributor
-            if not customer.distributors.exists():
-                return Response(
-                    {
-                        'success': False,
-                        'error': 'Customer has no associated distributor'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            distributor = customer.distributors.first()
-
+            # Customers are not allowed to access this endpoint
             return Response(
                 {
-                    'success': True,
-                    'user_id': user.id,
-                    'profileType': profile_type,
-                    'customer_id': customer.id,
-                    'distributor_id': distributor.id,
-                    'customer_data': CustomerSerializer(customer).data,
-                    'distributor_data': DistributorSerializer(distributor).data
+                    'success': False,
+                    'error': 'This endpoint is only available for distributors and admins'
                 },
-                status=status.HTTP_200_OK
-            )
-
-        elif profile_type == 'distributor':
-            # Handle distributor profile
-            # Note: Distributor has a ManyToMany 'users' field, not a OneToOne 'user' field
-            distributor = Distributor.objects.filter(users=user).first()
-
-            if not distributor:
-                return Response(
-                    {
-                        'success': False,
-                        'error': 'User is not associated with a distributor'
-                    },
-                    status=status.HTTP_400_BAD_REQUEST
-                )
-
-            # Get all customers associated with this distributor
-            customers = Customer.objects.filter(distributors=distributor)
-
-            return Response(
-                {
-                    'success': True,
-                    'user_id': user.id,
-                    'profileType': profile_type,
-                    'distributor_id': distributor.id,
-                    'distributor_data': DistributorSerializer(distributor).data,
-                    'customers': CustomerSerializer(customers, many=True).data
-                },
-                status=status.HTTP_200_OK
+                status=status.HTTP_403_FORBIDDEN
             )
 
         elif profile_type == 'admin':
