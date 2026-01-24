@@ -37,6 +37,7 @@ ALLOWED_HOSTS = [
                     '67d6-121-98-82-132.ngrok-free.app',
                     'geller2025-production-4bef.up.railway.app',
                     'admin.geller.co.nz',
+                    '10.0.2.2',
                     
                 ]
 CSRF_TRUSTED_ORIGINS = ['https://geller2025-production-4bef.up.railway.app',
@@ -271,6 +272,8 @@ LOGGING = {
         },
     },
 }
+
+POSTMARK_SERVER_API_TOKEN="e731faa5-a198-4524-80f1-f6c287ba8789"
 
 '''If you are runnig Django on Apache using mod_wsgi you have to add
 WSGIPassAuthorization On

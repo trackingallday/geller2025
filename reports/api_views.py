@@ -5,6 +5,8 @@ from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
 from django.utils import timezone
+from django.conf import settings
+from postmarker.core import PostmarkClient
 
 from .models import Report, ReportType, Answer, QuestionOption, ReportStatus
 from .serializers import (
@@ -426,7 +428,7 @@ def get_user_profile_api(request):
 def report_questions_api(request, report_type_id):
     """
     API endpoint to get all questions for a report type (useful for building forms).
-    
+
     GET /reports/api/report-types/{report_type_id}/questions/
     """
     report_type = get_object_or_404(
@@ -437,9 +439,9 @@ def report_questions_api(request, report_type_id):
         pk=report_type_id,
         is_active=True
     )
-    
+
     serializer = ReportTypeSerializer(report_type)
-    
+
     return Response(
         {
             'success': True,
@@ -447,3 +449,180 @@ def report_questions_api(request, report_type_id):
         },
         status=status.HTTP_200_OK
     )
+
+
+def send_report_email(report, recipient_email, pdf_content):
+    """
+    Send a report PDF via email using Postmark.
+
+    Args:
+        report: Report instance
+        recipient_email: Email address to send to
+        pdf_content: Binary PDF content
+
+    Returns:
+        True if successful, False otherwise
+
+    Raises:
+        Exception: If email sending fails
+    """
+    postmark = PostmarkClient(server_token=settings.POSTMARK_SERVER_API_TOKEN)
+
+    # Create email with attachment
+    email = postmark.emails.Email(
+        From='noreply@geller.co.nz',
+        To=recipient_email,
+        Subject=f'Report {report.document_number} - {report.report_type.name}',
+        HtmlBody=f'''
+            <html>
+            <body>
+                <h2>Your Report is Ready</h2>
+                <p>Please find attached your report:</p>
+                <ul>
+                    <li><strong>Report Number:</strong> {report.document_number}</li>
+                    <li><strong>Report Type:</strong> {report.report_type.name}</li>
+                    <li><strong>Inspection Date:</strong> {report.inspection_date}</li>
+                    <li><strong>Status:</strong> {report.get_status_display()}</li>
+                </ul>
+                <p>Thank you for using Geller Chemical Data Sheets.</p>
+            </body>
+            </html>
+        ''',
+        TextBody=f'''
+Your Report is Ready
+
+Please find attached your report:
+
+Report Number: {report.document_number}
+Report Type: {report.report_type.name}
+Inspection Date: {report.inspection_date}
+Status: {report.get_status_display()}
+
+Thank you for using Geller Chemical Data Sheets.
+        '''
+    )
+
+    # Attach the PDF
+    email.attach_binary(
+        content=pdf_content,
+        filename=f'{report.document_number}.pdf'
+    )
+
+    # Send the email
+    email.send()
+    return True
+
+
+def get_or_generate_report_pdf(report):
+    """
+    Get existing PDF or generate new one if needed.
+
+    Args:
+        report: Report instance
+
+    Returns:
+        Binary PDF content
+
+    Raises:
+        ValueError: If PDF generation fails
+    """
+    pdf_file = report.get_or_generate_pdf()
+
+    if not pdf_file:
+        raise ValueError('Failed to generate PDF')
+
+    pdf_file.open('rb')
+    pdf_content = pdf_file.read()
+    pdf_file.close()
+
+    return pdf_content
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def email_report_pdf(request):
+    """
+    API endpoint to generate and email a report PDF.
+
+    POST /reports/api/email-report-pdf/
+
+    Expected JSON:
+    {
+        "email_address": "user@example.com",
+        "report_id": 123
+    }
+
+    Returns:
+    {
+        "success": true,
+        "message": "Report PDF sent to user@example.com",
+        "report": {
+            "document_number": "REP-0001",
+            "report_type": "Monthly Inspection",
+            "inspection_date": "2025-01-25",
+            "status": "Submitted"
+        }
+    }
+    """
+    # Validate request data
+    email_address = request.data.get('email_address')
+    report_id = request.data.get('report_id')
+
+    if not email_address:
+        return Response(
+            {
+                'success': False,
+                'error': 'email_address is required'
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    if not report_id:
+        return Response(
+            {
+                'success': False,
+                'error': 'report_id is required'
+            },
+            status=status.HTTP_400_BAD_REQUEST
+        )
+
+    # Get the report
+    report = get_object_or_404(Report, pk=report_id)
+
+    try:
+        # Generate PDF if needed
+        pdf_content = get_or_generate_report_pdf(report)
+
+        # Send email
+        send_report_email(report, email_address, pdf_content)
+
+        return Response(
+            {
+                'success': True,
+                'message': f'Report PDF sent to {email_address}',
+                'report': {
+                    'document_number': report.document_number,
+                    'report_type': report.report_type.name,
+                    'inspection_date': report.inspection_date,
+                    'status': report.get_status_display()
+                }
+            },
+            status=status.HTTP_200_OK
+        )
+
+    except ValueError as e:
+        return Response(
+            {
+                'success': False,
+                'error': str(e)
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
+    except Exception as e:
+        return Response(
+            {
+                'success': False,
+                'error': f'Failed to send email: {str(e)}'
+            },
+            status=status.HTTP_500_INTERNAL_SERVER_ERROR
+        )
