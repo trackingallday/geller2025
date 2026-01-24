@@ -87,3 +87,7 @@ backups/gellerbackup
 production_backup.sql
 production_backup.json
 production_backup.dump
+reports/management/commands/import_stores.py
+Upload for App /Complaince Managers-Table 1.csv
+Upload for App /Customers-Table 1.csv
+Upload for App /Users-Table 1.csv
