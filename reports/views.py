@@ -365,6 +365,56 @@ def section_duplicate(request, pk):
 
 
 @login_required
+def question_duplicate(request, pk):
+    """Duplicate a question with all its options"""
+    original_question = get_object_or_404(Question, pk=pk)
+    report_type = original_question.report_type
+
+    try:
+        with transaction.atomic():
+            # Create new question with same properties
+            new_question = Question.objects.create(
+                report_type=report_type,
+                section=original_question.section,
+                question_text=original_question.question_text,
+                question_type=original_question.question_type,
+                help_text=original_question.help_text,
+                is_required=original_question.is_required,
+                order=original_question.order + 1,  # Place it after the original
+                parent_question=original_question.parent_question
+            )
+
+            # Copy conditional values if exists
+            if original_question.parent_question:
+                trigger_values = original_question.get_show_when_values()
+                if trigger_values:
+                    new_question.set_show_when_values(trigger_values)
+                    new_question.save()
+
+            # Duplicate question options
+            for old_option in original_question.options.all():
+                QuestionOption.objects.create(
+                    question=new_question,
+                    text=old_option.text,
+                    value=old_option.value,
+                    is_flag=old_option.is_flag,
+                    badge_type=old_option.badge_type,
+                    additional_instructions=old_option.additional_instructions,
+                    order=old_option.order
+                )
+
+            messages.success(
+                request,
+                f'Question duplicated successfully! Copied {original_question.options.count()} options.'
+            )
+
+    except Exception as e:
+        messages.error(request, f'Error duplicating question: {str(e)}')
+
+    return redirect('reports:report_type_detail', pk=report_type.pk)
+
+
+@login_required
 def question_create(request, report_type_id):
     """Create a new question"""
     report_type = get_object_or_404(ReportType, pk=report_type_id)

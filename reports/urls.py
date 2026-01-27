@@ -39,6 +39,7 @@ urlpatterns = [
     path('<int:report_type_id>/questions/create/', views.question_create, name='question_create'),
     path('questions/<int:pk>/edit/', views.question_edit, name='question_edit'),
     path('questions/<int:pk>/delete/', views.question_delete, name='question_delete'),
+    path('questions/<int:pk>/duplicate/', views.question_duplicate, name='question_duplicate'),
     path('questions/<int:pk>/options/', views.question_options, name='question_options'),
     
     # Question Option Management

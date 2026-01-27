@@ -175,6 +175,9 @@
                                             <a href="{% url 'reports:question_edit' question.pk %}" class="btn btn-outline-warning btn-sm">
                                                 <i class="bi bi-pencil"></i>
                                             </a>
+                                            <a href="{% url 'reports:question_duplicate' question.pk %}" class="btn btn-outline-secondary btn-sm" title="Duplicate question">
+                                                <i class="bi bi-files"></i>
+                                            </a>
                                             <a href="{% url 'reports:question_delete' question.pk %}" class="btn btn-outline-danger btn-sm">
                                                 <i class="bi bi-trash"></i>
                                             </a>
@@ -221,6 +224,9 @@
                                             {% endif %}
                                             <a href="{% url 'reports:question_edit' question.pk %}" class="btn btn-outline-warning btn-sm">
                                                 <i class="bi bi-pencil"></i>
+                                            </a>
+                                            <a href="{% url 'reports:question_duplicate' question.pk %}" class="btn btn-outline-secondary btn-sm" title="Duplicate question">
+                                                <i class="bi bi-files"></i>
                                             </a>
                                             <a href="{% url 'reports:question_delete' question.pk %}" class="btn btn-outline-danger btn-sm">
                                                 <i class="bi bi-trash"></i>
