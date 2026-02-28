@@ -3,7 +3,7 @@ import random
 import string
 from django.views.decorators.cache import cache_control
 from django.forms import ValidationError
-from django.http import HttpResponse, JsonResponse, Http404
+from django.http import HttpResponse, StreamingHttpResponse, JsonResponse, Http404
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.db import transaction
@@ -74,10 +74,30 @@ def backup_documents(request):
     documents_dir = '/data/documents'
     if not os.path.isdir(documents_dir):
         return HttpResponse('Documents directory not found', status=404)
-    response = HttpResponse(content_type='application/x-gzip')
+
+    import threading
+
+    read_fd, write_fd = os.pipe()
+
+    def write_tar():
+        with os.fdopen(write_fd, 'wb') as pipe_out:
+            with tarfile.open(fileobj=pipe_out, mode='w:gz') as tar:
+                tar.add(documents_dir, arcname='documents')
+
+    thread = threading.Thread(target=write_tar, daemon=True)
+    thread.start()
+
+    def stream_pipe():
+        with os.fdopen(read_fd, 'rb') as pipe_in:
+            while True:
+                chunk = pipe_in.read(65536)
+                if not chunk:
+                    break
+                yield chunk
+        thread.join()
+
+    response = StreamingHttpResponse(stream_pipe(), content_type='application/x-gzip')
     response['Content-Disposition'] = 'attachment; filename="documents_backup.tar.gz"'
-    with tarfile.open(fileobj=response, mode='w:gz') as tar:
-        tar.add(documents_dir, arcname='documents')
     return response
 
 
