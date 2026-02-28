@@ -91,3 +91,13 @@ reports/management/commands/import_stores.py
 Upload for App /Complaince Managers-Table 1.csv
 Upload for App /Customers-Table 1.csv
 Upload for App /Users-Table 1.csv
+/backups
+import_onedose_products.py
+migrate_products.py
+migration_summary_20260201_083935.json
+migration_skipped_20260201_083935.csv
+migration_same_id_diff_data_20260201_083935.json
+migration_safe_to_add_20260201_083935.csv
+migration_name_code_conflicts_20260201_083935.json
+media/documents/2261558143.jpg
+media/documents/2261558143_lsJBYwT.jpg

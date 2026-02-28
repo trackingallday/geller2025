@@ -8,6 +8,37 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.db import transaction
 import os
+from PIL import Image
+import io
+
+MAX_DIM = 1200
+JPEG_QUALITY = 80
+
+
+def downscale_image(file_path):
+    """
+    Resize image at file_path in-place to fit within MAX_DIM x MAX_DIM.
+    Keeps original file format and filename (no renaming).
+    Skips non-image files gracefully.
+    Returns True if the file was changed, False otherwise.
+    """
+    try:
+        with Image.open(file_path) as img:
+            orig_fmt = img.format  # 'JPEG', 'PNG', etc.
+            if not (img.width > MAX_DIM or img.height > MAX_DIM):
+                return False  # already small enough
+
+            img.thumbnail((MAX_DIM, MAX_DIM), Image.LANCZOS)
+
+            save_kwargs = {}
+            if orig_fmt == 'JPEG':
+                save_kwargs = {'quality': JPEG_QUALITY, 'optimize': True}
+            img.save(file_path, orig_fmt, **save_kwargs)
+            return True
+
+    except Exception:
+        # Not an image or unreadable — leave it alone
+        return False
 
 import requests
 from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWearSerializer, \
@@ -33,6 +64,23 @@ from django.views.decorators.csrf import csrf_exempt
 logger = logging.getLogger('django')
 
 
+import tarfile
+
+@csrf_exempt
+def backup_documents(request):
+    """Temporary endpoint to download /data/documents as a tar.gz archive."""
+    if not request.user.is_staff:
+        return HttpResponse(status=403)
+    documents_dir = '/data/documents'
+    if not os.path.isdir(documents_dir):
+        return HttpResponse('Documents directory not found', status=404)
+    response = HttpResponse(content_type='application/x-gzip')
+    response['Content-Disposition'] = 'attachment; filename="documents_backup.tar.gz"'
+    with tarfile.open(fileobj=response, mode='w:gz') as tar:
+        tar.add(documents_dir, arcname='documents')
+    return response
+
+
 @csrf_exempt  # Disable CSRF protection just for now (because you're uploading manually)
 def upload_file(request):
     #make this a directory if not exists
@@ -54,6 +102,7 @@ def upload_file(request):
             with open(file_path, 'wb+') as destination:
                 for chunk in file.chunks():
                     destination.write(chunk)
+            downscale_image(file_path)
             saved_files.append(file.name)
             
 
@@ -65,8 +114,22 @@ def getFileFromBase64(data, filename):
     format, imgstr = data.split(';base64,')
     ext = format.split('/')[-1]
     fname = filename + '.' + ext
-    fileFieldData = ContentFile(base64.b64decode(imgstr), name=fname)
-    return fileFieldData
+    raw = base64.b64decode(imgstr)
+
+    # Attempt downscale in-memory before saving
+    try:
+        img = Image.open(io.BytesIO(raw))
+        if img.width > MAX_DIM or img.height > MAX_DIM:
+            img.thumbnail((MAX_DIM, MAX_DIM), Image.LANCZOS)
+            orig_fmt = img.format or ext.upper()
+            buf = io.BytesIO()
+            save_kwargs = {'quality': JPEG_QUALITY, 'optimize': True} if orig_fmt == 'JPEG' else {}
+            img.save(buf, orig_fmt, **save_kwargs)
+            raw = buf.getvalue()
+    except Exception:
+        pass  # Not an image — leave raw bytes unchanged
+
+    return ContentFile(raw, name=fname)
 
 
 def addInfoSheetToProduct(product, data):
