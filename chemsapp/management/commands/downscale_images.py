@@ -1,23 +1,23 @@
 import os
+from django.conf import settings
 from django.core.management.base import BaseCommand
 from chemsapp.views import downscale_image
 
-DOCUMENTS_DIR = '/data/documents'
-
 
 class Command(BaseCommand):
-    help = 'Downscale all existing images in /data/documents in-place'
+    help = 'Downscale all existing JPEG/PNG images in the documents directory in-place'
 
     def handle(self, *args, **options):
-        if not os.path.isdir(DOCUMENTS_DIR):
-            self.stderr.write(f'Directory not found: {DOCUMENTS_DIR}')
+        documents_dir = os.path.join(settings.MEDIA_ROOT, 'documents')
+        if not os.path.isdir(documents_dir):
+            self.stderr.write(f'Directory not found: {documents_dir}')
             return
 
-        files = os.listdir(DOCUMENTS_DIR)
+        files = os.listdir(documents_dir)
         changed = skipped = errors = 0
 
         for fname in files:
-            fpath = os.path.join(DOCUMENTS_DIR, fname)
+            fpath = os.path.join(documents_dir, fname)
             if not os.path.isfile(fpath):
                 continue
             try:

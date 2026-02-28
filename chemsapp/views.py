@@ -18,10 +18,12 @@ JPEG_QUALITY = 80
 def downscale_image(file_path):
     """
     Resize image at file_path in-place to fit within MAX_DIM x MAX_DIM.
-    Keeps original file format and filename (no renaming).
-    Skips non-image files gracefully.
+    Only processes JPEG and PNG files; skips everything else.
     Returns True if the file was changed, False otherwise.
     """
+    ext = os.path.splitext(file_path)[1].lower()
+    if ext not in {'.jpg', '.jpeg', '.png'}:
+        return False
     try:
         with Image.open(file_path) as img:
             orig_fmt = img.format  # 'JPEG', 'PNG', etc.
