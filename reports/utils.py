@@ -11,6 +11,9 @@ import logging
 
 logger = logging.getLogger(__name__)
 
+PDF_IMAGE_MAX_DIM = 800
+PDF_IMAGE_QUALITY = 75
+
 
 class ReportPDFGenerator:
     """Generates professional PDF reports with proper styling and image handling"""
@@ -35,6 +38,8 @@ class ReportPDFGenerator:
         # Signature-specific size (small)
         self.signature_width = 150
         self.signature_height = 60
+
+        self._temp_image_files = []
 
     def get_answer_badge_type(self, answer):
         """Determine the badge type/color for an answer based on QuestionOption badge_type or content"""
@@ -105,10 +110,23 @@ class ReportPDFGenerator:
             document = html.render(stylesheets=[css], font_config=self.font_config)
             document.write_pdf(temp_file.name)
 
+            for p in self._temp_image_files:
+                try:
+                    os.unlink(p)
+                except OSError:
+                    pass
+            self._temp_image_files = []
+
             temp_file.close()
             return temp_file.name
 
         except Exception as e:
+            for p in self._temp_image_files:
+                try:
+                    os.unlink(p)
+                except OSError:
+                    pass
+            self._temp_image_files = []
             logger.error(f"Error generating PDF for report {self.report.document_number}: {str(e)}")
             return None
 
@@ -252,6 +270,13 @@ class ReportPDFGenerator:
                 else:
                     continue
 
+                # Downscale non-signature images to a temp JPEG to reduce PDF size
+                if size != 'signature':
+                    temp_path = self._make_temp_jpeg(image_path)
+                    if temp_path:
+                        self._temp_image_files.append(temp_path)
+                        image_url = f"file://{temp_path}"
+
                 # Open and analyze image
                 with PILImage.open(image_path) as img:
                     original_width, original_height = img.size
@@ -322,6 +347,22 @@ class ReportPDFGenerator:
             return (self.large_portrait_width, self.large_portrait_height) if is_portrait else (self.large_landscape_width, self.large_landscape_height)
         else:  # small
             return (self.small_portrait_width, self.small_portrait_height) if is_portrait else (self.small_landscape_width, self.small_landscape_height)
+
+    def _make_temp_jpeg(self, image_path):
+        """Write a downscaled JPEG copy of image_path to a temp file. Returns temp path or None."""
+        try:
+            with PILImage.open(image_path) as img:
+                img = img.convert('RGB')  # handles RGBA PNGs, palette modes, etc.
+                if img.width > PDF_IMAGE_MAX_DIM or img.height > PDF_IMAGE_MAX_DIM:
+                    img.thumbnail((PDF_IMAGE_MAX_DIM, PDF_IMAGE_MAX_DIM), PILImage.LANCZOS)
+                tmp = tempfile.NamedTemporaryFile(suffix='.jpg', delete=False,
+                                                  dir=tempfile.gettempdir())
+                img.save(tmp.name, 'JPEG', quality=PDF_IMAGE_QUALITY, optimize=True)
+                tmp.close()
+                return tmp.name
+        except Exception as e:
+            logger.warning(f"Could not create temp JPEG for {image_path}: {e}")
+            return None
 
     def _get_css_styles(self):
         """Get CSS styles for professional PDF formatting"""
