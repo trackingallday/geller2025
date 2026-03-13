@@ -276,6 +276,10 @@ LOGGING = {
 
 POSTMARK_SERVER_API_TOKEN="e731faa5-a198-4524-80f1-f6c287ba8789"
 
+# Trust the X-Forwarded-Proto header from Railway's proxy so request.build_absolute_uri()
+# returns https:// URLs instead of http://.
+SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+
 '''If you are runnig Django on Apache using mod_wsgi you have to add
 WSGIPassAuthorization On
 in your httpd.conf. Otherwise authorization header will be stripped out by mod_wsgi.'''
