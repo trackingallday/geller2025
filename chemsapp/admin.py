@@ -6,7 +6,7 @@ from django.utils.html import format_html
 import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
-    MarketSector, MarketSectorSection, NewsArticle
+    MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm
@@ -223,9 +223,22 @@ class DistributorAdmin(ImportExportModelAdmin):
         return render(request, 'admin/chemsapp/distributor/create_user.html', context)
 
 
+class CustomerContactInline(admin.TabularInline):
+    model = CustomerContact
+    extra = 1
+    fields = ('name', 'email', 'phone', 'receive_report')
+
+
+class CustomerProductVariantInline(admin.TabularInline):
+    model = CustomerProductVariant
+    extra = 1
+    fields = ('product_variant', 'max_stock_level')
+
+
 class CustomerAdmin(ImportExportModelAdmin):
     search_fields = ['address', 'businessName',]
     resource_class = CustomerResource
+    inlines = [CustomerContactInline, CustomerProductVariantInline]
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -236,10 +249,17 @@ class UserAdmin(admin.ModelAdmin):
     pass
 
 
+class ProductVariantInline(admin.TabularInline):
+    model = ProductVariant
+    extra = 1
+    fields = ('size', 'pack_size', 'description', 'barcode', 'image')
+
+
 class ProductAdmin(ImportExportModelAdmin):
     search_fields = ['name',]
     readonly_fields = ["properties", "application"]
     resource_class = ProductResource
+    inlines = [ProductVariantInline]
 
 
 #class ProductAddAdmin(ImportExportModelAdmin):

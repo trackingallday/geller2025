@@ -119,6 +119,39 @@ class Product(models.Model):
         return f'{self.name}'
 
 
+class ProductVariant(models.Model):
+    product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
+    size = models.ForeignKey('Size', related_name='variants', on_delete=models.SET_NULL, blank=True, null=True)
+    pack_size = models.IntegerField()
+    description = models.TextField(blank=True, null=True)
+    barcode = models.CharField(max_length=255)
+    image = models.FileField(upload_to='documents/', blank=True, null=True)
+
+    def __str__(self):
+        size_str = f' ({self.size})' if self.size else ''
+        return f'{self.product.name}{size_str} - {self.barcode}'
+
+
+class CustomerContact(models.Model):
+    customer = models.ForeignKey('Customer', related_name='contacts', on_delete=models.CASCADE)
+    name = models.CharField(max_length=255)
+    email = models.EmailField(blank=True, null=True)
+    phone = models.CharField(max_length=100, blank=True, null=True)
+    receive_report = models.BooleanField(default=False, help_text='Email the report to this contact')
+
+    def __str__(self):
+        return f'{self.name} ({self.customer})'
+
+
+class CustomerProductVariant(models.Model):
+    customer = models.ForeignKey('Customer', related_name='product_variants', on_delete=models.CASCADE)
+    product_variant = models.ForeignKey(ProductVariant, related_name='customer_variants', on_delete=models.CASCADE)
+    max_stock_level = models.IntegerField()
+
+    def __str__(self):
+        return f'{self.customer} - {self.product_variant}'
+
+
 class Post(MyBaseModel):
     name = models.CharField(max_length=500, blank=True, null=True)
     page = models.CharField(max_length=100)

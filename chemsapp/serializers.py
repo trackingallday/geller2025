@@ -1,6 +1,7 @@
 from django.contrib.auth.models import User
 from chemsapp.models import ProductRemove, Distributor, ProductAdd, Product, Customer, Profile, SafetyWear, ProductCategory,\
-    Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle, MarketSectorSection
+    Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle, MarketSectorSection,\
+    ProductVariant, CustomerProductVariant, CustomerContact
 from rest_framework import serializers
 import pyqrcode
 import base64
@@ -142,16 +143,51 @@ class DistributorSerializer(serializers.ModelSerializer):
         )
 
 
+class SizeSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = Size
+        fields = (
+            'id', 'name', 'desc', 'amount', 'image', 'imageNo', 'isBag',
+        )
+
+
+class ProductVariantSerializer(serializers.ModelSerializer):
+    size = SizeSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = ProductVariant
+        fields = ('id', 'size', 'pack_size', 'description', 'barcode', 'image')
+
+
+class CustomerContactSerializer(serializers.ModelSerializer):
+
+    class Meta:
+        model = CustomerContact
+        fields = ('id', 'name', 'email', 'phone', 'receive_report')
+
+
+class CustomerProductVariantSerializer(serializers.ModelSerializer):
+    product_variant = ProductVariantSerializer(many=False, read_only=True)
+
+    class Meta:
+        model = CustomerProductVariant
+        fields = ('id', 'product_variant', 'max_stock_level')
+
+
 class CustomerSheetSerializer(serializers.ModelSerializer):
 
     products = ProductSheetSerializer(many=True, read_only=True)
     distributor = serializers.SerializerMethodField('distributor_parent')
+    contacts = CustomerContactSerializer(many=True, read_only=True)
+    product_variants = CustomerProductVariantSerializer(many=True, read_only=True)
 
     class Meta:
         model = Customer
         fields = (
             'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
             'products', 'address', 'geocodingDetail', 'distributor',
+            'contacts', 'product_variants',
         )
 
     def distributor_parent(self, obj):
@@ -169,12 +205,15 @@ class CustomerSerializer(serializers.ModelSerializer):
     products = serializers.StringRelatedField(many=True, read_only=True)
     productsExpanded = serializers.SerializerMethodField('products_expanded')
     distributor = serializers.SerializerMethodField('distributor_parent')
+    contacts = CustomerContactSerializer(many=True, read_only=True)
+    product_variants = CustomerProductVariantSerializer(many=True, read_only=True)
 
     class Meta:
         model = Customer
         fields = (
             'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
             'products', 'address', 'geocodingDetail', 'productsExpanded', 'distributor',
+            'contacts', 'product_variants',
         )
 
     def products_expanded(self, obj):
@@ -258,14 +297,6 @@ class ContactSerializer(serializers.ModelSerializer):
         model = Contact
         fields = (
             'id', 'nameFrom', 'emailFrom', 'replied', 'content', 'isSDSDownload', 'companyName'
-        )
-
-class SizeSerializer(serializers.ModelSerializer):
-
-    class Meta:
-        model = Size
-        fields = (
-            'id', 'name', 'desc', 'amount', 'image', 'imageNo', 'isBag',
         )
 
 class NewsPostSerializer(serializers.ModelSerializer):
