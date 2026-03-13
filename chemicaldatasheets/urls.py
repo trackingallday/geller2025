@@ -34,6 +34,7 @@ urlpatterns = [
     re_path(r'^accounts/', include('django.contrib.auth.urls')),
     re_path(r'^upload_file/', upload_file, name='upload_file'),
     re_path(r'^reports/', include('reports.urls')),
+    re_path(r'^orders/', include('orders.urls')),
     re_path(r'', include('chemsapp.urls' )),
 
 ]

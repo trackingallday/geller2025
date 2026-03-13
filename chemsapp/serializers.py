@@ -157,7 +157,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariant
-        fields = ('id', 'size', 'pack_size', 'description', 'barcode', 'image')
+        fields = ('id', 'code', 'size', 'pack_size', 'description', 'barcode', 'image')
 
 
 class CustomerContactSerializer(serializers.ModelSerializer):

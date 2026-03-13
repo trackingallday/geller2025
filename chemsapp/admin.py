@@ -253,7 +253,14 @@ class UserAdmin(admin.ModelAdmin):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
-    fields = ('size', 'pack_size', 'description', 'barcode', 'image')
+    fields = ('code', 'size', 'pack_size', 'description', 'barcode', 'image')
+
+    def formfield_for_dbfield(self, db_field, request, **kwargs):
+        field = super().formfield_for_dbfield(db_field, request, **kwargs)
+        if db_field.name == 'description':
+            field.widget.attrs['rows'] = 2
+            field.widget.attrs['style'] = 'width: 150px;'
+        return field
 
 
 class ProductAdmin(ImportExportModelAdmin):

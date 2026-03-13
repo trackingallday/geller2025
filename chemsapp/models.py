@@ -120,6 +120,7 @@ class Product(models.Model):
 
 
 class ProductVariant(models.Model):
+    code = models.CharField(max_length=255, unique=True, null=True, blank=True)
     product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
     size = models.ForeignKey('Size', related_name='variants', on_delete=models.SET_NULL, blank=True, null=True)
     pack_size = models.IntegerField()
@@ -135,6 +136,7 @@ class ProductVariant(models.Model):
 class CustomerContact(models.Model):
     customer = models.ForeignKey('Customer', related_name='contacts', on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
+    role = models.CharField(max_length=255, default='')
     email = models.EmailField(blank=True, null=True)
     phone = models.CharField(max_length=100, blank=True, null=True)
     receive_report = models.BooleanField(default=False, help_text='Email the report to this contact')

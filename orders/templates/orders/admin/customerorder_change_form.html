@@ -1,0 +1,15 @@
+{% extends "admin/change_form.html" %}
+
+{% block object-tools-items %}
+    {% if original and not original.submitted %}
+        <li>
+            <a href="{% url 'admin:orders_customerorder_submit' original.pk %}"
+               class="button"
+               style="background: #28a745; color: white; padding: 6px 12px; border-radius: 4px; text-decoration: none; font-weight: bold;"
+               onclick="return confirm('Submit this order and generate the PDF?')">
+                Submit Order &amp; Generate PDF
+            </a>
+        </li>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}

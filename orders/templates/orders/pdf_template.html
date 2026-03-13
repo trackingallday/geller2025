@@ -1,0 +1,87 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Order {{ order.order_number }}</title>
+</head>
+<body>
+
+    <!-- Header / Logo -->
+    <div class="logo-section">
+        {% if geller_logo %}
+            <img src="{{ geller_logo }}" class="geller-logo" alt="Geller & Co">
+        {% else %}
+            <strong>{{ company_name }}</strong>
+        {% endif %}
+    </div>
+
+    <div class="order-title">Customer Order</div>
+    <div class="order-number">Order #{{ order.order_number }}</div>
+
+    <!-- Order Metadata -->
+    <table class="metadata-table">
+        <tr>
+            <td class="label">Order Number</td>
+            <td class="value">{{ order.order_number }}</td>
+        </tr>
+        <tr>
+            <td class="label">Date</td>
+            <td class="value">{{ order.date|date:"d M Y, H:i" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Customer</td>
+            <td class="value">{{ order.customer.businessName }}</td>
+        </tr>
+        <tr>
+            <td class="label">Address</td>
+            <td class="value">{{ order.customer.address|default:"-" }}</td>
+        </tr>
+        <tr>
+            <td class="label">Status</td>
+            <td class="value">
+                <span class="status-badge status-{{ order.fulfilment_status }}">
+                    {{ order.get_fulfilment_status_display }}
+                </span>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Line Items -->
+    <div class="section-title">Order Items</div>
+    <table class="line-items-table">
+        <thead>
+            <tr>
+                <th>Product</th>
+                <th>Code</th>
+                <th>Variant / Barcode</th>
+                <th>Size</th>
+                <th>Qty</th>
+            </tr>
+        </thead>
+        <tbody>
+            {% for item in line_items %}
+            <tr>
+                <td>{{ item.product_variant.product.name }}</td>
+                <td>{{ item.product_variant.code|default:"-" }}</td>
+                <td>{{ item.product_variant.barcode }}</td>
+                <td>{{ item.product_variant.size|default:"-" }}</td>
+                <td>{{ item.quantity }}</td>
+            </tr>
+            {% empty %}
+            <tr>
+                <td colspan="5" style="color:#999; font-style:italic;">No items on this order.</td>
+            </tr>
+            {% endfor %}
+        </tbody>
+    </table>
+
+    <!-- Notes -->
+    {% if order.notes %}
+    <div class="notes-section">
+        <div class="notes-label">Notes</div>
+        <div>{{ order.notes }}</div>
+    </div>
+    {% endif %}
+
+</body>
+</html>
