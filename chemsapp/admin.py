@@ -239,6 +239,7 @@ class CustomerAdmin(ImportExportModelAdmin):
     search_fields = ['address', 'businessName',]
     resource_class = CustomerResource
     inlines = [CustomerContactInline, CustomerProductVariantInline]
+    filter_horizontal = ['products']
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -260,6 +261,7 @@ class ProductAdmin(ImportExportModelAdmin):
     readonly_fields = ["properties", "application"]
     resource_class = ProductResource
     inlines = [ProductVariantInline]
+    filter_horizontal = ['safetyWears', 'subCategory', 'productCategory', 'sizes']
 
 
 #class ProductAddAdmin(ImportExportModelAdmin):
@@ -276,7 +278,7 @@ class ProfileAdmin(ImportExportModelAdmin):
 
 class CategoryAdmin(ImportExportModelAdmin):
     form = ProductCategoryForm
-    pass
+    filter_horizontal = ['products', 'relatedCategory']
 
 class PostAdmin(ImportExportModelAdmin):
     form = PostForm
@@ -346,7 +348,7 @@ class PostAdmin(ImportExportModelAdmin):
         return render(request, 'admin/chemsapp/post/edit_special_post.html', context)
 
 class MarketAdmin(ImportExportModelAdmin):
-    pass
+    filter_horizontal = ['products']
 
 class ContactAdmin(ImportExportModelAdmin):
     def _created_at(self, obj):
