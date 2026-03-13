@@ -64,16 +64,7 @@ def submit_order(request):
 
     # Permission check
     try:
-        if profile_type == 'admin':
-            customer = Customer.objects.get(pk=customer_id)
-        elif profile_type == 'distributor':
-            customer = request.user.profile.distributor.customers.get(pk=customer_id)
-        elif profile_type == 'customer':
-            customer = request.user.profile.customer
-            if customer.pk != int(customer_id):
-                return Response({'detail': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
-        else:
-            return Response({'detail': 'Forbidden.'}, status=status.HTTP_403_FORBIDDEN)
+        customer = Customer.objects.get(pk=customer_id)
     except Customer.DoesNotExist:
         return Response({'detail': 'Customer not found.'}, status=status.HTTP_404_NOT_FOUND)
 

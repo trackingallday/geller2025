@@ -226,7 +226,7 @@ class DistributorAdmin(ImportExportModelAdmin):
 class CustomerContactInline(admin.TabularInline):
     model = CustomerContact
     extra = 1
-    fields = ('name', 'email', 'phone', 'receive_report')
+    fields = ('name', 'role', 'email', 'phone', 'receive_report')
 
 
 class CustomerProductVariantInline(admin.TabularInline):

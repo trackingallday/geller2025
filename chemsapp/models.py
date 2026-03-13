@@ -356,3 +356,35 @@ class Contact(MyBaseModel):
 
     def __str__(self):
         return self.nameFrom
+
+
+# Map each model to the FileField names that hold images (not PDFs/docs).
+_IMAGE_FIELDS = {
+    ProductCategory: ['image'],
+    Product: ['primaryImageLink', 'secondaryImageLink'],
+    ProductVariant: ['image'],
+    Post: ['image'],
+    NewsArticle: ['image'],
+    MarketSector: ['image', 'product_feature_image'],
+    MarketSectorSection: ['image'],
+    SectorSolution: ['content_image', 'content2_image', 'footer_image'],
+    MarketCategory: ['image'],
+    Distributor: ['primaryimagelink'],
+    Size: ['image', 'imageNo'],
+}
+
+
+def _downscale_model_images(sender, instance, **kwargs):
+    from chemsapp.views import downscale_image
+    fields = _IMAGE_FIELDS.get(sender, [])
+    for field_name in fields:
+        file_field = getattr(instance, field_name, None)
+        if file_field and file_field.name:
+            try:
+                downscale_image(file_field.path)
+            except Exception:
+                pass
+
+
+for _model in _IMAGE_FIELDS:
+    post_save.connect(_downscale_model_images, sender=_model)
