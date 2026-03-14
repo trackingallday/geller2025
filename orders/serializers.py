@@ -40,7 +40,7 @@ class CustomerOrderSerializer(serializers.ModelSerializer):
 
 class OrderLineItemWriteSerializer(serializers.Serializer):
     product_variant_id = serializers.IntegerField()
-    quantity = serializers.IntegerField(min_value=1)
+    quantity = serializers.IntegerField(min_value=0)
 
 
 class CustomerOrderCreateSerializer(serializers.Serializer):

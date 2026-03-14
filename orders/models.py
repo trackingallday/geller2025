@@ -48,7 +48,7 @@ class CustomerOrder(models.Model):
 class OrderLineItem(models.Model):
     order = models.ForeignKey(CustomerOrder, related_name='line_items', on_delete=models.CASCADE)
     product_variant = models.ForeignKey(ProductVariant, related_name='order_line_items', on_delete=models.CASCADE)
-    quantity = models.PositiveIntegerField(default=1)
+    quantity = models.IntegerField(default=0)
 
     def __str__(self):
         return f'{self.product_variant} x{self.quantity}'

@@ -56,7 +56,9 @@ def submit_order(request):
     profile_type = request.user.profile.profileType
 
     input_serializer = CustomerOrderCreateSerializer(data=request.data)
+    print(request.data)
     if not input_serializer.is_valid():
+        print(input_serializer.errors)
         return Response(input_serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
     data = input_serializer.validated_data
