@@ -7,4 +7,5 @@ urlpatterns = [
     path('customer/<int:customer_id>/', views.orders_by_customer, name='orders_by_customer'),
     path('customer/<int:customer_id>/product-variants/', views.customer_product_variants, name='customer_product_variants'),
     path('submit/', views.submit_order, name='submit_order'),
+    path('email-pdf/', views.email_order_pdf, name='email_order_pdf'),
 ]

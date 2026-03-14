@@ -51,6 +51,29 @@ class ReportListAPIView(generics.ListAPIView):
         ).order_by('-created_at')
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def reports_by_customer(request, customer_id):
+    """
+    List all reports for a given customer.
+
+    GET /reports/api/customer/{customer_id}/
+    """
+    from chemsapp.models import Customer
+
+    try:
+        customer = Customer.objects.get(pk=customer_id)
+    except Customer.DoesNotExist:
+        return Response({'detail': 'Customer not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    reports = Report.objects.filter(customer=customer).select_related(
+        'report_type', 'customer', 'distributor', 'prepared_by'
+    ).order_by('-created_at')
+
+    serializer = ReportListSerializer(reports, many=True)
+    return Response(serializer.data)
+
+
 class ReportTypeListAPIView(generics.ListAPIView):
     """
     API view to list all available report types.
