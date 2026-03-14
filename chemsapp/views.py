@@ -8,6 +8,7 @@ from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.db import transaction
 import os
+import threading
 from PIL import Image
 import io
 
@@ -30,7 +31,7 @@ def downscale_image(file_path):
             if not (img.width > MAX_DIM or img.height > MAX_DIM):
                 return False  # already small enough
 
-            img.thumbnail((MAX_DIM, MAX_DIM), Image.LANCZOS)
+            img.thumbnail((MAX_DIM, MAX_DIM), Image.BILINEAR)
 
             save_kwargs = {}
             if orig_fmt == 'JPEG':
@@ -124,7 +125,7 @@ def upload_file(request):
             with open(file_path, 'wb+') as destination:
                 for chunk in file.chunks():
                     destination.write(chunk)
-            downscale_image(file_path)
+            threading.Thread(target=downscale_image, args=(file_path,), daemon=True).start()
             saved_files.append(file.name)
             
 
@@ -142,7 +143,7 @@ def getFileFromBase64(data, filename):
     try:
         img = Image.open(io.BytesIO(raw))
         if img.width > MAX_DIM or img.height > MAX_DIM:
-            img.thumbnail((MAX_DIM, MAX_DIM), Image.LANCZOS)
+            img.thumbnail((MAX_DIM, MAX_DIM), Image.BILINEAR)
             orig_fmt = img.format or ext.upper()
             buf = io.BytesIO()
             save_kwargs = {'quality': JPEG_QUALITY, 'optimize': True} if orig_fmt == 'JPEG' else {}
@@ -234,11 +235,11 @@ def mail_customer(subject, content, customer_email, reply_to=None):
 @api_view(['GET'])
 def customers_list(request):
     if request.user.profile.profileType == 'admin':
-        custs = CustomerSerializer(Customer.objects.all(), many=True).data
+        custs = CustomerSerializer(Customer.objects.all().order_by('businessName'), many=True).data
         return JsonResponse(custs, safe=False)
 
     customers = request.user.profile.distributor.customers.prefetch_related(
-        'products', 'user', 'products__productCategory', 'products__subCategory')
+        'products', 'user', 'products__productCategory', 'products__subCategory').order_by('businessName')
     serializer = CustomerSerializer(customers, many=True)
     return JsonResponse(serializer.data, safe=False)
 
@@ -595,7 +596,7 @@ def products_map(request):
 def customers_table_admin(request):
     if request.user.profile.profileType == 'admin':
         products = Product.objects.only('id', 'name')
-        customers = CustomerSerializer(Customer.objects.all(), many=True).data
+        customers = CustomerSerializer(Customer.objects.all().order_by('businessName'), many=True).data
         return JsonResponse({"customers": customers, "products": products})
     else:
         return JsonResponse({"error": "evildoer"})
@@ -607,7 +608,7 @@ def customers_table(request):
     profile = request.user.profile
     if profile.profileType == "distributor":
         products = profile.distributor.products.only('id', 'name')
-        customers = CustomerSerializer(profile.distributor.customers, many=True).data
+        customers = CustomerSerializer(profile.distributor.customers.order_by('businessName'), many=True).data
         return JsonResponse({"customers": customers, "products": products})
 
     return JsonResponse({"error": "evildoer"})

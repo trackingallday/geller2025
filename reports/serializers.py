@@ -1,6 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth.models import User
-from chemsapp.models import Customer, Distributor
+from chemsapp.models import Customer, Distributor, CustomerContact
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
     Report, Answer, ComplianceManager, QUESTION_TYPES
@@ -63,13 +63,24 @@ class ComplianceManagerSerializer(serializers.ModelSerializer):
         fields = ['id', 'name', 'phone_number']
 
 
+class CustomerContactSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = CustomerContact
+        fields = ('id', 'name', 'role', 'email', 'phone', 'receive_report')
+
+
 class CustomerSerializer(serializers.ModelSerializer):
     """Customer info for reports"""
     compliance_managers = ComplianceManagerSerializer(many=True, read_only=True)
+    contacts = CustomerContactSerializer(many=True, read_only=True)
+    email = serializers.SerializerMethodField()
 
     class Meta:
         model = Customer
-        fields = ['id', 'businessName', 'address', 'phoneNumber', 'compliance_managers']
+        fields = ['id', 'businessName', 'address', 'phoneNumber', 'compliance_managers', 'contacts', 'email']
+
+    def get_email(self, obj):
+        return obj.user.email if obj.user else None
 
 
 class DistributorSerializer(serializers.ModelSerializer):

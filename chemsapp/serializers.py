@@ -173,7 +173,7 @@ class CustomerContactSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = CustomerContact
-        fields = ('id', 'name', 'email', 'phone', 'receive_report')
+        fields = ('id', 'name', 'role', 'email', 'phone', 'receive_report')
 
 
 class CustomerProductVariantSerializer(serializers.ModelSerializer):
@@ -190,14 +190,18 @@ class CustomerSheetSerializer(serializers.ModelSerializer):
     distributor = serializers.SerializerMethodField('distributor_parent')
     contacts = CustomerContactSerializer(many=True, read_only=True)
     product_variants = CustomerProductVariantSerializer(many=True, read_only=True)
+    email = serializers.SerializerMethodField()
 
     class Meta:
         model = Customer
         fields = (
             'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
             'products', 'address', 'geocodingDetail', 'distributor',
-            'contacts', 'product_variants',
+            'contacts', 'product_variants', 'email',
         )
+
+    def get_email(self, obj):
+        return obj.user.email if obj.user else None
 
     def distributor_parent(self, obj):
         # Return the first distributor (for backward compatibility)
@@ -216,14 +220,18 @@ class CustomerSerializer(serializers.ModelSerializer):
     distributor = serializers.SerializerMethodField('distributor_parent')
     contacts = CustomerContactSerializer(many=True, read_only=True)
     product_variants = CustomerProductVariantSerializer(many=True, read_only=True)
+    email = serializers.SerializerMethodField()
 
     class Meta:
         model = Customer
         fields = (
             'id', 'phoneNumber', 'user', 'cellPhoneNumber', 'businessName',
             'products', 'address', 'geocodingDetail', 'productsExpanded', 'distributor',
-            'contacts', 'product_variants',
+            'contacts', 'product_variants', 'email',
         )
+
+    def get_email(self, obj):
+        return obj.user.email if obj.user else None
 
     def products_expanded(self, obj):
         return ProductSerializer(obj.products, many=True).data

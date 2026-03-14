@@ -118,7 +118,7 @@ def customer_product_variants(request, customer_id):
     product_variants = customer.product_variants.select_related(
         'product_variant__size',
         'product_variant__product',
-    ).all()
+    ).order_by('product_variant__description')
 
     serializer = CustomerProductVariantSerializer(product_variants, many=True, context={'request': request})
     return Response(serializer.data)
