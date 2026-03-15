@@ -74,6 +74,7 @@ urlpatterns = [
     path('api/report-types/<int:report_type_id>/create/', api_views.create_report_api, name='api_report_create'),
     path('api/report-types/<int:report_type_id>/questions/', api_views.report_questions_api, name='api_report_questions'),
     path('api/customer/<int:customer_id>/', api_views.reports_by_customer, name='api_reports_by_customer'),
+    path('api/customer/report_types_by_customer/<int:customer_id>/', api_views.report_types_by_customer, name='api_report_types_by_customer'),
     path('api/user/profile/', api_views.get_user_profile_api, name='api_user_profile'),
     path('api/email-report-pdf/', api_views.email_report_pdf, name='api_email_report_pdf'),
 ]

@@ -61,7 +61,7 @@
         <tbody>
             {% for item in line_items %}
             <tr>
-                <td>{{ item.product_variant.product.name }}</td>
+                <td>{{ item.product_variant.description }}</td>
                 <td>{{ item.product_variant.code|default:"-" }}</td>
                 <td>{{ item.product_variant.barcode }}</td>
                 <td>{{ item.product_variant.size|default:"-" }}</td>

@@ -74,6 +74,35 @@ def reports_by_customer(request, customer_id):
     return Response(serializer.data)
 
 
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def report_types_by_customer(request, customer_id):
+    """
+    List all reports types for a given customer.
+
+    GET /reports/api/customer/{customer_id}/
+    """
+    print(f"Fetching report types for customer_id: {customer_id}")
+    from chemsapp.models import Customer
+
+    try:
+        customer = Customer.objects.get(pk=customer_id)
+    except Customer.DoesNotExist:
+        return Response({'detail': 'Customer not found.'}, status=status.HTTP_404_NOT_FOUND)
+
+    report_types = ReportType.objects.filter(
+        customer_assignments__customer=customer,
+        customer_assignments__is_active=True,
+        is_active=True
+    ).prefetch_related(
+        'sections__questions__options',
+        'questions__options'
+    ).order_by('name')
+
+    serializer = ReportTypeSerializer(report_types, many=True)
+    return Response(serializer.data)
+
+
 class ReportTypeListAPIView(generics.ListAPIView):
     """
     API view to list all available report types.

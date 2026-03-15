@@ -405,5 +405,10 @@
     bodyInput.disabled = false;
     submitBtn.disabled = false;
   });
+
+  document.getElementById('createTicketForm').addEventListener('submit', function () {
+    submitBtn.disabled = true;
+    submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating…';
+  });
 </script>
 {% endblock %}
