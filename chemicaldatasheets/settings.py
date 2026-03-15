@@ -65,6 +65,7 @@ INSTALLED_APPS = [
     'chemsapp',
     'reports',
     'orders',
+    'tickets',
     'corsheaders',
     'import_export',
     'ckeditor',

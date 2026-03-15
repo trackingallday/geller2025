@@ -1,0 +1,409 @@
+{% extends "tickets/base.html" %}
+{% load ticket_tags %}
+
+{% block title %}Ticket Dashboard{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+  <!-- ===== LEFT PANEL: filter bar + ticket list ===== -->
+  <div class="ticket-list-panel">
+
+    <!-- Filter bar -->
+    <div class="filter-panel">
+      <form method="get" action="{% url 'tickets:ticket_dashboard' %}">
+        <div class="row g-1 mb-1">
+          <div class="col-12">
+            <select name="status" class="form-select form-select-sm">
+              {% for val, label in status_choices %}
+                <option value="{{ val }}" {% if val == current_status %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <select name="distributor" class="form-select form-select-sm">
+              <option value="">All Distributors</option>
+              {% for d in distributors %}
+                <option value="{{ d.pk }}" {% if d.pk|stringformat:"s" == current_distributor %}selected{% endif %}>{{ d.businessname }}</option>
+              {% endfor %}
+            </select>
+          </div>
+          <div class="col-12">
+            <select name="customer" class="form-select form-select-sm">
+              <option value="">All Customers</option>
+              {% for c in customers %}
+                <option value="{{ c.pk }}" {% if c.pk|stringformat:"s" == current_customer %}selected{% endif %}>{{ c.businessName }}</option>
+              {% endfor %}
+            </select>
+          </div>
+        </div>
+        <div class="d-flex gap-1">
+          <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
+            <i class="bi bi-funnel"></i> Filter
+          </button>
+          <a href="{% url 'tickets:ticket_dashboard' %}" class="btn btn-sm btn-outline-secondary">
+            <i class="bi bi-x"></i>
+          </a>
+        </div>
+      </form>
+      <button class="btn btn-sm btn-success w-100 mt-1" data-bs-toggle="modal" data-bs-target="#createModal">
+        <i class="bi bi-plus-lg"></i> New Ticket
+      </button>
+    </div>
+
+    <!-- Ticket list -->
+    {% if tickets %}
+      {% for ticket in tickets %}
+        <a href="?ticket={{ ticket.pk }}{% if filter_querystring %}&{{ filter_querystring }}{% endif %}"
+           class="ticket-list-item {% if ticket == active_ticket %}active{% endif %}">
+          <div class="d-flex justify-content-between align-items-start">
+            <strong class="me-1" style="font-size:0.9rem">{{ ticket.customer.businessName }}</strong>
+            <span class="badge bg-{{ ticket.status|status_color }} text-nowrap" style="font-size:0.65rem">{{ ticket.get_status_display }}</span>
+          </div>
+          <div class="text-muted" style="font-size:0.75rem">
+            {% with dist=ticket.customer.distributors.first %}
+              {% if dist %}<i class="bi bi-truck"></i> {{ dist.businessname }}{% endif %}
+            {% endwith %}
+            {% if ticket.assigned_to %}
+              &middot; <i class="bi bi-person"></i> {{ ticket.assigned_to.username }}
+            {% endif %}
+          </div>
+          <div class="subject-preview text-muted" style="font-size:0.82rem">{{ ticket.subject }}</div>
+          <div class="text-muted" style="font-size:0.7rem">{{ ticket.updated_at|timesince }} ago</div>
+        </a>
+      {% endfor %}
+    {% else %}
+      <div class="p-3 text-center text-muted">
+        <i class="bi bi-inbox" style="font-size:2rem"></i>
+        <p class="mt-2 mb-0">No tickets found</p>
+      </div>
+    {% endif %}
+  </div>
+
+  <!-- ===== RIGHT PANEL: thread ===== -->
+  <div class="ticket-thread-panel">
+    {% if active_ticket %}
+
+      <!-- Thread header -->
+      <div class="thread-header d-flex justify-content-between align-items-center flex-wrap gap-2">
+        <div>
+          <strong>{{ active_ticket.subject }}</strong>
+          <span class="text-muted ms-2">{{ active_ticket.customer.businessName }}</span>
+          {% if active_ticket.assigned_to %}
+            <span class="badge bg-light text-dark ms-2"><i class="bi bi-person"></i> {{ active_ticket.assigned_to.username }}</span>
+          {% endif %}
+        </div>
+        <form method="post" action="{% url 'tickets:dashboard_update_status' active_ticket.pk %}" class="d-flex gap-2 align-items-center">
+          {% csrf_token %}
+          {% for key, val in filter_params.items %}{% if val %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endif %}{% endfor %}
+          <select name="status" class="form-select form-select-sm" style="width:auto">
+            {% for val, label in status_choices %}
+              {% if val %}
+                <option value="{{ val }}" {% if val == active_ticket.status %}selected{% endif %}>{{ label }}</option>
+              {% endif %}
+            {% endfor %}
+          </select>
+          <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">Update</button>
+        </form>
+      </div>
+
+      <!-- Messages area -->
+      <div class="thread-messages" id="threadMessages">
+
+        <!-- Original message -->
+        <div class="d-flex flex-column mb-3">
+          <div class="message-bubble message-other">
+            {{ active_ticket.body|linebreaks }}
+          </div>
+          <div class="message-meta">
+            <i class="bi bi-person-circle"></i> {{ active_ticket.created_by.username }}
+            &middot; {{ active_ticket.created_at|date:"M j, Y H:i" }}
+            &middot; <span class="badge bg-{{ active_ticket.status|status_color }}">{{ active_ticket.get_status_display }}</span>
+          </div>
+        </div>
+
+        <!-- Replies -->
+        {% for reply in active_ticket.replies.all %}
+          <div class="d-flex flex-column mb-2 {% if reply.author == request.user %}align-items-end{% endif %}">
+            <div class="message-bubble {% if reply.author == request.user %}message-self{% else %}message-other{% endif %}">
+              {{ reply.body|linebreaks }}
+            </div>
+            <div class="message-meta {% if reply.author == request.user %}text-end{% endif %}">
+              <i class="bi bi-person-circle"></i> {{ reply.author.username }}
+              &middot; {{ reply.created_at|date:"M j, Y H:i" }}
+            </div>
+          </div>
+        {% endfor %}
+
+        <!-- Images -->
+        {% for img in active_ticket.images.all %}
+          <div class="message-image d-flex flex-column mb-2">
+            <img src="{{ img.image.url }}" class="img-fluid" alt="Uploaded image"
+                 onclick="window.open('{{ img.image.url }}','_blank')">
+            <div class="message-meta">
+              <i class="bi bi-image"></i> {{ img.uploaded_by.username }}
+              &middot; {{ img.uploaded_at|date:"M j, Y H:i" }}
+            </div>
+          </div>
+        {% endfor %}
+
+      </div>
+
+      <!-- Footer: reply + image upload -->
+      <div class="thread-footer">
+        <form method="post" action="{% url 'tickets:dashboard_reply' active_ticket.pk %}">
+          {% csrf_token %}
+          {% for key, val in filter_params.items %}{% if val %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endif %}{% endfor %}
+          <div class="d-flex gap-2">
+            <textarea name="body" class="form-control" rows="2"
+                      placeholder="Type a reply..." required></textarea>
+            <button type="submit" class="btn btn-primary align-self-end">
+              <i class="bi bi-send"></i>
+            </button>
+          </div>
+        </form>
+        <form method="post" enctype="multipart/form-data"
+              action="{% url 'tickets:dashboard_upload_image' active_ticket.pk %}"
+              class="mt-2 d-flex gap-2 align-items-center">
+          {% csrf_token %}
+          {% for key, val in filter_params.items %}{% if val %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endif %}{% endfor %}
+          <input type="file" name="image" class="form-control form-control-sm" accept="image/*">
+          <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">
+            <i class="bi bi-upload"></i> Upload
+          </button>
+        </form>
+      </div>
+
+    {% else %}
+      <!-- No ticket selected -->
+      <div class="d-flex align-items-center justify-content-center h-100 text-muted">
+        <div class="text-center">
+          <i class="bi bi-chat-dots" style="font-size:3rem"></i>
+          <p class="mt-2">Select a conversation or create a new ticket</p>
+          <button class="btn btn-success" data-bs-toggle="modal" data-bs-target="#createModal">
+            <i class="bi bi-plus-lg"></i> New Ticket
+          </button>
+        </div>
+      </div>
+    {% endif %}
+  </div>
+</div>
+
+<!-- ===== Create Ticket Modal ===== -->
+<div class="modal fade" id="createModal" tabindex="-1" aria-labelledby="createModalLabel" aria-hidden="true">
+  <div class="modal-dialog">
+    <div class="modal-content">
+      <form method="post" action="{% url 'tickets:dashboard_create_ticket' %}" id="createTicketForm">
+        {% csrf_token %}
+        {% for key, val in filter_params.items %}{% if val %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endif %}{% endfor %}
+        <div class="modal-header">
+          <h5 class="modal-title" id="createModalLabel">
+            <i class="bi bi-plus-circle"></i> New Ticket
+          </h5>
+          <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+        </div>
+        <div class="modal-body">
+
+          <!-- Step 1: Customer -->
+          <div class="mb-3">
+            <label class="form-label">Customer <span class="text-danger">*</span></label>
+            <select name="customer_id" id="createCustomer" class="form-select" required>
+              <option value="">— Select customer —</option>
+              {% for c in customers %}
+                <option value="{{ c.pk }}">{{ c.businessName }}</option>
+              {% endfor %}
+            </select>
+          </div>
+
+          <!-- Step 2: Distributor (filtered by customer) -->
+          <div class="mb-3" id="createDistributorWrap" style="display:none">
+            <label class="form-label">Distributor <span class="text-danger">*</span></label>
+            <select name="distributor_id" id="createDistributor" class="form-select" required disabled>
+              <option value="">— Select distributor —</option>
+            </select>
+          </div>
+
+          <!-- Step 3: User (filtered by distributor) -->
+          <div class="mb-3" id="createUserWrap" style="display:none">
+            <label class="form-label">Assign to user <span class="text-danger">*</span></label>
+            <select name="assigned_to_id" id="createUser" class="form-select" required disabled>
+              <option value="">— Select user —</option>
+            </select>
+          </div>
+
+          <!-- Step 4: Subject + body (shown after user selected) -->
+          <div id="createMessageWrap" style="display:none">
+            <div class="mb-3">
+              <label class="form-label">Subject <span class="text-danger">*</span></label>
+              <input type="text" name="subject" id="createSubject" class="form-control" placeholder="Brief subject" required disabled>
+            </div>
+            <div class="mb-3">
+              <label class="form-label">Message <span class="text-danger">*</span></label>
+              <textarea name="body" id="createBody" class="form-control" rows="4" placeholder="Describe the issue…" required disabled></textarea>
+            </div>
+          </div>
+
+        </div>
+        <div class="modal-footer">
+          <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Cancel</button>
+          <button type="submit" id="createSubmitBtn" class="btn btn-success" disabled>
+            <i class="bi bi-send"></i> Create Ticket
+          </button>
+        </div>
+      </form>
+    </div>
+  </div>
+</div>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+  // Auto-scroll thread messages to bottom on load
+  const messages = document.getElementById('threadMessages');
+  if (messages) messages.scrollTop = messages.scrollHeight;
+
+  // ---- Polling for new replies and images ----
+  {% if active_ticket %}
+  (function () {
+    const container = document.getElementById('threadMessages');
+    if (!container) return;
+
+    // Track highest IDs already rendered
+    let lastReplyId  = {{ active_ticket.replies.last.pk|default:0 }};
+    let lastImageId  = {{ active_ticket.images.last.pk|default:0 }};
+    const ticketId   = {{ active_ticket.pk }};
+    const currentUserId = {{ request.user.pk }};
+    const pollUrl    = "{% url 'tickets:ajax_poll_ticket' active_ticket.pk %}";
+
+    function escapeHtml(str) {
+      return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/\n/g,'<br>');
+    }
+
+    function appendReply(r) {
+      const isSelf = r.is_self;
+      const div = document.createElement('div');
+      div.className = 'd-flex flex-column mb-2' + (isSelf ? ' align-items-end' : '');
+      div.innerHTML = `
+        <div class="message-bubble ${isSelf ? 'message-self' : 'message-other'}">${escapeHtml(r.body)}</div>
+        <div class="message-meta ${isSelf ? 'text-end' : ''}">
+          <i class="bi bi-person-circle"></i> ${escapeHtml(r.author)} &middot; ${escapeHtml(r.created_at)}
+        </div>`;
+      container.appendChild(div);
+    }
+
+    function appendImage(img) {
+      const div = document.createElement('div');
+      div.className = 'message-image d-flex flex-column mb-2';
+      div.innerHTML = `
+        <img src="${img.url}" class="img-fluid" style="max-width:300px;border-radius:12px;cursor:pointer"
+             onclick="window.open('${img.url}','_blank')">
+        <div class="message-meta">
+          <i class="bi bi-image"></i> ${escapeHtml(img.uploaded_by)} &middot; ${escapeHtml(img.uploaded_at)}
+        </div>`;
+      container.appendChild(div);
+    }
+
+    function poll() {
+      fetch(`${pollUrl}?after_reply=${lastReplyId}&after_image=${lastImageId}`)
+        .then(r => r.json())
+        .then(data => {
+          let scrolled = false;
+          data.replies.forEach(r => {
+            appendReply(r);
+            lastReplyId = r.id;
+            scrolled = true;
+          });
+          data.images.forEach(img => {
+            appendImage(img);
+            lastImageId = img.id;
+            scrolled = true;
+          });
+          if (scrolled) container.scrollTop = container.scrollHeight;
+        })
+        .catch(() => {});
+    }
+
+    setInterval(poll, 5000);
+  })();
+  {% endif %}
+
+  // Create ticket modal: cascading dropdowns
+  const customerSel    = document.getElementById('createCustomer');
+  const distWrap       = document.getElementById('createDistributorWrap');
+  const distSel        = document.getElementById('createDistributor');
+  const userWrap       = document.getElementById('createUserWrap');
+  const userSel        = document.getElementById('createUser');
+  const msgWrap        = document.getElementById('createMessageWrap');
+  const subjectInput   = document.getElementById('createSubject');
+  const bodyInput      = document.getElementById('createBody');
+  const submitBtn      = document.getElementById('createSubmitBtn');
+
+  function resetFrom(step) {
+    if (step <= 2) {
+      distSel.innerHTML = '<option value="">— Select distributor —</option>';
+      distSel.disabled = true;
+      distWrap.style.display = 'none';
+    }
+    if (step <= 3) {
+      userSel.innerHTML = '<option value="">— Select user —</option>';
+      userSel.disabled = true;
+      userWrap.style.display = 'none';
+    }
+    if (step <= 4) {
+      msgWrap.style.display = 'none';
+      subjectInput.disabled = true;
+      bodyInput.disabled = true;
+      submitBtn.disabled = true;
+    }
+  }
+
+  // Reset modal fully when it opens
+  document.getElementById('createModal').addEventListener('show.bs.modal', () => {
+    customerSel.value = '';
+    resetFrom(2);
+  });
+
+  customerSel.addEventListener('change', function () {
+    resetFrom(2);
+    if (!this.value) return;
+    fetch(`{% url 'tickets:ajax_distributors_for_customer' %}?customer_id=${this.value}`)
+      .then(r => r.json())
+      .then(data => {
+        data.distributors.forEach(d => {
+          const opt = document.createElement('option');
+          opt.value = d.id;
+          opt.textContent = d.name;
+          distSel.appendChild(opt);
+        });
+        distSel.disabled = false;
+        distWrap.style.display = '';
+      });
+  });
+
+  distSel.addEventListener('change', function () {
+    resetFrom(3);
+    if (!this.value) return;
+    fetch(`{% url 'tickets:ajax_users_for_distributor' %}?distributor_id=${this.value}`)
+      .then(r => r.json())
+      .then(data => {
+        data.users.forEach(u => {
+          const opt = document.createElement('option');
+          opt.value = u.id;
+          opt.textContent = u.name;
+          userSel.appendChild(opt);
+        });
+        userSel.disabled = false;
+        userWrap.style.display = '';
+      });
+  });
+
+  userSel.addEventListener('change', function () {
+    resetFrom(4);
+    if (!this.value) return;
+    msgWrap.style.display = '';
+    subjectInput.disabled = false;
+    bodyInput.disabled = false;
+    submitBtn.disabled = false;
+  });
+</script>
+{% endblock %}
