@@ -96,6 +96,7 @@ def ticket_reply(request, ticket_id):
         return Response({'detail': 'Ticket not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     if request.user != ticket.created_by and request.user != ticket.assigned_to:
+        print(ticket.created_by, ticket.assigned_to, request.user)  # Debugging line
         return Response({'detail': 'You do not have permission to reply to this ticket.'}, status=status.HTTP_403_FORBIDDEN)
 
     body = request.data.get('body', '').strip()

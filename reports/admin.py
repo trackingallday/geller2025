@@ -1,14 +1,18 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from django.urls import reverse
-from django.http import HttpResponse, Http404, HttpResponseRedirect
-from django.shortcuts import get_object_or_404
+from django.urls import reverse, path
+from django.http import HttpResponse, Http404, HttpResponseRedirect, JsonResponse
+from django.shortcuts import get_object_or_404, render
 from django.contrib import messages
+from django.views.decorators.http import require_POST
+from django.db import transaction
+import json
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
     Report, Answer, ConditionalRule, ReportTypeCustomer, ReportTypeDistributor,
     QuestionTemplate, ComplianceManager
 )
+from chemsapp.models import Customer
 
 
 
@@ -64,6 +68,72 @@ class ReportTypeAdmin(admin.ModelAdmin):
         if not change:
             obj.created_by = request.user
         super().save_model(request, obj, form, change)
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'assign/',
+                self.admin_site.admin_view(self.assign_view),
+                name='reports_assign'
+            ),
+            path(
+                'assign/toggle/',
+                self.admin_site.admin_view(self.assign_toggle),
+                name='reports_assign_toggle'
+            ),
+        ]
+        return custom_urls + urls
+
+    def assign_view(self, request):
+        customers = Customer.objects.select_related('user').order_by('businessName')
+        report_types = ReportType.objects.filter(is_active=True).order_by('name')
+        active_assignments = list(
+            ReportTypeCustomer.objects.filter(is_active=True).values(
+                'customer_id', 'report_type_id', 'report_type__name'
+            )
+        )
+        total_assignments = len(active_assignments)
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Assign Report Types',
+            'customers': customers,
+            'report_types': report_types,
+            'active_assignments': active_assignments,
+            'total_assignments': total_assignments,
+        }
+        return render(request, 'admin/reports/assign_report_types.html', context)
+
+    def assign_toggle(self, request):
+        if request.method != 'POST':
+            return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+        try:
+            data = json.loads(request.body)
+            customer_id = int(data['customer_id'])
+            report_type_id = int(data['report_type_id'])
+            active = bool(data['active'])
+        except (KeyError, ValueError, json.JSONDecodeError):
+            return JsonResponse({'ok': False, 'error': 'Invalid data'}, status=400)
+
+        try:
+            customer = Customer.objects.get(pk=customer_id)
+            report_type = ReportType.objects.get(pk=report_type_id)
+        except (Customer.DoesNotExist, ReportType.DoesNotExist):
+            return JsonResponse({'ok': False, 'error': 'Not found'}, status=404)
+
+        with transaction.atomic():
+            assignment, created = ReportTypeCustomer.objects.get_or_create(
+                report_type=report_type,
+                customer=customer,
+                defaults={'assigned_by': request.user, 'is_active': active}
+            )
+            if not created:
+                assignment.is_active = active
+                if active:
+                    assignment.assigned_by = request.user
+                assignment.save(update_fields=['is_active', 'assigned_by'])
+
+        return JsonResponse({'ok': True})
 
 
 @admin.register(ReportSection)
@@ -594,3 +664,5 @@ class ComplianceManagerAdmin(admin.ModelAdmin):
         return obj.customer.businessName
     customer_name.short_description = 'Customer'
     customer_name.admin_order_field = 'customer__businessName'
+
+

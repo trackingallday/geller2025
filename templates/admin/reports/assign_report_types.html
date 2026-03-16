@@ -1,0 +1,470 @@
+{% extends "admin/base_site.html" %}
+{% load i18n %}
+
+{% block title %}Assign Report Types to Customers{% endblock %}
+
+{% block extrahead %}
+{{ block.super }}
+<style>
+  @import url('https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap');
+
+  :root {
+    --bg: #f4f2ef;
+    --surface: #ffffff;
+    --border: #d8d4cc;
+    --border-strong: #a09890;
+    --ink: #1a1714;
+    --ink-muted: #6b6460;
+    --accent: #c8410a;
+    --accent-light: #fef0ea;
+    --on: #1a8a3a;
+    --on-bg: #e8f7ed;
+    --header-bg: #1a1714;
+    --header-text: #f4f2ef;
+    --mono: 'IBM Plex Mono', monospace;
+    --sans: 'IBM Plex Sans', sans-serif;
+    --radius: 4px;
+  }
+
+  #content-main {
+    font-family: var(--sans);
+    color: var(--ink);
+    background: var(--bg);
+    min-height: 100vh;
+    padding: 0 !important;
+  }
+
+  .rta-page {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 24px 48px;
+  }
+
+  .rta-header {
+    background: var(--header-bg);
+    margin: 0 -24px 32px;
+    padding: 28px 24px 24px;
+    border-bottom: 3px solid var(--accent);
+  }
+
+  .rta-header h1 {
+    font-family: var(--mono);
+    font-size: 20px;
+    font-weight: 600;
+    color: var(--header-text);
+    letter-spacing: 0.02em;
+    margin: 0 0 4px;
+    text-transform: uppercase;
+  }
+
+  .rta-header p {
+    font-size: 13px;
+    color: #a09890;
+    margin: 0;
+    font-family: var(--mono);
+  }
+
+  .rta-toolbar {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .rta-search {
+    flex: 1;
+    min-width: 220px;
+    max-width: 360px;
+    position: relative;
+  }
+
+  .rta-search input {
+    width: 100%;
+    padding: 8px 12px 8px 36px;
+    font-family: var(--sans);
+    font-size: 13px;
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    background: var(--surface);
+    color: var(--ink);
+    outline: none;
+    transition: border-color 0.15s;
+    box-sizing: border-box;
+  }
+
+  .rta-search input:focus { border-color: var(--accent); }
+
+  .rta-search svg {
+    position: absolute;
+    left: 10px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: var(--ink-muted);
+    pointer-events: none;
+  }
+
+  .rta-badge {
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    padding: 4px 10px;
+    border-radius: 20px;
+    background: var(--ink);
+    color: var(--header-text);
+    letter-spacing: 0.04em;
+  }
+
+  .rta-badge.active { background: var(--on); color: #fff; }
+
+  .rta-message {
+    padding: 10px 14px;
+    border-radius: var(--radius);
+    font-size: 13px;
+    margin-bottom: 16px;
+    border-left: 4px solid;
+  }
+  .rta-message.success { background: var(--on-bg); border-color: var(--on); color: #145e28; }
+  .rta-message.error   { background: var(--accent-light); border-color: var(--accent); color: var(--accent); }
+
+  .rta-matrix-wrap {
+    background: var(--surface);
+    border: 1.5px solid var(--border);
+    border-radius: var(--radius);
+    overflow: hidden;
+  }
+
+  .rta-matrix-scroll {
+    overflow-x: auto;
+    overflow-y: auto;
+    max-height: 72vh;
+  }
+
+  table.rta-matrix {
+    border-collapse: collapse;
+    width: 100%;
+    min-width: max-content;
+    font-family: var(--sans);
+  }
+
+  .rta-matrix thead th:first-child,
+  .rta-matrix tbody td:first-child {
+    position: sticky;
+    left: 0;
+    z-index: 2;
+    background: var(--surface);
+  }
+
+  .rta-matrix thead th {
+    position: sticky;
+    top: 0;
+    z-index: 3;
+    background: var(--header-bg);
+    color: var(--header-text);
+  }
+
+  .rta-matrix thead th:first-child {
+    z-index: 4;
+    background: var(--header-bg);
+  }
+
+  .rta-matrix thead th {
+    padding: 0;
+    border-right: 1px solid rgba(255,255,255,0.08);
+    border-bottom: 2px solid var(--accent);
+    text-align: center;
+    vertical-align: bottom;
+  }
+
+  .rta-matrix thead th:first-child {
+    text-align: left;
+    padding: 12px 16px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 600;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: #a09890;
+    min-width: 220px;
+    max-width: 280px;
+  }
+
+  .rta-col-label {
+    writing-mode: vertical-rl;
+    transform: rotate(180deg);
+    padding: 10px 8px;
+    font-family: var(--mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    color: var(--header-text);
+    white-space: nowrap;
+    cursor: default;
+    min-height: 100px;
+    display: flex;
+    align-items: flex-start;
+    justify-content: flex-end;
+  }
+
+  .rta-matrix tbody tr {
+    border-bottom: 1px solid var(--border);
+    transition: background 0.08s;
+  }
+
+  .rta-matrix tbody tr:last-child { border-bottom: none; }
+
+  .rta-matrix tbody tr:hover { background: #faf9f7; }
+  .rta-matrix tbody tr:hover td:first-child { background: #faf9f7; }
+
+  .rta-matrix tbody td:first-child {
+    padding: 10px 16px;
+    font-size: 13px;
+    font-weight: 500;
+    color: var(--ink);
+    min-width: 220px;
+    max-width: 280px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    border-right: 2px solid var(--border-strong);
+  }
+
+  .rta-matrix tbody td.rta-cell {
+    text-align: center;
+    padding: 6px 4px;
+    border-right: 1px solid var(--border);
+    min-width: 52px;
+    vertical-align: middle;
+  }
+
+  .rta-matrix tbody td.rta-cell:last-child { border-right: none; }
+
+  .rta-toggle {
+    display: inline-block;
+    width: 36px;
+    height: 20px;
+    position: relative;
+    cursor: pointer;
+  }
+
+  .rta-toggle input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+    position: absolute;
+  }
+
+  .rta-track {
+    position: absolute;
+    inset: 0;
+    border-radius: 20px;
+    background: #ddd9d4;
+    transition: background 0.2s;
+    border: 1.5px solid #c5bfb8;
+  }
+
+  .rta-thumb {
+    position: absolute;
+    top: 2px;
+    left: 2px;
+    width: 14px;
+    height: 14px;
+    border-radius: 50%;
+    background: #fff;
+    box-shadow: 0 1px 3px rgba(0,0,0,0.25);
+    transition: left 0.2s, box-shadow 0.2s;
+  }
+
+  .rta-toggle input:checked + .rta-track {
+    background: var(--on);
+    border-color: #157a30;
+  }
+
+  .rta-toggle input:checked + .rta-track .rta-thumb {
+    left: 18px;
+    box-shadow: 0 1px 4px rgba(0,0,0,0.3);
+  }
+
+  .rta-toggle input:focus-visible + .rta-track {
+    outline: 2px solid var(--accent);
+    outline-offset: 2px;
+  }
+
+  .rta-save-toast {
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    background: var(--header-bg);
+    color: var(--header-text);
+    padding: 10px 18px;
+    border-radius: var(--radius);
+    font-family: var(--mono);
+    font-size: 12px;
+    font-weight: 500;
+    letter-spacing: 0.04em;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    opacity: 0;
+    transform: translateY(8px);
+    pointer-events: none;
+    transition: opacity 0.2s, transform 0.2s;
+    z-index: 1000;
+    border-left: 3px solid var(--accent);
+  }
+
+  .rta-save-toast.visible { opacity: 1; transform: translateY(0); }
+  .rta-save-toast.error-toast { background: #3a0d02; }
+
+  .rta-empty {
+    padding: 48px 24px;
+    text-align: center;
+    color: var(--ink-muted);
+    font-size: 13px;
+    font-family: var(--mono);
+  }
+
+  @media (max-width: 700px) {
+    .rta-page { padding: 0 12px 32px; }
+    .rta-header { margin: 0 -12px 24px; padding: 20px 12px 18px; }
+  }
+</style>
+{% endblock %}
+
+{% block content_title %}{% endblock %}
+
+{% block content %}
+<div class="rta-page">
+
+  <div class="rta-header">
+    <h1>Report Type Assignments</h1>
+    <p>Assign report types to customers — changes save instantly</p>
+  </div>
+
+  {% if messages %}
+    {% for message in messages %}
+      <div class="rta-message {{ message.tags }}">{{ message }}</div>
+    {% endfor %}
+  {% endif %}
+
+  <div class="rta-toolbar">
+    <div class="rta-search">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+        <circle cx="11" cy="11" r="8"/><path d="m21 21-4.35-4.35"/>
+      </svg>
+      <input type="text" id="customerSearch" placeholder="Filter customers…" autocomplete="off">
+    </div>
+    <span class="rta-badge">{{ customers|length }} customers</span>
+    <span class="rta-badge active" id="assignedCount">{{ total_assignments }} assigned</span>
+  </div>
+
+  <div class="rta-matrix-wrap">
+    <div class="rta-matrix-scroll">
+      <table class="rta-matrix">
+        <thead>
+          <tr>
+            <th>Customer</th>
+            {% for rt in report_types %}
+            <th>
+              <div class="rta-col-label" title="{{ rt.name }}">{{ rt.name }}</div>
+            </th>
+            {% endfor %}
+          </tr>
+        </thead>
+        <tbody>
+          {% for customer in customers %}
+          <tr data-customer-name="{{ customer.businessName|lower }}">
+            <td title="{{ customer.businessName }}">{{ customer.businessName }}</td>
+            {% for rt in report_types %}
+            <td class="rta-cell">
+              <label class="rta-toggle" title="{{ rt.name }} for {{ customer.businessName }}">
+                <input
+                  type="checkbox"
+                  class="rta-checkbox"
+                  data-customer="{{ customer.id }}"
+                  data-rt="{{ rt.id }}"
+                  {% for a in active_assignments %}{% if a.customer_id == customer.id and a.report_type_id == rt.id %}checked{% endif %}{% endfor %}
+                >
+                <span class="rta-track"><span class="rta-thumb"></span></span>
+              </label>
+            </td>
+            {% endfor %}
+          </tr>
+          {% empty %}
+          <tr><td colspan="{{ report_types|length|add:1 }}" class="rta-empty">No customers found.</td></tr>
+          {% endfor %}
+        </tbody>
+      </table>
+    </div>
+  </div>
+
+</div>
+
+<div class="rta-save-toast" id="saveToast">
+  <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5">
+    <polyline points="20 6 9 17 4 12"/>
+  </svg>
+  <span id="toastMsg">Saved</span>
+</div>
+
+<script>
+const CSRF = '{{ csrf_token }}';
+const ASSIGN_URL = '{% url "admin:reports_assign_toggle" %}';
+
+let toastTimer;
+function showToast(msg, isError) {
+  const t = document.getElementById('saveToast');
+  t.classList.toggle('error-toast', !!isError);
+  document.getElementById('toastMsg').textContent = msg;
+  t.classList.add('visible');
+  clearTimeout(toastTimer);
+  toastTimer = setTimeout(() => t.classList.remove('visible'), 2000);
+}
+
+function handleToggle(customerId, rtId, isActive) {
+  fetch(ASSIGN_URL, {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json', 'X-CSRFToken': CSRF },
+    body: JSON.stringify({ customer_id: customerId, report_type_id: rtId, active: isActive })
+  })
+  .then(r => r.json())
+  .then(data => {
+    if (data.ok) {
+      updateAssignedCount(isActive ? 1 : -1);
+      showToast(isActive ? 'Assigned' : 'Removed');
+    } else {
+      showToast(data.error || 'Error saving', true);
+      revert(customerId, rtId, !isActive);
+    }
+  })
+  .catch(() => {
+    showToast('Network error', true);
+    revert(customerId, rtId, !isActive);
+  });
+}
+
+function revert(customerId, rtId, state) {
+  document.querySelectorAll(`.rta-checkbox[data-customer="${customerId}"][data-rt="${rtId}"]`)
+    .forEach(c => c.checked = state);
+}
+
+document.querySelectorAll('.rta-checkbox').forEach(cb => {
+  cb.addEventListener('change', function() {
+    handleToggle(this.dataset.customer, this.dataset.rt, this.checked);
+  });
+});
+
+function updateAssignedCount(delta) {
+  const badge = document.getElementById('assignedCount');
+  const current = parseInt(badge.textContent);
+  badge.textContent = (current + delta) + ' assigned';
+}
+
+document.getElementById('customerSearch').addEventListener('input', function() {
+  const q = this.value.toLowerCase().trim();
+  document.querySelectorAll('tr[data-customer-name]').forEach(row => {
+    row.style.display = (!q || row.dataset.customerName.includes(q)) ? '' : 'none';
+  });
+});
+</script>
+{% endblock %}
