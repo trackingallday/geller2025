@@ -192,7 +192,7 @@ STATIC_ROOT = os.path.join(BASE_DIR, 'dist_static')
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'
 
 #media files where uploaded files go to
-
+CONN_MAX_AGE = 60
 
 CKEDITOR_CONFIGS = {
     'default': {
