@@ -246,6 +246,50 @@ def customers_list(request):
 
 @csrf_exempt
 @api_view(['GET'])
+def sds_products(request):
+    profile = getattr(request.user, "profile", None)
+    profile_type = getattr(profile, "profileType", None)
+
+    base_qs = Product.objects.filter(sdsSheet__isnull=False).exclude(sdsSheet='')
+
+    if profile_type == "distributor":
+        distributor = profile.distributor
+        if distributor:
+            customer_ids = distributor.customers.values_list('pk', flat=True)
+            base_qs = base_qs.filter(customers__pk__in=customer_ids)
+        else:
+            return JsonResponse([], safe=False)
+    elif profile_type != "admin":
+        return JsonResponse({"error": "Not authorized"}, status=403)
+
+    products = base_qs.distinct().values('id', 'name', 'brand')
+    return JsonResponse(list(products), safe=False)
+
+
+@csrf_exempt
+@api_view(['GET'])
+def info_sheet_products(request):
+    profile = getattr(request.user, "profile", None)
+    profile_type = getattr(profile, "profileType", None)
+
+    base_qs = Product.objects.filter(infoSheet__isnull=False).exclude(infoSheet='')
+
+    if profile_type == "distributor":
+        distributor = profile.distributor
+        if distributor:
+            customer_ids = distributor.customers.values_list('pk', flat=True)
+            base_qs = base_qs.filter(customers__pk__in=customer_ids)
+        else:
+            return JsonResponse([], safe=False)
+    elif profile_type != "admin":
+        return JsonResponse({"error": "Not authorized"}, status=403)
+
+    products = base_qs.distinct().values('id', 'name', 'brand')
+    return JsonResponse(list(products), safe=False)
+
+
+@csrf_exempt
+@api_view(['GET'])
 def products_list(request):
     print(datetime.datetime.now(), "products_list called by", request.user)
 

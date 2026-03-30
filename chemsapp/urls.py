@@ -1,7 +1,7 @@
 from django.contrib import admin
 from django.urls import re_path
 from rest_framework.authtoken import views as drf_views
-from chemsapp.views import customers_list, products_list, new_customer, edit_customer, safety_wears_list,\
+from chemsapp.views import customers_list, products_list, sds_products, info_sheet_products, new_customer, edit_customer, safety_wears_list,\
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
     new_distributor, edit_distributor, printout, public_products, markets_list, categories_list, create_contact,\
     sizes_list, download_product_document, sds_enquire, special_customer_edit, backup_documents
@@ -15,6 +15,8 @@ urlpatterns = [
     # API, the URLs are not closed with $
     re_path(r'^customers_list/', customers_list, name='customers_list'),
     re_path(r'^list_products/', products_list, name='products_list'),
+    re_path(r'^sds_products/', sds_products, name='sds_products'),
+    re_path(r'^info_sheet_products/', info_sheet_products, name='info_sheet_products'),
     re_path(r'^distributors_list/', distributors_list, name='distributors_list'),
     re_path(r'^new_customer/', new_customer, name="new_customer"),
     re_path(r'^edit_customer/', edit_customer, name="edit_customer"),
