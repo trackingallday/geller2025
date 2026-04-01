@@ -247,9 +247,6 @@ def customers_list(request):
 @csrf_exempt
 @api_view(['GET'])
 def sds_products(request):
-    profile = getattr(request.user, "profile", None)
-    profile_type = getattr(profile, "profileType", None)
-
     products = Product.objects.filter(sdsSheet__isnull=False).exclude(sdsSheet='').values('id', 'name', 'brand')
     return JsonResponse(list(products), safe=False)
 
@@ -258,8 +255,6 @@ def sds_products(request):
 @api_view(['GET'])
 def info_sheet_products(request):
     products = Product.objects.filter(infoSheet__isnull=False).exclude(infoSheet='').values('id', 'name', 'brand')
-
-    products = base_qs.distinct().values('id', 'name', 'brand')
     return JsonResponse(list(products), safe=False)
 
 
