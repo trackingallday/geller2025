@@ -9,7 +9,7 @@ from django.db import transaction
 import json
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
-    Report, Answer, ConditionalRule, ReportTypeCustomer, ReportTypeDistributor,
+    Report, Answer, AnswerAttachment, ConditionalRule, ReportTypeCustomer, ReportTypeDistributor,
     QuestionTemplate, ComplianceManager
 )
 from chemsapp.models import Customer
@@ -173,8 +173,8 @@ class QuestionOptionAdmin(admin.ModelAdmin):
 class AnswerInline(admin.TabularInline):
     model = Answer
     extra = 0
-    fields = ('question', 'text_answer', 'file_answer', 'file_image_preview', 'signature_answer', 'signature_image_preview', 'attachment', 'attachment_image_preview')
-    readonly_fields = ('question', 'file_image_preview', 'signature_image_preview', 'attachment_image_preview')
+    fields = ('question', 'text_answer', 'file_answer', 'file_image_preview', 'signature_answer', 'signature_image_preview', 'attachment', 'attachment_image_preview', 'all_attachments_preview')
+    readonly_fields = ('question', 'file_image_preview', 'signature_image_preview', 'attachment_image_preview', 'all_attachments_preview')
 
     def file_image_preview(self, obj):
         if obj.file_answer:
@@ -213,6 +213,25 @@ class AnswerInline(admin.TabularInline):
                 return format_html('<a href="{}" target="_blank">{}</a>', file_url, obj.attachment.name)
         return "No attachment"
     attachment_image_preview.short_description = 'Attachment Preview'
+
+    def all_attachments_preview(self, obj):
+        attachments = obj.attachments.all()
+        if not attachments:
+            return "No attachments"
+        html_parts = []
+        for att in attachments:
+            file_url = att.file.url
+            file_name = att.file.name.lower()
+            if any(ext in file_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                html_parts.append(
+                    '<img src="{}" style="max-height: 100px; max-width: 150px;" /><br><small><a href="{}" target="_blank">{}</a></small>'.format(
+                        file_url, file_url, att.file.name
+                    )
+                )
+            else:
+                html_parts.append('<a href="{}" target="_blank">{}</a>'.format(file_url, att.file.name))
+        return format_html('<br>'.join(html_parts))
+    all_attachments_preview.short_description = 'Attachments'
 
 
 @admin.register(Report)
@@ -412,8 +431,9 @@ class ReportAdmin(admin.ModelAdmin):
         count = obj.answers.filter(
             Q(file_answer__isnull=False) |
             Q(signature_answer__isnull=False) |
-            Q(attachment__isnull=False)
-        ).count()
+            Q(attachment__isnull=False) |
+            Q(attachments__isnull=False)
+        ).distinct().count()
         if count > 0:
             return f"{count} 📷"
         return "—"
@@ -427,8 +447,9 @@ class ReportAdmin(admin.ModelAdmin):
         answers_with_files = obj.answers.filter(
             Q(file_answer__isnull=False) |
             Q(signature_answer__isnull=False) |
-            Q(attachment__isnull=False)
-        ).select_related('question')
+            Q(attachment__isnull=False) |
+            Q(attachments__isnull=False)
+        ).distinct().select_related('question').prefetch_related('attachments')
 
         if not answers_with_files:
             return format_html('<em>No images in this report</em>')
@@ -460,11 +481,21 @@ class ReportAdmin(admin.ModelAdmin):
                 att_url = answer.attachment.url
                 att_name = answer.attachment.name.lower()
                 if any(ext in att_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
-                    html_parts.append(f'<strong>Attachment:</strong><br>')
+                    html_parts.append(f'<strong>Attachment (legacy):</strong><br>')
                     html_parts.append(f'<img src="{att_url}" style="max-height: 150px; max-width: 200px; margin: 5px 0;" /><br>')
                     html_parts.append(f'<small><a href="{att_url}" target="_blank">{answer.attachment.name}</a></small><br>')
                 else:
-                    html_parts.append(f'<strong>Attachment:</strong> <a href="{att_url}" target="_blank">{answer.attachment.name}</a><br>')
+                    html_parts.append(f'<strong>Attachment (legacy):</strong> <a href="{att_url}" target="_blank">{answer.attachment.name}</a><br>')
+
+            for i, att in enumerate(answer.attachments.all(), 1):
+                att_url = att.file.url
+                att_name = att.file.name.lower()
+                if any(ext in att_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                    html_parts.append(f'<strong>Attachment {i}:</strong><br>')
+                    html_parts.append(f'<img src="{att_url}" style="max-height: 150px; max-width: 200px; margin: 5px 0;" /><br>')
+                    html_parts.append(f'<small><a href="{att_url}" target="_blank">{att.file.name}</a></small><br>')
+                else:
+                    html_parts.append(f'<strong>Attachment {i}:</strong> <a href="{att_url}" target="_blank">{att.file.name}</a><br>')
 
             html_parts.append('</div>')
 
@@ -473,12 +504,34 @@ class ReportAdmin(admin.ModelAdmin):
     images_summary.short_description = 'All Images in Report'
 
 
+class AnswerAttachmentInline(admin.TabularInline):
+    model = AnswerAttachment
+    extra = 1
+    fields = ('file', 'caption', 'file_preview')
+    readonly_fields = ('file_preview',)
+
+    def file_preview(self, obj):
+        if obj.file:
+            file_url = obj.file.url
+            file_name = obj.file.name.lower()
+            if any(ext in file_name for ext in ['.jpg', '.jpeg', '.png', '.gif', '.webp']):
+                return format_html(
+                    '<img src="{}" style="max-height: 100px; max-width: 150px;" /><br><small><a href="{}" target="_blank">{}</a></small>',
+                    file_url, file_url, obj.file.name
+                )
+            else:
+                return format_html('<a href="{}" target="_blank">{}</a>', file_url, obj.file.name)
+        return "No file"
+    file_preview.short_description = 'Preview'
+
+
 @admin.register(Answer)
 class AnswerAdmin(admin.ModelAdmin):
     list_display = ('report', 'question_short', 'answer_display', 'has_images', 'created_at')
     list_filter = ('report__report_type', 'question__question_type', 'created_at')
     search_fields = ('report__document_number', 'question__question_text', 'text_answer')
     readonly_fields = ('created_at', 'updated_at', 'file_image_preview', 'signature_image_preview', 'attachment_image_preview')
+    inlines = [AnswerAttachmentInline]
 
     fieldsets = (
         ('Answer Information', {
@@ -505,7 +558,7 @@ class AnswerAdmin(admin.ModelAdmin):
     answer_display.short_description = 'Answer'
 
     def has_images(self, obj):
-        has_files = bool(obj.file_answer or obj.signature_answer or obj.attachment)
+        has_files = bool(obj.file_answer or obj.signature_answer or obj.attachment or obj.attachments.exists())
         return "✓" if has_files else "—"
     has_images.short_description = 'Images'
     has_images.admin_order_field = 'file_answer'

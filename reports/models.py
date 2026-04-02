@@ -282,8 +282,9 @@ class Report(MyBaseModel):
         answers_with_files = self.answers.filter(
             models.Q(file_answer__isnull=False) |
             models.Q(signature_answer__isnull=False) |
-            models.Q(attachment__isnull=False)
-        )
+            models.Q(attachment__isnull=False) |
+            models.Q(attachments__isnull=False)
+        ).distinct()
 
         if not answers_with_files.exists():
             logger.info(f"Report {self.document_number}: No images found")
@@ -301,8 +302,12 @@ class Report(MyBaseModel):
                 logger.info(f"    URL: {answer.signature_answer.url}")
 
             if answer.attachment:
-                logger.info(f"  - Attachment: {answer.attachment.name}")
+                logger.info(f"  - Attachment (legacy): {answer.attachment.name}")
                 logger.info(f"    URL: {answer.attachment.url}")
+
+            for att in answer.attachments.all():
+                logger.info(f"  - Attachment: {att.file.name}")
+                logger.info(f"    URL: {att.file.url}")
 
         logger.info(f"=== END IMAGE LOGGING FOR REPORT: {self.document_number} ===")
 
@@ -318,7 +323,7 @@ class Report(MyBaseModel):
         ordered_answers = self.answers.select_related(
             'question',
             'question__section'
-        ).prefetch_related('selected_options').order_by(
+        ).prefetch_related('selected_options', 'attachments').order_by(
             'question__section__order',  # Section order: 0, 1, 2, 3...
             'question__order'  # Then question order within section: 0, 1, 2, 3...
         )
@@ -333,7 +338,7 @@ class Report(MyBaseModel):
                 'question': answer.question,
                 'answer': answer,
                 'display_value': answer.get_display_value(),
-                'has_image': bool(answer.file_answer or answer.signature_answer or answer.attachment),
+                'has_image': bool(answer.file_answer or answer.signature_answer or answer.attachment or answer.attachments.exists()),
                 'images': []
             }
 
@@ -344,6 +349,10 @@ class Report(MyBaseModel):
                 answer_data['images'].append(answer.signature_answer)
             if answer.attachment and self._is_image_file(answer.attachment.name):
                 answer_data['images'].append(answer.attachment)
+
+            for att in answer.attachments.all():
+                if self._is_image_file(att.file.name):
+                    answer_data['images'].append(att.file)
 
             answers_by_section[section_name].append(answer_data)
 
@@ -522,6 +531,19 @@ class Answer(MyBaseModel):
             return str(self.number_answer)
         else:
             return "No answer"
+
+
+class AnswerAttachment(MyBaseModel):
+    """An attachment (photo/file) linked to an answer. Supports multiple per answer."""
+    answer = models.ForeignKey(Answer, on_delete=models.CASCADE, related_name='attachments')
+    file = models.FileField(upload_to='answer_attachments/')
+    caption = models.CharField(max_length=255, blank=True, default='')
+
+    class Meta:
+        ordering = ['created_at']
+
+    def __str__(self):
+        return f"Attachment for {self.answer} - {self.file.name}"
 
 
 class ReportTypeCustomer(MyBaseModel):

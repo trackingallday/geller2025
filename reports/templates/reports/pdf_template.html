@@ -114,14 +114,18 @@
                 </div>
 
                 <!-- Display image if exists -->
-                {% if flagged.answer.file_answer or flagged.answer.attachment %}
+                {% if flagged.answer.file_answer or flagged.answer.attachment or flagged.answer.attachments.all %}
                     <div class="flagged-notes">
                         <strong>NOTES</strong><br>
                         {% if flagged.answer.file_answer %}
                             <img src="{{ flagged.answer.file_answer.url }}" alt="Photo" style="max-width: 200px; max-height: 150px; margin-top: 8px;">
-                        {% elif flagged.answer.attachment %}
+                        {% endif %}
+                        {% if flagged.answer.attachment %}
                             <img src="{{ flagged.answer.attachment.url }}" alt="Photo" style="max-width: 200px; max-height: 150px; margin-top: 8px;">
                         {% endif %}
+                        {% for att in flagged.answer.attachments.all %}
+                            <img src="{{ att.file.url }}" alt="Photo" style="max-width: 200px; max-height: 150px; margin-top: 8px;">
+                        {% endfor %}
                     </div>
                 {% endif %}
             </div>

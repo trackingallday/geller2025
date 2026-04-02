@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from chemsapp.models import Customer, Distributor, CustomerContact
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
-    Report, Answer, ComplianceManager, QUESTION_TYPES
+    Report, Answer, AnswerAttachment, ComplianceManager, QUESTION_TYPES
 )
 import base64
 import io
@@ -159,6 +159,14 @@ class ReportTypeSerializer(serializers.ModelSerializer):
         return DistributorSerializer(distributors, many=True).data
 
 
+class AnswerAttachmentSerializer(serializers.ModelSerializer):
+    file = Base64FileField()
+
+    class Meta:
+        model = AnswerAttachment
+        fields = ['id', 'file', 'caption']
+
+
 class AnswerSerializer(serializers.ModelSerializer):
     """Serializer for question answers"""
     question = QuestionSerializer(read_only=True)
@@ -172,25 +180,28 @@ class AnswerSerializer(serializers.ModelSerializer):
     )
     display_value = serializers.CharField(source='get_display_value', read_only=True)
     attachment = Base64FileField(required=False, allow_null=True)
-    
+    attachments = AnswerAttachmentSerializer(many=True, read_only=True)
+    attachments_data = serializers.ListField(
+        child=Base64FileField(),
+        write_only=True,
+        required=False,
+        allow_empty=True
+    )
+
     class Meta:
         model = Answer
         fields = [
             'id', 'question', 'question_id', 'text_answer', 'number_answer',
-            'date_answer', 'file_answer', 'signature_answer', 
+            'date_answer', 'file_answer', 'signature_answer',
             'selected_options', 'selected_option_ids', 'display_value',
-            'notes', 'attachment'
+            'notes', 'attachment', 'attachments', 'attachments_data'
         ]
-    
-    def create(self, validated_data):
-        """Create answer with selected options"""
-        selected_option_ids = validated_data.pop('selected_option_ids', [])
 
-        # Log attachment processing
-        if 'attachment' in validated_data:
-            attachment = validated_data['attachment']
-            if attachment:
-                print(f"Creating answer with attachment: {attachment.name}")
+    def create(self, validated_data):
+        """Create answer with selected options and attachments"""
+        selected_option_ids = validated_data.pop('selected_option_ids', [])
+        attachments_data = validated_data.pop('attachments_data', [])
+        legacy_attachment = validated_data.pop('attachment', None)
 
         answer = Answer.objects.create(**validated_data)
 
@@ -198,31 +209,39 @@ class AnswerSerializer(serializers.ModelSerializer):
             options = QuestionOption.objects.filter(id__in=selected_option_ids)
             answer.selected_options.set(options)
 
+        for file_data in attachments_data:
+            AnswerAttachment.objects.create(answer=answer, file=file_data)
+
+        if legacy_attachment:
+            AnswerAttachment.objects.create(answer=answer, file=legacy_attachment)
+
         return answer
-    
+
     def update(self, instance, validated_data):
-        """Update answer with selected options"""
+        """Update answer with selected options and attachments"""
         selected_option_ids = validated_data.pop('selected_option_ids', None)
+        attachments_data = validated_data.pop('attachments_data', None)
+        legacy_attachment = validated_data.pop('attachment', None)
 
-        # Log attachment processing
-        if 'attachment' in validated_data:
-            attachment = validated_data['attachment']
-            if attachment:
-                print(f"Updating answer with attachment: {attachment.name}")
-
-        # Update other fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)
         instance.save()
-        
-        # Update selected options if provided
+
         if selected_option_ids is not None:
             if selected_option_ids:
                 options = QuestionOption.objects.filter(id__in=selected_option_ids)
                 instance.selected_options.set(options)
             else:
                 instance.selected_options.clear()
-        
+
+        if attachments_data is not None:
+            instance.attachments.all().delete()
+            for file_data in attachments_data:
+                AnswerAttachment.objects.create(answer=instance, file=file_data)
+
+        if legacy_attachment:
+            AnswerAttachment.objects.create(answer=instance, file=legacy_attachment)
+
         return instance
 
 

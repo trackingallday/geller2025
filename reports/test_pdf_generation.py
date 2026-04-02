@@ -9,7 +9,7 @@ from django.utils import timezone
 from chemsapp.models import Customer, Distributor
 from reports.models import (
     ReportType, ReportSection, Question, QuestionOption,
-    Report, Answer
+    Report, Answer, AnswerAttachment
 )
 from PIL import Image, ImageDraw, ImageFont
 import io
@@ -381,8 +381,11 @@ class PDFGenerationTest(TestCase):
             notes="Soiled Surfaces can harbour bacteria and can contaminate foods. Use Ultimo Block Cleaner/Whitener, apply liberally at the end of the day and let sit over night with boards sandwiched together. In the morning scrub, rinse and sanitise. Repeat 4 times in a week until buildup has cleared. ENSURE that staff wear the appropriate PPE when using this product (Gloves, Goggles, Apron, Respirator Mask etc.)\n\nConducted coaching and training session with the staff member/s in the department to ensure adherence to the correct cleaning procedures. Subsequently, implemented corrective actions to address any identified areas of improvement."
         )
         answer8.signature_answer = self.generate_signature_image("Pat")
-        answer8.attachment = self.generate_random_image(640, 480, "Cutting Board")
         answer8.save()
+        AnswerAttachment.objects.create(
+            answer=answer8,
+            file=self.generate_random_image(640, 480, "Cutting Board")
+        )
         print("✓ Q8: Corrective action with signature and photo")
 
         answer9 = Answer.objects.create(report=report, question=q9)

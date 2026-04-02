@@ -284,7 +284,16 @@
                                     </div>
                                 {% endif %}
 
-                                {% if answer_data.answer.attachment %}
+                                {% if answer_data.answer.attachments.all %}
+                                    <div class="mt-2">
+                                        <strong>Attachments:</strong><br>
+                                        {% for att in answer_data.answer.attachments.all %}
+                                            <a href="{{ att.file.url }}" target="_blank" class="btn btn-sm btn-outline-primary me-1 mb-1">
+                                                <i class="bi bi-paperclip"></i> Attachment {{ forloop.counter }}
+                                            </a>
+                                        {% endfor %}
+                                    </div>
+                                {% elif answer_data.answer.attachment %}
                                     <div class="mt-2">
                                         <strong>Attachment:</strong><br>
                                         <a href="{{ answer_data.answer.attachment.url }}" target="_blank" class="btn btn-sm btn-outline-primary">
