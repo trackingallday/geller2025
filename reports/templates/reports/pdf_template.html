@@ -117,6 +117,7 @@
                 {% if flagged.answer.file_answer or flagged.answer.attachment or flagged.answer.attachments.all %}
                     <div class="flagged-notes">
                         <strong>NOTES</strong><br>
+                        <div class="images-row">
                         {% if flagged.answer.file_answer %}
                             <img src="{{ flagged.answer.file_answer.url }}" alt="Photo" style="max-width: 200px; max-height: 150px; margin-top: 8px;">
                         {% endif %}
@@ -126,6 +127,7 @@
                         {% for att in flagged.answer.attachments.all %}
                             <img src="{{ att.file.url }}" alt="Photo" style="max-width: 200px; max-height: 150px; margin-top: 8px;">
                         {% endfor %}
+                        </div>
                     </div>
                 {% endif %}
             </div>
@@ -199,6 +201,7 @@
 
                     <!-- Images -->
                     {% if answer_data.processed_images %}
+                        <div class="images-row">
                         {% for image in answer_data.processed_images %}
                             <div class="image-container">
                                 <img src="{{ image.url }}" alt="Photo" class="report-image"
@@ -208,6 +211,7 @@
                                 </div>
                             </div>
                         {% endfor %}
+                        </div>
                     {% endif %}
                 </div>
             {% empty %}

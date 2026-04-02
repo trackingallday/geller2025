@@ -695,12 +695,16 @@ class ReportPDFGenerator:
         }
 
         /* Image Styles */
-        .image-container {
+        .images-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
             margin: 15px 0;
+        }
+
+        .image-container {
             text-align: left;
             page-break-inside: avoid;
-            page-break-before: auto;
-            page-break-after: auto;
         }
 
         .report-image {
