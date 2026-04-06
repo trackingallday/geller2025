@@ -81,8 +81,8 @@ class ProductSerializer(serializers.ModelSerializer):
         )
 
     def get_can_edit(self, obj):
-        if "user" in self.context:
-            return obj.uploadedBy.id == self.context["user"].id
+        if "user" in self.context and obj.uploadedBy_id is not None:
+            return obj.uploadedBy_id == self.context["user"].id
         return False
 
 
