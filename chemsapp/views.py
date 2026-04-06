@@ -269,12 +269,15 @@ def products_list(request):
 
     # Base queryset
     if is_customer:
-        products_qs = getattr(profile.customer, "products", Product.objects.none())
+        try:
+            products_qs = profile.customer.products.all()
+        except Customer.DoesNotExist:
+            products_qs = Product.objects.none()
     else:
         products_qs = Product.objects.all()
 
     # Optimized related loading
-    products_qs = products_qs.select_related().prefetch_related(
+    products_qs = products_qs.prefetch_related(
         'productCategory',
         'subCategory',
         'markets',

@@ -67,23 +67,17 @@ class UserSerializer(serializers.ModelSerializer):
 
 class ProductSerializer(serializers.ModelSerializer):
 
-    editable = serializers.SerializerMethodField('get_can_edit')
     customers = serializers.StringRelatedField(many=True, read_only=True)
 
     class Meta:
         model = Product
-        read_only_fields = ('editable', 'customers')
+        read_only_fields = ('customers',)
         fields = (
             'id', 'name', 'subheading', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
             'directions', 'productCode', 'productCodes', 'brand', 'infoSheet', 'sdsSheet', 'application', 'properties',
-            'safetyWears', 'customers', 'editable',  'markets', 'description', 'subCategory', 'productCategory',
+            'safetyWears', 'customers', 'markets', 'description', 'subCategory', 'productCategory',
             'sizes',
         )
-
-    def get_can_edit(self, obj):
-        if "user" in self.context and obj.uploadedBy_id is not None:
-            return obj.uploadedBy_id == self.context["user"].id
-        return False
 
 
 class PublicProductSerializer(serializers.ModelSerializer):
