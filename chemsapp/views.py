@@ -9,11 +9,42 @@ from django.conf import settings
 from django.db import transaction
 import os
 import threading
-from PIL import Image
+from PIL import Image, ImageCms
 import io
 
 MAX_DIM = 1200
 JPEG_QUALITY = 80
+
+
+def _prepare_image(img, fmt):
+    """
+    Convert color mode to RGB if needed and downscale to fit MAX_DIM.
+    Uses ICC profile for accurate CMYK-to-RGB conversion when available.
+    Returns (img, changed) where changed is True if the image was modified.
+    """
+    changed = False
+
+    if img.mode == 'CMYK':
+        icc_profile = img.info.get('icc_profile')
+        if icc_profile:
+            src_profile = ImageCms.ImageCmsProfile(io.BytesIO(icc_profile))
+            dst_profile = ImageCms.createProfile('sRGB')
+            img = ImageCms.profileToProfile(img, src_profile, dst_profile, outputMode='RGB')
+        else:
+            img = img.convert('RGB')
+        changed = True
+    elif fmt == 'JPEG' and img.mode != 'RGB':
+        img = img.convert('RGB')
+        changed = True
+    elif img.mode in ('P', 'LA', 'PA'):
+        img = img.convert('RGBA' if fmt == 'PNG' else 'RGB')
+        changed = True
+
+    if img.width > MAX_DIM or img.height > MAX_DIM:
+        img.thumbnail((MAX_DIM, MAX_DIM), Image.BILINEAR)
+        changed = True
+
+    return img, changed
 
 
 def downscale_image(file_path):
@@ -28,10 +59,9 @@ def downscale_image(file_path):
     try:
         with Image.open(file_path) as img:
             orig_fmt = img.format  # 'JPEG', 'PNG', etc.
-            if not (img.width > MAX_DIM or img.height > MAX_DIM):
-                return False  # already small enough
-
-            img.thumbnail((MAX_DIM, MAX_DIM), Image.BILINEAR)
+            img, changed = _prepare_image(img, orig_fmt)
+            if not changed:
+                return False
 
             save_kwargs = {}
             if orig_fmt == 'JPEG':
@@ -142,9 +172,9 @@ def getFileFromBase64(data, filename):
     # Attempt downscale in-memory before saving
     try:
         img = Image.open(io.BytesIO(raw))
-        if img.width > MAX_DIM or img.height > MAX_DIM:
-            img.thumbnail((MAX_DIM, MAX_DIM), Image.BILINEAR)
-            orig_fmt = img.format or ext.upper()
+        orig_fmt = img.format or ext.upper()
+        img, changed = _prepare_image(img, orig_fmt)
+        if changed:
             buf = io.BytesIO()
             save_kwargs = {'quality': JPEG_QUALITY, 'optimize': True} if orig_fmt == 'JPEG' else {}
             img.save(buf, orig_fmt, **save_kwargs)
