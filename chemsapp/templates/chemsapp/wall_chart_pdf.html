@@ -1,0 +1,261 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Product user guide - {{ customer.businessName }}</title>
+    <style>
+        @page {
+            size: A4 portrait;
+            margin: 0;
+        }
+
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: Arial, Helvetica, sans-serif;
+            font-size: 7pt;
+            color: #1a1a1a;
+            background: #fff;
+        }
+
+        /* ── Header: full bleed purple bar ── */
+        .header-table {
+            width: 100%;
+            border-collapse: collapse;
+            background-color: #4a3880;
+            padding: 0;
+        }
+        .header-table td {
+            background-color: #4a3880;
+            padding: 5mm 8mm;
+            vertical-align: middle;
+        }
+        .header-title {
+            font-size: 22pt;
+            font-weight: 900;
+            color: #ffffff;
+            line-height: 1.1;
+        }
+        .header-logo-cell {
+            text-align: right;
+            width: 55mm;
+        }
+        .header-logo-cell img {
+            height: 13mm;
+            width: auto;
+        }
+
+        /* ── Content area with side margins ── */
+        .content {
+            padding: 4mm 8mm 20mm 8mm;
+        }
+
+        /* ── Column header row ── */
+        .col-heads {
+            width: 100%;
+            border-collapse: collapse;
+            margin-bottom: 0;
+        }
+        .col-heads td {
+            font-size: 6.5pt;
+            font-weight: bold;
+            color: #333;
+            padding: 1.5mm 1.5mm;
+            border-bottom: 1.5px solid #444;
+        }
+
+        /* ── Product row ── */
+        .product-row {
+            width: 100%;
+            border-collapse: collapse;
+            border-bottom: 1px solid #ddd;
+            page-break-inside: avoid;
+        }
+        .product-row td {
+            vertical-align: top;
+        }
+
+        /* image cell - always white */
+        .cell-img {
+            width: 16mm;
+            background-color: #ffffff;
+            text-align: center;
+            vertical-align: middle;
+            padding: 1.5mm;
+        }
+        .cell-img img {
+            width: 13mm;
+            height: auto;
+            max-height: 20mm;
+            object-fit: contain;
+        }
+
+        .product-name {
+            font-size: 8.5pt;
+            font-weight: bold;
+            line-height: 1.2;
+            margin-bottom: 1mm;
+        }
+        .product-sub {
+            font-size: 6.5pt;
+            color: #444;
+            line-height: 1.3;
+        }
+        .col-text {
+            font-size: 7pt;
+            line-height: 1.4;
+            color: #222;
+        }
+        .hs-label {
+            font-size: 5.5pt;
+            font-weight: bold;
+            color: #555;
+            text-transform: uppercase;
+            letter-spacing: 0.3pt;
+            margin-bottom: 1mm;
+        }
+        .ppe-icon {
+            width: 6.5mm;
+            height: 6.5mm;
+            object-fit: contain;
+            margin: 0.3mm;
+            display: inline-block;
+            vertical-align: middle;
+        }
+        .qr-section { margin-top: 1.5mm; }
+        .qr-img {
+            width: 16mm;
+            height: 16mm;
+            display: block;
+        }
+        .qr-label {
+            font-size: 5pt;
+            color: #666;
+            margin-top: 0.5mm;
+        }
+
+        /* ── Footer: full bleed purple bar ── */
+        .footer {
+            position: fixed;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: #4a3880;
+            color: #ffffff;
+            font-size: 8pt;
+            font-weight: bold;
+            padding: 3mm 8mm;
+        }
+    </style>
+</head>
+<body>
+
+    <!-- Header: full bleed -->
+    <table class="header-table">
+        <tr>
+            <td><div class="header-title">Product user guide</div></td>
+            <td class="header-logo-cell">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 220 95" style="height:14mm; width:auto; display:block;">
+                    <text x="0" y="68"
+                        font-family="Arial, Helvetica, sans-serif"
+                        font-size="80"
+                        font-weight="900"
+                        fill="#ffffff"
+                        letter-spacing="-2">Geller</text>
+                    <text x="208" y="22"
+                        font-family="Arial, Helvetica, sans-serif"
+                        font-size="18"
+                        font-weight="400"
+                        fill="#ffffff">®</text>
+                    <text x="2" y="88"
+                        font-family="Arial, Helvetica, sans-serif"
+                        font-size="13"
+                        font-weight="400"
+                        fill="#ffffff"
+                        font-style="italic">Every care in the world.</text>
+                </svg>
+            </td>
+        </tr>
+    </table>
+
+    <!-- Content area -->
+    <div class="content">
+
+        <!-- Column headers -->
+        <table class="col-heads">
+            <colgroup>
+                <col style="width:16mm;">
+                <col style="width:4mm;">
+                <col style="width:38mm;">
+                <col style="width:48mm;">
+                <col style="width:48mm;">
+                <col style="width:37mm;">
+            </colgroup>
+            <tr>
+                <td></td>
+                <td></td>
+                <td>Product</td>
+                <td>Application</td>
+                <td>Procedure</td>
+                <td>Health &amp; Safety</td>
+            </tr>
+        </table>
+
+        <!-- Product rows -->
+        {% for row in product_rows %}
+        {% with p=row.product c=row.product.wall_chart_color|default:"#f5f5f5" %}
+        <table class="product-row">
+            <colgroup>
+                <col style="width:16mm;">
+                <col style="width:4mm;">
+                <col style="width:38mm;">
+                <col style="width:48mm;">
+                <col style="width:48mm;">
+                <col style="width:37mm;">
+            </colgroup>
+            <tr>
+                <td class="cell-img">
+                    {% if p.primaryImageLink %}
+                        <img src="{{ base_url }}media/{{ p.primaryImageLink }}" alt="{{ p.name }}">
+                    {% endif %}
+                </td>
+                <td style="background-color:{{ row.stripe_color }};"></td>
+                <td style="background-color:{{ c }}; padding:2.5mm 1.5mm;">
+                    <div class="product-name">{{ p.name }}</div>
+                    {% if p.subheading %}<div class="product-sub">{{ p.subheading }}</div>{% endif %}
+                </td>
+                <td style="background-color:{{ c }}; padding:2.5mm 1.5mm;">
+                    <div class="col-text">{{ row.description }}</div>
+                </td>
+                <td style="background-color:{{ c }}; padding:2.5mm 1.5mm;">
+                    <div class="col-text">{{ row.directions }}</div>
+                </td>
+                <td style="background-color:{{ c }}; padding:2.5mm 1.5mm; vertical-align:middle;">
+                    {% if p.safetyWears.all %}
+                        <div class="hs-label">Required PPE</div>
+                        {% for wear in p.safetyWears.all %}
+                            {% if wear.imageLink %}
+                                <img class="ppe-icon" src="{{ wear.imageLink }}" alt="{{ wear.name }}">
+                            {% endif %}
+                        {% endfor %}
+                    {% endif %}
+                    {% if row.qr_code %}
+                        <div class="qr-section">
+                            <div class="hs-label">Download SDS</div>
+                            <img class="qr-img" src="{{ row.qr_code }}" alt="SDS QR Code">
+                            <div class="qr-label">Scan for SDS</div>
+                        </div>
+                    {% endif %}
+                </td>
+            </tr>
+        </table>
+        {% endwith %}
+        {% endfor %}
+
+    </div><!-- /content -->
+
+    <!-- Footer: full bleed -->
+    <div class="footer">geller.co.nz</div>
+
+</body>
+</html>

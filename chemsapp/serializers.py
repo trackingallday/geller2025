@@ -76,7 +76,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'name', 'subheading', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
             'directions', 'productCode', 'productCodes', 'brand', 'infoSheet', 'sdsSheet', 'application', 'properties',
             'safetyWears', 'customers', 'markets', 'description', 'subCategory', 'productCategory',
-            'sizes',
+            'sizes', 'wall_chart_color',
         )
 
 

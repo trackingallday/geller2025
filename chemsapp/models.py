@@ -107,6 +107,11 @@ class Product(models.Model):
     productCategory = models.ManyToManyField(ProductCategory, through=ProductCategory.products.through, blank=True, related_name='categories')
     sizes = models.ManyToManyField("Size", related_name="products", blank=True)
 
+    wall_chart_color = models.CharField(
+        max_length=7, blank=True, null=True,
+        help_text=mark_safe('Background colour for this product on wall chart PDFs. See <a href="https://www.w3schools.com/colors/colors_picker.asp">W3Schools Color Picker</a>. Leave blank for white.')
+    )
+
     # Unused for marketing frontend
     usageType = models.CharField(max_length=455, blank=True)
     amountDesc = models.CharField(max_length=455, blank=True)

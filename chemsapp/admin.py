@@ -9,7 +9,7 @@ from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
-from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm
+from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm, ProductForm
 from django.urls import path, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -264,6 +264,7 @@ class ProductVariantInline(admin.TabularInline):
 
 
 class ProductAdmin(ImportExportModelAdmin):
+    form = ProductForm
     search_fields = ['name',]
     readonly_fields = ["properties", "application"]
     resource_class = ProductResource

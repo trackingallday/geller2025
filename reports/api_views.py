@@ -404,6 +404,8 @@ def get_user_profile_api(request):
                 {
                     'success': True,
                     'user_id': user.id,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
                     'profileType': 'distributor',
                     'distributor_id': distributor.id,
                     'distributor_data': DistributorSerializer(distributor).data,

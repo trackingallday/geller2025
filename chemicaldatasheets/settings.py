@@ -47,7 +47,7 @@ CSRF_TRUSTED_ORIGINS = ['https://geller2025-production-4bef.up.railway.app',
                         'http://localhost:3000','https://www.geller.co.nz', 'https://geller.co.nz','https://admin.geller.co.nz',]
 
 
-DEBUG_HOSTS = ('josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
+DEBUG_HOSTS = ('MacBook.local', 'josh-ubuntu', 'Chriss-MacBook-Pro.local', 'Chriss-MBP', 'Chriss-Mac-mini.local',)
 if platform_hostname() in DEBUG_HOSTS:
     DEBUG = True
 
@@ -113,10 +113,12 @@ APPEND_SLASH=True
 # Database
 # https://docs.djangoproject.com/en/1.11/ref/settings/#databases
 
+#export token = 2c21b8a3545b7c323dd85103714b209ab941c99b
+
 # DATABASES = {
 #     'default': {
 #         'ENGINE': 'django.db.backends.postgresql',
-#         'NAME': 'geller_db',
+#         'NAME': 'geller1',
 #         'USER': 'postgres',
 #         'PASSWORD': 'postgres',
 #         'HOST': 'localhost',

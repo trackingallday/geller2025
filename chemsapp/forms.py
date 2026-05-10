@@ -4,7 +4,16 @@ from django.forms.widgets import TextInput
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import Post, ProductCategory, Distributor, Profile
+from .models import Post, ProductCategory, Distributor, Profile, Product
+
+class ProductForm(ModelForm):
+    class Meta:
+        model = Product
+        fields = '__all__'
+        widgets = {
+            'wall_chart_color': TextInput(attrs={'type': 'color'}),
+        }
+
 
 class ProductCategoryForm(ModelForm):
     class Meta:
