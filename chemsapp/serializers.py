@@ -23,6 +23,15 @@ def path_to_qr_code(path):
 
 
 class SafetyWearSerializer(serializers.ModelSerializer):
+    imageLink = serializers.SerializerMethodField()
+
+    def get_imageLink(self, obj):
+        if obj.imageLink:
+            request = self.context.get('request')
+            if request:
+                return request.build_absolute_uri(obj.imageLink.url)
+            return obj.imageLink.url
+        return None
 
     class Meta:
         model = SafetyWear

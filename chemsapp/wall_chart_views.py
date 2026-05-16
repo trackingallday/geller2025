@@ -55,11 +55,7 @@ def _build_wall_chart_pdf(customer, products, base_url):
         ppe_items = []
         for wear in product.safetyWears.all():
             if wear.imageLink:
-                icon_path = os.path.join(settings.MEDIA_ROOT, wear.imageLink.lstrip('/'))
-                if os.path.exists(icon_path):
-                    icon_url = f'file://{icon_path}'
-                else:
-                    icon_url = wear.imageLink
+                icon_url = f'file://{wear.imageLink.path}'
                 ppe_items.append({'name': wear.name, 'url': icon_url})
 
         product_rows.append({

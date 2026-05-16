@@ -116,9 +116,8 @@ class Product(models.Model):
     usageType = models.CharField(max_length=455, blank=True)
     amountDesc = models.CharField(max_length=455, blank=True)
 
-    # Old fields that are now read-only in the admin.
-    properties = models.CharField(max_length=500, blank=True, null=True, help_text='Read only: Legacy field is no longer used. Exists only for reference.')
-    application = models.CharField(max_length=500, blank=True, null=True, help_text='Read only: Legacy field is no longer used. Exists only for reference.')
+    properties = models.CharField(max_length=500, blank=True, null=True)
+    application = models.CharField(max_length=500, blank=True, null=True)
 
     def __str__(self):
         return f'{self.name}'
@@ -325,7 +324,7 @@ class ProductRemove(models.Model):
 
 class SafetyWear(models.Model):
     name = models.CharField(max_length=255)
-    imageLink = models.CharField(max_length=455)
+    imageLink = models.FileField(upload_to='icons/', blank=True, null=True)
 
     def __str__(self):
         return self.name

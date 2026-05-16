@@ -37,6 +37,14 @@ class ProductResource(resources.ModelResource):
 
 class SafetyWearAdmin(ImportExportModelAdmin):
     resource_class = SafetyWearResource
+    list_display = ['name', 'image_preview']
+    readonly_fields = ['image_preview']
+
+    def image_preview(self, obj):
+        if obj.imageLink:
+            return format_html('<img src="{}" style="max-height:40px; max-width:40px;" />', obj.imageLink.url)
+        return '-'
+    image_preview.short_description = 'Preview'
 
 
 class DistributorAdmin(ImportExportModelAdmin):
@@ -287,7 +295,7 @@ class ProductVariantInline(admin.TabularInline):
 class ProductAdmin(ImportExportModelAdmin):
     form = ProductForm
     search_fields = ['name',]
-    readonly_fields = ["properties", "application"]
+    readonly_fields = []
     resource_class = ProductResource
     inlines = [ProductVariantInline]
     filter_horizontal = ['safetyWears', 'subCategory', 'productCategory', 'sizes']
