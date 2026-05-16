@@ -270,6 +270,21 @@ class ProductAdmin(ImportExportModelAdmin):
     resource_class = ProductResource
     inlines = [ProductVariantInline]
     filter_horizontal = ['safetyWears', 'subCategory', 'productCategory', 'sizes']
+    list_display = ['brand', 'name', 'get_categories', 'has_sds', 'has_pi_sheet', 'public']
+
+    def get_categories(self, obj):
+        return ', '.join(obj.productCategory.values_list('name', flat=True))
+    get_categories.short_description = 'Category'
+
+    def has_sds(self, obj):
+        return bool(obj.sdsSheet)
+    has_sds.boolean = True
+    has_sds.short_description = 'SDS Attached'
+
+    def has_pi_sheet(self, obj):
+        return bool(obj.infoSheet)
+    has_pi_sheet.boolean = True
+    has_pi_sheet.short_description = 'PI Sheet Attached'
 
 
 #class ProductAddAdmin(ImportExportModelAdmin):
