@@ -136,6 +136,8 @@ def dashboard_reply(request, ticket_id):
         body = request.POST.get('body', '').strip()
         if body:
             TicketReply.objects.create(ticket=ticket, author=request.user, body=body)
+            if ticket.status == 'read':
+                ticket.status = 'pending'
             ticket.save()  # update updated_at
     qs = _build_filter_querystring(request.POST)
     redirect_url = f'/tickets/dashboard/?ticket={ticket_id}'
@@ -207,6 +209,8 @@ def dashboard_upload_image(request, ticket_id):
             uploaded_by=request.user,
         )
         threading.Thread(target=downscale_image, args=(ticket_image.image.path,), daemon=True).start()
+        if ticket.status == 'read':
+            ticket.status = 'pending'
         ticket.save()  # update updated_at
     qs = _build_filter_querystring(request.POST)
     redirect_url = f'/tickets/dashboard/?ticket={ticket_id}'

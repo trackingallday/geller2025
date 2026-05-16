@@ -241,6 +241,27 @@ class CustomerAdmin(ImportExportModelAdmin):
     inlines = [CustomerContactInline, CustomerProductVariantInline]
     filter_horizontal = ['products']
 
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                '<int:customer_id>/wall-chart/',
+                self.admin_site.admin_view(self.wall_chart_view),
+                name='chemsapp_customer_wall_chart',
+            ),
+        ]
+        return custom_urls + urls
+
+    def wall_chart_view(self, request, customer_id):
+        from django.http import HttpResponse
+        from chemsapp.wall_chart_views import _build_wall_chart_pdf
+        customer = get_object_or_404(Customer, pk=customer_id)
+        products = customer.products.prefetch_related('safetyWears').order_by('name')
+        pdf_bytes = _build_wall_chart_pdf(customer, products, request.build_absolute_uri('/'))
+        response = HttpResponse(pdf_bytes, content_type='application/pdf')
+        response['Content-Disposition'] = f'inline; filename="wall-chart-{customer_id}.pdf"'
+        return response
+
 
 class ProfileAdmin(admin.ModelAdmin):
     pass

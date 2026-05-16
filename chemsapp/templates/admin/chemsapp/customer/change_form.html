@@ -1,0 +1,19 @@
+{% extends "admin/change_form.html" %}
+
+{% block field_sets %}
+    {% if original %}
+        <div style="margin: 15px 0; padding: 15px; background: #e7f3ff; border-left: 4px solid #417690; border-radius: 3px;">
+            <strong>Quick Actions:</strong>
+            <ul style="margin: 10px 0; padding-left: 20px;">
+                <li>
+                    <a href="{% url 'admin:chemsapp_customer_wall_chart' original.pk %}"
+                       target="_blank"
+                       style="color: #417690; text-decoration: none; font-weight: bold;">
+                        📄 Download Wall Chart (all products)
+                    </a>
+                </li>
+            </ul>
+        </div>
+    {% endif %}
+    {{ block.super }}
+{% endblock %}
