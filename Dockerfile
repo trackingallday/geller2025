@@ -34,4 +34,4 @@ RUN chmod +x /app/entrypoint.sh
 EXPOSE 8000
 
 ENTRYPOINT ["/app/entrypoint.sh"]
-CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "6", "--worker-class", "gevent", "--timeout", "30", "--max-requests", "1000", "--max-requests-jitter", "100", "chemicaldatasheets.wsgi:application"]
+CMD ["gunicorn", "--bind", "0.0.0.0:8000", "--workers", "6", "--worker-class", "gevent", "--timeout", "120", "--max-requests", "1000", "--max-requests-jitter", "100", "chemicaldatasheets.wsgi:application"]
