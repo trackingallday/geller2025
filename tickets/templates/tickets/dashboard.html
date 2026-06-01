@@ -36,6 +36,13 @@
               {% endfor %}
             </select>
           </div>
+          <div class="col-12">
+            <select name="ticket_type" class="form-select form-select-sm">
+              {% for val, label in ticket_type_choices %}
+                <option value="{{ val }}" {% if val == current_ticket_type %}selected{% endif %}>{{ label }}</option>
+              {% endfor %}
+            </select>
+          </div>
         </div>
         <div class="d-flex gap-1">
           <button type="submit" class="btn btn-sm btn-primary flex-grow-1">
@@ -57,10 +64,14 @@
         <a href="?ticket={{ ticket.pk }}{% if filter_querystring %}&{{ filter_querystring }}{% endif %}"
            class="ticket-list-item {% if ticket == active_ticket %}active{% endif %}">
           <div class="d-flex justify-content-between align-items-start">
-            <strong class="me-1" style="font-size:0.9rem">{{ ticket.customer.businessName }}</strong>
+            <strong class="me-1" style="font-size:0.9rem">{{ ticket.customer.businessName|default:"No customer" }}</strong>
             <span class="badge bg-{{ ticket.status|status_color }} text-nowrap" style="font-size:0.65rem">{{ ticket.get_status_display }}</span>
           </div>
           <div class="text-muted" style="font-size:0.75rem">
+            {% if ticket.ticket_type == 'flagged_report' %}
+              <span class="badge bg-danger" style="font-size:0.65rem"><i class="bi bi-flag-fill"></i> Flagged</span>
+              {% if not ticket.assigned_to %}<span class="badge bg-warning text-dark" style="font-size:0.65rem">Unassigned</span>{% endif %}
+            {% endif %}
             {% with dist=ticket.customer.distributors.first %}
               {% if dist %}<i class="bi bi-truck"></i> {{ dist.businessname }}{% endif %}
             {% endwith %}
@@ -88,9 +99,17 @@
       <div class="thread-header d-flex justify-content-between align-items-center flex-wrap gap-2">
         <div>
           <strong>{{ active_ticket.subject }}</strong>
-          <span class="text-muted ms-2">{{ active_ticket.customer.businessName }}</span>
+          <span class="text-muted ms-2">{{ active_ticket.customer.businessName|default:"No customer" }}</span>
           {% if active_ticket.assigned_to %}
             <span class="badge bg-light text-dark ms-2"><i class="bi bi-person"></i> {{ active_ticket.assigned_to.username }}</span>
+          {% endif %}
+          {% if active_ticket.ticket_type == 'flagged_report' %}
+            <span class="badge bg-danger ms-2"><i class="bi bi-flag-fill"></i> Flagged Report</span>
+            {% if active_ticket.source_report %}
+              <a href="{% url 'reports:completed_report_detail' active_ticket.source_report.pk %}" class="ms-2" target="_blank">
+                <i class="bi bi-box-arrow-up-right"></i> View report {{ active_ticket.source_report.document_number }}
+              </a>
+            {% endif %}
           {% endif %}
         </div>
         <form method="post" action="{% url 'tickets:dashboard_update_status' active_ticket.pk %}" class="d-flex gap-2 align-items-center">
@@ -105,6 +124,38 @@
           </select>
           <button type="submit" class="btn btn-sm btn-outline-primary text-nowrap">Update</button>
         </form>
+      </div>
+
+      <!-- Assignment bar: pick a distributor, then a user, then assign -->
+      <div class="assign-bar border-bottom px-3 py-2 d-flex flex-wrap gap-2 align-items-center bg-light">
+        <span class="text-muted small text-nowrap"><i class="bi bi-person-gear"></i> Assign to:</span>
+        <form method="post" action="{% url 'tickets:dashboard_update_status' active_ticket.pk %}"
+              class="d-flex flex-wrap gap-2 align-items-center" id="assignForm">
+          {% csrf_token %}
+          {% for key, val in filter_params.items %}{% if val %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endif %}{% endfor %}
+          <select id="assignDistributor" class="form-select form-select-sm" style="width:auto">
+            <option value="">— Select distributor —</option>
+            {% for d in distributors %}
+              <option value="{{ d.pk }}">{{ d.businessname }}</option>
+            {% endfor %}
+          </select>
+          <select name="assigned_to_id" id="assignUser" class="form-select form-select-sm" style="width:auto" disabled>
+            <option value="">— Select user —</option>
+          </select>
+          <button type="submit" id="assignSubmitBtn" class="btn btn-sm btn-primary text-nowrap" disabled>
+            <i class="bi bi-check2"></i> Assign
+          </button>
+        </form>
+        {% if active_ticket.assigned_to %}
+          <form method="post" action="{% url 'tickets:dashboard_update_status' active_ticket.pk %}" class="d-inline">
+            {% csrf_token %}
+            {% for key, val in filter_params.items %}{% if val %}<input type="hidden" name="{{ key }}" value="{{ val }}">{% endif %}{% endfor %}
+            <input type="hidden" name="assigned_to_id" value="">
+            <button type="submit" class="btn btn-sm btn-outline-secondary text-nowrap">
+              <i class="bi bi-x"></i> Unassign
+            </button>
+          </form>
+        {% endif %}
       </div>
 
       <!-- Messages area -->
@@ -410,5 +461,33 @@
     submitBtn.disabled = true;
     submitBtn.innerHTML = '<i class="bi bi-hourglass-split"></i> Creating…';
   });
+
+  // Assignment bar: distributor -> user cascade
+  const assignDist = document.getElementById('assignDistributor');
+  const assignUser = document.getElementById('assignUser');
+  const assignBtn  = document.getElementById('assignSubmitBtn');
+  if (assignDist && assignUser && assignBtn) {
+    assignDist.addEventListener('change', function () {
+      assignUser.innerHTML = '<option value="">— Select user —</option>';
+      assignUser.disabled = true;
+      assignBtn.disabled = true;
+      if (!this.value) return;
+      fetch(`{% url 'tickets:ajax_users_for_distributor' %}?distributor_id=${this.value}`)
+        .then(r => r.json())
+        .then(data => {
+          data.users.forEach(u => {
+            const opt = document.createElement('option');
+            opt.value = u.id;
+            opt.textContent = u.name;
+            assignUser.appendChild(opt);
+          });
+          assignUser.disabled = false;
+        });
+    });
+
+    assignUser.addEventListener('change', function () {
+      assignBtn.disabled = !this.value;
+    });
+  }
 </script>
 {% endblock %}

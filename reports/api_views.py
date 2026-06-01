@@ -184,14 +184,14 @@ def create_report_api(request, report_type_id):
             serializer = ReportSubmissionSerializer(data=report_data)
             
             if serializer.is_valid():
-                # Save the report with status set to submitted
+                # Save the report (answers are created by the serializer), then
+                # run submission side effects now that answers exist.
                 report = serializer.save(
                     report_type=report_type,
                     prepared_by=request.user,
-                    status=ReportStatus.SUBMITTED,
-                    submitted_at=timezone.now()
                 )
-                
+                report.mark_submitted()
+
                 # Return the complete report data
                 response_serializer = ReportSerializer(report)
                 return Response(
@@ -329,12 +329,7 @@ def submit_report_api(request, report_id):
         )
 
     try:
-        report.status = ReportStatus.SUBMITTED
-        report.submitted_at = timezone.now()
-        report.save()
-
-        # Log all images in this report to console
-        report.log_all_images()
+        report.mark_submitted()
 
         response_serializer = ReportSerializer(report)
         return Response(

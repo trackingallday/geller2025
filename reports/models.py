@@ -262,6 +262,38 @@ class Report(MyBaseModel):
 
         super().save(*args, **kwargs)
 
+    def mark_submitted(self, save=True):
+        """Mark this report as submitted and run the post-submission side effects.
+
+        This is the single entry point for submitting a report — every code path
+        (website create+fill, website submit, mobile API create, mobile API
+        submit) should call this so the behaviour stays consistent. It:
+          - sets status to 'submitted' and stamps submitted_at,
+          - logs the report's images,
+          - creates a back-end review ticket for any flagged items.
+
+        Call this only once answers have been saved, since flagged-item
+        detection reads the report's answers. Ticket creation is idempotent, so
+        calling it more than once will not create duplicate tickets.
+        """
+        self.status = ReportStatus.SUBMITTED
+        self.submitted_at = timezone.now()
+        if save:
+            self.save()
+
+        # Log all images in this report to console
+        self.log_all_images()
+
+        # Create a back-end review ticket for any flagged items.
+        try:
+            from tickets.services import create_ticket_for_flagged_report
+            create_ticket_for_flagged_report(self)
+        except Exception:
+            import logging
+            logging.getLogger('django').exception(
+                "Failed to create flagged-report ticket for report %s", self.pk
+            )
+
     @property
     def compliance_manager_name(self):
         """Get the compliance manager name from either the ForeignKey or the text field"""

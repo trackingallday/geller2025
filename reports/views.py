@@ -673,7 +673,11 @@ def report_fill(request, pk):
                     answer.text_answer = value if value in ['yes', 'no'] else ''
                 
                 answer.save()
-        
+
+            # Answers are now saved; run submission side effects (flagged-item
+            # ticket creation) now that flagged answers can be detected.
+            report.mark_submitted()
+
         messages.success(request, 'Report answers saved successfully!')
         return redirect('reports:report_detail', pk=report.pk)
     
@@ -698,13 +702,7 @@ def report_submit(request, pk):
     report = get_object_or_404(Report, pk=pk)
     
     if request.method == 'POST':
-        report.status = 'submitted'
-        from django.utils import timezone
-        report.submitted_at = timezone.now()
-        report.save()
-
-        # Log all images in this report to console
-        report.log_all_images()
+        report.mark_submitted()
 
         messages.success(request, f'Report "{report.document_number}" submitted for review!')
         return redirect('reports:report_detail', pk=report.pk)

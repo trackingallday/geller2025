@@ -16,8 +16,8 @@ class TicketImageInline(admin.TabularInline):
 
 @admin.register(Ticket)
 class TicketAdmin(admin.ModelAdmin):
-    list_display = ['id', 'subject', 'customer', 'created_by', 'assigned_to', 'status', 'created_at']
-    list_filter = ['status', 'created_at']
+    list_display = ['id', 'subject', 'ticket_type', 'customer', 'created_by', 'assigned_to', 'status', 'created_at']
+    list_filter = ['ticket_type', 'status', 'created_at']
     search_fields = ['subject', 'body', 'customer__businessName', 'created_by__username']
-    readonly_fields = ['created_at', 'updated_at']
+    readonly_fields = ['created_at', 'updated_at', 'source_report']
     inlines = [TicketReplyInline, TicketImageInline]

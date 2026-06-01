@@ -8,13 +8,13 @@ from django.template.response import TemplateResponse
 
 from chemsapp.models import Customer, Distributor
 from chemsapp.views import downscale_image
-from .models import Ticket, TicketReply, TicketImage
+from .models import Ticket, TicketReply, TicketImage, TICKET_TYPE_CHOICES
 
 
 def _build_filter_querystring(params):
     """Build a query string from filter params (excluding 'ticket')."""
     parts = []
-    for key in ('status', 'customer', 'distributor', 'assigned_to'):
+    for key in ('status', 'customer', 'distributor', 'assigned_to', 'ticket_type'):
         val = params.get(key, '')
         if val:
             parts.append(f'{key}={val}')
@@ -27,6 +27,7 @@ def ticket_dashboard(request):
     customer_id = request.GET.get('customer', '')
     distributor_id = request.GET.get('distributor', '')
     assigned_to = request.GET.get('assigned_to', '')
+    ticket_type = request.GET.get('ticket_type', '')
     active_ticket_id = request.GET.get('ticket', '')
 
     tickets = (
@@ -43,6 +44,8 @@ def ticket_dashboard(request):
         tickets = tickets.filter(customer__distributors__id=distributor_id)
     if assigned_to:
         tickets = tickets.filter(assigned_to_id=assigned_to)
+    if ticket_type:
+        tickets = tickets.filter(ticket_type=ticket_type)
 
     active_ticket = None
     if active_ticket_id:
@@ -67,6 +70,7 @@ def ticket_dashboard(request):
         'customer': customer_id,
         'distributor': distributor_id,
         'assigned_to': assigned_to,
+        'ticket_type': ticket_type,
     }
 
     context = {
@@ -76,12 +80,14 @@ def ticket_dashboard(request):
         'distributors': Distributor.objects.all().order_by('businessname'),
         'staff_users': User.objects.filter(is_staff=True).order_by('username'),
         'status_choices': [('', 'All Statuses'), ('pending', 'Pending'), ('read', 'Read'), ('completed', 'Completed'), ('cancelled', 'Cancelled')],
+        'ticket_type_choices': [('', 'All Types')] + list(TICKET_TYPE_CHOICES),
         'filter_querystring': filter_querystring,
         'filter_params': filter_params,
         'current_status': status,
         'current_customer': customer_id,
         'current_distributor': distributor_id,
         'current_assigned_to': assigned_to,
+        'current_ticket_type': ticket_type,
     }
     return TemplateResponse(request, 'tickets/dashboard.html', context)
 

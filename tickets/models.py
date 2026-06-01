@@ -10,12 +10,25 @@ TICKET_STATUS_CHOICES = [
     ('completed', 'Completed'),
 ]
 
+TICKET_TYPE_CHOICES = [
+    ('general', 'General'),
+    ('flagged_report', 'Flagged Report Item'),
+]
+
 
 class Ticket(models.Model):
     created_by = models.ForeignKey(User, related_name='created_tickets', on_delete=models.CASCADE)
-    customer = models.ForeignKey(Customer, related_name='tickets', on_delete=models.CASCADE)
+    customer = models.ForeignKey(
+        Customer, related_name='tickets', on_delete=models.CASCADE,
+        null=True, blank=True,
+    )
     assigned_to = models.ForeignKey(
         User, related_name='assigned_tickets', on_delete=models.SET_NULL,
+        null=True, blank=True,
+    )
+    ticket_type = models.CharField(max_length=20, choices=TICKET_TYPE_CHOICES, default='general')
+    source_report = models.ForeignKey(
+        'reports.Report', related_name='tickets', on_delete=models.SET_NULL,
         null=True, blank=True,
     )
     status = models.CharField(max_length=20, choices=TICKET_STATUS_CHOICES, default='pending')
