@@ -262,9 +262,6 @@ LOGGING = {
             # But the emails are plain text by default - HTML is nicer
             'include_html': True,
         },
-        # Log to a text file that can be rotated by logrotate
-        'logfile': {
-            'class': 'logging.handlers.WatchedFileHandler',
         # Log to stdout so Railway captures it (visible in `railway logs`).
         # The previous file handler wrote to /var/log/django/ which does not
         # exist in the container, so all error logging was silently dropped.
@@ -276,7 +273,7 @@ LOGGING = {
     'loggers': {
         # Again, default Django configuration to email unhandled exceptions
         'django.request': {
-            'handlers': ['mail_admins'],
+            'handlers': ['mail_admins', 'console'],
             'level': 'ERROR',
             'propagate': True,
         },
