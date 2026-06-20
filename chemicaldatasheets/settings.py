@@ -248,6 +248,11 @@ IMPORT_EXPORT_USE_TRANSACTIONS = True
 LOGGING = {
     'version': 1,
     'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '[%(asctime)s] %(levelname)s %(name)s: %(message)s',
+        },
+    },
     'handlers': {
         # Include the default Django email handler for errors
         # This is what you'd get without configuring logging at all.
@@ -260,7 +265,12 @@ LOGGING = {
         # Log to a text file that can be rotated by logrotate
         'logfile': {
             'class': 'logging.handlers.WatchedFileHandler',
-            'filename': 'alllogs.log' if DEBUG else '/var/log/django/alllogs.log'
+        # Log to stdout so Railway captures it (visible in `railway logs`).
+        # The previous file handler wrote to /var/log/django/ which does not
+        # exist in the container, so all error logging was silently dropped.
+        'console': {
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
         },
     },
     'loggers': {
@@ -272,13 +282,13 @@ LOGGING = {
         },
         # Might as well log any errors anywhere else in Django
         'django': {
-            'handlers': ['logfile'],
-            'level': 'ERROR',
+            'handlers': ['console'],
+            'level': 'INFO',
             'propagate': False,
         },
         # Your own app - this assumes all your logger names start with "myapp."
         'myapp': {
-            'handlers': ['logfile'],
+            'handlers': ['console'],
             'level': 'WARNING',# Or maybe INFO or DEBUG
             'propagate': False
         },

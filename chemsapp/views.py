@@ -820,7 +820,9 @@ def push_sds_to_onepagecrm(b):
     create_resp = requests.post(
         base + '/contacts.json', json=contact_payload, auth=auth, timeout=10,
     )
-    create_resp.raise_for_status()
+    if not create_resp.ok:
+        raise RuntimeError('create contact failed: HTTP {} {}'.format(
+            create_resp.status_code, create_resp.text[:500]))
     contact_id = create_resp.json()['data']['contact']['id']
 
     note_payload = {
@@ -831,7 +833,10 @@ def push_sds_to_onepagecrm(b):
         base + '/contacts/{}/notes.json'.format(contact_id),
         json=note_payload, auth=auth, timeout=10,
     )
-    note_resp.raise_for_status()
+    if not note_resp.ok:
+        raise RuntimeError('add note failed: HTTP {} {}'.format(
+            note_resp.status_code, note_resp.text[:500]))
+    logger.info("OnePageCRM SDS push OK: contact %s, product '%s'", contact_id, product_name)
     return contact_id
 
 
