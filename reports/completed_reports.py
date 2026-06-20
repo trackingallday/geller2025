@@ -19,13 +19,23 @@ def completed_reports_list(request):
         'report_type', 'customer', 'distributor', 'prepared_by'
     ).exclude(status__in=[ReportStatus.DRAFT, ReportStatus.REJECTED]).order_by('-inspection_date', '-created_at')
 
-    # Get filter parameters
-    distributor_id = request.GET.get('distributor')
-    customer_id = request.GET.get('customer')
+    # Get filter parameters (default to empty string, not None, so the value
+    # isn't rendered as the literal text "None" in the template inputs)
+    distributor_id = request.GET.get('distributor', '')
+    customer_id = request.GET.get('customer', '')
     status_filter = request.GET.get('status', 'all')
-    date_from = request.GET.get('date_from')
-    date_to = request.GET.get('date_to')
-    search_query = request.GET.get('search')
+    date_from = request.GET.get('date_from', '')
+    date_to = request.GET.get('date_to', '')
+    search_query = request.GET.get('search', '')
+
+    # Guard against stale links that pass the literal string "None" (or "all"
+    # for the optional id filters) so those values don't get treated as a search.
+    if search_query == 'None':
+        search_query = ''
+    if distributor_id == 'None':
+        distributor_id = ''
+    if customer_id == 'None':
+        customer_id = ''
 
     # Apply filters
     if distributor_id:
