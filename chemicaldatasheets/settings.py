@@ -137,6 +137,11 @@ DATABASES = {
     }
 }
 
+# OnePageCRM API (v3). Auth is HTTP Basic: user_id as username, api_key as password.
+# Set real values via env in production (Railway); defaults here keep dev working.
+ONEPAGECRM_ENDPOINT = os.getenv('ONEPAGECRM_ENDPOINT', 'https://app.onepagecrm.com/api/v3/')
+ONEPAGECRM_API_KEY = os.getenv('ONEPAGECRM_API_KEY', 'Nprht0mvpI4AB2Sa4KEoE5K9C9E0qTYwhDoGBZKwcgI=')
+ONEPAGECRM_USER_ID = os.getenv('ONEPAGECRM_USER_ID', '69e6e1d66d24124e94187104')
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
@@ -162,7 +167,10 @@ AUTH_PASSWORD_VALIDATORS = [
 
 LANGUAGE_CODE = 'en-us'
 
-TIME_ZONE = 'UTC'
+# Display all dates/times in New Zealand time. Datetimes are still stored in
+# UTC in the DB (USE_TZ = True); Django converts to this zone for display.
+# Pacific/Auckland handles NZST/NZDT daylight saving automatically.
+TIME_ZONE = 'Pacific/Auckland'
 
 USE_I18N = True
 

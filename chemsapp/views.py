@@ -791,6 +791,50 @@ def create_contact(request):
     # Return response even if there is an error. 
     return JsonResponse({'sddsfds':'sdfsefsfseffse'})
 
+def push_sds_to_onepagecrm(b):
+    """Push an SDS-download lead into OnePageCRM as a contact tagged with the product,
+    plus a note recording the download. Auth is HTTP Basic (user_id : api_key).
+
+    Best-effort: any failure is logged and swallowed by the caller so it can never
+    block the actual SDS file download. `b` must contain nameFrom, emailFrom,
+    productName, productId, and optionally companyName.
+    """
+    base = settings.ONEPAGECRM_ENDPOINT.rstrip('/')
+    auth = (settings.ONEPAGECRM_USER_ID, settings.ONEPAGECRM_API_KEY)
+
+    # Split the single "name" field into first/last for OnePageCRM.
+    full_name = (b.get('nameFrom') or '').strip()
+    first_name, _, last_name = full_name.partition(' ')
+    if not first_name:
+        first_name = full_name or 'Unknown'
+
+    product_name = b.get('productName', '')
+    contact_payload = {
+        'first_name': first_name,
+        'last_name': last_name,
+        'company_name': b.get('companyName') or '',
+        'emails': [{'type': 'work', 'value': b.get('emailFrom', '')}],
+        'tags': ['Download SDS for {}'.format(product_name)],
+    }
+
+    create_resp = requests.post(
+        base + '/contacts.json', json=contact_payload, auth=auth, timeout=10,
+    )
+    create_resp.raise_for_status()
+    contact_id = create_resp.json()['data']['contact']['id']
+
+    note_payload = {
+        'contact_id': contact_id,
+        'text': 'Downloaded SDS for product: {} (id {})'.format(product_name, b.get('productId')),
+    }
+    note_resp = requests.post(
+        base + '/contacts/{}/notes.json'.format(contact_id),
+        json=note_payload, auth=auth, timeout=10,
+    )
+    note_resp.raise_for_status()
+    return contact_id
+
+
 @csrf_exempt
 def sds_enquire(request):
     try:
@@ -811,6 +855,13 @@ def sds_enquire(request):
         a = c.validated_data
         c.create(a)
 
+        # Push the lead to OnePageCRM (tag + note). Isolated so a CRM outage
+        # never breaks the SDS download for the customer.
+        try:
+            push_sds_to_onepagecrm(b)
+        except Exception as crm_err:
+            logger.error("OnePageCRM SDS push failed: %s", crm_err)
+
         mail_admin_async(
             'Contact from Geller.co.nz',
             """A customer has downloaded an SDS for a product.
@@ -823,7 +874,7 @@ Product: {productName}""".format(**b),
         # Dump the error into alllogs.log
         logger.error(e)
 
-    # Return response even if there is an error. 
+    # Return response even if there is an error.
     return JsonResponse({'sddsfds':'sdfsefsfseffse'})
 
 
