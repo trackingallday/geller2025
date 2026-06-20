@@ -129,38 +129,34 @@ def completed_report_detail(request, pk):
 @login_required
 def generate_pdf_view(request, pk):
     """
-    Generate or regenerate PDF for a report
+    Generate or regenerate the PDF for a report, then redirect to its detail page.
+
+    Both GET and POST generate the PDF: the "Generate PDF" action in the reports
+    list/detail pages is a plain link (GET), so we can't require POST here without
+    showing a confirmation page (there is no such template).
     """
     report = get_object_or_404(Report, pk=pk)
 
-    if request.method == 'POST':
-        try:
-            success = report.generate_pdf()
+    try:
+        success = report.generate_pdf()
 
-            if success:
-                messages.success(
-                    request,
-                    f'PDF generated successfully for report {report.document_number}!'
-                )
-            else:
-                messages.error(
-                    request,
-                    f'Failed to generate PDF for report {report.document_number}. Please try again.'
-                )
-        except Exception as e:
+        if success:
+            messages.success(
+                request,
+                f'PDF generated successfully for report {report.document_number}!'
+            )
+        else:
             messages.error(
                 request,
-                f'Error generating PDF: {str(e)}'
+                f'Failed to generate PDF for report {report.document_number}. Please try again.'
             )
+    except Exception as e:
+        messages.error(
+            request,
+            f'Error generating PDF: {str(e)}'
+        )
 
-        return redirect('reports:completed_report_detail', pk=report.pk)
-
-    # If GET request, show confirmation page
-    context = {
-        'report': report,
-        'title': f'Generate PDF: {report.document_number}'
-    }
-    return render(request, 'reports/completed_report_generate_pdf.html', context)
+    return redirect('reports:completed_report_detail', pk=report.pk)
 
 
 @login_required
