@@ -779,6 +779,14 @@ def create_contact(request):
     c.is_valid()
     a = c.validated_data
     c.create(a)
+
+    # Push the full submission to OnePageCRM (tag + note with the message).
+    # Isolated so a CRM outage never breaks the contact form.
+    try:
+        push_contact_to_onepagecrm(b)
+    except Exception as crm_err:
+        logger.error("OnePageCRM contact push failed: %s", crm_err)
+
     mail_admin_async('Contact from Geller.co.nz',
         b['nameFrom'] + '\n' + b['emailFrom'] + '\nMessage:\n' + b['content'],
         reply_to=b['emailFrom']
@@ -791,32 +799,27 @@ def create_contact(request):
     # Return response even if there is an error. 
     return JsonResponse({'sddsfds':'sdfsefsfseffse'})
 
-def push_sds_to_onepagecrm(b):
-    """Push an SDS-download lead into OnePageCRM as a contact tagged with the product,
-    plus a note recording the download. Auth is HTTP Basic (user_id : api_key).
-
-    Best-effort: any failure is logged and swallowed by the caller so it can never
-    block the actual SDS file download. `b` must contain nameFrom, emailFrom,
-    productName, productId, and optionally companyName.
+def _onepagecrm_create_contact_with_note(name, email, note_text, tags, company_name=''):
+    """Create (or let OnePageCRM dedupe) a contact and attach a note. Returns the
+    contact id. Auth is HTTP Basic (user_id : api_key). Raises RuntimeError with the
+    HTTP body on any non-OK response so callers can log a useful reason.
     """
     base = settings.ONEPAGECRM_ENDPOINT.rstrip('/')
     auth = (settings.ONEPAGECRM_USER_ID, settings.ONEPAGECRM_API_KEY)
 
     # Split the single "name" field into first/last for OnePageCRM.
-    full_name = (b.get('nameFrom') or '').strip()
+    full_name = (name or '').strip()
     first_name, _, last_name = full_name.partition(' ')
     if not first_name:
         first_name = full_name or 'Unknown'
 
-    product_name = b.get('productName', '')
     contact_payload = {
         'first_name': first_name,
         'last_name': last_name,
-        'company_name': b.get('companyName') or '',
-        'emails': [{'type': 'work', 'value': b.get('emailFrom', '')}],
-        'tags': ['Download SDS for {}'.format(product_name)],
+        'company_name': company_name or '',
+        'emails': [{'type': 'work', 'value': email or ''}],
+        'tags': tags,
     }
-
     create_resp = requests.post(
         base + '/contacts.json', json=contact_payload, auth=auth, timeout=10,
     )
@@ -825,18 +828,54 @@ def push_sds_to_onepagecrm(b):
             create_resp.status_code, create_resp.text[:500]))
     contact_id = create_resp.json()['data']['contact']['id']
 
-    note_payload = {
-        'contact_id': contact_id,
-        'text': 'Downloaded SDS for product: {} (id {})'.format(product_name, b.get('productId')),
-    }
-    note_resp = requests.post(
-        base + '/contacts/{}/notes.json'.format(contact_id),
-        json=note_payload, auth=auth, timeout=10,
+    if note_text:
+        note_resp = requests.post(
+            base + '/contacts/{}/notes.json'.format(contact_id),
+            json={'contact_id': contact_id, 'text': note_text}, auth=auth, timeout=10,
+        )
+        if not note_resp.ok:
+            raise RuntimeError('add note failed: HTTP {} {}'.format(
+                note_resp.status_code, note_resp.text[:500]))
+    return contact_id
+
+
+def push_sds_to_onepagecrm(b):
+    """Push an SDS-download lead into OnePageCRM as a contact tagged with the product,
+    plus a note recording the download. `b` must contain nameFrom, emailFrom,
+    productName, productId, and optionally companyName.
+
+    Best-effort: the caller swallows+logs any failure so it never blocks the download.
+    """
+    product_name = b.get('productName', '')
+    contact_id = _onepagecrm_create_contact_with_note(
+        name=b.get('nameFrom'),
+        email=b.get('emailFrom'),
+        note_text='Downloaded SDS for product: {} (id {})'.format(product_name, b.get('productId')),
+        tags=['Download SDS for {}'.format(product_name)],
+        company_name=b.get('companyName'),
     )
-    if not note_resp.ok:
-        raise RuntimeError('add note failed: HTTP {} {}'.format(
-            note_resp.status_code, note_resp.text[:500]))
     logger.info("OnePageCRM SDS push OK: contact %s, product '%s'", contact_id, product_name)
+    return contact_id
+
+
+def push_contact_to_onepagecrm(b):
+    """Push a Contact-Us form submission into OnePageCRM: a contact tagged
+    'Website Contact Form' plus a note containing the full message the user typed.
+    `b` must contain nameFrom, emailFrom, content, and optionally companyName.
+
+    Best-effort: the caller swallows+logs any failure so it never blocks the form.
+    """
+    message = b.get('content') or ''
+    note_text = 'Contact form submission from geller.co.nz\n\nName: {}\nEmail: {}\n\nMessage:\n{}'.format(
+        b.get('nameFrom', ''), b.get('emailFrom', ''), message)
+    contact_id = _onepagecrm_create_contact_with_note(
+        name=b.get('nameFrom'),
+        email=b.get('emailFrom'),
+        note_text=note_text,
+        tags=['Website Contact Form'],
+        company_name=b.get('companyName'),
+    )
+    logger.info("OnePageCRM contact push OK: contact %s, email %s", contact_id, b.get('emailFrom'))
     return contact_id
 
 
