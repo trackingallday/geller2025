@@ -787,8 +787,13 @@ def create_contact(request):
     except Exception as crm_err:
         logger.error("OnePageCRM contact push failed: %s", crm_err)
 
+    company = b.get('companyName') or ''
+    admin_body = 'Name: ' + b['nameFrom'] + '\nEmail: ' + b['emailFrom']
+    if company:
+        admin_body += '\nCompany: ' + company
+    admin_body += '\n\nMessage:\n' + b['content']
     mail_admin_async('Contact from Geller.co.nz',
-        b['nameFrom'] + '\n' + b['emailFrom'] + '\nMessage:\n' + b['content'],
+        admin_body,
         reply_to=b['emailFrom']
     )
     mail_customer('Contact from Geller.co.nz',
@@ -860,7 +865,7 @@ def push_sds_to_onepagecrm(b):
 
 def push_contact_to_onepagecrm(b):
     """Push a Contact-Us form submission into OnePageCRM: a contact tagged
-    'Website Contact Form' plus a note containing the full message the user typed.
+    'Geller Website Enquiry' plus a note containing the full message the user typed.
     `b` must contain nameFrom, emailFrom, content, and optionally companyName.
 
     Best-effort: the caller swallows+logs any failure so it never blocks the form.
@@ -872,7 +877,7 @@ def push_contact_to_onepagecrm(b):
         name=b.get('nameFrom'),
         email=b.get('emailFrom'),
         note_text=note_text,
-        tags=['Website Contact Form'],
+        tags=['Geller Website Enquiry'],
         company_name=b.get('companyName'),
     )
     logger.info("OnePageCRM contact push OK: contact %s, email %s", contact_id, b.get('emailFrom'))
