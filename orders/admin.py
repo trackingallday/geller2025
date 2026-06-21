@@ -9,7 +9,7 @@ from .models import CustomerOrder, OrderLineItem
 class OrderLineItemInline(admin.TabularInline):
     model = OrderLineItem
     extra = 1
-    fields = ('product_variant', 'quantity')
+    fields = ('product_variant', 'max_stock_level', 'soh', 'quantity')
 
 
 @admin.register(CustomerOrder)

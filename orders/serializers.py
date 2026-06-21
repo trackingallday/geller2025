@@ -14,7 +14,7 @@ class OrderLineItemSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = OrderLineItem
-        fields = ('id', 'product_variant', 'product_variant_id', 'quantity')
+        fields = ('id', 'product_variant', 'product_variant_id', 'quantity', 'soh', 'max_stock_level')
 
 
 class CustomerOrderSerializer(serializers.ModelSerializer):
@@ -41,6 +41,9 @@ class CustomerOrderSerializer(serializers.ModelSerializer):
 class OrderLineItemWriteSerializer(serializers.Serializer):
     product_variant_id = serializers.IntegerField()
     quantity = serializers.IntegerField(min_value=0)
+    # Optional so older app builds that don't send these still submit successfully.
+    soh = serializers.IntegerField(min_value=0, required=False, default=0)
+    max_stock_level = serializers.IntegerField(min_value=0, required=False, default=0)
 
 
 class CustomerOrderCreateSerializer(serializers.Serializer):

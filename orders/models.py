@@ -49,6 +49,8 @@ class OrderLineItem(models.Model):
     order = models.ForeignKey(CustomerOrder, related_name='line_items', on_delete=models.CASCADE)
     product_variant = models.ForeignKey(ProductVariant, related_name='order_line_items', on_delete=models.CASCADE)
     quantity = models.IntegerField(default=0)
+    soh = models.IntegerField(default=0)  # stock on hand at order time
+    max_stock_level = models.IntegerField(default=0)  # customer's max stock level snapshot at order time
 
     def __str__(self):
         return f'{self.product_variant} x{self.quantity}'

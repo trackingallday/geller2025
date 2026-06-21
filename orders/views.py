@@ -39,10 +39,13 @@ def submit_order(request):
         "customer_id": 1,
         "notes": "...",          # optional
         "line_items": [
-            {"product_variant_id": 3, "quantity": 2},
+            {"product_variant_id": 3, "quantity": 2, "soh": 5, "max_stock_level": 7},
             ...
         ]
     }
+
+    soh and max_stock_level are optional (default 0) for backward compatibility
+    with older app builds that don't send them.
     """
     profile_type = request.user.profile.profileType
 
@@ -84,6 +87,8 @@ def submit_order(request):
                 order=order,
                 product_variant=variants[item['product_variant_id']],
                 quantity=item['quantity'],
+                soh=item.get('soh', 0),
+                max_stock_level=item.get('max_stock_level', 0),
             )
             for item in line_items_data
         ])
