@@ -536,6 +536,7 @@ def new_product(request):
             brand=data.get('brand'),
             properties=data.get('properties'),
             application=data.get('application'),
+            procedure=data.get('procedure'),
             description=data.get('description'),
             uploadedBy=request.user,
         )
@@ -586,6 +587,7 @@ def edit_product(request):
     product.brand = data.get('brand')
     product.properties = data.get('properties')
     product.application = data.get('application')
+    product.procedure = data.get('procedure')
     product.description = data.get('description')
     product.subCategory = data.get('subCategory')
     product.markets = MarketCategory.objects.filter(pk__in=data.get('markets'))

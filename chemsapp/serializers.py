@@ -83,7 +83,7 @@ class ProductSerializer(serializers.ModelSerializer):
         read_only_fields = ('customers',)
         fields = (
             'id', 'name', 'subheading', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
-            'directions', 'productCode', 'productCodes', 'brand', 'infoSheet', 'sdsSheet', 'application', 'properties',
+            'directions', 'productCode', 'productCodes', 'brand', 'infoSheet', 'sdsSheet', 'application', 'procedure', 'properties',
             'safetyWears', 'customers', 'markets', 'description', 'subCategory', 'productCategory',
             'sizes', 'wall_chart_color',
         )

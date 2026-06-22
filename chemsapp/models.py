@@ -117,7 +117,8 @@ class Product(models.Model):
     amountDesc = models.CharField(max_length=455, blank=True)
 
     properties = models.CharField(max_length=500, blank=True, null=True)
-    application = models.CharField(max_length=500, blank=True, null=True)
+    application = RichTextField(blank=True, null=True)
+    procedure = RichTextField(blank=True, null=True)
 
     def __str__(self):
         return f'{self.name}'

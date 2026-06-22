@@ -30,8 +30,8 @@ def _build_wall_chart_pdf(customer, products, base_url):
             encoded = base64.b64encode(buf.getvalue()).decode()
             qr_code = 'data:image/svg+xml;base64,' + encoded
 
-        description = html_module.unescape(strip_tags(product.description))
-        directions = html_module.unescape(strip_tags(product.directions))
+        description = html_module.unescape(strip_tags(product.application))
+        directions = html_module.unescape(strip_tags(product.procedure))
 
         row_color = product.wall_chart_color or '#f5f5f5'
         try:
