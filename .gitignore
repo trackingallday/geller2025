@@ -99,3 +99,6 @@ media/documents/2261558143_lsJBYwT.jpg
 /media/documents
 /media
 /old-stuff-for-dev
+
+# Local dev settings (machine-specific, do not deploy)
+chemicaldatasheets/settings_dev.py

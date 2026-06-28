@@ -19,8 +19,8 @@ from django.contrib import admin
 from django.conf.urls import include
 from rest_framework.authtoken import views as rest_framework_views
 from chemsapp.auth_views import CustomAuthToken
-from django.conf.urls.static import static
 from django.conf import settings
+from django.views.static import serve
 from django.views.generic.base import RedirectView
 from chemsapp.views import upload_file
 
@@ -40,4 +40,9 @@ urlpatterns = [
 
 ]
 
-urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve user-uploaded media. Django's static() helper no-ops when DEBUG=False,
+# and WhiteNoise only indexes files present at startup (media is uploaded at
+# runtime to the /data volume), so wire the serve view directly for all modes.
+urlpatterns += [
+    re_path(r'^media/(?P<path>.*)$', serve, {'document_root': settings.MEDIA_ROOT}),
+]
