@@ -9,6 +9,7 @@ from django.shortcuts import get_object_or_404
 from django.views.decorators.csrf import csrf_exempt
 from django.conf import settings
 from django.db import transaction
+from postmarker.core import PostmarkClient
 import os
 import threading
 from PIL import Image, ImageCms
@@ -90,10 +91,7 @@ import datetime
 from django.db.models import Q
 from django.core import serializers
 import json
-from django.core.mail import EmailMessage
 import time
-import subprocess
-import sys
 from django.views.decorators.csrf import csrf_exempt
 
 logger = logging.getLogger('django')
@@ -222,45 +220,35 @@ def create_user(data):
     user.save()
     return user
 
-def mail_admin(subject, content, reply_to=None):
-    msg = EmailMessage(
-        subject=subject,
-        body=content,
-        from_email=settings.EMAIL_FROM,
-        to=[settings.EMAIL_ADMIN],
-        reply_to=[reply_to or settings.EMAIL_ADMIN]
-    )
-    return msg.send()
-
 def mail_admin_async(subject, content, reply_to=None):
-    """Send email asynchronously using management command"""
+    """Send the admin notification via Postmark (matches orders/reports apps)."""
     try:
-        cmd = [
-            sys.executable, 'manage.py', 'send_email',
-            '--subject', subject,
-            '--body', content,
-            '--to', settings.EMAIL_ADMIN,
-            '--from-email', settings.EMAIL_FROM
-        ]
-        
-        if reply_to:
-            cmd.extend(['--reply-to', reply_to])
-        
-        # Run command in background without waiting for completion
-        subprocess.Popen(cmd, cwd=settings.BASE_DIR)
-        
+        postmark = PostmarkClient(server_token=settings.POSTMARK_SERVER_API_TOKEN)
+        email = postmark.emails.Email(
+            From='noreply@geller.co.nz',
+            To=settings.EMAIL_ADMIN,
+            Subject=subject,
+            TextBody=content,
+            ReplyTo=reply_to or settings.EMAIL_ADMIN,
+        )
+        email.send()
     except Exception as e:
-        logger.error(f"Failed to start async email process: {e}")
+        logger.error(f"Failed to send admin email: {e}")
 
 def mail_customer(subject, content, customer_email, reply_to=None):
-    msg = EmailMessage(
-        subject=subject,
-        body=content,
-        from_email=settings.EMAIL_FROM,
-        to=[customer_email],
-        reply_to=[reply_to or settings.EMAIL_ADMIN]
-    )
-    return msg.send()
+    """Send the customer auto-reply via Postmark."""
+    try:
+        postmark = PostmarkClient(server_token=settings.POSTMARK_SERVER_API_TOKEN)
+        email = postmark.emails.Email(
+            From='noreply@geller.co.nz',
+            To=customer_email,
+            Subject=subject,
+            TextBody=content,
+            ReplyTo=reply_to or settings.EMAIL_ADMIN,
+        )
+        return email.send()
+    except Exception as e:
+        logger.error(f"Failed to send customer email: {e}")
 
 
 @csrf_exempt
