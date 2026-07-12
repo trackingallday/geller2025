@@ -36,6 +36,7 @@ urlpatterns = [
     re_path(r'^reports/', include('reports.urls')),
     re_path(r'^orders/', include('orders.urls')),
     re_path(r'^tickets/', include('tickets.urls')),
+    re_path(r'^ai/', include('ai.urls')),
     re_path(r'', include('chemsapp.urls' )),
 
 ]

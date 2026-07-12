@@ -66,6 +66,7 @@ INSTALLED_APPS = [
     'reports',
     'orders',
     'tickets',
+    'ai',
     'corsheaders',
     'import_export',
     'ckeditor',
@@ -142,6 +143,14 @@ DATABASES = {
 ONEPAGECRM_ENDPOINT = os.getenv('ONEPAGECRM_ENDPOINT', 'https://app.onepagecrm.com/api/v3/')
 ONEPAGECRM_API_KEY = os.getenv('ONEPAGECRM_API_KEY', 'Nprht0mvpI4AB2Sa4KEoE5K9C9E0qTYwhDoGBZKwcgI=')
 ONEPAGECRM_USER_ID = os.getenv('ONEPAGECRM_USER_ID', '69e6e1d66d24124e94187104')
+
+# Geller AI (Mastra) service — the /ai/ proxy forwards requests here and
+# records the conversations (ai.AIThread / ai.AIMessage).
+GELLER_AI_ENDPOINT = os.getenv('GELLER_AI_ENDPOINT', 'http://localhost:4111')
+GELLER_AI_TIMEOUT = int(os.getenv('GELLER_AI_TIMEOUT', '300'))
+
+# Base64 label photos proxied to the AI service exceed Django's 2.5 MB default.
+DATA_UPLOAD_MAX_MEMORY_SIZE = 26214400  # 25 MB
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': (
