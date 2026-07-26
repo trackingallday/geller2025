@@ -74,19 +74,14 @@
             vertical-align: top;
         }
 
-        /* image cell - always white */
+        /* image cell - always white; image set as background so it covers
+           the full cell area (row height included), cropping as needed */
         .cell-img {
             width: 16mm;
             background-color: #ffffff;
-            text-align: center;
-            vertical-align: middle;
-            padding: 1.5mm;
-        }
-        .cell-img img {
-            width: 14mm;
-            height: auto;
-            max-height: 28mm;
-            object-fit: contain;
+            background-size: cover;
+            background-position: center;
+            background-repeat: no-repeat;
         }
 
         .product-name {
@@ -213,11 +208,7 @@
                 <col style="width:43mm;">
             </colgroup>
             <tr>
-                <td class="cell-img">
-                    {% if p.primaryImageLink %}
-                        <img src="{{ base_url }}media/{{ p.primaryImageLink }}" alt="{{ p.name }}">
-                    {% endif %}
-                </td>
+                <td class="cell-img"{% if p.primaryImageLink %} style="background-image: url('{{ base_url }}media/{{ p.primaryImageLink }}');"{% endif %}></td>
                 <td style="background-color:{{ row.stripe_color }};"></td>
                 <td style="background-color:{{ row.tint_color }}; padding:3mm 2mm;">
                     <div class="product-name">{{ p.name }}</div>

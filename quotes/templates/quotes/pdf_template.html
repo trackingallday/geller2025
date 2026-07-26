@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Proposal {{ quote.quote_number }}</title>
+</head>
+<body>
+
+    <div class="footer-bar">{{ company_website }}</div>
+
+    <!-- Purple header bar -->
+    <div class="header-bar">
+        <table class="header-table">
+            <tr>
+                <td class="header-title"><span>Product</span> <span class="light">&amp; Cost Proposal</span></td>
+                <td class="wordmark">
+                    {# No white Geller logo asset exists yet — styled text wordmark until one is supplied. #}
+                    <div class="wordmark-block">
+                        <div>Geller<span class="reg">&reg;</span></div>
+                        <div class="tagline">Every care in the world.</div>
+                    </div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Proposal for / date / number -->
+    <div class="info-section">
+        <table class="info-table">
+            <tr>
+                <td>
+                    <div class="proposal-for-label">Proposal for:</div>
+                    <div class="proposal-for">
+                        {{ quote.company_name }}<br>
+                        {{ quote.address|linebreaksbr }}
+                    </div>
+                    {% if quote.contact_name %}
+                    <div class="proposal-att">Att : {{ quote.contact_name }}</div>
+                    {% endif %}
+                </td>
+                <td class="meta-right">
+                    <div class="meta-row">Date : <span class="meta-value">{{ quote_date|date:"d/m/Y" }}</span></div>
+                    <div class="meta-row">Proposal No: <span class="meta-value">{{ quote.quote_number }}</span></div>
+                </td>
+            </tr>
+        </table>
+    </div>
+
+    <!-- Product lines -->
+    <div class="items-section">
+        <table class="items-table">
+            <thead>
+                <tr>
+                    <th></th>
+                    <th>Product</th>
+                    <th>Code</th>
+                    <th>Description</th>
+                    <th>Cost Per Unit</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for entry in lines %}
+                <tr class="{% cycle 'row-grey' 'row-cream' %}">
+                    <td class="img-cell"{% if entry.image_src %} style="background-image: url('{{ entry.image_src }}');"{% endif %}></td>
+                    <td class="product-cell">
+                        <div class="product-name">{{ entry.line.product_name }}</div>
+                        {% if entry.line.product_subheading %}
+                        <div class="product-subheading">{{ entry.line.product_subheading }}</div>
+                        {% endif %}
+                    </td>
+                    <td class="code-cell">{{ entry.line.product_code|default:"-" }}</td>
+                    <td class="desc-cell">{{ entry.line.description }}</td>
+                    <td class="price-cell">
+                        <div class="price">${{ entry.line.price }} per Unit</div>
+                        {% if entry.line.cost_in_use %}
+                        <div class="ciu-heading">Cost in use</div>
+                        {% for ciu in entry.line.cost_in_use %}
+                        <div class="ciu-line">{{ ciu.display }}</div>
+                        {% endfor %}
+                        {% endif %}
+                    </td>
+                </tr>
+                {% empty %}
+                <tr>
+                    <td colspan="5" style="color:#999; font-style:italic;">No products on this proposal.</td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+    </div>
+
+</body>
+</html>

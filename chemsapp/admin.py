@@ -6,7 +6,8 @@ from django.utils.html import format_html
 import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
-    MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact
+    MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact,\
+    FillType, VariantFillOverride
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm, ProductForm
@@ -282,7 +283,7 @@ class UserAdmin(admin.ModelAdmin):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
-    fields = ('code', 'size', 'pack_size', 'description', 'barcode', 'image')
+    fields = ('code', 'size', 'pack_size', 'volume_litres', 'description', 'barcode', 'image')
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         field = super().formfield_for_dbfield(db_field, request, **kwargs)
@@ -298,7 +299,7 @@ class ProductAdmin(ImportExportModelAdmin):
     readonly_fields = []
     resource_class = ProductResource
     inlines = [ProductVariantInline]
-    filter_horizontal = ['safetyWears', 'subCategory', 'productCategory', 'sizes']
+    filter_horizontal = ['safetyWears', 'subCategory', 'productCategory', 'sizes', 'fill_types']
     list_display = ['brand', 'name', 'get_categories', 'has_sds', 'has_pi_sheet', 'public']
 
     def get_categories(self, obj):
@@ -314,6 +315,25 @@ class ProductAdmin(ImportExportModelAdmin):
         return bool(obj.infoSheet)
     has_pi_sheet.boolean = True
     has_pi_sheet.short_description = 'PI Sheet Attached'
+
+
+class FillTypeAdmin(admin.ModelAdmin):
+    list_display = ['name', 'volume_litres', 'sort_order', 'is_active']
+    list_editable = ['volume_litres', 'sort_order', 'is_active']
+
+
+class VariantFillOverrideInline(admin.TabularInline):
+    model = VariantFillOverride
+    extra = 1
+
+
+class ProductVariantAdmin(admin.ModelAdmin):
+    """Standalone variant admin so cost-in-use overrides can be edited
+    (inlines can't nest inside ProductVariantInline on the product page)."""
+    search_fields = ['code', 'product__name', 'barcode']
+    list_display = ['__str__', 'code', 'pack_size', 'volume_litres']
+    list_select_related = ['product', 'size']
+    inlines = [VariantFillOverrideInline]
 
 
 #class ProductAddAdmin(ImportExportModelAdmin):
@@ -443,6 +463,8 @@ admin.site.register(Config, ConfigAdmin)
 admin.site.register(Distributor, DistributorAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Product, ProductAdmin)
+admin.site.register(ProductVariant, ProductVariantAdmin)
+admin.site.register(FillType, FillTypeAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)
 admin.site.register(Post, PostAdmin)

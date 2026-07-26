@@ -1,4 +1,6 @@
 # -*- coding: utf-8 -*-
+from decimal import Decimal
+
 from django.db import models
 from django.contrib.auth.models import User
 from django.conf import settings
@@ -88,6 +90,21 @@ class ProductCategory(models.Model):
         return "{} ".format(self.name)
 
 
+class FillType(models.Model):
+    """Global lookup of fill/container types used for cost-in-use maths,
+    e.g. 'Bucket Fill' = 10L, 'Spray Bottle' = 0.5L. Admin-editable."""
+    name = models.CharField(max_length=100, unique=True)
+    volume_litres = models.DecimalField(max_digits=8, decimal_places=3)
+    sort_order = models.PositiveIntegerField(default=0)
+    is_active = models.BooleanField(default=True)
+
+    class Meta:
+        ordering = ['sort_order', 'name']
+
+    def __str__(self):
+        return f'{self.name} ({self.volume_litres}L)'
+
+
 class Product(models.Model):
     name = models.CharField(max_length=255, unique=True)
     subheading = models.CharField(max_length=255, blank=True, null=True)
@@ -112,6 +129,15 @@ class Product(models.Model):
         help_text=mark_safe('Background colour for this product on wall chart PDFs. See <a href="https://www.w3schools.com/colors/colors_picker.asp">W3Schools Color Picker</a>. Leave blank for white.')
     )
 
+    dilution_ratio = models.DecimalField(
+        max_digits=8, decimal_places=2, blank=True, null=True,
+        help_text='Dilution 1:X — enter 100 for 1:100. Leave blank for ready-to-use/non-liquid products.'
+    )
+    fill_types = models.ManyToManyField(
+        FillType, blank=True, related_name='products',
+        help_text='Fill/container types shown as "Cost in use" lines on quote proposals.'
+    )
+
     # Unused for marketing frontend
     usageType = models.CharField(max_length=455, blank=True)
     amountDesc = models.CharField(max_length=455, blank=True)
@@ -132,10 +158,54 @@ class ProductVariant(models.Model):
     description = models.TextField(blank=True, null=True)
     barcode = models.CharField(max_length=255)
     image = models.FileField(upload_to='documents/', blank=True, null=True)
+    volume_litres = models.DecimalField(
+        max_digits=8, decimal_places=3, blank=True, null=True,
+        help_text='Container volume in litres used for cost-in-use maths. Do not rely on Size.amount.'
+    )
 
     def __str__(self):
         size_str = f' ({self.size})' if self.size else ''
         return f'{self.product.name}{size_str} - {self.barcode}'
+
+    def get_fill_options(self):
+        """Cost-in-use fill counts for this variant.
+
+        Returns [{'fill_type': FillType, 'fills': Decimal, 'source': 'override'|'computed'}].
+        Union of product.fill_types (active) and this variant's overrides; an
+        override always wins, and is the only path for products where the
+        dilution maths doesn't apply (no dilution_ratio or volume_litres).
+        Computed fills = volume_litres × dilution_ratio ÷ fill_type.volume_litres.
+        """
+        overrides = {o.fill_type_id: o for o in self.fill_overrides.select_related('fill_type').all()}
+        fill_types = {ft.id: ft for ft in self.product.fill_types.filter(is_active=True)}
+        for override in overrides.values():
+            fill_types.setdefault(override.fill_type_id, override.fill_type)
+
+        results = []
+        for ft in sorted(fill_types.values(), key=lambda f: (f.sort_order, f.name)):
+            if ft.id in overrides:
+                results.append({'fill_type': ft, 'fills': overrides[ft.id].fills, 'source': 'override'})
+            elif self.volume_litres and self.product.dilution_ratio and ft.volume_litres:
+                fills = (self.volume_litres * self.product.dilution_ratio) / ft.volume_litres
+                results.append({'fill_type': ft, 'fills': fills.quantize(Decimal('0.01')), 'source': 'computed'})
+        return results
+
+
+class VariantFillOverride(models.Model):
+    """Manual fills-per-unit for a variant + fill type. Wins over the computed
+    value, and is the only way to get cost-in-use for non-liquid products."""
+    variant = models.ForeignKey(ProductVariant, related_name='fill_overrides', on_delete=models.CASCADE)
+    fill_type = models.ForeignKey(FillType, related_name='variant_overrides', on_delete=models.CASCADE)
+    fills = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        help_text='Number of fills per unit; cost in use = price ÷ fills'
+    )
+
+    class Meta:
+        unique_together = ('variant', 'fill_type')
+
+    def __str__(self):
+        return f'{self.variant} — {self.fill_type.name}: {self.fills} fills'
 
 
 class CustomerContact(models.Model):

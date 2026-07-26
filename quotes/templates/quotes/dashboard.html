@@ -1,0 +1,126 @@
+{% extends 'quotes/base.html' %}
+
+{% block title %}Proposals{% endblock %}
+
+{% block content %}
+<div class="dashboard-layout">
+
+    <!-- Quote list -->
+    <div class="quote-list-panel">
+        <div class="list-panel-header d-flex justify-content-between align-items-center">
+            <strong>Proposals</strong>
+            <a href="{% url 'quotes:dashboard_create_quote' %}" class="btn btn-sm btn-primary">
+                <i class="bi bi-plus-lg"></i> New
+            </a>
+        </div>
+        {% for quote in quotes %}
+            <a href="?quote={{ quote.pk }}" class="quote-list-item {% if active_quote and active_quote.pk == quote.pk %}active{% endif %}">
+                <div class="d-flex justify-content-between">
+                    <strong>{{ quote.quote_number }}</strong>
+                    <small class="text-muted">{{ quote.date|date:"d M Y" }}</small>
+                </div>
+                <div>{{ quote.company_name }}</div>
+                <small class="text-muted">
+                    {{ quote.lines.count }} line{{ quote.lines.count|pluralize }}
+                    {% if quote.created_by %} · {{ quote.created_by.username }}{% endif %}
+                </small>
+            </a>
+        {% empty %}
+            <div class="p-3 text-muted">No proposals yet. Create the first one.</div>
+        {% endfor %}
+    </div>
+
+    <!-- Detail panel -->
+    <div class="quote-detail-panel">
+        {% if active_quote %}
+            <div class="d-flex justify-content-between align-items-start mb-3">
+                <div>
+                    <h4 class="mb-1">Proposal {{ active_quote.quote_number }}</h4>
+                    <div class="text-muted">{{ active_quote.date|date:"d M Y, H:i" }}
+                        {% if active_quote.created_by %} · created by {{ active_quote.created_by.username }}{% endif %}
+                    </div>
+                </div>
+                <div>
+                    {% if active_quote.pdf %}
+                        <a href="{{ active_quote.pdf.url }}" target="_blank" class="btn btn-outline-primary">
+                            <i class="bi bi-file-earmark-pdf"></i> View PDF
+                        </a>
+                    {% else %}
+                        <span class="badge bg-warning text-dark">No PDF generated</span>
+                    {% endif %}
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <div class="card-body">
+                    <div class="row">
+                        <div class="col-md-8">
+                            <h6 class="text-muted mb-1">Proposal for</h6>
+                            <strong>{{ active_quote.company_name }}</strong><br>
+                            {{ active_quote.address|linebreaksbr }}
+                            {% if active_quote.contact_name %}<div class="mt-1">Att : {{ active_quote.contact_name }}</div>{% endif %}
+                        </div>
+                        <div class="col-md-4">
+                            {% if active_quote.customer %}
+                                <h6 class="text-muted mb-1">Linked customer</h6>
+                                {{ active_quote.customer.businessName }}
+                            {% endif %}
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="card mb-3">
+                <table class="table table-striped mb-0 align-middle">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Code</th>
+                            <th class="text-end">Price</th>
+                            <th>Cost in use</th>
+                        </tr>
+                    </thead>
+                    <tbody>
+                        {% for line in active_quote.lines.all %}
+                        <tr>
+                            <td>
+                                <strong>{{ line.product_name }}</strong>
+                                {% if line.product_subheading %}<br><small class="text-muted">{{ line.product_subheading }}</small>{% endif %}
+                            </td>
+                            <td>{{ line.product_code|default:"-" }}</td>
+                            <td class="text-end">${{ line.price }}</td>
+                            <td class="ciu-block">
+                                {% for ciu in line.cost_in_use %}
+                                    {{ ciu.display }}{% if not forloop.last %}<br>{% endif %}
+                                {% empty %}
+                                    <span class="text-muted">—</span>
+                                {% endfor %}
+                            </td>
+                        </tr>
+                        {% endfor %}
+                    </tbody>
+                </table>
+            </div>
+
+            <div class="card">
+                <div class="card-body">
+                    <h6 class="mb-2">Email this proposal</h6>
+                    <form method="post" action="{% url 'quotes:dashboard_email_quote' active_quote.pk %}" class="d-flex gap-2">
+                        {% csrf_token %}
+                        <input type="email" name="email_address" class="form-control" style="max-width: 320px;"
+                               placeholder="recipient@example.com" required>
+                        <button type="submit" class="btn btn-primary">
+                            <i class="bi bi-envelope"></i> Send PDF
+                        </button>
+                    </form>
+                </div>
+            </div>
+        {% else %}
+            <div class="text-center text-muted mt-5">
+                <i class="bi bi-file-earmark-text" style="font-size: 3rem;"></i>
+                <p class="mt-2">Select a proposal from the list, or create a new one.</p>
+            </div>
+        {% endif %}
+    </div>
+</div>
+{% endblock %}
