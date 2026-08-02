@@ -1,7 +1,7 @@
 from django.contrib.auth.models import User
 from django.db import models
 
-from chemsapp.models import Customer, ProductVariant
+from chemsapp.models import Customer, DilutionVariant, ProductVariant
 
 
 def generate_quote_number():
@@ -42,6 +42,9 @@ class QuoteLine(models.Model):
     product_variant = models.ForeignKey(ProductVariant, related_name='quote_lines', on_delete=models.SET_NULL, null=True)
     price = models.DecimalField(max_digits=10, decimal_places=2)
     sort_order = models.PositiveIntegerField(default=0)
+    # Dilution options the salesperson picked for this line; the source used
+    # to (re-)freeze the cost_in_use snapshot below.
+    dilutions = models.ManyToManyField(DilutionVariant, blank=True, related_name='quote_lines')
 
     # Snapshots frozen at generation time so old proposals never drift
     # when product data changes later.
@@ -50,7 +53,8 @@ class QuoteLine(models.Model):
     product_code = models.CharField(max_length=255, blank=True, default='')
     description = models.TextField(blank=True, default='')
     cost_in_use = models.JSONField(default=list, blank=True)
-    # e.g. [{"fill_type": "Bucket Fill", "fills": "200.00", "cost": "0.45", "display": "Bucket Fill .45c"}]
+    # e.g. [{"label": "Floor Mop/Bucket - General Cleaning", "unit_label": "per litre",
+    #        "fills": "200.00", "cost": "0.45", "display": "Floor Mop/Bucket - General Cleaning .45c"}]
 
     class Meta:
         ordering = ['sort_order', 'id']

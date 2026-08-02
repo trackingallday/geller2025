@@ -6,7 +6,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from chemsapp.models import FillType, Product, ProductVariant, VariantFillOverride
+from chemsapp.models import ApplicationType, DilutionVariant, Product, ProductVariant, Size
 from .models import Quote, QuoteLine, generate_quote_number
 from .services import build_cost_in_use_snapshot, format_cost_in_use
 
@@ -24,64 +24,96 @@ def make_product(**kwargs):
     return Product.objects.create(**defaults)
 
 
-def make_variant(product, **kwargs):
+def make_variant(product, volume_litres=None, **kwargs):
+    """Variant factory; volume_litres creates/reuses a Size carrying the volume."""
     defaults = dict(code='CONQUEST20', pack_size=1, barcode='9400000000001')
     defaults.update(kwargs)
+    if volume_litres is not None and 'size' not in defaults:
+        defaults['size'], _ = Size.objects.get_or_create(
+            name=f'{volume_litres} Litre',
+            defaults={'desc': f'{volume_litres} Litre', 'amount': str(volume_litres), 'volume_litres': volume_litres},
+        )
     return ProductVariant.objects.create(product=product, **defaults)
 
 
-class FillOptionsTestCase(TestCase):
+def make_application_type(**kwargs):
+    defaults = dict(
+        name='Floor Mop/Bucket - General Cleaning',
+        category='Floor Mop/Bucket',
+        value_kind=ApplicationType.RATIO,
+        unit_volume_litres=Decimal('1'),
+        unit_label='per litre',
+    )
+    defaults.update(kwargs)
+    return ApplicationType.objects.create(**defaults)
+
+
+class DilutionFillsTestCase(TestCase):
     serialized_rollback = True
 
     def setUp(self):
-        self.bucket = FillType.objects.create(name='Bucket Fill', volume_litres=Decimal('10'), sort_order=1)
-        self.spray = FillType.objects.create(name='Spray Bottle', volume_litres=Decimal('0.5'), sort_order=2)
-        self.product = make_product(dilution_ratio=Decimal('100'))
-        self.product.fill_types.set([self.bucket, self.spray])
+        self.product = make_product()
         self.variant = make_variant(self.product, volume_litres=Decimal('20'))
 
-    def test_computed_fills(self):
-        options = self.variant.get_fill_options()
-        self.assertEqual(len(options), 2)
-        bucket = next(o for o in options if o['fill_type'] == self.bucket)
-        spray = next(o for o in options if o['fill_type'] == self.spray)
-        # 20L × 100 ÷ 10L = 200 bucket fills; ÷ 0.5L = 4000 spray fills
-        self.assertEqual(bucket['fills'], Decimal('200.00'))
-        self.assertEqual(bucket['source'], 'computed')
-        self.assertEqual(spray['fills'], Decimal('4000.00'))
+    def test_ratio_fills(self):
+        mop = make_application_type()
+        dilution = DilutionVariant.objects.create(
+            variant=self.variant, application_type=mop, value=Decimal('100'))
+        # 20L × 100 ÷ 1L = 2000 litres of solution per pack
+        self.assertEqual(dilution.fills(), Decimal('2000.00'))
 
-    def test_override_beats_computed(self):
-        VariantFillOverride.objects.create(variant=self.variant, fill_type=self.bucket, fills=Decimal('300'))
-        options = self.variant.get_fill_options()
-        bucket = next(o for o in options if o['fill_type'] == self.bucket)
-        self.assertEqual(bucket['fills'], Decimal('300'))
-        self.assertEqual(bucket['source'], 'override')
+    def test_ratio_zero_means_undiluted(self):
+        spray = make_application_type(
+            name='Spray Bottle - General Cleaning', category='Spray Bottle',
+            unit_volume_litres=Decimal('0.75'), unit_label='per 750ml spray bottle')
+        rtu = make_variant(
+            self.product, volume_litres=Decimal('0.5'), code='CONQUEST500', barcode='9400000000009')
+        dilution = DilutionVariant.objects.create(
+            variant=rtu, application_type=spray, value=Decimal('0'))
+        # Undiluted: 0.5L pack fills a 750ml bottle 0.67 times
+        self.assertEqual(dilution.fills(), Decimal('0.67'))
 
-    def test_override_only_for_non_liquid_product(self):
-        # 4KG powder: no dilution, no volume — only the override produces a line
-        powder = make_product(name='Powder', productCode='POWDER4')
-        powder_variant = make_variant(powder, code='POWDER4KG', barcode='9400000000002')
-        VariantFillOverride.objects.create(variant=powder_variant, fill_type=self.bucket, fills=Decimal('80'))
-        options = powder_variant.get_fill_options()
-        self.assertEqual(len(options), 1)
-        self.assertEqual(options[0]['fills'], Decimal('80'))
-        self.assertEqual(options[0]['source'], 'override')
+    def test_ml_per_litre_fills(self):
+        sanitising = make_application_type(
+            name='Sanitising 200-400ppm', category='Sanitising',
+            value_kind=ApplicationType.ML_PER_LITRE, unit_label='per litre @ 200-400ppm')
+        dilution = DilutionVariant.objects.create(
+            variant=self.variant, application_type=sanitising, value=Decimal('120'))
+        # 20,000ml ÷ 120ml dose = 166.67 litres of solution
+        self.assertEqual(dilution.fills(), Decimal('166.67'))
 
-    def test_no_data_gives_empty_list(self):
-        bare = make_product(name='Bare', productCode='BARE')
-        bare_variant = make_variant(bare, code='BARE1', barcode='9400000000003')
-        self.assertEqual(bare_variant.get_fill_options(), [])
+    def test_ml_per_cycle_fills(self):
+        autodose = make_application_type(
+            name='AutoDose - Per Cycle', category='AutoDose',
+            value_kind=ApplicationType.ML_PER_CYCLE, unit_volume_litres=None, unit_label='per cycle')
+        dilution = DilutionVariant.objects.create(
+            variant=self.variant, application_type=autodose, value=Decimal('50'))
+        # 20,000ml ÷ 50ml per cycle = 400 cycles
+        self.assertEqual(dilution.fills(), Decimal('400.00'))
 
-    def test_missing_volume_skips_computed(self):
-        self.variant.volume_litres = None
-        self.variant.save()
-        self.assertEqual(self.variant.get_fill_options(), [])
+    def test_no_value_gives_none(self):
+        autodose = make_application_type(
+            name='AutoDose - Per Cycle', value_kind=ApplicationType.ML_PER_CYCLE,
+            unit_volume_litres=None, unit_label='per cycle')
+        dilution = DilutionVariant.objects.create(
+            variant=self.variant, application_type=autodose, value=None,
+            note='Check manufacturer recommendation')
+        self.assertIsNone(dilution.fills())
 
-    def test_inactive_fill_type_excluded(self):
-        self.spray.is_active = False
-        self.spray.save()
-        options = self.variant.get_fill_options()
-        self.assertEqual([o['fill_type'] for o in options], [self.bucket])
+    def test_zero_dose_gives_none(self):
+        sanitising = make_application_type(
+            name='Sanitising 200-400ppm', value_kind=ApplicationType.ML_PER_LITRE,
+            unit_label='per litre @ 200-400ppm')
+        dilution = DilutionVariant.objects.create(
+            variant=self.variant, application_type=sanitising, value=Decimal('0'))
+        self.assertIsNone(dilution.fills())
+
+    def test_missing_volume_gives_none(self):
+        mop = make_application_type()
+        bare = make_variant(self.product, code='CONQUESTX', barcode='9400000000002')
+        dilution = DilutionVariant.objects.create(
+            variant=bare, application_type=mop, value=Decimal('100'))
+        self.assertIsNone(dilution.fills())
 
 
 class CostFormattingTestCase(TestCase):
@@ -99,17 +131,31 @@ class CostFormattingTestCase(TestCase):
         self.assertEqual(format_cost_in_use(Decimal('0.999')), '$1.00')
 
     def test_snapshot_shape(self):
-        bucket = FillType.objects.create(name='Bucket Fill', volume_litres=Decimal('10'))
-        product = make_product(dilution_ratio=Decimal('100'))
-        product.fill_types.set([bucket])
+        mop = make_application_type()
+        product = make_product()
         variant = make_variant(product, volume_litres=Decimal('20'))
-        snapshot = build_cost_in_use_snapshot(variant, Decimal('89.90'))
+        dilution = DilutionVariant.objects.create(
+            variant=variant, application_type=mop, value=Decimal('100'))
+        snapshot = build_cost_in_use_snapshot(Decimal('100.00'), [dilution])
         self.assertEqual(snapshot, [{
-            'fill_type': 'Bucket Fill',
-            'fills': '200.00',
-            'cost': '0.45',
-            'display': 'Bucket Fill .45c',
+            'label': 'Floor Mop/Bucket - General Cleaning',
+            'unit_label': 'per litre',
+            'fills': '2000.00',
+            'cost': '0.05',
+            'display': 'Floor Mop/Bucket - General Cleaning .05c',
         }])
+
+    def test_snapshot_note_only_entry(self):
+        autodose = make_application_type(
+            name='AutoDose - Per Cycle', value_kind=ApplicationType.ML_PER_CYCLE,
+            unit_volume_litres=None, unit_label='per cycle')
+        product = make_product()
+        variant = make_variant(product, volume_litres=Decimal('20'))
+        dilution = DilutionVariant.objects.create(
+            variant=variant, application_type=autodose, value=None, note='Check manufacturer recommendation')
+        snapshot = build_cost_in_use_snapshot(Decimal('100.00'), [dilution])
+        self.assertEqual(snapshot[0]['display'], 'AutoDose - Per Cycle: Check manufacturer recommendation')
+        self.assertIsNone(snapshot[0]['cost'])
 
 
 class QuoteNumberTestCase(TestCase):
@@ -136,41 +182,78 @@ class SubmitQuoteAPITestCase(TestCase):
         self.client = APIClient()
         self.client.force_authenticate(user=self.user)
 
-        self.bucket = FillType.objects.create(name='Bucket Fill', volume_litres=Decimal('10'))
-        self.product = make_product(dilution_ratio=Decimal('100'))
-        self.product.fill_types.set([self.bucket])
+        self.mop = make_application_type()
+        self.spray = make_application_type(
+            name='Spray Bottle - General Cleaning', category='Spray Bottle',
+            unit_volume_litres=Decimal('0.75'), unit_label='per 750ml spray bottle')
+        self.product = make_product()
         self.variant = make_variant(self.product, volume_litres=Decimal('20'))
+        self.mop_dilution = DilutionVariant.objects.create(
+            variant=self.variant, application_type=self.mop, value=Decimal('100'))
+        self.spray_dilution = DilutionVariant.objects.create(
+            variant=self.variant, application_type=self.spray, value=Decimal('25'))
 
     def _payload(self, **overrides):
         payload = {
             'company_name': 'XYZ CAFE',
             'address': '29 BRIDGE ST\nCAMBRIDGE',
             'contact_name': 'Sam Brown',
-            'lines': [{'product_variant_id': self.variant.pk, 'price': '89.90'}],
+            'lines': [{
+                'product_variant_id': self.variant.pk,
+                'price': '100.00',
+                'dilution_ids': [self.mop_dilution.pk],
+            }],
         }
         payload.update(overrides)
         return payload
 
-    def test_submit_creates_quote_with_snapshots(self, mock_pdf):
+    def test_submit_creates_quote_with_selected_dilutions(self, mock_pdf):
         response = self.client.post('/quotes/submit/', self._payload(), format='json')
         self.assertEqual(response.status_code, 201, response.data)
         self.assertEqual(response.data['quote_number'], 'Q0001')
-        self.assertEqual(response.data['company_name'], 'XYZ CAFE')
 
         line = QuoteLine.objects.get()
         self.assertEqual(line.product_name, 'Conquest Dishwash Detergent')
         self.assertEqual(line.product_code, 'CONQUEST20')
-        # RichText HTML stripped from the description snapshot
         self.assertNotIn('<', line.description)
-        self.assertEqual(line.cost_in_use[0]['display'], 'Bucket Fill .45c')
+        # Only the selected mop option is snapshotted, not the spray one
+        self.assertEqual(len(line.cost_in_use), 1)
+        self.assertEqual(line.cost_in_use[0]['display'], 'Floor Mop/Bucket - General Cleaning .05c')
+        self.assertEqual(list(line.dilutions.all()), [self.mop_dilution])
         mock_pdf.assert_called_once()
 
-    def test_snapshot_frozen_against_product_changes(self, mock_pdf):
+    def test_submit_without_dilutions_gives_empty_cost_in_use(self, mock_pdf):
+        payload = self._payload(lines=[{'product_variant_id': self.variant.pk, 'price': '100.00'}])
+        response = self.client.post('/quotes/submit/', payload, format='json')
+        self.assertEqual(response.status_code, 201, response.data)
+        self.assertEqual(QuoteLine.objects.get().cost_in_use, [])
+
+    def test_dilution_of_other_variant_rejected(self, mock_pdf):
+        other_product = make_product(name='Other', productCode='OTHER')
+        other_variant = make_variant(other_product, code='OTHER05', barcode='9400000000003',
+                                     volume_litres=Decimal('5'))
+        foreign = DilutionVariant.objects.create(
+            variant=other_variant, application_type=self.mop, value=Decimal('50'))
+        payload = self._payload(lines=[{
+            'product_variant_id': self.variant.pk, 'price': '100.00', 'dilution_ids': [foreign.pk],
+        }])
+        response = self.client.post('/quotes/submit/', payload, format='json')
+        self.assertEqual(response.status_code, 400)
+        self.assertFalse(Quote.objects.exists())
+
+    def test_unknown_dilution_rejected(self, mock_pdf):
+        payload = self._payload(lines=[{
+            'product_variant_id': self.variant.pk, 'price': '100.00', 'dilution_ids': [99999],
+        }])
+        response = self.client.post('/quotes/submit/', payload, format='json')
+        self.assertEqual(response.status_code, 400)
+
+    def test_snapshot_frozen_against_dilution_changes(self, mock_pdf):
         self.client.post('/quotes/submit/', self._payload(), format='json')
-        self.product.dilution_ratio = Decimal('50')
-        self.product.save()
+        self.mop_dilution.value = Decimal('50')
+        self.mop_dilution.save()
         line = QuoteLine.objects.get()
-        self.assertEqual(line.cost_in_use[0]['cost'], '0.45')  # unchanged
+        self.assertEqual(line.cost_in_use[0]['cost'], '0.05')  # unchanged
 
     def test_empty_lines_rejected(self, mock_pdf):
         response = self.client.post('/quotes/submit/', self._payload(lines=[]), format='json')
@@ -185,13 +268,22 @@ class SubmitQuoteAPITestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         self.assertFalse(Quote.objects.exists())
 
-    def test_catalogue_lists_all_variants_with_fill_options(self, mock_pdf):
+    def test_catalogue_lists_dilution_options(self, mock_pdf):
         response = self.client.get('/quotes/catalogue/')
         self.assertEqual(response.status_code, 200)
         self.assertEqual(len(response.data), 1)
         item = response.data[0]
         self.assertEqual(item['code'], 'CONQUEST20')
-        self.assertEqual(item['fill_options'][0]['fills'], '200.00')
+        options = {o['application_type']: o for o in item['dilution_options']}
+        self.assertEqual(options['Floor Mop/Bucket - General Cleaning']['fills'], '2000.00')
+        self.assertEqual(options['Spray Bottle - General Cleaning']['value'], '25.00')
+
+    def test_catalogue_hides_inactive_application_types(self, mock_pdf):
+        self.spray.is_active = False
+        self.spray.save()
+        response = self.client.get('/quotes/catalogue/')
+        names = [o['application_type'] for o in response.data[0]['dilution_options']]
+        self.assertEqual(names, ['Floor Mop/Bucket - General Cleaning'])
 
     def test_list_and_mine_filter(self, mock_pdf):
         self.client.post('/quotes/submit/', self._payload(), format='json')
@@ -213,10 +305,11 @@ class DashboardTestCase(TestCase):
         self.user = User.objects.create_user(username='staff', email='staff@example.com', password='pass12345')
         self.client.force_login(self.user)
 
-        self.bucket = FillType.objects.create(name='Bucket Fill', volume_litres=Decimal('10'))
-        self.product = make_product(dilution_ratio=Decimal('100'))
-        self.product.fill_types.set([self.bucket])
+        self.mop = make_application_type()
+        self.product = make_product()
         self.variant = make_variant(self.product, volume_litres=Decimal('20'))
+        self.dilution = DilutionVariant.objects.create(
+            variant=self.variant, application_type=self.mop, value=Decimal('100'))
 
     def test_requires_login(self, mock_pdf):
         self.client.logout()
@@ -238,22 +331,23 @@ class DashboardTestCase(TestCase):
         self.assertEqual(response.status_code, 200)
         self.assertContains(response, 'catalogue-data')
         self.assertContains(response, 'Conquest Dishwash Detergent')
+        self.assertContains(response, 'dilution_options')
 
-    def test_create_quote_via_form(self, mock_pdf):
+    def test_create_quote_via_form_includes_all_dilutions(self, mock_pdf):
         response = self.client.post('/quotes/dashboard/create/', {
             'company_name': 'XYZ CAFE',
             'address': '29 BRIDGE ST\nCAMBRIDGE',
             'contact_name': 'Sam Brown',
             'customer_id': '',
             'variant_id': [str(self.variant.pk)],
-            'price': ['89.90'],
+            'price': ['100.00'],
         })
         self.assertEqual(response.status_code, 302)
         quote = Quote.objects.get()
         self.assertEqual(quote.company_name, 'XYZ CAFE')
         self.assertEqual(quote.created_by, self.user)
         line = quote.lines.get()
-        self.assertEqual(line.cost_in_use[0]['display'], 'Bucket Fill .45c')
+        self.assertEqual(line.cost_in_use[0]['display'], 'Floor Mop/Bucket - General Cleaning .05c')
         mock_pdf.assert_called_once()
 
     def test_create_rejects_missing_price(self, mock_pdf):

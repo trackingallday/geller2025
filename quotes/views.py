@@ -2,7 +2,7 @@ from rest_framework import status
 from rest_framework.decorators import api_view
 from rest_framework.response import Response
 
-from chemsapp.models import Customer, ProductVariant
+from chemsapp.models import Customer, DilutionVariant, ProductVariant
 from .models import Quote
 from .serializers import QuoteCatalogueVariantSerializer, QuoteCreateSerializer, QuoteSerializer
 from .services import create_quote, send_quote_pdf_email
@@ -12,8 +12,7 @@ from .services import create_quote, send_quote_pdf_email
 def quote_catalogue(request):
     """Full product-variant catalogue for the quote builder (not customer-filtered)."""
     variants = ProductVariant.objects.select_related('product', 'size').prefetch_related(
-        'product__fill_types',
-        'fill_overrides__fill_type',
+        'dilutions__application_type',
     ).order_by('product__name', 'code')
     serializer = QuoteCatalogueVariantSerializer(variants, many=True, context={'request': request})
     return Response(serializer.data)
@@ -31,10 +30,13 @@ def submit_quote(request):
         "contact_name": "Sam Brown",              # optional
         "customer_id": 7,                         # optional prefill provenance
         "lines": [
-            {"product_variant_id": 12, "price": "89.90"},
+            {"product_variant_id": 12, "price": "89.90", "dilution_ids": [3, 7]},
             ...
         ]
     }
+
+    dilution_ids (optional) are the DilutionVariant options selected as
+    cost-in-use lines; each must belong to that line's product variant.
     """
     input_serializer = QuoteCreateSerializer(data=request.data)
     if not input_serializer.is_valid():
@@ -57,9 +59,7 @@ def submit_quote(request):
     # Validate all product variant IDs up front
     variant_ids = [line['product_variant_id'] for line in lines_data]
     variants = {
-        v.pk: v for v in ProductVariant.objects.filter(pk__in=variant_ids).select_related('product').prefetch_related(
-            'product__fill_types', 'fill_overrides__fill_type',
-        )
+        v.pk: v for v in ProductVariant.objects.filter(pk__in=variant_ids).select_related('product', 'size')
     }
     missing = set(variant_ids) - set(variants.keys())
     if missing:
@@ -68,6 +68,21 @@ def submit_quote(request):
             status=status.HTTP_400_BAD_REQUEST,
         )
 
+    # Validate selected dilution options and that each belongs to its line's variant
+    all_dilution_ids = {d for line in lines_data for d in line.get('dilution_ids', [])}
+    dilutions = {
+        d.pk: d for d in DilutionVariant.objects.filter(pk__in=all_dilution_ids)
+        .select_related('application_type', 'variant__size')
+    }
+    for line in lines_data:
+        for dilution_id in line.get('dilution_ids', []):
+            dilution = dilutions.get(dilution_id)
+            if dilution is None or dilution.variant_id != line['product_variant_id']:
+                return Response(
+                    {'detail': f"Dilution option {dilution_id} does not belong to variant {line['product_variant_id']}."},
+                    status=status.HTTP_400_BAD_REQUEST,
+                )
+
     quote = create_quote(
         user=request.user,
         company_name=data['company_name'],
@@ -75,7 +90,11 @@ def submit_quote(request):
         contact_name=data.get('contact_name', ''),
         customer=customer,
         lines=[
-            {'variant': variants[line['product_variant_id']], 'price': line['price']}
+            {
+                'variant': variants[line['product_variant_id']],
+                'price': line['price'],
+                'dilutions': [dilutions[d] for d in line.get('dilution_ids', [])],
+            }
             for line in lines_data
         ],
     )

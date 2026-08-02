@@ -7,7 +7,7 @@ import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
     MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact,\
-    FillType, VariantFillOverride
+    ApplicationType, DilutionVariant
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm, ProductForm
@@ -283,7 +283,7 @@ class UserAdmin(admin.ModelAdmin):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
-    fields = ('code', 'size', 'pack_size', 'volume_litres', 'description', 'barcode', 'image')
+    fields = ('code', 'size', 'pack_size', 'description', 'barcode', 'image')
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         field = super().formfield_for_dbfield(db_field, request, **kwargs)
@@ -299,7 +299,7 @@ class ProductAdmin(ImportExportModelAdmin):
     readonly_fields = []
     resource_class = ProductResource
     inlines = [ProductVariantInline]
-    filter_horizontal = ['safetyWears', 'subCategory', 'productCategory', 'sizes', 'fill_types']
+    filter_horizontal = ['safetyWears', 'subCategory', 'productCategory', 'sizes']
     list_display = ['brand', 'name', 'get_categories', 'has_sds', 'has_pi_sheet', 'public']
 
     def get_categories(self, obj):
@@ -317,23 +317,88 @@ class ProductAdmin(ImportExportModelAdmin):
     has_pi_sheet.short_description = 'PI Sheet Attached'
 
 
-class FillTypeAdmin(admin.ModelAdmin):
-    list_display = ['name', 'volume_litres', 'sort_order', 'is_active']
-    list_editable = ['volume_litres', 'sort_order', 'is_active']
+class ApplicationTypeAdmin(admin.ModelAdmin):
+    change_list_template = 'admin/chemsapp/applicationtype/change_list.html'
+    list_display = ['name', 'category', 'value_kind', 'unit_volume_litres', 'unit_label', 'sort_order', 'is_active']
+    list_editable = ['sort_order', 'is_active']
+    list_filter = ['category', 'value_kind']
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'import-dilutions/',
+                self.admin_site.admin_view(self.import_dilutions_view),
+                name='chemsapp_applicationtype_import_dilutions',
+            ),
+        ]
+        return custom_urls + urls
+
+    def import_dilutions_view(self, request):
+        """Upload the "Dilutions for Geller" xlsx and re-seed ApplicationTypes +
+        remap every matched variant's DilutionVariant rows."""
+        from django.core.exceptions import PermissionDenied
+        from django.db import transaction
+        from django.template.response import TemplateResponse
+        from chemsapp.dilutions_import import import_dilutions_workbook
+
+        if not self.has_change_permission(request):
+            raise PermissionDenied
+
+        stats = None
+        error = None
+        dry_run = True
+        create_missing = False
+        if request.method == 'POST':
+            upload = request.FILES.get('xlsx_file')
+            dry_run = bool(request.POST.get('dry_run'))
+            create_missing = bool(request.POST.get('create_missing_variants'))
+            if not upload:
+                error = 'Choose an .xlsx file to upload.'
+            else:
+                try:
+                    with transaction.atomic():
+                        stats = import_dilutions_workbook(upload, create_missing_variants=create_missing)
+                        if dry_run:
+                            transaction.set_rollback(True)
+                except Exception as e:
+                    error = f'Import failed: {e}'
+                if stats and not error:
+                    verb = 'Dry run — nothing saved.' if dry_run else 'Import saved.'
+                    messages.success(
+                        request,
+                        f"{verb} {len(stats['matched'])} variants matched, "
+                        f"{stats['dilutions']} dilution rows, {len(stats['unmatched'])} unmatched SKUs.",
+                    )
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Import dilutions spreadsheet',
+            'opts': self.model._meta,
+            'stats': stats,
+            'error': error,
+            'dry_run': dry_run,
+            'create_missing_variants': create_missing,
+        }
+        return TemplateResponse(request, 'admin/chemsapp/applicationtype/import_dilutions.html', context)
 
 
-class VariantFillOverrideInline(admin.TabularInline):
-    model = VariantFillOverride
+class DilutionVariantInline(admin.TabularInline):
+    model = DilutionVariant
     extra = 1
 
 
 class ProductVariantAdmin(admin.ModelAdmin):
-    """Standalone variant admin so cost-in-use overrides can be edited
+    """Standalone variant admin so dilution options can be edited
     (inlines can't nest inside ProductVariantInline on the product page)."""
     search_fields = ['code', 'product__name', 'barcode']
-    list_display = ['__str__', 'code', 'pack_size', 'volume_litres']
+    list_display = ['__str__', 'code', 'pack_size', 'size_volume']
     list_select_related = ['product', 'size']
-    inlines = [VariantFillOverrideInline]
+    inlines = [DilutionVariantInline]
+
+    def size_volume(self, obj):
+        return obj.size.volume_litres if obj.size else None
+    size_volume.short_description = 'Size volume (L)'
 
 
 #class ProductAddAdmin(ImportExportModelAdmin):
@@ -433,7 +498,8 @@ class ConfigAdmin(ImportExportModelAdmin):
     read_only_fields = ('name', )
 
 class SizeAdmin(ImportExportModelAdmin):
-    pass
+    list_display = ['name', 'desc', 'amount', 'volume_litres', 'isBag']
+    list_editable = ['volume_litres']
 
 
 class SectorSectionInline(admin.TabularInline):  # or admin.StackedInline
@@ -464,7 +530,7 @@ admin.site.register(Distributor, DistributorAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductVariant, ProductVariantAdmin)
-admin.site.register(FillType, FillTypeAdmin)
+admin.site.register(ApplicationType, ApplicationTypeAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)
 admin.site.register(Post, PostAdmin)

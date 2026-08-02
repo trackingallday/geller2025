@@ -101,11 +101,11 @@
         const price = parseFloat(row.querySelector('.price-input').value);
         const preview = row.querySelector('.ciu-preview');
         const variant = catalogueById[variantId];
-        if (!variant || !variant.fill_options.length || isNaN(price) || price <= 0) {
+        if (!variant || !variant.dilution_options.length || isNaN(price) || price <= 0) {
             preview.innerHTML = '<span class="text-muted">—</span>';
             return;
         }
-        preview.innerHTML = variant.fill_options
+        preview.innerHTML = variant.dilution_options
             .map(o => `${o.name} <strong>${formatCost(price / parseFloat(o.fills))}</strong>`)
             .join('<br>');
     }

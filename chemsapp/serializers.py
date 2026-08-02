@@ -85,7 +85,7 @@ class ProductSerializer(serializers.ModelSerializer):
             'id', 'name', 'subheading', 'primaryImageLink', 'secondaryImageLink', 'usageType', 'amountDesc',
             'directions', 'productCode', 'productCodes', 'brand', 'infoSheet', 'sdsSheet', 'application', 'procedure', 'properties',
             'safetyWears', 'customers', 'markets', 'description', 'subCategory', 'productCategory',
-            'sizes', 'wall_chart_color', 'dilution_ratio', 'fill_types',
+            'sizes', 'wall_chart_color',
         )
 
 
@@ -151,7 +151,7 @@ class SizeSerializer(serializers.ModelSerializer):
     class Meta:
         model = Size
         fields = (
-            'id', 'name', 'desc', 'amount', 'image', 'imageNo', 'isBag',
+            'id', 'name', 'desc', 'amount', 'image', 'imageNo', 'isBag', 'volume_litres',
         )
 
 
@@ -161,7 +161,7 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariant
-        fields = ('id', 'code', 'size', 'pack_size', 'description', 'barcode', 'image', 'image_url', 'volume_litres')
+        fields = ('id', 'code', 'size', 'pack_size', 'description', 'barcode', 'image', 'image_url')
 
     def get_image_url(self, obj):
         if not obj.image:

@@ -90,11 +90,38 @@ class ProductCategory(models.Model):
         return "{} ".format(self.name)
 
 
-class FillType(models.Model):
-    """Global lookup of fill/container types used for cost-in-use maths,
-    e.g. 'Bucket Fill' = 10L, 'Spray Bottle' = 0.5L. Admin-editable."""
+class ApplicationType(models.Model):
+    """Global lookup of application contexts for dilution/cost-in-use maths,
+    seeded from the 'Dilutions for Geller' spreadsheet columns,
+    e.g. 'Spray Bottle - General Cleaning' (750ml container, ratio value)."""
+    RATIO = 'ratio'
+    ML_PER_LITRE = 'ml_per_litre'
+    G_PER_LITRE = 'g_per_litre'
+    ML_PER_KG = 'ml_per_kg'
+    G_PER_KG = 'g_per_kg'
+    ML_PER_CYCLE = 'ml_per_cycle'
+    G_PER_CYCLE = 'g_per_cycle'
+    VALUE_KIND_CHOICES = [
+        (RATIO, 'Dilution ratio (water:chemical, 0 = undiluted)'),
+        (ML_PER_LITRE, 'ml per litre'),
+        (G_PER_LITRE, 'grams per litre'),
+        (ML_PER_KG, 'ml per kg'),
+        (G_PER_KG, 'grams per kg'),
+        (ML_PER_CYCLE, 'ml per cycle'),
+        (G_PER_CYCLE, 'grams per cycle'),
+    ]
+
     name = models.CharField(max_length=100, unique=True)
-    volume_litres = models.DecimalField(max_digits=8, decimal_places=3)
+    category = models.CharField(
+        max_length=100, blank=True, default='',
+        help_text='Grouping shown in the quote builder, e.g. "Spray Bottle", "Sanitising".')
+    value_kind = models.CharField(max_length=20, choices=VALUE_KIND_CHOICES, default=RATIO)
+    unit_volume_litres = models.DecimalField(
+        max_digits=8, decimal_places=3, blank=True, null=True,
+        help_text='Container/basis volume for ratio kinds, e.g. 0.75 for a spray bottle. Blank for per-cycle/per-kg kinds.')
+    unit_label = models.CharField(
+        max_length=100,
+        help_text='Cost-in-use unit shown on proposals, e.g. "per 750ml spray bottle", "per cycle".')
     sort_order = models.PositiveIntegerField(default=0)
     is_active = models.BooleanField(default=True)
 
@@ -102,7 +129,7 @@ class FillType(models.Model):
         ordering = ['sort_order', 'name']
 
     def __str__(self):
-        return f'{self.name} ({self.volume_litres}L)'
+        return self.name
 
 
 class Product(models.Model):
@@ -129,15 +156,6 @@ class Product(models.Model):
         help_text=mark_safe('Background colour for this product on wall chart PDFs. See <a href="https://www.w3schools.com/colors/colors_picker.asp">W3Schools Color Picker</a>. Leave blank for white.')
     )
 
-    dilution_ratio = models.DecimalField(
-        max_digits=8, decimal_places=2, blank=True, null=True,
-        help_text='Dilution 1:X — enter 100 for 1:100. Leave blank for ready-to-use/non-liquid products.'
-    )
-    fill_types = models.ManyToManyField(
-        FillType, blank=True, related_name='products',
-        help_text='Fill/container types shown as "Cost in use" lines on quote proposals.'
-    )
-
     # Unused for marketing frontend
     usageType = models.CharField(max_length=455, blank=True)
     amountDesc = models.CharField(max_length=455, blank=True)
@@ -158,54 +176,53 @@ class ProductVariant(models.Model):
     description = models.TextField(blank=True, null=True)
     barcode = models.CharField(max_length=255)
     image = models.FileField(upload_to='documents/', blank=True, null=True)
-    volume_litres = models.DecimalField(
-        max_digits=8, decimal_places=3, blank=True, null=True,
-        help_text='Container volume in litres used for cost-in-use maths. Do not rely on Size.amount.'
-    )
 
     def __str__(self):
         size_str = f' ({self.size})' if self.size else ''
         return f'{self.product.name}{size_str} - {self.barcode}'
 
-    def get_fill_options(self):
-        """Cost-in-use fill counts for this variant.
-
-        Returns [{'fill_type': FillType, 'fills': Decimal, 'source': 'override'|'computed'}].
-        Union of product.fill_types (active) and this variant's overrides; an
-        override always wins, and is the only path for products where the
-        dilution maths doesn't apply (no dilution_ratio or volume_litres).
-        Computed fills = volume_litres × dilution_ratio ÷ fill_type.volume_litres.
-        """
-        overrides = {o.fill_type_id: o for o in self.fill_overrides.select_related('fill_type').all()}
-        fill_types = {ft.id: ft for ft in self.product.fill_types.filter(is_active=True)}
-        for override in overrides.values():
-            fill_types.setdefault(override.fill_type_id, override.fill_type)
-
-        results = []
-        for ft in sorted(fill_types.values(), key=lambda f: (f.sort_order, f.name)):
-            if ft.id in overrides:
-                results.append({'fill_type': ft, 'fills': overrides[ft.id].fills, 'source': 'override'})
-            elif self.volume_litres and self.product.dilution_ratio and ft.volume_litres:
-                fills = (self.volume_litres * self.product.dilution_ratio) / ft.volume_litres
-                results.append({'fill_type': ft, 'fills': fills.quantize(Decimal('0.01')), 'source': 'computed'})
-        return results
-
-
-class VariantFillOverride(models.Model):
-    """Manual fills-per-unit for a variant + fill type. Wins over the computed
-    value, and is the only way to get cost-in-use for non-liquid products."""
-    variant = models.ForeignKey(ProductVariant, related_name='fill_overrides', on_delete=models.CASCADE)
-    fill_type = models.ForeignKey(FillType, related_name='variant_overrides', on_delete=models.CASCADE)
-    fills = models.DecimalField(
-        max_digits=10, decimal_places=2,
-        help_text='Number of fills per unit; cost in use = price ÷ fills'
-    )
+class DilutionVariant(models.Model):
+    """Dilution ratio/dose for one product variant in one application context,
+    imported from the 'Dilutions for Geller' spreadsheet. These are the
+    selectable cost-in-use options when building a quote."""
+    variant = models.ForeignKey(ProductVariant, related_name='dilutions', on_delete=models.CASCADE)
+    application_type = models.ForeignKey(ApplicationType, related_name='dilutions', on_delete=models.PROTECT)
+    value = models.DecimalField(
+        max_digits=8, decimal_places=2, blank=True, null=True,
+        help_text='Ratio or dose per the application type; 0 = undiluted/ready to use. Blank when only the note applies.')
+    note = models.CharField(max_length=255, blank=True, default='',
+                            help_text='e.g. "Check manufacturer\'s recommendation"')
 
     class Meta:
-        unique_together = ('variant', 'fill_type')
+        unique_together = ('variant', 'application_type')
+        ordering = ['application_type__sort_order', 'application_type__name']
 
     def __str__(self):
-        return f'{self.variant} — {self.fill_type.name}: {self.fills} fills'
+        detail = self.value if self.value is not None else self.note
+        return f'{self.variant} — {self.application_type.name}: {detail}'
+
+    def fills(self):
+        """Fills/uses per pack for cost-in-use (cost = price ÷ fills).
+
+        Ratio kinds: pack litres × ratio ÷ container litres, where ratio 0
+        (undiluted) counts as 1 — the pack fills the container as-is.
+        Dose kinds (ml/g per litre, kg or cycle): pack litres × 1000 ÷ dose.
+        Returns None when the maths doesn't apply (no value, no pack volume,
+        or a zero dose) — the option is then display-only.
+        """
+        app_type = self.application_type
+        volume = self.variant.size.volume_litres if self.variant.size else None
+        if self.value is None or not volume:
+            return None
+        if app_type.value_kind == ApplicationType.RATIO:
+            if not app_type.unit_volume_litres:
+                return None
+            fills = (volume * max(self.value, Decimal('1'))) / app_type.unit_volume_litres
+        else:
+            if not self.value:
+                return None
+            fills = (volume * Decimal('1000')) / self.value
+        return fills.quantize(Decimal('0.01'))
 
 
 class CustomerContact(models.Model):
@@ -415,6 +432,11 @@ class Size(models.Model):
     image = models.FileField(upload_to='documents/', blank=True, null=True)
     imageNo = models.FileField(upload_to='documents/', blank=True, null=True)
     isBag = models.BooleanField(default=False)
+    volume_litres = models.DecimalField(
+        max_digits=8, decimal_places=3, blank=True, null=True,
+        help_text='Container volume in litres used for cost-in-use maths. '
+                  'The free-text "amount" field is not used for calculations.'
+    )
 
     def __str__(self):
         return self.name

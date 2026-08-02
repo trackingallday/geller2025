@@ -25,24 +25,34 @@ def format_cost_in_use(cost):
     return f'${cost:.2f}'
 
 
-def build_cost_in_use_snapshot(variant, price):
-    """JSON-serialisable cost-in-use lines for a quote line.
+def build_cost_in_use_snapshot(price, dilutions):
+    """JSON-serialisable cost-in-use lines for the selected dilution options.
 
-    Empty list (no dilution, no volume, no overrides) means the PDF omits
-    the 'Cost in use' block for that line.
+    `dilutions` is an iterable of DilutionVariant. Empty list means the PDF
+    omits the 'Cost in use' block for that line. Options whose maths doesn't
+    apply (no value or pack volume) fall back to a note-only entry.
     """
     snapshot = []
-    for option in variant.get_fill_options():
-        fills = option['fills']
-        if not fills:
-            continue
-        cost = (Decimal(price) / fills).quantize(CENT, rounding=COST_ROUNDING)
-        snapshot.append({
-            'fill_type': option['fill_type'].name,
-            'fills': str(fills),
-            'cost': str(cost),
-            'display': f"{option['fill_type'].name} {format_cost_in_use(cost)}",
-        })
+    for dilution in dilutions:
+        app_type = dilution.application_type
+        fills = dilution.fills()
+        if fills:
+            cost = (Decimal(price) / fills).quantize(CENT, rounding=COST_ROUNDING)
+            snapshot.append({
+                'label': app_type.name,
+                'unit_label': app_type.unit_label,
+                'fills': str(fills),
+                'cost': str(cost),
+                'display': f'{app_type.name} {format_cost_in_use(cost)}',
+            })
+        elif dilution.note:
+            snapshot.append({
+                'label': app_type.name,
+                'unit_label': app_type.unit_label,
+                'fills': None,
+                'cost': None,
+                'display': f'{app_type.name}: {dilution.note}',
+            })
     return snapshot
 
 
@@ -62,7 +72,9 @@ def snapshot_line_fields(variant):
 def create_quote(*, user, company_name, address='', contact_name='', customer=None, lines):
     """Create a quote with snapshotted lines and generate its PDF.
 
-    `lines` is a list of {'variant': ProductVariant, 'price': Decimal}.
+    `lines` is a list of {'variant': ProductVariant, 'price': Decimal,
+    'dilutions': [DilutionVariant]} (dilutions optional — the options the
+    salesperson selected to show as cost-in-use on that line).
     Single code path shared by the API submit view and the dashboard page.
     """
     from .models import Quote, QuoteLine
@@ -77,14 +89,16 @@ def create_quote(*, user, company_name, address='', contact_name='', customer=No
         )
         for i, line in enumerate(lines):
             variant = line['variant']
-            QuoteLine.objects.create(
+            dilutions = line.get('dilutions', [])
+            quote_line = QuoteLine.objects.create(
                 quote=quote,
                 product_variant=variant,
                 price=line['price'],
                 sort_order=i,
-                cost_in_use=build_cost_in_use_snapshot(variant, line['price']),
+                cost_in_use=build_cost_in_use_snapshot(line['price'], dilutions),
                 **snapshot_line_fields(variant),
             )
+            quote_line.dilutions.set(dilutions)
 
     # Generate PDF outside the transaction so a PDF failure doesn't roll back the quote
     QuotePDFGenerator(quote).generate_and_save()
@@ -142,5 +156,8 @@ def refresh_line_snapshots(quote):
         line.product_subheading = fields['product_subheading']
         line.product_code = fields['product_code']
         line.description = fields['description']
-        line.cost_in_use = build_cost_in_use_snapshot(variant, line.price)
+        line.cost_in_use = build_cost_in_use_snapshot(
+            line.price,
+            line.dilutions.select_related('application_type', 'variant__size').all(),
+        )
         line.save()

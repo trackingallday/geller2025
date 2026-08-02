@@ -43,8 +43,7 @@ def quote_dashboard(request):
 
 def _builder_context():
     variants = ProductVariant.objects.select_related('product', 'size').prefetch_related(
-        'product__fill_types',
-        'fill_overrides__fill_type',
+        'dilutions__application_type',
     ).order_by('product__name', 'code')
 
     catalogue = []
@@ -54,13 +53,15 @@ def _builder_context():
             label += f' — {v.size.name}'
         if v.code:
             label += f' ({v.code})'
+        dilution_options = []
+        for dilution in v.dilutions.all():
+            fills = dilution.fills()
+            if fills:
+                dilution_options.append({'name': dilution.application_type.name, 'fills': str(fills)})
         catalogue.append({
             'id': v.pk,
             'label': label,
-            'fill_options': [
-                {'name': o['fill_type'].name, 'fills': str(o['fills'])}
-                for o in v.get_fill_options()
-            ],
+            'dilution_options': dilution_options,
         })
 
     customers = []
@@ -99,7 +100,7 @@ def dashboard_create_quote(request):
             if not vid and not price:
                 continue  # skip fully empty rows
             try:
-                variant = ProductVariant.objects.select_related('product').get(pk=vid)
+                variant = ProductVariant.objects.select_related('product', 'size').get(pk=vid)
                 price_dec = Decimal(price)
                 if price_dec <= 0:
                     raise InvalidOperation
@@ -107,7 +108,12 @@ def dashboard_create_quote(request):
                 lines = None
                 error = 'Every line needs a product and a price greater than zero.'
                 break
-            lines.append({'variant': variant, 'price': price_dec})
+            # Test page has no per-option picker: include all of the variant's dilutions
+            lines.append({
+                'variant': variant,
+                'price': price_dec,
+                'dilutions': list(variant.dilutions.select_related('application_type').all()),
+            })
 
         if lines is not None:
             if not company_name:

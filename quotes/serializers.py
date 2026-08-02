@@ -47,6 +47,9 @@ class QuoteSerializer(serializers.ModelSerializer):
 class QuoteLineWriteSerializer(serializers.Serializer):
     product_variant_id = serializers.IntegerField()
     price = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('0.01'))
+    # DilutionVariant ids the salesperson selected as cost-in-use lines;
+    # must belong to the same product variant.
+    dilution_ids = serializers.ListField(child=serializers.IntegerField(), required=False, default=list)
 
 
 class QuoteCreateSerializer(serializers.Serializer):
@@ -63,18 +66,18 @@ class QuoteCatalogueVariantSerializer(serializers.ModelSerializer):
     product_id = serializers.PrimaryKeyRelatedField(source='product', read_only=True)
     product_name = serializers.CharField(source='product.name', read_only=True)
     subheading = serializers.CharField(source='product.subheading', read_only=True)
-    dilution_ratio = serializers.DecimalField(
-        source='product.dilution_ratio', max_digits=8, decimal_places=2, read_only=True)
     size_name = serializers.CharField(source='size.name', read_only=True, default=None)
+    volume_litres = serializers.DecimalField(
+        source='size.volume_litres', max_digits=8, decimal_places=3, read_only=True, default=None)
     image_url = serializers.SerializerMethodField()
-    fill_options = serializers.SerializerMethodField()
+    dilution_options = serializers.SerializerMethodField()
 
     class Meta:
         model = ProductVariant
         fields = (
             'id', 'code', 'barcode', 'pack_size', 'description', 'volume_litres',
-            'product_id', 'product_name', 'subheading', 'dilution_ratio',
-            'size_name', 'image_url', 'fill_options',
+            'product_id', 'product_name', 'subheading',
+            'size_name', 'image_url', 'dilution_options',
         )
 
     def get_image_url(self, obj):
@@ -86,13 +89,21 @@ class QuoteCatalogueVariantSerializer(serializers.ModelSerializer):
             return request.build_absolute_uri(image.url)
         return image.url
 
-    def get_fill_options(self, obj):
-        return [
-            {
-                'fill_type_id': option['fill_type'].id,
-                'fill_type': option['fill_type'].name,
-                'fills': str(option['fills']),
-                'source': option['source'],
-            }
-            for option in obj.get_fill_options()
-        ]
+    def get_dilution_options(self, obj):
+        options = []
+        for dilution in obj.dilutions.all():
+            app_type = dilution.application_type
+            if not app_type.is_active:
+                continue
+            fills = dilution.fills()
+            options.append({
+                'id': dilution.id,
+                'application_type': app_type.name,
+                'category': app_type.category,
+                'value_kind': app_type.value_kind,
+                'unit_label': app_type.unit_label,
+                'value': str(dilution.value) if dilution.value is not None else None,
+                'fills': str(fills) if fills is not None else None,
+                'note': dilution.note,
+            })
+        return options

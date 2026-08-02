@@ -1,0 +1,68 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:chemsapp_applicationtype_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; Import dilutions spreadsheet
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Import dilutions spreadsheet</h1>
+<p>Upload the <strong>"Dilutions for Geller"</strong> .xlsx file. This re-seeds all Application Types
+from the sheet's columns and replaces the dilution options of every matched product variant with the
+sheet's values (stale options are removed). Rows are matched by SKU &rarr; variant code, falling back
+to product code / product name.</p>
+
+{% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+        <div class="form-row">
+            <label for="xlsx_file">Spreadsheet (.xlsx):</label>
+            <input type="file" name="xlsx_file" id="xlsx_file" accept=".xlsx" required>
+        </div>
+        <div class="form-row">
+            <label for="dry_run">Dry run:</label>
+            <input type="checkbox" name="dry_run" id="dry_run" {% if dry_run %}checked{% endif %}>
+            <p class="help">Show the report below without saving anything. Untick to apply for real.</p>
+        </div>
+        <div class="form-row">
+            <label for="create_missing_variants">Create missing variants:</label>
+            <input type="checkbox" name="create_missing_variants" id="create_missing_variants" {% if create_missing_variants %}checked{% endif %}>
+            <p class="help">If a SKU has no variant record but its product can be matched, create the variant.</p>
+        </div>
+    </fieldset>
+    <div class="submit-row">
+        <input type="submit" value="Run import" class="default">
+    </div>
+</form>
+
+{% if stats %}
+<h2>Report</h2>
+<ul>
+    <li><strong>Matched variants:</strong> {{ stats.matched|length }}</li>
+    <li><strong>Dilution rows synced:</strong> {{ stats.dilutions }}</li>
+    <li><strong>Size volumes backfilled:</strong> {{ stats.volume_backfills }}</li>
+    <li><strong>Rows with no dilution data (skipped):</strong> {{ stats.skipped_empty|length }}</li>
+</ul>
+
+{% if stats.created_variants %}
+<h3>Created variants ({{ stats.created_variants|length }})</h3>
+<ul>{% for line in stats.created_variants %}<li>+ {{ line }}</li>{% endfor %}</ul>
+{% endif %}
+
+{% if stats.duplicate_skus %}
+<h3>Duplicate SKUs in sheet ({{ stats.duplicate_skus|length }})</h3>
+<ul>{% for line in stats.duplicate_skus %}<li>! {{ line }}</li>{% endfor %}</ul>
+{% endif %}
+
+{% if stats.unmatched %}
+<h3>Unmatched SKUs ({{ stats.unmatched|length }})</h3>
+<ul>{% for line in stats.unmatched %}<li>? {{ line }}</li>{% endfor %}</ul>
+{% endif %}
+{% endif %}
+{% endblock %}
