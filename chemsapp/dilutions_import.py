@@ -113,8 +113,8 @@ def _import_rows(sheet, app_types, create_missing):
     products_by_name = {p.name.strip().lower(): p for p in Product.objects.all()}
     sizes_by_name = {s.name.strip().lower(): s for s in Size.objects.all()}
 
-    stats = {'matched': [], 'created_variants': [], 'unmatched': [], 'skipped_empty': [],
-             'dilutions': 0, 'volume_backfills': 0, 'duplicate_skus': []}
+    stats = {'matched': [], 'created_variants': [], 'unmatched': [], 'unmatched_with_product': [],
+             'skipped_empty': [], 'dilutions': 0, 'volume_backfills': 0, 'duplicate_skus': []}
     seen_skus = set()
     claimed_variant_ids = set()
 
@@ -137,7 +137,7 @@ def _import_rows(sheet, app_types, create_missing):
             stats['skipped_empty'].append(f'{sku} ({product_name} {pack_size})')
             continue
 
-        variant = _resolve_variant(
+        variant, product = _resolve_variant(
             sku, product_name, pack_size, variants_by_code, products_by_code,
             products_by_name, sizes_by_name, create_missing, stats,
         )
@@ -146,7 +146,11 @@ def _import_rows(sheet, app_types, create_missing):
         if variant is not None and variant.pk in claimed_variant_ids:
             variant = None
         if variant is None:
-            stats['unmatched'].append(f'{sku} ({product_name} {pack_size})')
+            if product is not None:
+                stats['unmatched_with_product'].append(
+                    f'{sku} ({product_name} {pack_size}) — product "{product.name}" matched, no variant to attach to')
+            else:
+                stats['unmatched'].append(f'{sku} ({product_name} {pack_size})')
             continue
         claimed_variant_ids.add(variant.pk)
         stats['matched'].append(sku)
@@ -159,30 +163,39 @@ def _import_rows(sheet, app_types, create_missing):
 
 def _resolve_variant(sku, product_name, pack_size, variants_by_code, products_by_code,
                      products_by_name, sizes_by_name, create_missing, stats):
+    """Returns (variant, product): variant None when nothing to attach to,
+    product still set when the product matched but no variant could be used."""
     variant = variants_by_code.get(sku)
     if variant:
-        return variant
+        return variant, variant.product
 
     product = products_by_code.get(sku) or products_by_name.get(product_name.lower())
     if product is None:
-        return None
+        return None, None
 
     existing = list(product.variants.all()[:2])
     if len(existing) == 1:
-        return existing[0]
+        single = existing[0]
+        single_code = (single.code or '').strip().upper()
+        # A coded single variant with a DIFFERENT code is a different pack size —
+        # when creating is allowed, make a new variant instead of hijacking it.
+        if not (create_missing and single_code and single_code != sku):
+            return single, product
     if not create_missing:
-        return None
+        return None, product
 
+    size = sizes_by_name.get(pack_size.lower())
     variant = ProductVariant.objects.create(
         code=sku,
         product=product,
-        size=sizes_by_name.get(pack_size.lower()),
+        size=size,
         pack_size=1,
         barcode='',
     )
     variants_by_code[sku] = variant
-    stats['created_variants'].append(f'{sku} ({product.name} {pack_size})')
-    return variant
+    no_size = '' if size else ' — no Size matched, cost-in-use needs one'
+    stats['created_variants'].append(f'{sku} ({product.name} {pack_size}){no_size}')
+    return variant, product
 
 
 def _backfill_volume(variant, volume_cell, stats):

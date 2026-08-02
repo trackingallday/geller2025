@@ -129,14 +129,27 @@ class ImportDilutionsTestCase(TestCase):
         rows = [{COL_NAME: 'Gleam', COL_SKU: 'GLEAM20', COL_PACK: '20L', COL_MOP_GENERAL: 30, COL_VOL: 20}]
 
         output = run_import(write_sheet(rows))
-        self.assertIn('Unmatched SKUs (1)', output)
+        self.assertIn('Product matched but no variant (1)', output)
+        self.assertIn('GLEAM20', output)
 
         output = run_import(write_sheet(rows), '--create-missing-variants')
         self.assertIn('Created variants (1)', output)
+        self.assertIn('no Size matched', output)
         created = ProductVariant.objects.get(code='GLEAM20')
         self.assertEqual(created.product, other)
         self.assertIsNone(created.size)  # no '20L' Size exists
         self.assertEqual(created.dilutions.count(), 1)
+
+    def test_create_flag_makes_new_variant_for_other_pack_size(self):
+        # Product has one coded variant (KONQ05); a row for a different pack
+        # (matched via product name) must create KONQ20, not hijack KONQ05.
+        rows = [self.row({COL_SKU: 'KONQ20', COL_PACK: '20L', COL_MOP_GENERAL: 55})]
+        run_import(write_sheet(rows), '--create-missing-variants')
+        created = ProductVariant.objects.get(code='KONQ20')
+        self.assertEqual(created.product, self.product)
+        self.assertEqual(created.dilutions.get(
+            application_type__name='Floor Mop/Bucket - General Cleaning').value, Decimal('55'))
+        self.assertEqual(self.variant.dilutions.count(), 0)  # KONQ05 untouched
 
     def test_row_without_dilution_values_skipped(self):
         output = run_import(write_sheet([self.row({COL_MOP_GENERAL: None, COL_SPRAY_HD: None})]))

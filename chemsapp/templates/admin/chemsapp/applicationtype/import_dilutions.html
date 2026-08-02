@@ -60,8 +60,17 @@ to product code / product name.</p>
 <ul>{% for line in stats.duplicate_skus %}<li>! {{ line }}</li>{% endfor %}</ul>
 {% endif %}
 
+{% if stats.unmatched_with_product %}
+<h3>Product matched but no variant ({{ stats.unmatched_with_product|length }})</h3>
+<p class="help">These products exist but have no variant record for this pack size —
+tick <strong>Create missing variants</strong> and re-run to import them.</p>
+<ul>{% for line in stats.unmatched_with_product %}<li>~ {{ line }}</li>{% endfor %}</ul>
+{% endif %}
+
 {% if stats.unmatched %}
-<h3>Unmatched SKUs ({{ stats.unmatched|length }})</h3>
+<h3>Unmatched SKUs — product not found ({{ stats.unmatched|length }})</h3>
+<p class="help">No product matches these by variant code, product code, or exact name.
+The products likely don't exist in the database yet (or are named differently).</p>
 <ul>{% for line in stats.unmatched %}<li>? {{ line }}</li>{% endfor %}</ul>
 {% endif %}
 {% endif %}

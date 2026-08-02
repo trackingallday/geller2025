@@ -50,6 +50,12 @@ class Command(BaseCommand):
                 write(f'  ! {line}')
         if stats['skipped_empty']:
             write(f"Rows with no dilution data (skipped): {len(stats['skipped_empty'])}")
+        if stats['unmatched_with_product']:
+            write(self.style.WARNING(
+                f"Product matched but no variant ({len(stats['unmatched_with_product'])}) "
+                f"— re-run with --create-missing-variants:"))
+            for line in stats['unmatched_with_product']:
+                write(f'  ~ {line}')
         if stats['unmatched']:
             write(self.style.WARNING(f"Unmatched SKUs ({len(stats['unmatched'])}):"))
             for line in stats['unmatched']:
