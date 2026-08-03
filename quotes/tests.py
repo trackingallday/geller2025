@@ -142,7 +142,7 @@ class CostFormattingTestCase(TestCase):
             'unit_label': 'per litre',
             'fills': '2000.00',
             'cost': '0.05',
-            'display': 'Floor Mop/Bucket - General Cleaning .05c',
+            'display': 'Floor Mop/Bucket - General Cleaning .05c per litre',
         }])
 
     def test_snapshot_note_only_entry(self):
@@ -218,7 +218,7 @@ class SubmitQuoteAPITestCase(TestCase):
         self.assertNotIn('<', line.description)
         # Only the selected mop option is snapshotted, not the spray one
         self.assertEqual(len(line.cost_in_use), 1)
-        self.assertEqual(line.cost_in_use[0]['display'], 'Floor Mop/Bucket - General Cleaning .05c')
+        self.assertEqual(line.cost_in_use[0]['display'], 'Floor Mop/Bucket - General Cleaning .05c per litre')
         self.assertEqual(list(line.dilutions.all()), [self.mop_dilution])
         mock_pdf.assert_called_once()
 
@@ -333,7 +333,7 @@ class DashboardTestCase(TestCase):
         self.assertContains(response, 'Conquest Dishwash Detergent')
         self.assertContains(response, 'dilution_options')
 
-    def test_create_quote_via_form_includes_all_dilutions(self, mock_pdf):
+    def test_create_quote_with_selected_dilution(self, mock_pdf):
         response = self.client.post('/quotes/dashboard/create/', {
             'company_name': 'XYZ CAFE',
             'address': '29 BRIDGE ST\nCAMBRIDGE',
@@ -341,14 +341,43 @@ class DashboardTestCase(TestCase):
             'customer_id': '',
             'variant_id': [str(self.variant.pk)],
             'price': ['100.00'],
+            'dilution_id': [str(self.dilution.pk)],
         })
         self.assertEqual(response.status_code, 302)
         quote = Quote.objects.get()
         self.assertEqual(quote.company_name, 'XYZ CAFE')
         self.assertEqual(quote.created_by, self.user)
         line = quote.lines.get()
-        self.assertEqual(line.cost_in_use[0]['display'], 'Floor Mop/Bucket - General Cleaning .05c')
+        self.assertEqual(len(line.cost_in_use), 1)
+        self.assertEqual(line.cost_in_use[0]['display'], 'Floor Mop/Bucket - General Cleaning .05c per litre')
+        self.assertEqual(list(line.dilutions.all()), [self.dilution])
         mock_pdf.assert_called_once()
+
+    def test_create_quote_without_dilution_has_no_cost_in_use(self, mock_pdf):
+        response = self.client.post('/quotes/dashboard/create/', {
+            'company_name': 'XYZ CAFE',
+            'variant_id': [str(self.variant.pk)],
+            'price': ['100.00'],
+            'dilution_id': [''],
+        })
+        self.assertEqual(response.status_code, 302)
+        self.assertEqual(Quote.objects.get().lines.get().cost_in_use, [])
+
+    def test_create_rejects_foreign_dilution(self, mock_pdf):
+        other_product = make_product(name='Other', productCode='OTHER')
+        other_variant = make_variant(other_product, code='OTHER05', barcode='9400000000004',
+                                     volume_litres=Decimal('5'))
+        foreign = DilutionVariant.objects.create(
+            variant=other_variant, application_type=self.mop, value=Decimal('50'))
+        response = self.client.post('/quotes/dashboard/create/', {
+            'company_name': 'XYZ CAFE',
+            'variant_id': [str(self.variant.pk)],
+            'price': ['100.00'],
+            'dilution_id': [str(foreign.pk)],
+        })
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'does not belong')
+        self.assertFalse(Quote.objects.exists())
 
     def test_create_rejects_missing_price(self, mock_pdf):
         response = self.client.post('/quotes/dashboard/create/', {

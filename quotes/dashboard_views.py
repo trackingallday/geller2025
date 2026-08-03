@@ -42,27 +42,36 @@ def quote_dashboard(request):
 
 
 def _builder_context():
+    """Catalogue nested for the builder's pick-product → pick-variant →
+    pick-dilution flow: [{id, name, variants: [{id, label, dilution_options}]}]."""
     variants = ProductVariant.objects.select_related('product', 'size').prefetch_related(
         'dilutions__application_type',
     ).order_by('product__name', 'code')
 
-    catalogue = []
+    products = {}
     for v in variants:
-        label = v.product.name
-        if v.size:
-            label += f' — {v.size.name}'
+        entry = products.setdefault(v.product_id, {'id': v.product_id, 'name': v.product.name, 'variants': []})
+        label = v.size.name if v.size else ''
         if v.code:
-            label += f' ({v.code})'
+            label = f'{label} ({v.code})' if label else v.code
         dilution_options = []
         for dilution in v.dilutions.all():
+            if not dilution.application_type.is_active:
+                continue
             fills = dilution.fills()
-            if fills:
-                dilution_options.append({'name': dilution.application_type.name, 'fills': str(fills)})
-        catalogue.append({
+            dilution_options.append({
+                'id': dilution.pk,
+                'name': dilution.application_type.name,
+                'unit_label': dilution.application_type.unit_label,
+                'fills': str(fills) if fills is not None else None,
+                'note': dilution.note,
+            })
+        entry['variants'].append({
             'id': v.pk,
-            'label': label,
+            'label': label or f'#{v.pk}',
             'dilution_options': dilution_options,
         })
+    catalogue = list(products.values())
 
     customers = []
     for c in Customer.objects.prefetch_related('contacts').order_by('businessName'):
@@ -92,11 +101,13 @@ def dashboard_create_quote(request):
 
         variant_ids = request.POST.getlist('variant_id')
         prices = request.POST.getlist('price')
+        dilution_ids = request.POST.getlist('dilution_id')
 
         lines = []
-        for vid, price in zip(variant_ids, prices):
+        for i, (vid, price) in enumerate(zip(variant_ids, prices)):
             vid = vid.strip()
             price = price.strip()
+            did = dilution_ids[i].strip() if i < len(dilution_ids) else ''
             if not vid and not price:
                 continue  # skip fully empty rows
             try:
@@ -108,12 +119,16 @@ def dashboard_create_quote(request):
                 lines = None
                 error = 'Every line needs a product and a price greater than zero.'
                 break
-            # Test page has no per-option picker: include all of the variant's dilutions
-            lines.append({
-                'variant': variant,
-                'price': price_dec,
-                'dilutions': list(variant.dilutions.select_related('application_type').all()),
-            })
+            # One selected dilution per line; blank = no cost-in-use block
+            dilutions = []
+            if did:
+                dilution = variant.dilutions.select_related('application_type').filter(pk=did).first()
+                if dilution is None:
+                    lines = None
+                    error = 'The selected dilution does not belong to the chosen variant.'
+                    break
+                dilutions = [dilution]
+            lines.append({'variant': variant, 'price': price_dec, 'dilutions': dilutions})
 
         if lines is not None:
             if not company_name:

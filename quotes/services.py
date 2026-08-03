@@ -43,7 +43,7 @@ def build_cost_in_use_snapshot(price, dilutions):
                 'unit_label': app_type.unit_label,
                 'fills': str(fills),
                 'cost': str(cost),
-                'display': f'{app_type.name} {format_cost_in_use(cost)}',
+                'display': f'{app_type.name} {format_cost_in_use(cost)} {app_type.unit_label}',
             })
         elif dilution.note:
             snapshot.append({

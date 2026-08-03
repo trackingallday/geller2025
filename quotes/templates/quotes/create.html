@@ -57,8 +57,10 @@
                 <table class="table mb-0 align-middle" id="lines-table">
                     <thead>
                         <tr>
-                            <th style="width: 45%;">Product</th>
-                            <th style="width: 20%;">Price ($) *</th>
+                            <th style="width: 26%;">Product</th>
+                            <th style="width: 18%;">Variant</th>
+                            <th style="width: 22%;">Dilution</th>
+                            <th style="width: 14%;">Unit price ($) *</th>
                             <th>Cost in use (preview)</th>
                             <th style="width: 40px;"></th>
                         </tr>
@@ -87,7 +89,7 @@
 <script>
     const catalogue = JSON.parse(document.getElementById('catalogue-data').textContent);
     const customers = JSON.parse(document.getElementById('customers-data').textContent);
-    const catalogueById = Object.fromEntries(catalogue.map(v => [String(v.id), v]));
+    const productsById = Object.fromEntries(catalogue.map(p => [String(p.id), p]));
 
     // Mirrors quotes/services.py format_cost_in_use (server value is authoritative)
     function formatCost(cost) {
@@ -96,35 +98,83 @@
         return '$' + rounded.toFixed(2);
     }
 
-    function updatePreview(row) {
+    function currentVariant(row) {
+        const product = productsById[row.querySelector('.product-select').value];
+        if (!product) return null;
         const variantId = row.querySelector('.variant-select').value;
-        const price = parseFloat(row.querySelector('.price-input').value);
+        return product.variants.find(v => String(v.id) === variantId) || null;
+    }
+
+    function updateVariants(row) {
+        const product = productsById[row.querySelector('.product-select').value];
+        const variantSelect = row.querySelector('.variant-select');
+        const variants = product ? product.variants : [];
+        variantSelect.innerHTML = ['<option value="">— select variant —</option>']
+            .concat(variants.map(v => `<option value="${v.id}">${v.label}</option>`))
+            .join('');
+        if (variants.length === 1) variantSelect.value = String(variants[0].id);
+        updateDilutions(row);
+    }
+
+    function updateDilutions(row) {
+        const variant = currentVariant(row);
+        const dilutionSelect = row.querySelector('.dilution-select');
+        const options = variant ? variant.dilution_options : [];
+        dilutionSelect.innerHTML = ['<option value="">— no cost in use —</option>']
+            .concat(options.map(o => `<option value="${o.id}">${o.name}</option>`))
+            .join('');
+        if (options.length === 1) dilutionSelect.value = String(options[0].id);
+        // Spell out what the price applies to: one unit of the chosen variant
+        const hint = row.querySelector('.price-hint');
+        hint.textContent = variant ? `for one ${variant.label.split(' (')[0]} unit` : '';
+        updatePreview(row);
+    }
+
+    function updatePreview(row) {
         const preview = row.querySelector('.ciu-preview');
-        const variant = catalogueById[variantId];
-        if (!variant || !variant.dilution_options.length || isNaN(price) || price <= 0) {
+        const variant = currentVariant(row);
+        const dilutionId = row.querySelector('.dilution-select').value;
+        const price = parseFloat(row.querySelector('.price-input').value);
+        const option = variant && variant.dilution_options.find(o => String(o.id) === dilutionId);
+        if (!option) {
             preview.innerHTML = '<span class="text-muted">—</span>';
             return;
         }
-        preview.innerHTML = variant.dilution_options
-            .map(o => `${o.name} <strong>${formatCost(price / parseFloat(o.fills))}</strong>`)
-            .join('<br>');
+        if (!option.fills) {
+            preview.innerHTML = option.note
+                ? `${option.name}: ${option.note}`
+                : '<span class="text-muted">no volume set for this size</span>';
+            return;
+        }
+        if (isNaN(price) || price <= 0) {
+            preview.innerHTML = '<span class="text-muted">enter a price</span>';
+            return;
+        }
+        preview.innerHTML = `${option.name} <strong>${formatCost(price / parseFloat(option.fills))}</strong> ${option.unit_label}`;
     }
 
     function addRow() {
         const tbody = document.getElementById('lines-body');
         const row = document.createElement('tr');
 
-        const options = ['<option value="">— select product —</option>']
-            .concat(catalogue.map(v => `<option value="${v.id}">${v.label}</option>`))
+        const productOptions = ['<option value="">— select product —</option>']
+            .concat(catalogue.map(p => `<option value="${p.id}">${p.name}</option>`))
             .join('');
 
         row.innerHTML = `
-            <td><select class="form-select variant-select" name="variant_id">${options}</select></td>
-            <td><input type="number" step="0.01" min="0.01" class="form-control price-input" name="price" placeholder="0.00"></td>
+            <td><select class="form-select product-select">${productOptions}</select></td>
+            <td><select class="form-select variant-select" name="variant_id"><option value="">— select variant —</option></select></td>
+            <td><select class="form-select dilution-select" name="dilution_id"><option value="">— no cost in use —</option></select></td>
+            <td>
+                <input type="number" step="0.01" min="0.01" class="form-control price-input" name="price" placeholder="0.00">
+                <div class="form-text price-hint"></div>
+            </td>
             <td class="ciu-preview ciu-block"><span class="text-muted">—</span></td>
             <td><button type="button" class="btn btn-sm btn-outline-danger remove-line"><i class="bi bi-x-lg"></i></button></td>
         `;
-        row.querySelector('.variant-select').addEventListener('change', () => updatePreview(row));
+        row.querySelector('.product-select').addEventListener('change', () => updateVariants(row));
+        row.querySelector('.variant-select').addEventListener('change', () => updateDilutions(row));
+        row.querySelector('.dilution-select').addEventListener('change', () => updatePreview(row));
         row.querySelector('.price-input').addEventListener('input', () => updatePreview(row));
         row.querySelector('.remove-line').addEventListener('click', () => {
             if (document.querySelectorAll('#lines-body tr').length > 1) row.remove();
