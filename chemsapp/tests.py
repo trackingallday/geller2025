@@ -163,6 +163,141 @@ class ImportDilutionsTestCase(TestCase):
         self.assertEqual(ApplicationType.objects.count(), 0)
 
 
+def write_variants_sheet(rows):
+    """Build a minimal variants xlsx; `rows` is a list of 7-tuples
+    (website_id, code, product, size, pack_size, description, barcode)
+    written from row 3 down. Returns the file path."""
+    workbook = openpyxl.Workbook()
+    sheet = workbook.active
+    for i, values in enumerate(rows):
+        for col, value in enumerate(values, start=1):
+            sheet.cell(row=3 + i, column=col, value=value)
+    path = tempfile.NamedTemporaryFile(suffix='.xlsx', delete=False).name
+    workbook.save(path)
+    return path
+
+
+def run_variants_import(path, *flags):
+    out = StringIO()
+    call_command('import_variants', path, *flags, stdout=out)
+    return out.getvalue()
+
+
+class ImportVariantsTestCase(TestCase):
+    serialized_rollback = True
+
+    def setUp(self):
+        self.product = make_product()
+
+    def test_creates_variant_with_new_size_and_parsed_volume(self):
+        from decimal import Decimal as D
+        output = run_variants_import(write_variants_sheet([
+            (self.product.pk, 'KONQ05', 'Konquer', '5L', 3, 'Geller Konquer 5L', 9421033270001),
+        ]))
+        self.assertIn('Variants created: 1', output)
+        variant = ProductVariant.objects.get(code='KONQ05')
+        self.assertEqual(variant.product, self.product)
+        self.assertEqual(variant.pack_size, 3)
+        self.assertEqual(variant.barcode, '9421033270001')
+        self.assertEqual(variant.size.name, '5L')
+        self.assertEqual(variant.size.volume_litres, D('5'))
+
+    def test_volume_parsing_variants(self):
+        from chemsapp.variants_import import parse_volume_litres
+        from decimal import Decimal as D
+        self.assertEqual(parse_volume_litres('500ml'), D('0.5'))
+        self.assertEqual(parse_volume_litres('500ml Pump'), D('0.5'))
+        self.assertEqual(parse_volume_litres('10kg Bag'), D('10'))
+        self.assertEqual(parse_volume_litres('3.3L'), D('3.3'))
+        self.assertIsNone(parse_volume_litres('Aerosol'))
+        self.assertIsNone(parse_volume_litres('200S'))
+
+    def test_existing_code_skipped_not_updated(self):
+        existing = ProductVariant.objects.create(
+            code='KONQ05', product=self.product, pack_size=1, barcode='original')
+        output = run_variants_import(write_variants_sheet([
+            (self.product.pk, 'konq05', 'Konquer', '5L', 3, 'desc', 123),
+        ]))
+        self.assertIn('Skipped (already exist): 1', output)
+        existing.refresh_from_db()
+        self.assertEqual(existing.barcode, 'original')  # untouched
+        self.assertEqual(ProductVariant.objects.count(), 1)
+
+    def test_existing_size_reused_case_insensitively(self):
+        size = Size.objects.create(name='5l', desc='5 Litre', amount='5')
+        run_variants_import(write_variants_sheet([
+            (self.product.pk, 'KONQ05', 'Konquer', '5L', 3, 'desc', 123),
+        ]))
+        self.assertEqual(ProductVariant.objects.get(code='KONQ05').size, size)
+        self.assertEqual(Size.objects.count(), 1)
+
+    def test_unknown_product_reported(self):
+        output = run_variants_import(write_variants_sheet([
+            (99999, 'NOPE05', 'Nope', '5L', 3, 'desc', 123),
+        ]))
+        self.assertIn('Unknown products (1)', output)
+        self.assertIn('Website ID 99999', output)
+        self.assertEqual(ProductVariant.objects.count(), 0)
+
+    def test_duplicate_code_in_sheet_skipped(self):
+        output = run_variants_import(write_variants_sheet([
+            (self.product.pk, 'GLEAM05', 'Gleam', '5L', 3, 'desc', 123),
+            (self.product.pk, 'GLEAM05', 'Gleam', '20L', 1, 'desc', 456),
+        ]))
+        self.assertIn('Duplicate codes in sheet (1)', output)
+        self.assertEqual(ProductVariant.objects.count(), 1)
+
+    def test_na_barcode_becomes_empty(self):
+        run_variants_import(write_variants_sheet([
+            (self.product.pk, 'KONQ05', 'Konquer', '5L', 3, 'desc', '#N/A'),
+        ]))
+        self.assertEqual(ProductVariant.objects.get(code='KONQ05').barcode, '')
+
+    def test_dry_run_rolls_back(self):
+        output = run_variants_import(write_variants_sheet([
+            (self.product.pk, 'KONQ05', 'Konquer', '5L', 3, 'desc', 123),
+        ]), '--dry-run')
+        self.assertIn('Dry run', output)
+        self.assertEqual(ProductVariant.objects.count(), 0)
+        self.assertEqual(Size.objects.count(), 0)
+
+
+class AdminImportVariantsTestCase(TestCase):
+    serialized_rollback = True
+    URL = '/admin/chemsapp/productvariant/import-variants/'
+
+    def setUp(self):
+        from django.contrib.auth.models import User
+        self.admin = User.objects.create_superuser('boss2', 'boss2@example.com', 'pass12345')
+        self.client.force_login(self.admin)
+        self.product = make_product()
+        self.sheet_path = write_variants_sheet([
+            (self.product.pk, 'KONQ05', 'Konquer', '5L', 3, 'Geller Konquer 5L', 9421033270001),
+        ])
+
+    def test_changelist_links_to_import(self):
+        response = self.client.get('/admin/chemsapp/productvariant/')
+        self.assertContains(response, 'import-variants/')
+
+    def test_import_applies_and_reports(self):
+        with open(self.sheet_path, 'rb') as f:
+            response = self.client.post(self.URL, {'xlsx_file': f})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'Variants created:</strong> 1')
+        self.assertTrue(ProductVariant.objects.filter(code='KONQ05').exists())
+
+    def test_dry_run_reports_without_saving(self):
+        with open(self.sheet_path, 'rb') as f:
+            response = self.client.post(self.URL, {'xlsx_file': f, 'dry_run': 'on'})
+        self.assertContains(response, 'Variants created:</strong> 1')
+        self.assertFalse(ProductVariant.objects.exists())
+
+    def test_requires_staff(self):
+        self.client.logout()
+        response = self.client.get(self.URL)
+        self.assertEqual(response.status_code, 302)
+
+
 class AdminImportDilutionsTestCase(TestCase):
     serialized_rollback = True
     URL = '/admin/chemsapp/applicationtype/import-dilutions/'

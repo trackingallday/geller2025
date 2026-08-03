@@ -391,6 +391,7 @@ class DilutionVariantInline(admin.TabularInline):
 class ProductVariantAdmin(admin.ModelAdmin):
     """Standalone variant admin so dilution options can be edited
     (inlines can't nest inside ProductVariantInline on the product page)."""
+    change_list_template = 'admin/chemsapp/productvariant/change_list.html'
     search_fields = ['code', 'product__name', 'barcode']
     list_display = ['__str__', 'code', 'pack_size', 'size_volume']
     list_select_related = ['product', 'size']
@@ -399,6 +400,63 @@ class ProductVariantAdmin(admin.ModelAdmin):
     def size_volume(self, obj):
         return obj.size.volume_litres if obj.size else None
     size_volume.short_description = 'Size volume (L)'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path(
+                'import-variants/',
+                self.admin_site.admin_view(self.import_variants_view),
+                name='chemsapp_productvariant_import_variants',
+            ),
+        ]
+        return custom_urls + urls
+
+    def import_variants_view(self, request):
+        """Upload the variants xlsx and create the missing ProductVariants
+        (existing codes skipped, missing Sizes created)."""
+        from django.core.exceptions import PermissionDenied
+        from django.db import transaction
+        from django.template.response import TemplateResponse
+        from chemsapp.variants_import import import_variants_workbook
+
+        if not self.has_add_permission(request):
+            raise PermissionDenied
+
+        stats = None
+        error = None
+        dry_run = True
+        if request.method == 'POST':
+            upload = request.FILES.get('xlsx_file')
+            dry_run = bool(request.POST.get('dry_run'))
+            if not upload:
+                error = 'Choose an .xlsx file to upload.'
+            else:
+                try:
+                    with transaction.atomic():
+                        stats = import_variants_workbook(upload)
+                        if dry_run:
+                            transaction.set_rollback(True)
+                except Exception as e:
+                    error = f'Import failed: {e}'
+                if stats and not error:
+                    verb = 'Dry run — nothing saved.' if dry_run else 'Import saved.'
+                    messages.success(
+                        request,
+                        f"{verb} {len(stats['created'])} variants created, "
+                        f"{len(stats['skipped_existing'])} already existed, "
+                        f"{len(stats['unknown_products'])} unknown products.",
+                    )
+
+        context = {
+            **self.admin_site.each_context(request),
+            'title': 'Import variants spreadsheet',
+            'opts': self.model._meta,
+            'stats': stats,
+            'error': error,
+            'dry_run': dry_run,
+        }
+        return TemplateResponse(request, 'admin/chemsapp/productvariant/import_variants.html', context)
 
 
 #class ProductAddAdmin(ImportExportModelAdmin):

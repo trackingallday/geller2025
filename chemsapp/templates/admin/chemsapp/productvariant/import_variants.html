@@ -1,0 +1,68 @@
+{% extends "admin/base_site.html" %}
+
+{% block breadcrumbs %}
+<div class="breadcrumbs">
+    <a href="{% url 'admin:index' %}">Home</a>
+    &rsaquo; <a href="{% url 'admin:app_list' app_label=opts.app_label %}">{{ opts.app_config.verbose_name }}</a>
+    &rsaquo; <a href="{% url 'admin:chemsapp_productvariant_changelist' %}">{{ opts.verbose_name_plural|capfirst }}</a>
+    &rsaquo; Import variants spreadsheet
+</div>
+{% endblock %}
+
+{% block content %}
+<h1>Import variants spreadsheet</h1>
+<p>Upload the variants .xlsx (columns: <strong>Website ID</strong> = product id, Code, Product,
+Size, Pack Size, Description, Barcode; header on row 2). Variants whose code already exists are
+<strong>skipped, never changed</strong>. Sizes that don't exist yet are created, with the container
+volume parsed from names like "5L" / "500ml" / "10kg Bag" so cost-in-use works.</p>
+
+{% if error %}<p class="errornote">{{ error }}</p>{% endif %}
+
+<form method="post" enctype="multipart/form-data">
+    {% csrf_token %}
+    <fieldset class="module aligned">
+        <div class="form-row">
+            <label for="xlsx_file">Spreadsheet (.xlsx):</label>
+            <input type="file" name="xlsx_file" id="xlsx_file" accept=".xlsx" required>
+        </div>
+        <div class="form-row">
+            <label for="dry_run">Dry run:</label>
+            <input type="checkbox" name="dry_run" id="dry_run" {% if dry_run %}checked{% endif %}>
+            <p class="help">Show the report below without saving anything. Untick to apply for real.</p>
+        </div>
+    </fieldset>
+    <div class="submit-row">
+        <input type="submit" value="Run import" class="default">
+    </div>
+</form>
+
+{% if stats %}
+<h2>Report</h2>
+<ul>
+    <li><strong>Variants created:</strong> {{ stats.created|length }}</li>
+    <li><strong>Skipped (already exist):</strong> {{ stats.skipped_existing|length }}</li>
+</ul>
+
+{% if stats.created %}
+<h3>Created ({{ stats.created|length }})</h3>
+<ul>{% for line in stats.created %}<li>+ {{ line }}</li>{% endfor %}</ul>
+{% endif %}
+
+{% if stats.created_sizes %}
+<h3>Sizes created ({{ stats.created_sizes|length }})</h3>
+<p class="help">Sizes with "no volume parsed" need a volume set in admin before cost-in-use can be computed.</p>
+<ul>{% for line in stats.created_sizes %}<li>+ {{ line }}</li>{% endfor %}</ul>
+{% endif %}
+
+{% if stats.duplicate_codes %}
+<h3>Duplicate codes in sheet ({{ stats.duplicate_codes|length }})</h3>
+<ul>{% for line in stats.duplicate_codes %}<li>! {{ line }}</li>{% endfor %}</ul>
+{% endif %}
+
+{% if stats.unknown_products %}
+<h3>Unknown products ({{ stats.unknown_products|length }})</h3>
+<p class="help">The Website ID column didn't match any product in the database.</p>
+<ul>{% for line in stats.unknown_products %}<li>? {{ line }}</li>{% endfor %}</ul>
+{% endif %}
+{% endif %}
+{% endblock %}
