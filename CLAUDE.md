@@ -34,3 +34,6 @@
 - `/frontend` and `/marketing_front`: React applications
 - `/chemsapp`: Django application code
 - `/chemicaldatasheets`: Django project settings
+
+##Always use skill
+always load the simple-english skill and always use it

@@ -8,6 +8,8 @@ from django.utils import timezone
 from weasyprint import CSS, HTML
 from weasyprint.text.fonts import FontConfiguration
 
+from chemsapp.wall_chart_colors import row_colors
+
 logger = logging.getLogger(__name__)
 
 GELLER_PURPLE = '#5A2D82'
@@ -62,6 +64,15 @@ class QuotePDFGenerator:
                     return f'file://{path}'
         return None
 
+    def _row_color(self, line):
+        """The snapshotted colour, or the live product colour for old lines."""
+        if line.row_color:
+            return line.row_color
+        variant = line.product_variant
+        if variant is not None:
+            return variant.product.wall_chart_color or ''
+        return ''
+
     def _get_context(self):
         import pytz
 
@@ -69,9 +80,12 @@ class QuotePDFGenerator:
 
         lines = []
         for line in self.quote.lines.select_related('product_variant__product').all():
+            stripe_color, tint_color = row_colors(self._row_color(line))
             lines.append({
                 'line': line,
                 'image_src': self._image_path(line),
+                'stripe_color': stripe_color,
+                'tint_color': tint_color,
             })
 
         return {
@@ -172,8 +186,8 @@ class QuotePDFGenerator:
             vertical-align: top;
         }
 
-        .row-grey td { background-color: %(grey)s; }
-        .row-cream td { background-color: %(cream)s; }
+        /* Row background colours come from Product.wall_chart_color and are
+           set inline per row, the same way the wall chart PDF does it. */
 
         /* Image fills the whole cell (row height included) via background cover */
         .img-cell {
@@ -184,8 +198,10 @@ class QuotePDFGenerator:
             background-repeat: no-repeat;
         }
 
-        .product-cell { width: 22%%; border-left: 6px solid %(purple)s; }
-        .row-cream .product-cell { border-left-color: #C9A227; }
+        /* Dark stripe of the product colour, between image and text */
+        .stripe-cell { width: 6px; padding: 0 !important; }
+
+        .product-cell { width: 22%%; }
 
         .product-name { font-weight: bold; font-size: 12px; color: #333; }
         .product-subheading { color: #777; font-size: 9px; margin-top: 3px; }
@@ -209,5 +225,5 @@ class QuotePDFGenerator:
             width: 100%%;
             box-sizing: border-box;
         }
-        """ % {'purple': GELLER_PURPLE, 'grey': ROW_TINT_GREY, 'cream': ROW_TINT_CREAM}
+        """ % {'purple': GELLER_PURPLE}
         return CSS(string=css_content, font_config=self.font_config)

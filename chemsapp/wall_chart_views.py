@@ -15,6 +15,7 @@ from weasyprint import HTML
 from weasyprint.text.fonts import FontConfiguration
 
 from chemsapp.models import Customer, Product
+from chemsapp.wall_chart_colors import row_colors
 
 
 def _build_wall_chart_pdf(customer, products, base_url):
@@ -33,24 +34,7 @@ def _build_wall_chart_pdf(customer, products, base_url):
         description = html_module.unescape(strip_tags(product.application))
         directions = html_module.unescape(strip_tags(product.procedure))
 
-        row_color = product.wall_chart_color or '#f5f5f5'
-        try:
-            r = int(row_color[1:3], 16)
-            g = int(row_color[3:5], 16)
-            b = int(row_color[5:7], 16)
-            stripe_color = '#{:02x}{:02x}{:02x}'.format(
-                max(0, int(r * 0.6)),
-                max(0, int(g * 0.6)),
-                max(0, int(b * 0.6)),
-            )
-            tint_color = '#{:02x}{:02x}{:02x}'.format(
-                int(255 * 0.85 + r * 0.15),
-                int(255 * 0.85 + g * 0.15),
-                int(255 * 0.85 + b * 0.15),
-            )
-        except (ValueError, IndexError):
-            stripe_color = '#aaaaaa'
-            tint_color = '#f5f5f5'
+        stripe_color, tint_color = row_colors(product.wall_chart_color or '#f5f5f5')
 
         ppe_items = []
         for wear in product.safetyWears.all():

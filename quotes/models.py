@@ -52,6 +52,9 @@ class QuoteLine(models.Model):
     product_subheading = models.CharField(max_length=255, blank=True, default='')
     product_code = models.CharField(max_length=255, blank=True, default='')
     description = models.TextField(blank=True, default='')
+    # Product.wall_chart_color at generation time. Blank means the PDF uses
+    # the neutral grey row.
+    row_color = models.CharField(max_length=7, blank=True, default='')
     cost_in_use = models.JSONField(default=list, blank=True)
     # e.g. [{"label": "Floor Mop/Bucket - General Cleaning", "unit_label": "per litre",
     #        "fills": "200.00", "cost": "0.45", "display": "Floor Mop/Bucket - General Cleaning .45c"}]

@@ -52,6 +52,7 @@
             <thead>
                 <tr>
                     <th></th>
+                    <th></th>
                     <th>Product</th>
                     <th>Code</th>
                     <th>Description</th>
@@ -60,17 +61,18 @@
             </thead>
             <tbody>
                 {% for entry in lines %}
-                <tr class="{% cycle 'row-grey' 'row-cream' %}">
+                <tr>
                     <td class="img-cell"{% if entry.image_src %} style="background-image: url('{{ entry.image_src }}');"{% endif %}></td>
-                    <td class="product-cell">
+                    <td class="stripe-cell" style="background-color:{{ entry.stripe_color }};"></td>
+                    <td class="product-cell" style="background-color:{{ entry.tint_color }};">
                         <div class="product-name">{{ entry.line.product_name }}</div>
                         {% if entry.line.product_subheading %}
                         <div class="product-subheading">{{ entry.line.product_subheading }}</div>
                         {% endif %}
                     </td>
-                    <td class="code-cell">{{ entry.line.product_code|default:"-" }}</td>
-                    <td class="desc-cell">{{ entry.line.description }}</td>
-                    <td class="price-cell">
+                    <td class="code-cell" style="background-color:{{ entry.tint_color }};">{{ entry.line.product_code|default:"-" }}</td>
+                    <td class="desc-cell" style="background-color:{{ entry.tint_color }};">{{ entry.line.description }}</td>
+                    <td class="price-cell" style="background-color:{{ entry.tint_color }};">
                         <div class="price">${{ entry.line.price }} per Unit</div>
                         {% if entry.line.cost_in_use %}
                         <div class="ciu-heading">Cost in use</div>
@@ -82,7 +84,7 @@
                 </tr>
                 {% empty %}
                 <tr>
-                    <td colspan="5" style="color:#999; font-style:italic;">No products on this proposal.</td>
+                    <td colspan="6" style="color:#999; font-style:italic;">No products on this proposal.</td>
                 </tr>
                 {% endfor %}
             </tbody>

@@ -1,3 +1,4 @@
+import html
 from decimal import Decimal, ROUND_HALF_UP
 
 from django.conf import settings
@@ -57,15 +58,21 @@ def build_cost_in_use_snapshot(price, dilutions):
 
 
 def snapshot_line_fields(variant):
-    """Denormalised product fields frozen onto a QuoteLine."""
+    """Denormalised product fields frozen onto a QuoteLine.
+
+    The description comes from `application`, the same field the wall chart
+    shows. `description` is the fallback when a product has no application text.
+    """
     product = variant.product
-    description = strip_tags(product.description or '')
+    source = product.application or product.description or ''
+    description = html.unescape(strip_tags(source))
     description = ' '.join(description.split())
     return {
         'product_name': product.name,
         'product_subheading': product.subheading or '',
         'product_code': variant.code or product.productCode or '',
         'description': Truncator(description).chars(DESCRIPTION_MAX_CHARS),
+        'row_color': product.wall_chart_color or '',
     }
 
 
@@ -156,6 +163,7 @@ def refresh_line_snapshots(quote):
         line.product_subheading = fields['product_subheading']
         line.product_code = fields['product_code']
         line.description = fields['description']
+        line.row_color = fields['row_color']
         line.cost_in_use = build_cost_in_use_snapshot(
             line.price,
             line.dilutions.select_related('application_type', 'variant__size').all(),

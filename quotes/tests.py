@@ -7,8 +7,9 @@ from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from chemsapp.models import ApplicationType, DilutionVariant, Product, ProductVariant, Size
+from chemsapp.wall_chart_colors import row_colors
 from .models import Quote, QuoteLine, generate_quote_number
-from .services import build_cost_in_use_snapshot, format_cost_in_use
+from .services import build_cost_in_use_snapshot, format_cost_in_use, snapshot_line_fields
 
 
 def make_product(**kwargs):
@@ -171,6 +172,41 @@ class QuoteNumberTestCase(TestCase):
         Quote.objects.create(company_name='A')
         Quote.objects.filter(company_name='A').update(quote_number='QLEGACY')
         self.assertEqual(generate_quote_number(), 'Q0001')
+
+
+class SnapshotLineFieldsTestCase(TestCase):
+    """The proposal PDF takes its description and row colour from the same
+    product fields the wall chart PDF uses."""
+    serialized_rollback = True
+
+    def test_description_comes_from_application(self):
+        product = make_product(
+            application='<p>For <strong>food areas</strong> &amp; kitchens.</p>')
+        fields = snapshot_line_fields(make_variant(product))
+        self.assertEqual(fields['description'], 'For food areas & kitchens.')
+
+    def test_description_falls_back_to_description(self):
+        fields = snapshot_line_fields(make_variant(make_product(application='')))
+        self.assertIn('concentrated automatic dishwasher liquid', fields['description'])
+
+    def test_row_color_snapshotted_from_product(self):
+        product = make_product(wall_chart_color='#3366CC')
+        self.assertEqual(snapshot_line_fields(make_variant(product))['row_color'], '#3366CC')
+
+    def test_row_color_blank_when_product_has_none(self):
+        self.assertEqual(snapshot_line_fields(make_variant(make_product()))['row_color'], '')
+
+
+class RowColorsTestCase(TestCase):
+    def test_stripe_is_darker_and_tint_is_lighter(self):
+        stripe, tint = row_colors('#3366cc')
+        self.assertEqual(stripe, '#1e3d7a')
+        self.assertEqual(tint, '#e0e8f7')
+
+    def test_invalid_color_gives_neutral_defaults(self):
+        self.assertEqual(row_colors('#xyz'), ('#aaaaaa', '#f5f5f5'))
+        self.assertEqual(row_colors(''), ('#aaaaaa', '#f5f5f5'))
+        self.assertEqual(row_colors(None), ('#aaaaaa', '#f5f5f5'))
 
 
 @mock.patch('quotes.services.QuotePDFGenerator')
