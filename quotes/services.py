@@ -14,7 +14,10 @@ from .utils import QuotePDFGenerator
 COST_ROUNDING = ROUND_HALF_UP
 CENT = Decimal('0.01')
 
-DESCRIPTION_MAX_CHARS = 220
+# Upper limit on the Description column. A long CKEditor field makes a tall
+# row, which can force a page break. Raised from 220 because that cut most
+# application texts part-way through a sentence.
+DESCRIPTION_MAX_CHARS = 400
 
 
 def format_cost_in_use(cost):

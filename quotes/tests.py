@@ -1,15 +1,22 @@
 import tempfile
 from decimal import Decimal
+from io import StringIO
 from unittest import mock
 
 from django.contrib.auth.models import User
+from django.core.management import call_command
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from chemsapp.models import ApplicationType, DilutionVariant, Product, ProductVariant, Size
 from chemsapp.wall_chart_colors import row_colors
 from .models import Quote, QuoteLine, generate_quote_number
-from .services import build_cost_in_use_snapshot, format_cost_in_use, snapshot_line_fields
+from .services import (
+    DESCRIPTION_MAX_CHARS,
+    build_cost_in_use_snapshot,
+    format_cost_in_use,
+    snapshot_line_fields,
+)
 
 
 def make_product(**kwargs):
@@ -195,6 +202,21 @@ class SnapshotLineFieldsTestCase(TestCase):
 
     def test_row_color_blank_when_product_has_none(self):
         self.assertEqual(snapshot_line_fields(make_variant(make_product()))['row_color'], '')
+
+    def test_long_application_is_kept_up_to_the_limit(self):
+        """A 300-character application text survives whole. The old 220-char
+        limit cut texts of this length part-way through a sentence."""
+        long_text = 'Suitable for stainless steel benches. ' * 8  # 296 chars
+        product = make_product(application=f'<p>{long_text}</p>')
+        description = snapshot_line_fields(make_variant(product))['description']
+        self.assertNotIn('…', description)
+        self.assertEqual(description, long_text.strip())
+
+    def test_application_longer_than_the_limit_is_cut(self):
+        product = make_product(application='<p>' + ('word ' * 200) + '</p>')
+        description = snapshot_line_fields(make_variant(product))['description']
+        self.assertLessEqual(len(description), DESCRIPTION_MAX_CHARS)
+        self.assertTrue(description.endswith('…'))
 
 
 class RowColorsTestCase(TestCase):
@@ -468,3 +490,59 @@ class EmailQuotePDFTestCase(TestCase):
         self.assertEqual(response.status_code, 400)
         response = self.client.post('/quotes/email-pdf/', {'email_address': 'a@b.c'}, format='json')
         self.assertEqual(response.status_code, 400)
+
+
+@mock.patch('quotes.management.commands.refresh_quote_descriptions.QuotePDFGenerator')
+class RefreshQuoteDescriptionsCommandTestCase(TestCase):
+    """The command re-freezes old snapshots after a change to the source
+    fields or to DESCRIPTION_MAX_CHARS."""
+    serialized_rollback = True
+
+    def setUp(self):
+        self.product = make_product(application='<p>Current application text.</p>')
+        self.variant = make_variant(self.product)
+        self.quote = Quote.objects.create(company_name='XYZ CAFE')
+        self.line = QuoteLine.objects.create(
+            quote=self.quote,
+            product_variant=self.variant,
+            price=Decimal('100.00'),
+            description='Stale text saved before the change.',
+            product_name=self.product.name,
+            product_code=self.variant.code,
+            sort_order=0,
+        )
+
+    def _run(self, *args):
+        out = StringIO()
+        call_command('refresh_quote_descriptions', *args, stdout=out)
+        return out.getvalue()
+
+    def test_refreshes_the_description(self, mock_pdf):
+        output = self._run()
+        self.line.refresh_from_db()
+        self.assertEqual(self.line.description, 'Current application text.')
+        self.assertIn('Quotes with a changed description: 1', output)
+        mock_pdf.assert_called_once_with(self.quote)
+
+    def test_dry_run_changes_nothing(self, mock_pdf):
+        output = self._run('--dry-run')
+        self.line.refresh_from_db()
+        self.assertEqual(self.line.description, 'Stale text saved before the change.')
+        self.assertIn('rolled back', output)
+        mock_pdf.assert_not_called()
+
+    def test_quote_id_limits_the_run(self, mock_pdf):
+        other = Quote.objects.create(company_name='OTHER CAFE')
+        other_line = QuoteLine.objects.create(
+            quote=other, product_variant=self.variant, price=Decimal('50.00'),
+            description='Also stale.', product_name=self.product.name, sort_order=0)
+        self._run('--quote-id', str(self.quote.pk))
+        other_line.refresh_from_db()
+        self.assertEqual(other_line.description, 'Also stale.')
+
+    def test_no_pdf_when_nothing_changed(self, mock_pdf):
+        self.line.description = 'Current application text.'
+        self.line.save()
+        output = self._run()
+        self.assertIn('Quotes with a changed description: 0', output)
+        mock_pdf.assert_not_called()

@@ -74,12 +74,14 @@
             vertical-align: top;
         }
 
-        /* image cell - always white; image set as background so it covers
-           the full cell area (row height included), cropping as needed */
+        /* image cell - always white; image set as background so it scales to
+           the full cell area (row height included). `contain` keeps the whole
+           image visible - no edge is cut off - at the cost of white space
+           when the shape of the image does not match the shape of the cell. */
         .cell-img {
-            width: 16mm;
+            width: 23mm;
             background-color: #ffffff;
-            background-size: cover;
+            background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
         }
@@ -149,7 +151,7 @@
         <tr>
             <td><div class="header-title">Product user guide</div></td>
             <td class="header-logo-cell">
-                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 100" style="height:14mm; width:auto; display:block;">
+                <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 260 80" style="height:14mm; width:auto; display:block;">
                     <text x="0" y="68"
                         font-family="Arial, Helvetica, sans-serif"
                         font-size="80"
@@ -161,12 +163,6 @@
                         font-size="18"
                         font-weight="400"
                         fill="#ffffff">®</text>
-                    <text x="2" y="88"
-                        font-family="Arial, Helvetica, sans-serif"
-                        font-size="13"
-                        font-weight="400"
-                        fill="#ffffff"
-                        font-style="italic">Every care in the world.</text>
                 </svg>
             </td>
         </tr>
@@ -178,12 +174,12 @@
         <!-- Column headers -->
         <table class="col-heads">
             <colgroup>
-                <col style="width:16mm;">
+                <col style="width:23mm;">
                 <col style="width:4mm;">
-                <col style="width:35mm;">
-                <col style="width:47mm;">
-                <col style="width:46mm;">
-                <col style="width:43mm;">
+                <col style="width:33mm;">
+                <col style="width:45mm;">
+                <col style="width:44mm;">
+                <col style="width:41mm;">
             </colgroup>
             <tr>
                 <td></td>
@@ -200,12 +196,12 @@
         {% with p=row.product c=row.product.wall_chart_color|default:"#f5f5f5" %}
         <table class="product-row">
             <colgroup>
-                <col style="width:16mm;">
+                <col style="width:23mm;">
                 <col style="width:4mm;">
-                <col style="width:35mm;">
-                <col style="width:47mm;">
-                <col style="width:46mm;">
-                <col style="width:43mm;">
+                <col style="width:33mm;">
+                <col style="width:45mm;">
+                <col style="width:44mm;">
+                <col style="width:41mm;">
             </colgroup>
             <tr>
                 <td class="cell-img"{% if p.primaryImageLink %} style="background-image: url('{{ base_url }}media/{{ p.primaryImageLink }}');"{% endif %}></td>

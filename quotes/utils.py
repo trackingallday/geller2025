@@ -129,7 +129,6 @@ class QuotePDFGenerator:
             font-size: 26px;
             font-weight: bold;
         }
-        .header-title .light { font-weight: normal; }
 
         .wordmark {
             text-align: right;
@@ -138,13 +137,6 @@ class QuotePDFGenerator:
             line-height: 1;
         }
         .wordmark .reg { font-size: 12px; vertical-align: super; }
-        .tagline {
-            text-align: right;
-            font-size: 9px;
-            border-top: 1px solid rgba(255,255,255,0.6);
-            padding-top: 3px;
-            margin-top: 4px;
-        }
         .wordmark-block { display: inline-block; text-align: right; }
         .header-logo { max-height: 46px; }
 
@@ -189,11 +181,13 @@ class QuotePDFGenerator:
         /* Row background colours come from Product.wall_chart_color and are
            set inline per row, the same way the wall chart PDF does it. */
 
-        /* Image fills the whole cell (row height included) via background cover */
+        /* Image scales to the cell (row height included). `contain` keeps the
+           whole image visible - no edge is cut off - the same way the wall
+           chart PDF does it. The two documents must not drift apart. */
         .img-cell {
-            width: 72px;
+            width: 100px;
             background-color: white !important;
-            background-size: cover;
+            background-size: contain;
             background-position: center;
             background-repeat: no-repeat;
         }
