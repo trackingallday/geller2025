@@ -1,0 +1,621 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if product %}{{ product.name }}{% else %}Products{% endif %} - Geller Products</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+
+    {% comment %}
+    description, directions, application and procedure are CKEditor fields.
+    Without jQuery and the form media they fall back to a plain textarea that
+    shows raw HTML. django-ckeditor needs jQuery before its own script.
+    {% endcomment %}
+    <script src="{% static 'admin/js/vendor/jquery/jquery.js' %}"></script>
+    {% if details_form %}{{ details_form.media }}{% endif %}
+    {% if compliance_form %}{{ compliance_form.media }}{% endif %}
+
+    <style>
+        :root {
+            --geller: #5A2D82;
+            --geller-soft: #efe6f7;
+            --geller-hover: #f5f0fa;
+        }
+        .navbar-brand { font-weight: bold; }
+        .navbar.bg-geller { background-color: var(--geller); }
+
+        .dashboard-layout { display: flex; height: calc(100vh - 56px); }
+        .product-list-panel {
+            width: 28%;
+            min-width: 260px;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            flex-shrink: 0;
+            background: #fff;
+        }
+        .product-detail-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: #f8f9fa;
+        }
+        .list-panel-header {
+            padding: 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .product-list-item {
+            display: block;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.1s;
+        }
+        .product-list-item:hover { background: var(--geller-hover); color: inherit; }
+        .product-list-item.active {
+            background: var(--geller-soft);
+            border-left: 3px solid var(--geller);
+        }
+
+        .nav-tabs .nav-link { color: #495057; }
+        .nav-tabs .nav-link.active {
+            color: var(--geller);
+            font-weight: 600;
+            border-bottom-color: transparent;
+        }
+
+        .panel-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+        }
+        .field-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+        .rrp-value { font-size: 1.6rem; font-weight: 600; color: var(--geller); }
+
+        .doc-row {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            padding: 14px 0;
+            border-bottom: 1px solid #f0f0f0;
+        }
+        .doc-row:last-child { border-bottom: none; }
+        .doc-name { flex: 0 0 240px; font-weight: 500; }
+
+        table.row-table { background: #fff; }
+        table.row-table td { vertical-align: middle; }
+        table.row-table input, table.row-table select, table.row-table textarea {
+            font-size: 0.9rem;
+        }
+        /* Django gives a textarea 10 rows and a file widget a stacked label.
+           Both stretch the row. Hold them down so the table stays readable. */
+        table.row-table textarea { height: 60px; min-height: 38px; }
+        table.row-table .col-image { font-size: 0.8rem; width: 230px; }
+        /* The variants table has ten columns. Let it scroll sideways inside
+           the panel rather than forcing the whole page to scroll. */
+        .table-scroll { overflow-x: auto; }
+        .table-scroll table { min-width: 1100px; }
+
+        /* Thumbnails. The client must see the picture, not the file name. */
+        .thumb {
+            width: 72px;
+            height: 72px;
+            object-fit: contain;
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 4px;
+            padding: 3px;
+            flex-shrink: 0;
+        }
+        .thumb-lg { width: 132px; height: 132px; }
+        .thumb-empty {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: #ced4da;
+            font-size: 1.4rem;
+        }
+        /* A missing file must not show its alt text in the frame. */
+        img.thumb { color: transparent; font-size: 0; }
+
+        /* CKEditor must not overflow its column. */
+        .panel-card .cke { max-width: 100%; }
+        .thumb-cell { display: flex; align-items: flex-start; gap: 10px; }
+        .thumb-cell .file-controls { min-width: 0; font-size: 0.75rem; color: #6c757d; }
+        .thumb-cell .file-controls input[type=file] {
+            font-size: 0.75rem;
+            padding: 0.2rem 0.4rem;
+            max-width: 200px;
+        }
+        .delete-cell { width: 70px; text-align: center; }
+        .empty-note { color: #6c757d; padding: 24px 0; }
+
+        /* Django renders formset fields with no Bootstrap classes. */
+        .panel-card input[type=text], .panel-card input[type=number],
+        .panel-card input[type=url], .panel-card input[type=file],
+        .panel-card select, .panel-card textarea {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.95rem;
+            color: #212529;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+        .panel-card select[multiple] { min-height: 140px; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-geller">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'product_dashboard' %}">
+            <i class="bi bi-box-seam"></i> Geller Products
+        </a>
+        <div class="ms-auto">
+            <a class="nav-link d-inline text-white-50 me-3" href="/admin/">Admin</a>
+            <a class="nav-link d-inline text-white-50" href="/quotes/dashboard/">Proposals</a>
+        </div>
+    </div>
+</nav>
+
+{% if messages %}
+    <div class="container-fluid mt-2">
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show mb-2">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="dashboard-layout">
+
+    <!-- Product list -->
+    <div class="product-list-panel">
+        <div class="list-panel-header">
+            <form method="get" class="d-flex gap-2">
+                <input type="search" name="q" value="{{ search }}" class="form-control form-control-sm"
+                       placeholder="Search name, code or brand">
+                <button class="btn btn-sm btn-outline-secondary" type="submit">
+                    <i class="bi bi-search"></i>
+                </button>
+            </form>
+        </div>
+        {% for item in products %}
+            <a href="?product={{ item.pk }}&tab={{ active_tab }}{% if search %}&q={{ search }}{% endif %}"
+               class="product-list-item {% if product and product.pk == item.pk %}active{% endif %}">
+                <div class="d-flex justify-content-between align-items-start">
+                    <strong>{{ item.name }}</strong>
+                    {% if item.public %}
+                        <span class="badge bg-success-subtle text-success border">Public</span>
+                    {% endif %}
+                </div>
+                <small class="text-muted">
+                    {{ item.productCode }} ·
+                    {{ item.variants.all|length }} variant{{ item.variants.all|length|pluralize }}
+                </small>
+            </a>
+        {% empty %}
+            <div class="p-3 text-muted">
+                {% if search %}No product matches "{{ search }}".{% else %}No products yet.{% endif %}
+            </div>
+        {% endfor %}
+    </div>
+
+    <!-- Editor -->
+    <div class="product-detail-panel">
+        {% if product %}
+            <div class="mb-3">
+                <h4 class="mb-1">{{ product.name }}</h4>
+                <div class="text-muted">
+                    {{ product.brand }} · Code {{ product.productCode }}
+                    {% if product.subheading %} · {{ product.subheading }}{% endif %}
+                </div>
+            </div>
+
+            <ul class="nav nav-tabs mb-3">
+                {% for key, label in tabs %}
+                    <li class="nav-item">
+                        <a class="nav-link {% if active_tab == key %}active{% endif %}"
+                           href="?product={{ product.pk }}&tab={{ key }}{% if search %}&q={{ search }}{% endif %}">{{ label }}</a>
+                    </li>
+                {% endfor %}
+            </ul>
+
+            {% if active_tab == 'prices' %}
+                <div class="panel-card mb-3">
+                    <form method="post" action="{% url 'save_product_rrp' product.pk %}">
+                        {% csrf_token %}
+                        <div class="field-label">Recommended retail price</div>
+                        <div class="d-flex align-items-center gap-3">
+                            <div class="rrp-value">
+                                {% if product.recommended_retail_price %}${{ product.recommended_retail_price }}{% else %}Not set{% endif %}
+                            </div>
+                            <div style="max-width: 180px;">{{ price_form.recommended_retail_price }}</div>
+                            <button class="btn btn-sm btn-primary" type="submit">Save</button>
+                        </div>
+                    </form>
+                </div>
+
+                <div class="panel-card">
+                    <h6 class="mb-3">Customer prices</h6>
+                    {% if product.pricing_variants.all %}
+                        <table class="table table-sm row-table align-middle">
+                            <thead>
+                                <tr><th>Name</th><th>Price</th><th>Qty from</th><th>Customers</th><th class="delete-cell"></th></tr>
+                            </thead>
+                            <tbody>
+                            {% for pricing in product.pricing_variants.all %}
+                                <tr>
+                                    <td>{{ pricing.name|default:"—" }}</td>
+                                    <td>${{ pricing.price }}</td>
+                                    <td>{{ pricing.min_quantity|default:"Any" }}</td>
+                                    <td>
+                                        {% for customer in pricing.customers.all %}
+                                            <span class="badge bg-light text-dark border">{{ customer.businessName }}</span>
+                                        {% empty %}
+                                            <span class="text-muted">No customers</span>
+                                        {% endfor %}
+                                    </td>
+                                    <td class="delete-cell">
+                                        <form method="post" action="{% url 'delete_pricing_variant' pricing.pk %}">
+                                            {% csrf_token %}
+                                            <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                    title="Remove this price">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-note">
+                            No customer prices. Every customer pays the recommended retail price.
+                        </div>
+                    {% endif %}
+
+                    <hr>
+                    <h6 class="mb-3">Add a price</h6>
+                    <form method="post" action="{% url 'save_pricing_variant' product.pk %}">
+                        {% csrf_token %}
+                        <input type="hidden" name="product" value="{{ product.pk }}">
+                        <div class="row g-3">
+                            <div class="col-md-3">
+                                <div class="field-label">Name</div>
+                                {{ pricing_form.name }}
+                            </div>
+                            <div class="col-md-2">
+                                <div class="field-label">Price</div>
+                                {{ pricing_form.price }}
+                            </div>
+                            <div class="col-md-2">
+                                <div class="field-label">Qty from</div>
+                                {{ pricing_form.min_quantity }}
+                            </div>
+                            <div class="col-md-5">
+                                <div class="field-label">Customers</div>
+                                {{ pricing_form.customers }}
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-primary mt-3" type="submit">Add price</button>
+                    </form>
+                </div>
+
+            {% elif active_tab == 'product' %}
+                <div class="panel-card">
+                    <form method="post" action="{% url 'save_product_details' product.pk %}"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            {% for field in details_form %}
+                                <div class="col-md-6">
+                                    <div class="field-label">{{ field.label }}</div>
+                                    {% if field.name == 'primaryImageLink' or field.name == 'secondaryImageLink' %}
+                                        <div class="thumb-cell">
+                                            {% with img=field.value %}
+                                                {% if img %}
+                                                    <a href="{{ MEDIA_URL }}{{ img }}" target="_blank" title="Open the full image">
+                                                        <img src="{{ MEDIA_URL }}{{ img }}" class="thumb thumb-lg" alt="{{ field.label }}">
+                                                    </a>
+                                                {% else %}
+                                                    <span class="thumb thumb-lg thumb-empty"><i class="bi bi-image"></i></span>
+                                                {% endif %}
+                                            {% endwith %}
+                                            <div class="file-controls flex-grow-1">
+                                                <input type="file" name="{{ field.html_name }}"
+                                                       id="{{ field.auto_id }}">
+                                                {% if field.value %}
+                                                    <label class="d-block mt-1">
+                                                        <input type="checkbox" name="{{ field.html_name }}-clear">
+                                                        Remove image
+                                                    </label>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    {% else %}
+                                        {{ field }}
+                                    {% endif %}
+                                    {% if field.errors %}
+                                        <div class="text-danger small">{{ field.errors|striptags }}</div>
+                                    {% endif %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button class="btn btn-primary mt-3" type="submit">Save details</button>
+                    </form>
+                </div>
+
+            {% elif active_tab == 'variants' %}
+                <div class="panel-card">
+                    <form method="post" action="{% url 'save_variants' product.pk %}"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {{ variant_formset.management_form }}
+                        <div class="table-scroll">
+                        <table class="table table-sm row-table">
+                            <thead>
+                                <tr>
+                                    <th>Code</th><th>Size</th><th>Pack size</th>
+                                    <th>Barcode</th><th>Carton barcode</th><th>Label code</th>
+                                    <th>Description</th><th>Image</th><th>Label</th>
+                                    <th class="delete-cell">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for form in variant_formset %}
+                                <tr>
+                                    {{ form.id }}
+                                    <td>{{ form.code }}</td>
+                                    <td>{{ form.size }}</td>
+                                    <td>{{ form.pack_size }}</td>
+                                    <td>{{ form.barcode }}</td>
+                                    <td>{{ form.carton_barcode }}</td>
+                                    <td>{{ form.label_code }}</td>
+                                    <td>{{ form.description }}</td>
+                                    <td class="col-image">
+                                        <div class="thumb-cell">
+                                            {% with img=form.instance.image %}
+                                                {% if img %}
+                                                    <a href="{{ img.url }}" target="_blank" title="Open the full image">
+                                                        <img src="{{ img.url }}" class="thumb" alt="{{ form.instance.code }}">
+                                                    </a>
+                                                {% else %}
+                                                    <span class="thumb thumb-empty"><i class="bi bi-image"></i></span>
+                                                {% endif %}
+                                            {% endwith %}
+                                            {% comment %}
+                                            The thumbnail already shows the current file, so render
+                                            the bare input rather than the whole Django widget,
+                                            which repeats the file path as text and crowds the cell.
+                                            {% endcomment %}
+                                            <div class="file-controls">
+                                                <input type="file" name="{{ form.image.html_name }}"
+                                                       id="{{ form.image.auto_id }}">
+                                                {% if form.instance.image %}
+                                                    <label class="d-block mt-1">
+                                                        <input type="checkbox"
+                                                               name="{{ form.image.html_name }}-clear">
+                                                        Remove image
+                                                    </label>
+                                                {% endif %}
+                                            </div>
+                                        </div>
+                                    </td>
+                                    <td class="col-image">
+                                        <input type="file" name="{{ form.label.html_name }}"
+                                               id="{{ form.label.auto_id }}">
+                                        {% if form.instance.label %}
+                                            <a href="{{ form.instance.label.url }}" target="_blank"
+                                               class="d-block small mt-1">View label</a>
+                                            <label class="d-block small text-muted">
+                                                <input type="checkbox" name="{{ form.label.html_name }}-clear">
+                                                Remove
+                                            </label>
+                                        {% endif %}
+                                    </td>
+                                    <td class="delete-cell">{{ form.DELETE }}</td>
+                                </tr>
+                                {% if form.errors %}
+                                    <tr><td colspan="10" class="text-danger small">{{ form.errors }}</td></tr>
+                                {% endif %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        </div>
+                        <button class="btn btn-primary" type="submit">Save variants</button>
+                        <span class="text-muted small ms-2">
+                            Tick Remove to delete a variant. The last row adds a new one.
+                        </span>
+                    </form>
+                </div>
+
+            {% elif active_tab == 'compliance' %}
+                <div class="panel-card mb-3">
+                    <form method="post" action="{% url 'save_product_compliance' product.pk %}"
+                          enctype="multipart/form-data">
+                        {% csrf_token %}
+                        {% for doc in compliance_documents %}
+                            <div class="doc-row">
+                                <div class="doc-name">{{ doc.label }}</div>
+                                <div class="flex-grow-1">
+                                    <input type="file" name="{{ doc.field.html_name }}"
+                                           id="{{ doc.field.auto_id }}">
+                                    {% if doc.file %}
+                                        <label class="d-block mt-1 small text-muted">
+                                            <input type="checkbox" name="{{ doc.field.html_name }}-clear">
+                                            Remove this file
+                                        </label>
+                                    {% endif %}
+                                </div>
+                                <div>
+                                    {% if doc.file %}
+                                        <a href="{{ doc.file.url }}" class="btn btn-sm btn-outline-secondary"
+                                           target="_blank">
+                                            <i class="bi bi-download"></i> Download
+                                        </a>
+                                    {% else %}
+                                        <span class="text-muted small">No file</span>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <div class="field-label">MPI approval number</div>
+                                {{ compliance_form.mpi_approval }}
+                            </div>
+                        </div>
+
+                        <div class="row g-3 mt-2">
+                            <div class="col-md-6">
+                                <div class="field-label">Application</div>
+                                {{ compliance_form.application }}
+                            </div>
+                            <div class="col-md-6">
+                                <div class="field-label">Procedure</div>
+                                {{ compliance_form.procedure }}
+                            </div>
+                        </div>
+                        <button class="btn btn-primary mt-3" type="submit">Save compliance</button>
+                    </form>
+                </div>
+
+                <div class="panel-card">
+                    <h6 class="mb-3">Safety wear</h6>
+                    {% for wear in product.safetyWears.all %}
+                        <span class="badge bg-light text-dark border me-1">{{ wear.name }}</span>
+                    {% empty %}
+                        <span class="text-muted">None set. Add it on the Product tab.</span>
+                    {% endfor %}
+                </div>
+
+            {% elif active_tab == 'dilutions' %}
+                {% for group in dilution_groups %}
+                    <div class="panel-card mb-3">
+                        <h6 class="mb-3">
+                            {{ group.variant.size|default:"No size" }}
+                            <small class="text-muted">{{ group.variant.code }}</small>
+                        </h6>
+                        <form method="post" action="{% url 'save_dilutions' group.variant.pk %}">
+                            {% csrf_token %}
+                            {{ group.formset.management_form }}
+                            <table class="table table-sm row-table">
+                                <thead>
+                                    <tr>
+                                        <th>Application type</th><th>Value</th>
+                                        <th>Note</th><th>Fills per pack</th>
+                                        <th class="delete-cell">Remove</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for form in group.formset %}
+                                    <tr>
+                                        {{ form.id }}
+                                        <td>{{ form.application_type }}</td>
+                                        <td>{{ form.value }}</td>
+                                        <td>{{ form.note }}</td>
+                                        <td class="text-muted small">
+                                            {% if form.instance.pk %}
+                                                {% with fills=form.instance.fills %}
+                                                    {% if fills %}
+                                                        {{ fills }} × {{ form.instance.application_type.unit_label }}
+                                                    {% else %}
+                                                        —
+                                                    {% endif %}
+                                                {% endwith %}
+                                            {% endif %}
+                                        </td>
+                                        <td class="delete-cell">{{ form.DELETE }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <button class="btn btn-sm btn-primary" type="submit">Save dilutions</button>
+                        </form>
+                    </div>
+                {% empty %}
+                    <div class="panel-card empty-note">
+                        This product has no variants. Add one on the Variants tab first.
+                    </div>
+                {% endfor %}
+
+            {% elif active_tab == 'equivalents' %}
+                <div class="panel-card">
+                    <h6 class="mb-1">Product equivalency guide</h6>
+                    <p class="text-muted small">
+                        Products that do the same job as this one. Both products must
+                        already exist in the database.
+                    </p>
+                    <form method="post" action="{% url 'save_equivalents' product.pk %}">
+                        {% csrf_token %}
+                        {{ equivalency_formset.management_form }}
+                        <table class="table table-sm row-table">
+                            <thead>
+                                <tr>
+                                    <th>Equivalent product</th><th>Note</th>
+                                    <th style="width:120px;">View</th>
+                                    <th class="delete-cell">Remove</th>
+                                </tr>
+                            </thead>
+                            <tbody>
+                            {% for form in equivalency_formset %}
+                                <tr>
+                                    {{ form.id }}
+                                    <td>{{ form.equivalent_product }}</td>
+                                    <td>{{ form.note }}</td>
+                                    <td>
+                                        {% if form.instance.pk %}
+                                            <a href="?product={{ form.instance.equivalent_product_id }}&tab=product"
+                                               class="btn btn-sm btn-outline-secondary">View</a>
+                                        {% endif %}
+                                    </td>
+                                    <td class="delete-cell">{{ form.DELETE }}</td>
+                                </tr>
+                                {% if form.errors %}
+                                    <tr><td colspan="4" class="text-danger small">{{ form.errors }}</td></tr>
+                                {% endif %}
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        {% if equivalency_formset.non_form_errors %}
+                            <div class="text-danger small mb-2">
+                                {{ equivalency_formset.non_form_errors|striptags }}
+                            </div>
+                        {% endif %}
+                        <button class="btn btn-primary" type="submit">Save equivalents</button>
+                    </form>
+                </div>
+            {% endif %}
+
+        {% else %}
+            <div class="text-muted d-flex align-items-center justify-content-center h-100">
+                <div class="text-center">
+                    <i class="bi bi-box-seam" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                    <p class="mt-2">Select a product on the left.</p>
+                </div>
+            </div>
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+</body>
+</html>

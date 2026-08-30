@@ -4,7 +4,35 @@ from django.forms.widgets import TextInput
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import Post, ProductCategory, Distributor, Profile, Product
+from .models import Post, ProductCategory, Distributor, Profile, Product, PricingVariant
+
+class PricingVariantForm(ModelForm):
+    class Meta:
+        model = PricingVariant
+        fields = '__all__'
+
+    def clean(self):
+        """Stop a customer having two prices for the same product.
+
+        The check lives here and not on the model, because Django writes the
+        many-to-many rows after it saves the object. self.customers is empty
+        during Model.clean() on a new object.
+        """
+        cleaned_data = super().clean()
+        product = cleaned_data.get('product')
+        customers = cleaned_data.get('customers')
+        if not product or not customers:
+            return cleaned_data
+
+        clashes = PricingVariant.objects.filter(
+            product=product, customers__in=customers).exclude(pk=self.instance.pk)
+        if clashes.exists():
+            clashing_names = ', '.join(
+                str(customer) for customer in customers.filter(pricing_variants__in=clashes).distinct())
+            raise ValidationError(
+                'These customers already have a price for {}: {}'.format(product.name, clashing_names))
+        return cleaned_data
+
 
 class ProductForm(ModelForm):
     class Meta:

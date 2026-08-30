@@ -6,9 +6,30 @@ from chemsapp.views import customers_list, products_list, sds_products, info_she
     new_distributor, edit_distributor, printout, public_products, markets_list, categories_list, create_contact,\
     sizes_list, download_product_document, sds_enquire, special_customer_edit, backup_documents
 from chemsapp.wall_chart_views import wall_chart_pdf
+from chemsapp import product_dashboard_views
 
 urlpatterns = [
     re_path(r'^auth$', drf_views.obtain_auth_token, name='auth'),
+
+    # Product dashboard (staff only, session auth)
+    re_path(r'^product-dashboard/$', product_dashboard_views.product_dashboard,
+            name='product_dashboard'),
+    re_path(r'^product-dashboard/(?P<product_id>\d+)/save-details/$',
+            product_dashboard_views.save_product_details, name='save_product_details'),
+    re_path(r'^product-dashboard/(?P<product_id>\d+)/save-compliance/$',
+            product_dashboard_views.save_product_compliance, name='save_product_compliance'),
+    re_path(r'^product-dashboard/(?P<product_id>\d+)/save-rrp/$',
+            product_dashboard_views.save_product_rrp, name='save_product_rrp'),
+    re_path(r'^product-dashboard/(?P<product_id>\d+)/save-variants/$',
+            product_dashboard_views.save_variants, name='save_variants'),
+    re_path(r'^product-dashboard/(?P<product_id>\d+)/save-price/$',
+            product_dashboard_views.save_pricing_variant, name='save_pricing_variant'),
+    re_path(r'^product-dashboard/(?P<product_id>\d+)/save-equivalents/$',
+            product_dashboard_views.save_equivalents, name='save_equivalents'),
+    re_path(r'^product-dashboard/variant/(?P<variant_id>\d+)/save-dilutions/$',
+            product_dashboard_views.save_dilutions, name='save_dilutions'),
+    re_path(r'^product-dashboard/price/(?P<pricing_variant_id>\d+)/delete/$',
+            product_dashboard_views.delete_pricing_variant, name='delete_pricing_variant'),
 
     # Marketing utility routes
     re_path(r'^product_download/(?P<product_id>\d+)/(?P<document_type>[a-z]{3,4})/$', download_product_document, name="product_download"),

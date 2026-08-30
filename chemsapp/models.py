@@ -140,10 +140,28 @@ class Product(models.Model):
     description = RichTextField()
     directions = RichTextField()
     productCode = models.CharField(max_length=255, unique=True)
+    recommended_retail_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True,
+        help_text='Recommended retail price, in dollars.')
     productCodes = models.TextField(max_length=1000, blank=True, null=True)
     brand = models.CharField(max_length=255)
+    product_range = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='Range within the brand, e.g. "Professional".')
+    bom = models.TextField(
+        blank=True, default='', verbose_name='BOM',
+        help_text='Bill of materials for this product.')
+    mpi_approval = models.CharField(
+        max_length=255, blank=True, default='', verbose_name='MPI approval',
+        help_text='MPI approval number, e.g. "C32".')
     infoSheet = models.FileField(upload_to='documents/', blank=True, null=True)
     sdsSheet = models.FileField(upload_to='documents/', blank=True, null=True)
+    mpi_approval_sheet = models.FileField(
+        upload_to='documents/', blank=True, null=True,
+        verbose_name='MPI approval document')
+    application_sheet = models.FileField(
+        upload_to='documents/', blank=True, null=True,
+        help_text='Product application sheet.')
     safetyWears = models.ManyToManyField("SafetyWear", related_name="products", blank=True)
     uploadedBy = models.ForeignKey(User, related_name="products_added", on_delete=models.CASCADE, blank=True, null=True)
     subCategory = models.ManyToManyField(ProductCategory, blank=True, related_name='subcategories')
@@ -175,7 +193,16 @@ class ProductVariant(models.Model):
     pack_size = models.IntegerField()
     description = models.TextField(blank=True, null=True)
     barcode = models.CharField(max_length=255)
+    carton_barcode = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='Barcode of the carton, when it differs from the unit barcode.')
+    label_code = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='Label code, e.g. "LABCLEANG05".')
     image = models.FileField(upload_to='documents/', blank=True, null=True)
+    label = models.FileField(
+        upload_to='documents/', blank=True, null=True,
+        help_text='Product label artwork for this size.')
 
     def __str__(self):
         size_str = f' ({self.size})' if self.size else ''
@@ -332,6 +359,63 @@ class Customer(Profile):
     def __str__(self):
         distributor_names = ", ".join([d.businessname for d in self.distributors.all()[:3]])
         return "{} {} {}".format(self.businessName, self.user.email, distributor_names if distributor_names else "No distributor")
+
+
+class PricingVariant(models.Model):
+    """A negotiated price for one product, for a set of customers.
+
+    A customer with no PricingVariant for a product pays the recommended
+    retail price of the product.
+    """
+    product = models.ForeignKey(Product, related_name='pricing_variants', on_delete=models.CASCADE)
+    customers = models.ManyToManyField(Customer, related_name='pricing_variants', blank=True)
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        help_text='Price that these customers pay for this product, in dollars.')
+    name = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='Optional label, e.g. "2026 contract" or "Bulk tier".')
+    min_quantity = models.PositiveIntegerField(
+        blank=True, null=True, verbose_name='Minimum quantity',
+        help_text='Smallest order that gets this price. Blank for any quantity.')
+
+    class Meta:
+        ordering = ['product__name', 'price']
+
+    def __str__(self):
+        label = f' ({self.name})' if self.name else ''
+        return f'{self.product.name}{label} - {self.price}'
+
+
+class ProductEquivalency(models.Model):
+    """A product that does the same job as this one.
+
+    Used for the equivalency guide: staff show a customer which product
+    replaces the one they use now. The equivalent is another row in the
+    product table, so both products must exist.
+    """
+    product = models.ForeignKey(
+        Product, related_name='equivalents', on_delete=models.CASCADE)
+    equivalent_product = models.ForeignKey(
+        Product, related_name='equivalent_to', on_delete=models.CASCADE,
+        help_text='The product that this one replaces, or is replaced by.')
+    note = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='e.g. "Same dilution" or "Use 20% more".')
+
+    class Meta:
+        unique_together = ('product', 'equivalent_product')
+        verbose_name_plural = 'Product equivalencies'
+        ordering = ['equivalent_product__name']
+
+    def clean(self):
+        """A product cannot be equivalent to itself."""
+        from django.core.exceptions import ValidationError
+        if self.product_id and self.product_id == self.equivalent_product_id:
+            raise ValidationError('A product cannot be equivalent to itself.')
+
+    def __str__(self):
+        return f'{self.product.name} ≡ {self.equivalent_product.name}'
 
 
 class Distributor(MyBaseModel):

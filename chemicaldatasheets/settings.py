@@ -223,7 +223,11 @@ CKEDITOR_CONFIGS = {
             ['NumberedList', 'BulletedList', '-', 'Outdent', 'Indent', '-', 'JustifyLeft', 'JustifyCenter', 'JustifyRight', 'JustifyBlock'],
             ['Link', 'Unlink'],
             ['RemoveFormat', 'Source']
-        ]
+        ],
+        # CKEditor 4.22 puts a red "this version is not secure" banner over the
+        # text. It asks the site to upgrade, which staff cannot act on, so hide
+        # it. Upgrading CKEditor stays a separate decision.
+        'versionCheck': False,
     }
 }
 

@@ -7,10 +7,11 @@ import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
     MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact,\
-    ApplicationType, DilutionVariant
+    ApplicationType, DilutionVariant, PricingVariant, ProductEquivalency
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
-from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm, ProductForm
+from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm, ProductForm,\
+    PricingVariantForm
 from django.urls import path, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -280,10 +281,20 @@ class UserAdmin(admin.ModelAdmin):
     pass
 
 
+class ProductEquivalencyInline(admin.TabularInline):
+    """Products that do the same job. fk_name is required because the model
+    has two foreign keys to Product."""
+    model = ProductEquivalency
+    fk_name = 'product'
+    extra = 1
+    raw_id_fields = ('equivalent_product',)
+
+
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
-    fields = ('code', 'size', 'pack_size', 'description', 'barcode', 'image')
+    fields = ('code', 'size', 'pack_size', 'description', 'barcode',
+              'carton_barcode', 'label_code', 'image', 'label')
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         field = super().formfield_for_dbfield(db_field, request, **kwargs)
@@ -294,13 +305,15 @@ class ProductVariantInline(admin.TabularInline):
 
 
 class ProductAdmin(ImportExportModelAdmin):
+    change_list_template = 'admin/chemsapp/product/change_list.html'
     form = ProductForm
     search_fields = ['name',]
     readonly_fields = []
     resource_class = ProductResource
-    inlines = [ProductVariantInline]
+    inlines = [ProductVariantInline, ProductEquivalencyInline]
     filter_horizontal = ['safetyWears', 'subCategory', 'productCategory', 'sizes']
-    list_display = ['brand', 'name', 'get_categories', 'has_sds', 'has_pi_sheet', 'public']
+    list_display = ['brand', 'product_range', 'name', 'get_categories', 'has_sds', 'has_pi_sheet', 'public']
+    list_filter = ['brand', 'product_range', 'public']
 
     def get_categories(self, obj):
         return ', '.join(obj.productCategory.values_list('name', flat=True))
@@ -388,12 +401,27 @@ class DilutionVariantInline(admin.TabularInline):
     extra = 1
 
 
+class PricingVariantAdmin(admin.ModelAdmin):
+    """Per-customer prices. Customers with no pricing variant for a product
+    pay the recommended retail price of the product."""
+    form = PricingVariantForm
+    search_fields = ['product__name', 'name']
+    list_display = ['product', 'name', 'price', 'min_quantity', 'customer_count']
+    list_filter = ['product']
+    list_select_related = ['product']
+    filter_horizontal = ['customers']
+
+    def customer_count(self, obj):
+        return obj.customers.count()
+    customer_count.short_description = 'Customers'
+
+
 class ProductVariantAdmin(admin.ModelAdmin):
     """Standalone variant admin so dilution options can be edited
     (inlines can't nest inside ProductVariantInline on the product page)."""
     change_list_template = 'admin/chemsapp/productvariant/change_list.html'
-    search_fields = ['code', 'product__name', 'barcode']
-    list_display = ['__str__', 'code', 'pack_size', 'size_volume']
+    search_fields = ['code', 'product__name', 'barcode', 'carton_barcode', 'label_code']
+    list_display = ['__str__', 'code', 'pack_size', 'size_volume', 'label_code']
     list_select_related = ['product', 'size']
     inlines = [DilutionVariantInline]
 
@@ -588,6 +616,7 @@ admin.site.register(Distributor, DistributorAdmin)
 admin.site.register(Customer, CustomerAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductVariant, ProductVariantAdmin)
+admin.site.register(PricingVariant, PricingVariantAdmin)
 admin.site.register(ApplicationType, ApplicationTypeAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)
