@@ -5,7 +5,7 @@ from django.urls import reverse
 
 from chemsapp.models import (
     ApplicationType, Customer, DilutionVariant, PricingVariant, Product,
-    ProductEquivalency, ProductVariant, Size,
+    ProductCategory, ProductEquivalency, ProductVariant, SafetyWear, Size,
 )
 
 
@@ -267,6 +267,77 @@ class ProductDashboardTests(TestCase):
                 'equivalents-0-note': '',
             })
         self.assertEqual(ProductEquivalency.objects.count(), 1)
+
+    # --- the search-and-add pickers ---
+
+    def test_customer_search_matches_business_name(self):
+        make_customer('jimmys3', 'Jimmys Pies Ltd')
+        make_customer('otago3', 'Otago Cleaning')
+        response = self.client.get(reverse('dashboard_customer_search'), {'q': 'Jimmy'})
+        names = [row['name'] for row in response.json()['results']]
+        self.assertIn('Jimmys Pies Ltd', names)
+        self.assertNotIn('Otago Cleaning', names)
+
+    def test_customer_search_hides_customers_that_already_have_a_price(self):
+        taken = make_customer('taken', 'Taken Ltd')
+        free = make_customer('free', 'Free Ltd')
+        pricing = PricingVariant.objects.create(product=self.product, price='10.00')
+        pricing.customers.add(taken)
+
+        response = self.client.get(
+            reverse('dashboard_customer_search'), {'product': self.product.pk})
+        names = [row['name'] for row in response.json()['results']]
+        self.assertIn('Free Ltd', names)
+        self.assertNotIn('Taken Ltd', names)
+
+    def test_category_search_filters_by_name(self):
+        ProductCategory.objects.create(name='Kitchen')
+        ProductCategory.objects.create(name='Laundry')
+        response = self.client.get(reverse('dashboard_category_search'), {'q': 'Kitch'})
+        names = [row['name'] for row in response.json()['results']]
+        self.assertEqual(names, ['Kitchen'])
+
+    def test_category_search_returns_every_category_when_nothing_is_typed(self):
+        """The category list is short, so staff can browse it without typing."""
+        for i in range(60):
+            ProductCategory.objects.create(name=f'Category {i:02d}')
+        response = self.client.get(reverse('dashboard_category_search'))
+        results = response.json()['results']
+        self.assertEqual(len(results), 60)
+        self.assertEqual(results[0]['name'], 'Category 00')
+
+    def test_customer_search_stays_capped(self):
+        """Customers grow without limit, so that list keeps its cap."""
+        for i in range(60):
+            make_customer(f'bulk{i}', f'Bulk Customer {i:02d}')
+        response = self.client.get(reverse('dashboard_customer_search'))
+        self.assertEqual(len(response.json()['results']), 50)
+
+    def test_search_endpoints_need_staff(self):
+        self.client.logout()
+        for name in ['dashboard_customer_search', 'dashboard_category_search']:
+            response = self.client.get(reverse(name))
+            self.assertEqual(response.status_code, 302, name)
+
+    def test_categories_posted_as_repeated_values_are_saved(self):
+        """The picker posts one input for each choice, like a multi-select."""
+        kitchen = ProductCategory.objects.create(name='Kitchen')
+        laundry = ProductCategory.objects.create(name='Laundry')
+        self.client.post(
+            reverse('save_product_details', args=[self.product.pk]),
+            {'name': 'Clean Green HD', 'brand': 'Geller', 'description': 'd',
+             'directions': 'd', 'productCategory': [str(kitchen.pk), str(laundry.pk)]})
+        self.assertEqual(self.product.productCategory.count(), 2)
+
+    def test_safety_wear_checkboxes_are_saved(self):
+        gloves = SafetyWear.objects.create(name='Gloves')
+        SafetyWear.objects.create(name='Boots')
+        self.client.post(
+            reverse('save_product_details', args=[self.product.pk]),
+            {'name': 'Clean Green HD', 'brand': 'Geller', 'description': 'd',
+             'directions': 'd', 'safetyWears': [str(gloves.pk)]})
+        self.assertEqual(
+            list(self.product.safetyWears.values_list('name', flat=True)), ['Gloves'])
 
     def test_get_on_a_save_view_changes_nothing(self):
         """A stray GET must not save. It just returns to the tab."""

@@ -4,17 +4,26 @@ The stock admin splits a product across a product page, a variant page and a
 pricing page. This dashboard puts them on one page with five tabs, in the
 shape of the quote dashboard in quotes/dashboard_views.py.
 """
+import json
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Q
 from django.forms import inlineformset_factory, modelform_factory
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 
 from .forms import PricingVariantForm
 from .models import (
-    DilutionVariant, PricingVariant, Product, ProductEquivalency, ProductVariant,
+    Customer, DilutionVariant, PricingVariant, Product, ProductCategory,
+    ProductEquivalency, ProductVariant,
 )
+
+# Most rows a search returns. Categories are a short fixed list and ignore
+# this when nothing is typed. Customers always apply it: the table grows.
+SEARCH_LIMIT = 50
 
 TABS = [
     ('prices', 'Prices'),
@@ -95,6 +104,7 @@ def _selected_product(product_id):
                 'pricing_variants__customers',
                 'equivalents__equivalent_product',
                 'productCategory',
+                'subCategory',
                 'safetyWears',
             )
             .get(pk=product_id)
@@ -140,6 +150,16 @@ def product_dashboard(request):
              'file': getattr(product, name)}
             for name, label in COMPLIANCE_DOCUMENTS
         ]
+        # The search pickers render the current selection as chips. Give them
+        # the id and the name, because the widget value holds only ids.
+        context['selected_safety_wears'] = set(
+            product.safetyWears.values_list('pk', flat=True))
+        context['picker_selected'] = json.dumps({
+            'productCategory': [
+                {'id': c.pk, 'name': c.name} for c in product.productCategory.all()],
+            'subCategory': [
+                {'id': c.pk, 'name': c.name} for c in product.subCategory.all()],
+        })
         context['dilution_groups'] = [
             {'variant': variant, 'formset': DilutionFormSet(
                 instance=variant, prefix=f'dilution-{variant.pk}')}
@@ -244,6 +264,57 @@ def save_dilutions(request, variant_id):
     else:
         messages.error(request, f'The dilutions did not save: {formset.errors}')
     return redirect(_dashboard_url(variant.product_id, 'dilutions'))
+
+
+@staff_member_required
+def customer_search(request):
+    """Customers matching ?q=, for the "add customer" box on the Prices tab.
+
+    Customers that already have a price for ?product= are left out. The form
+    rejects them anyway, so offering them would only produce an error.
+    """
+    search = request.GET.get('q', '').strip()
+    customers = Customer.objects.select_related('user')
+
+    product_id = request.GET.get('product', '')
+    if product_id:
+        customers = customers.exclude(pricing_variants__product_id=product_id)
+
+    if search:
+        customers = customers.filter(
+            Q(businessName__icontains=search) |
+            Q(user__email__icontains=search) |
+            Q(user__first_name__icontains=search) |
+            Q(user__last_name__icontains=search)
+        )
+
+    customers = customers.order_by('businessName')[:SEARCH_LIMIT]
+    results = [
+        {'id': customer.pk,
+         'name': customer.businessName or customer.user.get_full_name() or customer.user.username,
+         'detail': customer.user.email}
+        for customer in customers
+    ]
+    return JsonResponse({'results': results})
+
+
+@staff_member_required
+def category_search(request):
+    """Product categories matching ?q=, for the search-and-add pickers.
+
+    With no search term this returns every category. The list is short and
+    fixed, so staff can browse it without typing.
+    """
+    search = request.GET.get('q', '').strip()
+    categories = ProductCategory.objects.order_by('name')
+    if search:
+        categories = categories.filter(name__icontains=search)[:SEARCH_LIMIT]
+
+    results = [
+        {'id': category.pk, 'name': category.name, 'detail': ''}
+        for category in categories
+    ]
+    return JsonResponse({'results': results})
 
 
 @staff_member_required

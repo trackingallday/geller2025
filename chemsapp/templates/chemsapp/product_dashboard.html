@@ -130,6 +130,73 @@
         .variant-block textarea { height: 74px; }
         .variant-block input[type=file] { font-size: 0.75rem; max-width: 100%; }
 
+        /* Search-and-add picker: a search box, a results list, and chips. */
+        .search-picker { position: relative; }
+        .customer-results {
+            position: absolute;
+            z-index: 20;
+            left: 0;
+            right: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .customer-result {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 7px 10px;
+            border: none;
+            background: none;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .customer-result:last-child { border-bottom: none; }
+        .customer-result:hover, .customer-result.active { background: var(--geller-soft); }
+        .customer-result .detail { color: #868e96; font-size: 0.75rem; }
+        .customer-chosen {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .customer-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 6px 3px 10px;
+            font-size: 0.8rem;
+            background: var(--geller-soft);
+            border: 1px solid #d9c7e8;
+            border-radius: 12px;
+        }
+        .customer-chip button {
+            border: none;
+            background: none;
+            line-height: 1;
+            padding: 0 2px;
+            color: #6c4a8a;
+            font-size: 0.95rem;
+        }
+        .customer-chip button:hover { color: #b02a37; }
+
+        .checkbox-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px 18px;
+            padding: 8px 2px;
+        }
+        .checkbox-item {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            font-size: 0.9rem;
+        }
+
         /* Thumbnails. The client must see the picture, not the file name. */
         .thumb {
             width: 72px;
@@ -332,7 +399,15 @@
                             </div>
                             <div class="col-md-5">
                                 <div class="field-label">Customers</div>
-                                {{ pricing_form.customers }}
+                                {% comment %}
+                                Type to search, then click a name to add it. The
+                                chosen customers become hidden inputs named
+                                "customers", which is what the form expects.
+                                {% endcomment %}
+                                <div class="search-picker" data-field="customers"
+                                     data-url="{% url 'dashboard_customer_search' %}?product={{ product.pk }}"
+                                     data-placeholder="Search customers, then click to add"
+                                     data-empty="No customers added yet."></div>
                             </div>
                         </div>
                         <button class="btn btn-sm btn-primary mt-3" type="submit">Add price</button>
@@ -369,6 +444,30 @@
                                                     </label>
                                                 {% endif %}
                                             </div>
+                                        </div>
+                                    {% elif field.name == 'productCategory' or field.name == 'subCategory' %}
+                                        {% comment %}
+                                        42 categories in a multi-select is hard
+                                        to use. Search and add one at a time.
+                                        {% endcomment %}
+                                        <div class="search-picker" data-field="{{ field.html_name }}"
+                                             data-url="{% url 'dashboard_category_search' %}"
+                                             data-placeholder="Search categories, then click to add"
+                                             data-empty="None added yet."></div>
+                                    {% elif field.name == 'safetyWears' %}
+                                        {% comment %}
+                                        Only a handful of options, so checkboxes
+                                        beat a search box here.
+                                        {% endcomment %}
+                                        <div class="checkbox-grid">
+                                            {% for choice in field.field.queryset %}
+                                                <label class="checkbox-item">
+                                                    <input type="checkbox" name="{{ field.html_name }}"
+                                                           value="{{ choice.pk }}"
+                                                           {% if choice.pk in selected_safety_wears %}checked{% endif %}>
+                                                    {{ choice.name }}
+                                                </label>
+                                            {% endfor %}
                                         </div>
                                     {% else %}
                                         {{ field }}
@@ -645,5 +744,121 @@
 </div>
 
 <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* Search-and-add picker. Replaces a multi-select that lists every row.
+   Type to search, click a result to add it, click x on a chip to remove it.
+   Each chosen row becomes a hidden input, so the form posts the same field
+   name that the multi-select posted. */
+(function () {
+    var preselected = {{ picker_selected|default:"{}"|safe }};
+
+    document.querySelectorAll('.search-picker').forEach(function (root) {
+        var fieldName = root.dataset.field;
+        var url = root.dataset.url;
+        var chosen = (preselected[fieldName] || []).slice();
+
+        root.innerHTML =
+            '<input type="search" class="form-control form-control-sm picker-input"' +
+            ' autocomplete="off" placeholder="' + root.dataset.placeholder + '">' +
+            '<div class="customer-results d-none picker-results"></div>' +
+            '<div class="customer-chosen picker-chosen"></div>';
+
+        var input = root.querySelector('.picker-input');
+        var results = root.querySelector('.picker-results');
+        var chosenBox = root.querySelector('.picker-chosen');
+
+        function renderChosen() {
+            if (!chosen.length) {
+                chosenBox.innerHTML =
+                    '<span class="text-muted small">' + root.dataset.empty + '</span>';
+                return;
+            }
+            chosenBox.innerHTML = '';
+            chosen.forEach(function (item, index) {
+                var chip = document.createElement('span');
+                chip.className = 'customer-chip';
+                chip.textContent = item.name;
+
+                var remove = document.createElement('button');
+                remove.type = 'button';
+                remove.innerHTML = '&times;';
+                remove.title = 'Remove ' + item.name;
+                remove.addEventListener('click', function () {
+                    chosen.splice(index, 1);
+                    renderChosen();
+                });
+                chip.appendChild(remove);
+
+                var hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = fieldName;
+                hidden.value = item.id;
+                chip.appendChild(hidden);
+
+                chosenBox.appendChild(chip);
+            });
+        }
+
+        function hideResults() {
+            results.classList.add('d-none');
+            results.innerHTML = '';
+        }
+
+        function showResults(rows) {
+            results.innerHTML = '';
+            var fresh = rows.filter(function (row) {
+                return !chosen.some(function (item) { return String(item.id) === String(row.id); });
+            });
+            if (!fresh.length) {
+                results.innerHTML = '<div class="customer-result text-muted">No matches.</div>';
+                results.classList.remove('d-none');
+                return;
+            }
+            fresh.forEach(function (row) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'customer-result';
+                button.innerHTML = row.detail
+                    ? row.name + '<div class="detail">' + row.detail + '</div>'
+                    : row.name;
+                button.addEventListener('click', function () {
+                    chosen.push({id: row.id, name: row.name});
+                    input.value = '';
+                    hideResults();
+                    renderChosen();
+                    input.focus();
+                });
+                results.appendChild(button);
+            });
+            results.classList.remove('d-none');
+        }
+
+        var timer = null;
+        function search() {
+            var query = input.value.trim();
+            var joiner = url.indexOf('?') === -1 ? '?' : '&';
+            fetch(url + joiner + 'q=' + encodeURIComponent(query), {
+                credentials: 'same-origin'
+            })
+                .then(function (response) { return response.json(); })
+                .then(function (data) { showResults(data.results || []); })
+                .catch(function () { hideResults(); });
+        }
+
+        input.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(search, 200);
+        });
+        input.addEventListener('focus', search);
+
+        document.addEventListener('click', function (event) {
+            if (!root.contains(event.target)) { hideResults(); }
+        });
+
+        renderChosen();
+    });
+})();
+</script>
 </body>
 </html>
