@@ -104,10 +104,31 @@
            Both stretch the row. Hold them down so the table stays readable. */
         table.row-table textarea { height: 60px; min-height: 38px; }
         table.row-table .col-image { font-size: 0.8rem; width: 230px; }
-        /* The variants table has ten columns. Let it scroll sideways inside
-           the panel rather than forcing the whole page to scroll. */
-        .table-scroll { overflow-x: auto; }
-        .table-scroll table { min-width: 1100px; }
+
+        /* One block for each variant. Taller rows, no sideways scrolling. */
+        .variant-block {
+            display: flex;
+            gap: 20px;
+            padding: 18px 0;
+            border-bottom: 1px solid #e9ecef;
+            position: relative;
+        }
+        .variant-block:first-of-type { padding-top: 0; }
+        .variant-block:last-of-type { border-bottom: none; }
+        .variant-media { flex: 0 0 150px; }
+        .variant-fields { flex: 1; min-width: 0; }
+        .variant-new { background: #fcfcfd; }
+        .variant-new::before {
+            content: 'New variant';
+            position: absolute;
+            margin-top: -14px;
+            font-size: 0.7rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #adb5bd;
+        }
+        .variant-block textarea { height: 74px; }
+        .variant-block input[type=file] { font-size: 0.75rem; max-width: 100%; }
 
         /* Thumbnails. The client must see the picture, not the file name. */
         .thumb {
@@ -368,80 +389,87 @@
                           enctype="multipart/form-data">
                         {% csrf_token %}
                         {{ variant_formset.management_form }}
-                        <div class="table-scroll">
-                        <table class="table table-sm row-table">
-                            <thead>
-                                <tr>
-                                    <th>Code</th><th>Size</th><th>Pack size</th>
-                                    <th>Barcode</th><th>Carton barcode</th><th>Label code</th>
-                                    <th>Description</th><th>Image</th><th>Label</th>
-                                    <th class="delete-cell">Remove</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                            {% for form in variant_formset %}
-                                <tr>
-                                    {{ form.id }}
-                                    <td>{{ form.code }}</td>
-                                    <td>{{ form.size }}</td>
-                                    <td>{{ form.pack_size }}</td>
-                                    <td>{{ form.barcode }}</td>
-                                    <td>{{ form.carton_barcode }}</td>
-                                    <td>{{ form.label_code }}</td>
-                                    <td>{{ form.description }}</td>
-                                    <td class="col-image">
-                                        <div class="thumb-cell">
-                                            {% with img=form.instance.image %}
-                                                {% if img %}
-                                                    <a href="{{ img.url }}" target="_blank" title="Open the full image">
-                                                        <img src="{{ img.url }}" class="thumb" alt="{{ form.instance.code }}">
-                                                    </a>
-                                                {% else %}
-                                                    <span class="thumb thumb-empty"><i class="bi bi-image"></i></span>
-                                                {% endif %}
-                                            {% endwith %}
-                                            {% comment %}
-                                            The thumbnail already shows the current file, so render
-                                            the bare input rather than the whole Django widget,
-                                            which repeats the file path as text and crowds the cell.
-                                            {% endcomment %}
-                                            <div class="file-controls">
-                                                <input type="file" name="{{ form.image.html_name }}"
-                                                       id="{{ form.image.auto_id }}">
-                                                {% if form.instance.image %}
-                                                    <label class="d-block mt-1">
-                                                        <input type="checkbox"
-                                                               name="{{ form.image.html_name }}-clear">
-                                                        Remove image
-                                                    </label>
-                                                {% endif %}
-                                            </div>
-                                        </div>
-                                    </td>
-                                    <td class="col-image">
-                                        <input type="file" name="{{ form.label.html_name }}"
-                                               id="{{ form.label.auto_id }}">
-                                        {% if form.instance.label %}
-                                            <a href="{{ form.instance.label.url }}" target="_blank"
-                                               class="d-block small mt-1">View label</a>
-                                            <label class="d-block small text-muted">
-                                                <input type="checkbox" name="{{ form.label.html_name }}-clear">
-                                                Remove
-                                            </label>
+                        {% comment %}
+                        One block for each variant, not one wide table row. Ten
+                        columns do not fit the panel, and a block keeps every
+                        field labelled and on screen.
+                        {% endcomment %}
+                        {% for form in variant_formset %}
+                            <div class="variant-block {% if not form.instance.pk %}variant-new{% endif %}">
+                                {{ form.id }}
+                                <div class="variant-media">
+                                    {% with img=form.instance.image %}
+                                        {% if img %}
+                                            <a href="{{ img.url }}" target="_blank" title="Open the full image">
+                                                <img src="{{ img.url }}" class="thumb thumb-lg" alt="">
+                                            </a>
+                                        {% else %}
+                                            <span class="thumb thumb-lg thumb-empty"><i class="bi bi-image"></i></span>
                                         {% endif %}
-                                    </td>
-                                    <td class="delete-cell">{{ form.DELETE }}</td>
-                                </tr>
-                                {% if form.errors %}
-                                    <tr><td colspan="10" class="text-danger small">{{ form.errors }}</td></tr>
-                                {% endif %}
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                        </div>
+                                    {% endwith %}
+                                    <div class="field-label mt-2">Image</div>
+                                    <input type="file" name="{{ form.image.html_name }}"
+                                           id="{{ form.image.auto_id }}">
+                                    {% if form.instance.image %}
+                                        <label class="d-block small text-muted">
+                                            <input type="checkbox" name="{{ form.image.html_name }}-clear">
+                                            Remove image
+                                        </label>
+                                    {% endif %}
+                                </div>
+
+                                <div class="variant-fields">
+                                    <div class="row g-2">
+                                        <div class="col-md-3">
+                                            <div class="field-label">Code</div>{{ form.code }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="field-label">Size</div>{{ form.size }}
+                                        </div>
+                                        <div class="col-md-2">
+                                            <div class="field-label">Pack size</div>{{ form.pack_size }}
+                                        </div>
+                                        <div class="col-md-4">
+                                            <div class="field-label">Label code</div>{{ form.label_code }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="field-label">Barcode</div>{{ form.barcode }}
+                                        </div>
+                                        <div class="col-md-3">
+                                            <div class="field-label">Carton barcode</div>{{ form.carton_barcode }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="field-label">Description</div>{{ form.description }}
+                                        </div>
+                                        <div class="col-md-6">
+                                            <div class="field-label">Product label artwork</div>
+                                            <input type="file" name="{{ form.label.html_name }}"
+                                                   id="{{ form.label.auto_id }}">
+                                            {% if form.instance.label %}
+                                                <a href="{{ form.instance.label.url }}" target="_blank"
+                                                   class="small me-2">View label</a>
+                                                <label class="small text-muted">
+                                                    <input type="checkbox" name="{{ form.label.html_name }}-clear">
+                                                    Remove
+                                                </label>
+                                            {% endif %}
+                                        </div>
+                                        <div class="col-md-6 d-flex align-items-end">
+                                            <label class="small text-danger">
+                                                {{ form.DELETE }} Remove this variant
+                                            </label>
+                                        </div>
+                                    </div>
+                                    {% if form.errors %}
+                                        <div class="text-danger small mt-2">{{ form.errors }}</div>
+                                    {% endif %}
+                                </div>
+                            </div>
+                        {% endfor %}
+
                         <button class="btn btn-primary" type="submit">Save variants</button>
                         <span class="text-muted small ms-2">
-                            Tick Remove to delete a variant. The last row adds a new one.
+                            The empty block at the end adds a new variant.
                         </span>
                     </form>
                 </div>
