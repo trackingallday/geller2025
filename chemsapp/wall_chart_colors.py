@@ -1,8 +1,8 @@
 """Row colours derived from Product.wall_chart_color.
 
 The wall chart PDF and the quote/proposal PDF both show a product row as a
-dark stripe next to a light tint of the same hue. This module holds that
-maths so the two documents cannot drift apart.
+full-strength stripe next to a light tint of the same hue. This module holds
+that maths so the two documents cannot drift apart.
 """
 
 DEFAULT_STRIPE = '#aaaaaa'
@@ -12,8 +12,8 @@ DEFAULT_TINT = '#f5f5f5'
 def row_colors(wall_chart_color):
     """Return (stripe_color, tint_color) for one product colour.
 
-    `wall_chart_color` is a '#rrggbb' string. The stripe is the colour at 60%
-    brightness. The tint is the colour mixed with 85% white. A blank or
+    `wall_chart_color` is a '#rrggbb' string. The stripe is the product colour
+    at full strength. The tint is the colour mixed with 85% white. A blank or
     invalid value gives the neutral grey defaults.
     """
     color = wall_chart_color or ''
@@ -24,11 +24,7 @@ def row_colors(wall_chart_color):
     except (ValueError, IndexError):
         return DEFAULT_STRIPE, DEFAULT_TINT
 
-    stripe = '#{:02x}{:02x}{:02x}'.format(
-        max(0, int(r * 0.6)),
-        max(0, int(g * 0.6)),
-        max(0, int(b * 0.6)),
-    )
+    stripe = '#{:02x}{:02x}{:02x}'.format(r, g, b)
     tint = '#{:02x}{:02x}{:02x}'.format(
         int(255 * 0.85 + r * 0.15),
         int(255 * 0.85 + g * 0.15),

@@ -220,9 +220,9 @@ class SnapshotLineFieldsTestCase(TestCase):
 
 
 class RowColorsTestCase(TestCase):
-    def test_stripe_is_darker_and_tint_is_lighter(self):
+    def test_stripe_is_full_strength_and_tint_is_lighter(self):
         stripe, tint = row_colors('#3366cc')
-        self.assertEqual(stripe, '#1e3d7a')
+        self.assertEqual(stripe, '#3366cc')
         self.assertEqual(tint, '#e0e8f7')
 
     def test_invalid_color_gives_neutral_defaults(self):

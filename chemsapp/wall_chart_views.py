@@ -34,7 +34,7 @@ def _build_wall_chart_pdf(customer, products, base_url):
         description = html_module.unescape(strip_tags(product.application))
         directions = html_module.unescape(strip_tags(product.procedure))
 
-        stripe_color, tint_color = row_colors(product.wall_chart_color or '#f5f5f5')
+        stripe_color, tint_color = row_colors(product.wall_chart_color)
 
         ppe_items = []
         for wear in product.safetyWears.all():
