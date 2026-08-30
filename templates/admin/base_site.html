@@ -11,13 +11,33 @@
 
 {% block nav-global %}
 {% if user.is_authenticated %}
+<style>
+    /* The admin lays #header out as a flex row, so two sibling divs would sit
+       side by side. Stack them instead, and let each row wrap on a narrow
+       screen rather than overlapping. */
+    #nav-global { display: flex; flex-wrap: wrap; gap: 8px; }
+    #nav-global .nav-row { display: flex; flex-wrap: wrap; gap: 8px; width: 100%; }
+    #nav-global .nav-button {
+        color: #fff;
+        text-decoration: none;
+        padding: 8px 15px;
+        border-radius: 3px;
+        white-space: nowrap;
+    }
+</style>
 <div id="header">
     <div id="nav-global">
-        <a href="{% url 'admin:chemsapp_post_special' %}" style="color: #fff; text-decoration: none; padding: 8px 15px; background-color: #5a2684; border-radius: 3px; margin-left: 10px;">Special Posts</a>
-        <a href="/reports/" style="color: #fff; text-decoration: none; padding: 8px 15px; background-color: #417690; border-radius: 3px; margin-left: 10px;">Reports</a>
-        <a href="{% url 'reports:completed_reports_list' %}" style="color: #fff; text-decoration: none; padding: 8px 15px; background-color: #28a745; border-radius: 3px; margin-left: 10px;">Completed Reports</a>
-        <a href="{% url 'tickets:ticket_dashboard' %}" style="color: #fff; text-decoration: none; padding: 8px 15px; background-color: #17a2b8; border-radius: 3px; margin-left: 10px;">Tickets</a>
-        <a href="{% url 'admin:reports_assign' %}" style="color: #fff; text-decoration: none; padding: 8px 15px; background-color: #c8410a; border-radius: 3px; margin-left: 10px;">Assign Reports</a>
+        <div class="nav-row">
+            <a class="nav-button" href="{% url 'admin:chemsapp_post_special' %}" style="background-color: #5a2684;">Special Posts</a>
+            <a class="nav-button" href="/reports/" style="background-color: #417690;">Reports</a>
+            <a class="nav-button" href="{% url 'reports:completed_reports_list' %}" style="background-color: #28a745;">Completed Reports</a>
+            <a class="nav-button" href="{% url 'tickets:ticket_dashboard' %}" style="background-color: #17a2b8;">Tickets</a>
+            <a class="nav-button" href="{% url 'admin:reports_assign' %}" style="background-color: #c8410a;">Assign Reports</a>
+        </div>
+        <div class="nav-row">
+            <a class="nav-button" href="{% url 'product_dashboard' %}" style="background-color: #5A2D82;">Product Dashboard</a>
+            <a class="nav-button" href="{% url 'quotes:quote_dashboard' %}" style="background-color: #5A2D82;">Proposals Dashboard</a>
+        </div>
     </div>
 </div>
 {% endif %}

@@ -405,7 +405,7 @@
                                 "customers", which is what the form expects.
                                 {% endcomment %}
                                 <div class="search-picker" data-field="customers"
-                                     data-url="{% url 'dashboard_customer_search' %}?product={{ product.pk }}"
+                                     data-url="{% url 'dashboard_customer_search' %}?exclude_priced={{ product.pk }}"
                                      data-placeholder="Search customers, then click to add"
                                      data-empty="No customers added yet."></div>
                             </div>
@@ -728,6 +728,58 @@
                             </div>
                         {% endif %}
                         <button class="btn btn-primary" type="submit">Save equivalents</button>
+                    </form>
+                </div>
+
+            {% elif active_tab == 'customers' %}
+                <div class="panel-card">
+                    <h6 class="mb-1">Customers with this product</h6>
+                    <p class="text-muted small">
+                        The customers that buy this product. This is separate from
+                        the prices on the Prices tab.
+                    </p>
+
+                    {% if product.customers.all %}
+                        <table class="table table-sm row-table align-middle">
+                            <thead>
+                                <tr><th>Customer</th><th>Email</th><th class="delete-cell"></th></tr>
+                            </thead>
+                            <tbody>
+                            {% for customer in product.customers.all %}
+                                <tr>
+                                    <td>{{ customer.businessName|default:customer.user.username }}</td>
+                                    <td class="text-muted small">{{ customer.user.email|default:"—" }}</td>
+                                    <td class="delete-cell">
+                                        <form method="post"
+                                              action="{% url 'remove_product_customer' product.pk customer.pk %}">
+                                            {% csrf_token %}
+                                            <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                    title="Remove this customer">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-note">No customers have this product yet.</div>
+                    {% endif %}
+
+                    <hr>
+                    <h6 class="mb-3">Add a customer</h6>
+                    <form method="post" action="{% url 'add_product_customer' product.pk %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="search-picker" data-field="customer"
+                                     data-url="{% url 'dashboard_customer_search' %}?exclude_linked={{ product.pk }}"
+                                     data-placeholder="Search customers, then click to add"
+                                     data-empty="No customer chosen yet."></div>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-primary mt-3" type="submit">Add customer</button>
                     </form>
                 </div>
             {% endif %}

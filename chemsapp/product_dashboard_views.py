@@ -32,6 +32,7 @@ TABS = [
     ('compliance', 'Compliance'),
     ('dilutions', 'Dilutions'),
     ('equivalents', 'Equivalents'),
+    ('customers', 'Customers'),
 ]
 
 PRODUCT_FIELDS = [
@@ -103,6 +104,7 @@ def _selected_product(product_id):
                 'variants__dilutions__application_type',
                 'pricing_variants__customers',
                 'equivalents__equivalent_product',
+                'customers__user',
                 'productCategory',
                 'subCategory',
                 'safetyWears',
@@ -267,6 +269,42 @@ def save_dilutions(request, variant_id):
 
 
 @staff_member_required
+def add_product_customer(request, product_id):
+    """Link one customer to this product, from the Customers tab."""
+    product = get_object_or_404(Product, pk=product_id)
+    if request.method != 'POST':
+        return redirect(_dashboard_url(product.pk, 'customers'))
+
+    # The picker allows more than one chip before saving, so read them all.
+    customer_ids = request.POST.getlist('customer')
+    customers = Customer.objects.filter(pk__in=customer_ids)
+    if not customers:
+        messages.error(request, 'Select a customer first.')
+        return redirect(_dashboard_url(product.pk, 'customers'))
+
+    added = []
+    for customer in customers:
+        # add() on a many-to-many ignores a row that is already there, so a
+        # repeat cannot create a duplicate.
+        customer.products.add(product)
+        added.append(customer.businessName or customer.user.username)
+    messages.success(request, 'Added {} to {}.'.format(', '.join(added), product.name))
+    return redirect(_dashboard_url(product.pk, 'customers'))
+
+
+@staff_member_required
+def remove_product_customer(request, product_id, customer_id):
+    """Unlink one customer from this product."""
+    product = get_object_or_404(Product, pk=product_id)
+    if request.method == 'POST':
+        customer = get_object_or_404(Customer, pk=customer_id)
+        customer.products.remove(product)
+        messages.success(
+            request, f'Removed {customer.businessName} from {product.name}.')
+    return redirect(_dashboard_url(product.pk, 'customers'))
+
+
+@staff_member_required
 def customer_search(request):
     """Customers matching ?q=, for the "add customer" box on the Prices tab.
 
@@ -276,9 +314,16 @@ def customer_search(request):
     search = request.GET.get('q', '').strip()
     customers = Customer.objects.select_related('user')
 
-    product_id = request.GET.get('product', '')
-    if product_id:
-        customers = customers.exclude(pricing_variants__product_id=product_id)
+    # ?exclude_priced=<product id> leaves out customers that already have a
+    # price for that product. ?exclude_linked=<product id> leaves out those
+    # already linked to it. Each picker asks for the one it needs.
+    priced_for = request.GET.get('exclude_priced', '')
+    if priced_for:
+        customers = customers.exclude(pricing_variants__product_id=priced_for)
+
+    linked_to = request.GET.get('exclude_linked', '')
+    if linked_to:
+        customers = customers.exclude(products__id=linked_to)
 
     if search:
         customers = customers.filter(

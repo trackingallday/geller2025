@@ -268,6 +268,63 @@ class ProductDashboardTests(TestCase):
             })
         self.assertEqual(ProductEquivalency.objects.count(), 1)
 
+    # --- the Customers tab ---
+
+    def test_add_a_customer_to_the_product(self):
+        customer = make_customer('linkme', 'Link Me Ltd')
+        self.client.post(
+            reverse('add_product_customer', args=[self.product.pk]),
+            {'customer': [str(customer.pk)]})
+        self.assertIn(customer, self.product.customers.all())
+
+    def test_add_several_customers_at_once(self):
+        first = make_customer('first', 'First Ltd')
+        second = make_customer('second', 'Second Ltd')
+        self.client.post(
+            reverse('add_product_customer', args=[self.product.pk]),
+            {'customer': [str(first.pk), str(second.pk)]})
+        self.assertEqual(self.product.customers.count(), 2)
+
+    def test_adding_the_same_customer_twice_makes_one_link(self):
+        customer = make_customer('twice', 'Twice Ltd')
+        for _ in range(2):
+            self.client.post(
+                reverse('add_product_customer', args=[self.product.pk]),
+                {'customer': [str(customer.pk)]})
+        self.assertEqual(self.product.customers.count(), 1)
+
+    def test_adding_no_customer_reports_an_error(self):
+        response = self.client.post(
+            reverse('add_product_customer', args=[self.product.pk]), {}, follow=True)
+        self.assertContains(response, 'Select a customer first')
+        self.assertEqual(self.product.customers.count(), 0)
+
+    def test_remove_a_customer_from_the_product(self):
+        customer = make_customer('dropme', 'Drop Me Ltd')
+        customer.products.add(self.product)
+        self.client.post(
+            reverse('remove_product_customer', args=[self.product.pk, customer.pk]))
+        self.assertEqual(self.product.customers.count(), 0)
+
+    def test_removing_a_customer_keeps_their_other_products(self):
+        """Unlinking one product must not touch the customer's other products."""
+        customer = make_customer('keeps', 'Keeps Ltd')
+        customer.products.add(self.product, self.other)
+        self.client.post(
+            reverse('remove_product_customer', args=[self.product.pk, customer.pk]))
+        self.assertEqual(list(customer.products.all()), [self.other])
+
+    def test_customer_search_can_hide_customers_already_linked(self):
+        linked = make_customer('linked', 'Linked Ltd')
+        make_customer('unlinked', 'Unlinked Ltd')
+        linked.products.add(self.product)
+
+        response = self.client.get(
+            reverse('dashboard_customer_search'), {'exclude_linked': self.product.pk})
+        names = [row['name'] for row in response.json()['results']]
+        self.assertIn('Unlinked Ltd', names)
+        self.assertNotIn('Linked Ltd', names)
+
     # --- the search-and-add pickers ---
 
     def test_customer_search_matches_business_name(self):
@@ -285,7 +342,7 @@ class ProductDashboardTests(TestCase):
         pricing.customers.add(taken)
 
         response = self.client.get(
-            reverse('dashboard_customer_search'), {'product': self.product.pk})
+            reverse('dashboard_customer_search'), {'exclude_priced': self.product.pk})
         names = [row['name'] for row in response.json()['results']]
         self.assertIn('Free Ltd', names)
         self.assertNotIn('Taken Ltd', names)
