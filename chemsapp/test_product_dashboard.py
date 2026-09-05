@@ -3,6 +3,7 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
+from chemsapp.product_dashboard_views import VARIANT_SEARCH_LENGTH
 from chemsapp.models import (
     ApplicationType, Customer, DilutionVariant, PricingVariant, Product,
     ProductCategory, ProductEquivalency, ProductVariant, SafetyWear, Size,
@@ -75,25 +76,35 @@ class ProductDashboardTests(TestCase):
         self.assertContains(response, 'Select a product')
 
     def test_selecting_a_product_shows_the_editor(self):
+        """A product opens on the Product tab, the first of the tabs."""
         response = self.client.get(self.url, {'product': self.product.pk})
         self.assertContains(response, 'CLEANO5')
-        self.assertContains(response, 'Recommended retail price')
+        self.assertEqual(response.context['active_tab'], 'product')
+        self.assertContains(response, 'Save details')
 
-    def test_bad_tab_falls_back_to_prices(self):
+    def test_bad_tab_falls_back_to_the_first_tab(self):
         response = self.client.get(self.url, {'product': self.product.pk, 'tab': 'nonsense'})
-        self.assertEqual(response.context['active_tab'], 'prices')
+        self.assertEqual(response.context['active_tab'], 'product')
+
+    def test_the_tabs_are_in_the_order_the_client_asked_for(self):
+        response = self.client.get(self.url, {'product': self.product.pk})
+        self.assertEqual(
+            [key for key, label in response.context['tabs']],
+            ['product', 'variants', 'customers', 'compliance', 'dilutions',
+             'prices', 'equivalents'])
 
     def test_list_query_count_is_flat(self):
         """Adding products must not add queries. This proves the prefetch works.
 
-        Four queries: the session, the user, the products, and one more for
-        every variant of every product together.
+        Five queries: the session, the user, the products, one for every
+        variant of every product together, and one for the sizes of those
+        variants. The list shows the size of each variant.
         """
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             self.client.get(self.url)
         for i in range(20):
             make_product(f'Filler {i}', f'FILL{i}')
-        with self.assertNumQueries(4):
+        with self.assertNumQueries(5):
             self.client.get(self.url)
 
     # --- saving ---
@@ -129,6 +140,36 @@ class ProductDashboardTests(TestCase):
             })
         self.assertEqual(response.status_code, 302)
         self.assertEqual(self.product.variants.count(), 2)
+
+    def test_save_a_variant_price(self):
+        self.client.post(
+            reverse('save_variants', args=[self.product.pk]),
+            {
+                'variants-TOTAL_FORMS': '1', 'variants-INITIAL_FORMS': '1',
+                'variants-MIN_NUM_FORMS': '0', 'variants-MAX_NUM_FORMS': '1000',
+                'variants-0-id': str(self.variant.pk),
+                'variants-0-code': 'CLEANO5-5L', 'variants-0-size': str(self.size.pk),
+                'variants-0-pack_size': '3', 'variants-0-barcode': '9421033275684',
+                'variants-0-recommended_retail_price': '48.50',
+                'variants-0-description': '',
+            })
+        self.variant.refresh_from_db()
+        self.assertEqual(str(self.variant.recommended_retail_price), '48.50')
+
+    def test_a_variant_price_can_be_left_blank(self):
+        self.client.post(
+            reverse('save_variants', args=[self.product.pk]),
+            {
+                'variants-TOTAL_FORMS': '1', 'variants-INITIAL_FORMS': '1',
+                'variants-MIN_NUM_FORMS': '0', 'variants-MAX_NUM_FORMS': '1000',
+                'variants-0-id': str(self.variant.pk),
+                'variants-0-code': 'CLEANO5-5L', 'variants-0-size': str(self.size.pk),
+                'variants-0-pack_size': '3', 'variants-0-barcode': '9421033275684',
+                'variants-0-recommended_retail_price': '',
+                'variants-0-description': '',
+            })
+        self.variant.refresh_from_db()
+        self.assertIsNone(self.variant.recommended_retail_price)
 
     def test_remove_a_variant(self):
         self.client.post(
@@ -402,3 +443,279 @@ class ProductDashboardTests(TestCase):
         self.assertEqual(response.status_code, 302)
         self.product.refresh_from_db()
         self.assertIsNone(self.product.recommended_retail_price)
+
+
+class VariantFocusTests(TestCase):
+    """The variant-focused dashboard: search, focus pane and per-variant save.
+
+    The client works in variants, not products. A search must reach a
+    variant, and a click on one must open it in the focus pane.
+    """
+
+    def setUp(self):
+        User.objects.create_user('staffer', password='pw12345678', is_staff=True)
+        self.client.login(username='staffer', password='pw12345678')
+        self.url = reverse('product_dashboard')
+        self.product = make_product('Clean Green HD', 'CLEANO5')
+        self.other_product = make_product('Lemon Dishwash', 'DISH01', brand='Kemsol')
+        self.size_5l = Size.objects.create(
+            name='5L', desc='5 litre', amount='5', volume_litres='5.000')
+        self.size_20l = Size.objects.create(
+            name='20L', desc='20 litre', amount='20', volume_litres='20.000')
+        self.variant = ProductVariant.objects.create(
+            product=self.product, size=self.size_5l, pack_size=3,
+            barcode='9421033275684', code='CLEANO5-5L')
+        self.second = ProductVariant.objects.create(
+            product=self.product, size=self.size_20l, pack_size=1,
+            barcode='9421033275691', code='CLEANO5-20L')
+        self.foreign = ProductVariant.objects.create(
+            product=self.other_product, size=self.size_5l, pack_size=6,
+            barcode='9421033275707', code='DISH01-5L')
+
+    # --- the left list ---
+
+    def test_search_matches_a_variant_code(self):
+        response = self.client.get(self.url, {'q': 'CLEANO5-20L'})
+        self.assertContains(response, 'Clean Green HD')
+        self.assertContains(response, 'CLEANO5-20L')
+        self.assertNotContains(response, 'DISH01-5L')
+
+    def test_search_matches_a_variant_barcode(self):
+        response = self.client.get(self.url, {'q': '9421033275691'})
+        self.assertContains(response, 'CLEANO5-20L')
+
+    def test_search_matches_a_variant_size(self):
+        """A search for the size name reaches every variant of that size."""
+        Size.objects.filter(pk=self.size_20l.pk).update(name='20 Litre')
+        response = self.client.get(self.url, {'q': '20 Litre'})
+        self.assertContains(response, 'CLEANO5-20L')
+        self.assertNotContains(response, 'DISH01-5L')
+
+    def test_a_variant_match_shows_a_product_that_does_not_match(self):
+        """The product row is the group header, even when it does not match."""
+        response = self.client.get(self.url, {'q': '9421033275707'})
+        self.assertContains(response, 'Lemon Dishwash')
+        self.assertNotContains(response, 'Clean Green HD')
+
+    def test_a_product_match_shows_its_variants(self):
+        """A product in the results lists its variants, so one is one click away."""
+        response = self.client.get(self.url, {'q': 'Kemsol'})
+        self.assertContains(response, 'Lemon Dishwash')
+        self.assertContains(response, 'DISH01-5L')
+
+    def test_a_short_search_shows_no_variant_rows(self):
+        """The first few characters match too many products to nest variants."""
+        response = self.client.get(self.url, {'q': 'Kem'})
+        self.assertContains(response, 'Lemon Dishwash')
+        self.assertNotContains(response, 'DISH01-5L')
+
+    def test_the_length_limit_is_the_constant(self):
+        """A term of exactly VARIANT_SEARCH_LENGTH characters shows variants."""
+        term = 'CLEA'
+        self.assertEqual(len(term), VARIANT_SEARCH_LENGTH)
+        response = self.client.get(self.url, {'q': term})
+        self.assertContains(response, 'CLEANO5-5L')
+        short = self.client.get(self.url, {'q': term[:-1]})
+        self.assertNotContains(short, 'CLEANO5-5L')
+
+    def test_an_empty_search_shows_no_variant_rows(self):
+        rows = self.client.get(self.url).context['product_rows']
+        self.assertEqual([row['variants'] for row in rows], [[], []])
+
+    def test_search_query_count_is_flat(self):
+        """More products must not add queries to the grouped search."""
+        def count():
+            self.client.get(self.url, {'q': 'CLEANO5'})
+
+        with self.assertNumQueries(6):
+            count()
+        for i in range(10):
+            product = make_product(f'Filler {i}', f'CLEANO5-FILL{i}')
+            ProductVariant.objects.create(
+                product=product, size=self.size_5l, pack_size=1,
+                barcode=f'barcode{i}', code=f'FILL{i}-5L')
+        with self.assertNumQueries(6):
+            count()
+
+    # --- the live search endpoint ---
+
+    def test_product_list_returns_the_rows(self):
+        """The search box asks for HTML rows, not a whole page."""
+        response = self.client.get(
+            reverse('dashboard_product_list'), {'q': 'CLEANO5-20L'})
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'CLEANO5-20L')
+        self.assertContains(response, 'Clean Green HD')
+        # A fragment, not a page.
+        self.assertNotContains(response, '<html')
+
+    def test_product_list_nests_variants_under_the_product(self):
+        """The product row comes first, then its variant rows."""
+        response = self.client.get(
+            reverse('dashboard_product_list'), {'q': 'Clean Green'})
+        body = response.content.decode()
+        self.assertLess(
+            body.index('product-list-item'), body.index('variant-list-item'),
+            'the product row must come before its variant rows')
+        self.assertIn('CLEANO5-5L', body)
+
+    def test_product_list_with_no_search_lists_every_product(self):
+        response = self.client.get(reverse('dashboard_product_list'))
+        self.assertContains(response, 'Clean Green HD')
+        self.assertContains(response, 'Lemon Dishwash')
+        self.assertNotContains(response, 'variant-list-item')
+
+    def test_product_list_reports_no_match(self):
+        response = self.client.get(
+            reverse('dashboard_product_list'), {'q': 'nothing matches this'})
+        self.assertContains(response, 'Nothing matches')
+
+    def test_product_list_marks_the_open_variant(self):
+        """The row of the variant in the focus pane keeps its mark."""
+        response = self.client.get(reverse('dashboard_product_list'), {
+            'q': 'CLEANO5', 'product': str(self.product.pk),
+            'tab': 'variants', 'variant': str(self.second.pk)})
+        body = response.content.decode()
+        marked = body.index(f'data-variant="{self.second.pk}"')
+        self.assertIn('active', body[marked:marked + 120])
+
+    def test_product_list_needs_staff(self):
+        self.client.logout()
+        response = self.client.get(reverse('dashboard_product_list'))
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/admin/login/', response['Location'])
+
+    # --- the focus pane ---
+
+    def test_variant_id_focuses_that_variant(self):
+        response = self.client.get(
+            self.url,
+            {'product': self.product.pk, 'tab': 'variants', 'variant': self.second.pk})
+        self.assertEqual(response.context['focus_variant'], self.second)
+        self.assertEqual(response.context['other_variants'], [self.variant])
+
+    def test_no_variant_id_focuses_the_first_variant(self):
+        response = self.client.get(
+            self.url, {'product': self.product.pk, 'tab': 'variants'})
+        self.assertEqual(response.context['focus_variant'], self.variant)
+
+    def test_a_variant_of_another_product_is_ignored(self):
+        """A stray id must not show one product's variant under another."""
+        response = self.client.get(
+            self.url,
+            {'product': self.product.pk, 'tab': 'variants', 'variant': self.foreign.pk})
+        self.assertEqual(response.context['focus_variant'], self.variant)
+
+    def test_an_unknown_variant_id_does_not_break_the_page(self):
+        response = self.client.get(
+            self.url,
+            {'product': self.product.pk, 'tab': 'variants', 'variant': '999999'})
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response.context['focus_variant'], self.variant)
+
+    def test_a_product_with_no_variant_has_no_focus(self):
+        response = self.client.get(
+            self.url, {'product': self.other_product.pk, 'tab': 'variants'})
+        self.assertEqual(response.context['focus_variant'], self.foreign)
+        self.assertEqual(response.context['other_variants'], [])
+
+    def test_new_opens_an_empty_pane(self):
+        response = self.client.get(
+            self.url, {'product': self.product.pk, 'tab': 'variants', 'new': '1'})
+        self.assertTrue(response.context['is_new_variant'])
+        self.assertIsNone(response.context['focus_variant'])
+        # With no variant in focus, every variant is an "other" variant.
+        self.assertEqual(len(response.context['other_variants']), 2)
+
+    # --- saving one variant ---
+
+    def test_save_one_variant_returns_json(self):
+        response = self.client.post(
+            reverse('save_one_variant', args=[self.variant.pk]),
+            {'code': 'CLEANO5-5L', 'size': str(self.size_5l.pk), 'pack_size': '4',
+             'barcode': '9421033275684', 'recommended_retail_price': '24.50',
+             'carton_barcode': '', 'label_code': '', 'description': ''},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        body = response.json()
+        self.assertTrue(body['ok'])
+        self.assertEqual(body['variant']['price'], '24.50')
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.pack_size, 4)
+
+    def test_save_one_variant_reports_an_error(self):
+        """A code that another variant already uses must not save."""
+        response = self.client.post(
+            reverse('save_one_variant', args=[self.variant.pk]),
+            {'code': 'CLEANO5-20L', 'size': str(self.size_5l.pk), 'pack_size': '3',
+             'barcode': '9421033275684', 'carton_barcode': '', 'label_code': '',
+             'description': ''},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 400)
+        body = response.json()
+        self.assertFalse(body['ok'])
+        self.assertIn('code', body['errors'])
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.code, 'CLEANO5-5L')
+
+    def test_save_one_variant_keeps_its_product(self):
+        """The save must not move the variant to another product."""
+        self.client.post(
+            reverse('save_one_variant', args=[self.variant.pk]),
+            {'code': 'CLEANO5-5L', 'size': str(self.size_5l.pk), 'pack_size': '3',
+             'barcode': '9421033275684', 'carton_barcode': '', 'label_code': '',
+             'description': ''})
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.product, self.product)
+
+    def test_create_a_variant(self):
+        response = self.client.post(
+            reverse('create_variant', args=[self.product.pk]),
+            {'code': 'CLEANO5-1L', 'size': str(self.size_5l.pk), 'pack_size': '12',
+             'barcode': '9421033275714', 'carton_barcode': '', 'label_code': '',
+             'description': ''},
+            HTTP_X_REQUESTED_WITH='XMLHttpRequest')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.json()['ok'])
+        self.assertEqual(self.product.variants.count(), 3)
+
+    def test_delete_a_variant(self):
+        self.client.post(reverse('delete_variant', args=[self.second.pk]))
+        self.assertEqual(self.product.variants.count(), 1)
+
+    def test_a_form_post_with_no_javascript_redirects(self):
+        """With no JavaScript the browser must get the page, not raw JSON."""
+        response = self.client.post(
+            reverse('save_one_variant', args=[self.variant.pk]),
+            {'code': 'CLEANO5-5L', 'size': str(self.size_5l.pk), 'pack_size': '7',
+             'barcode': '9421033275684', 'carton_barcode': '', 'label_code': '',
+             'description': ''})
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('tab=variants', response['Location'])
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.pack_size, 7)
+
+    def test_a_bad_form_post_with_no_javascript_redirects(self):
+        response = self.client.post(
+            reverse('save_one_variant', args=[self.variant.pk]),
+            {'code': 'CLEANO5-20L', 'size': str(self.size_5l.pk), 'pack_size': '3',
+             'barcode': '9421033275684', 'carton_barcode': '', 'label_code': '',
+             'description': ''}, follow=True)
+        self.assertContains(response, 'The variant did not save')
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.code, 'CLEANO5-5L')
+
+    def test_get_on_a_variant_save_changes_nothing(self):
+        response = self.client.get(reverse('save_one_variant', args=[self.variant.pk]))
+        self.assertEqual(response.status_code, 302)
+        self.variant.refresh_from_db()
+        self.assertEqual(self.variant.pack_size, 3)
+
+    def test_the_variant_views_need_staff(self):
+        self.client.logout()
+        for name, args in [('save_one_variant', [self.variant.pk]),
+                           ('create_variant', [self.product.pk]),
+                           ('delete_variant', [self.variant.pk])]:
+            response = self.client.post(reverse(name, args=args))
+            self.assertEqual(response.status_code, 302, name)
+            self.assertIn('/admin/login/', response['Location'], name)

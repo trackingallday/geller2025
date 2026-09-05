@@ -25,15 +25,19 @@ from .models import (
 # this when nothing is typed. Customers always apply it: the table grows.
 SEARCH_LIMIT = 50
 
+# The order the tabs show in. The first one is the tab a product opens on.
 TABS = [
-    ('prices', 'Prices'),
     ('product', 'Product'),
     ('variants', 'Variants'),
+    ('customers', 'Customers'),
     ('compliance', 'Compliance'),
     ('dilutions', 'Dilutions'),
+    ('prices', 'Prices'),
     ('equivalents', 'Equivalents'),
-    ('customers', 'Customers'),
 ]
+
+# The tab a product opens on, and the one a bad ?tab= falls back to.
+DEFAULT_TAB = TABS[0][0]
 
 PRODUCT_FIELDS = [
     'name', 'brand', 'product_range', 'subheading', 'description', 'directions',
@@ -57,11 +61,28 @@ ProductDetailsForm = modelform_factory(Product, fields=PRODUCT_FIELDS)
 ProductComplianceForm = modelform_factory(Product, fields=COMPLIANCE_FIELDS)
 ProductPriceForm = modelform_factory(Product, fields=['recommended_retail_price'])
 
+# The fields of one variant. The bulk formset and the single-variant form
+# share this list, so the two cannot drift apart.
+VARIANT_FIELDS = [
+    'code', 'size', 'pack_size', 'recommended_retail_price', 'barcode',
+    'carton_barcode', 'label_code', 'description', 'image', 'label',
+]
+
+# The fields that a variant search looks at. This is the list that
+# ProductVariantAdmin.search_fields uses, less the product name: the product
+# query below already matches on that.
+# Shortest search term that also lists variants. Below this the term
+# matches too many products to show a variant under each one.
+VARIANT_SEARCH_LENGTH = 4
+
+VARIANT_SEARCH_FIELDS = [
+    'code', 'barcode', 'carton_barcode', 'label_code', 'size__name',
+]
+
+ProductVariantForm = modelform_factory(ProductVariant, fields=VARIANT_FIELDS)
+
 VariantFormSet = inlineformset_factory(
-    Product, ProductVariant,
-    fields=['code', 'size', 'pack_size', 'barcode', 'carton_barcode',
-            'label_code', 'description', 'image', 'label'],
-    extra=1, can_delete=True)
+    Product, ProductVariant, fields=VARIANT_FIELDS, extra=1, can_delete=True)
 
 # fk_name is required: ProductEquivalency has two foreign keys to Product.
 EquivalencyFormSet = inlineformset_factory(
@@ -75,17 +96,92 @@ DilutionFormSet = inlineformset_factory(
     extra=1, can_delete=True)
 
 
-def _dashboard_url(product_id=None, tab=None, search=''):
-    """Back to the dashboard, on the same product and the same tab."""
+def _dashboard_url(product_id=None, tab=None, search='', variant_id=None):
+    """Back to the dashboard, on the same product, tab and variant."""
     url = reverse('product_dashboard')
     params = []
     if product_id:
         params.append(f'product={product_id}')
     if tab:
         params.append(f'tab={tab}')
+    if variant_id:
+        params.append(f'variant={variant_id}')
     if search:
         params.append(f'q={search}')
     return f'{url}?{"&".join(params)}' if params else url
+
+
+def _search_products(search):
+    """The left list: one row for each product, with its variants under it.
+
+    A row is {'product': product, 'variants': [variant, ...]}. With no search
+    term every product shows and no variant shows: the list is a product
+    list until the user types.
+
+    A short search term also shows no variants. The first few characters of
+    a word match too many products, and a variant under each one makes a
+    list too long to read. From VARIANT_SEARCH_LENGTH characters the term is
+    specific enough, and every product in the results shows all of its
+    variants. The user can then click one without opening the product first.
+    """
+    products = Product.objects.prefetch_related('variants__size').order_by('name')
+    if not search:
+        return [{'product': product, 'variants': []} for product in products]
+
+    products = products.filter(
+        Q(name__icontains=search) |
+        Q(productCode__icontains=search) |
+        Q(brand__icontains=search)
+    ).distinct()
+
+    if len(search) < VARIANT_SEARCH_LENGTH:
+        return [{'product': product, 'variants': []} for product in products]
+
+    variant_query = Q()
+    for field in VARIANT_SEARCH_FIELDS:
+        variant_query |= Q(**{f'{field}__icontains': search})
+    matched = (
+        ProductVariant.objects
+        .filter(variant_query)
+        .select_related('product')
+        .order_by('code')
+    )
+
+    # A product shows when it matches, or when one of its variants does.
+    rows = {product.pk: product for product in products}
+
+    # A product that only a variant matched is not in `rows` yet. Fetch them
+    # together, with the same prefetch: every row lists its variants, and
+    # variant.product would make one query for each row.
+    missing = {v.product_id for v in matched} - set(rows)
+    if missing:
+        extra = (Product.objects
+                 .prefetch_related('variants__size')
+                 .filter(pk__in=missing))
+        for product in extra:
+            rows[product.pk] = product
+
+    # Every product in the results lists all of its variants, not only the
+    # ones that matched. The prefetch already holds them, so this is free.
+    return [
+        {'product': product, 'variants': list(product.variants.all())}
+        for product in sorted(rows.values(), key=lambda p: p.name)
+    ]
+
+
+def _focus_variant(product, variant_id):
+    """The variant the Variants tab shows in its focus pane.
+
+    An id that belongs to another product is ignored, as an unknown product
+    id is. The first variant then takes the focus, so the tab is never empty
+    when the product has a variant.
+    """
+    variants = list(product.variants.all())
+    if variant_id:
+        for variant in variants:
+            if str(variant.pk) == str(variant_id):
+                return variant
+    return variants[0] if variants else None
 
 
 def _selected_product(product_id):
@@ -119,21 +215,15 @@ def _selected_product(product_id):
 def product_dashboard(request):
     """Product list on the left, the tabbed editor on the right."""
     search = request.GET.get('q', '').strip()
-    active_tab = request.GET.get('tab', 'prices')
+    active_tab = request.GET.get('tab', DEFAULT_TAB)
     if active_tab not in dict(TABS):
-        active_tab = 'prices'
+        active_tab = DEFAULT_TAB
 
-    products = Product.objects.prefetch_related('variants').order_by('name')
-    if search:
-        products = products.filter(name__icontains=search) | \
-            products.filter(productCode__icontains=search) | \
-            products.filter(brand__icontains=search)
-        products = products.distinct()
-
+    product_rows = _search_products(search)
     product = _selected_product(request.GET.get('product', ''))
 
     context = {
-        'products': products,
+        'product_rows': product_rows,
         'product': product,
         'search': search,
         'tabs': TABS,
@@ -167,6 +257,22 @@ def product_dashboard(request):
                 instance=variant, prefix=f'dilution-{variant.pk}')}
             for variant in product.variants.all()
         ]
+
+        # The Variants tab: one variant in the focus pane, the rest below it.
+        # ?new=1 opens an empty pane, which the save creates as a new row.
+        is_new_variant = request.GET.get('new') == '1'
+        focus_variant = None if is_new_variant else _focus_variant(
+            product, request.GET.get('variant', ''))
+        context['is_new_variant'] = is_new_variant
+        context['focus_variant'] = focus_variant
+        context['focus_form'] = ProductVariantForm(instance=focus_variant)
+        context['other_variants'] = [
+            variant for variant in product.variants.all()
+            if focus_variant is None or variant.pk != focus_variant.pk
+        ]
+        context['focus_dilution_formset'] = DilutionFormSet(
+            instance=focus_variant,
+            prefix=f'dilution-{focus_variant.pk}') if focus_variant else None
 
     return TemplateResponse(request, 'chemsapp/product_dashboard.html', context)
 
@@ -233,6 +339,85 @@ def save_variants(request, product_id):
     else:
         messages.error(request, f'The variants did not save: {formset.errors}')
     return redirect(_dashboard_url(product.pk, 'variants'))
+
+
+def _variant_json(variant):
+    """One variant as the row data the Variants tab shows."""
+    return {
+        'id': variant.pk,
+        'code': variant.code or '',
+        'size': str(variant.size) if variant.size else '',
+        'pack_size': variant.pack_size,
+        'price': str(variant.recommended_retail_price)
+        if variant.recommended_retail_price is not None else '',
+        'image_url': variant.image.url if variant.image else '',
+    }
+
+
+def _is_ajax(request):
+    """True when the focus pane posted by fetch, not as a plain form."""
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+
+
+def _save_variant_form(request, instance, product):
+    """Validate and save one variant.
+
+    The focus pane posts by fetch and stays on the page, so the answer holds
+    the new row data on success and the field errors on failure. With no
+    JavaScript the same form posts normally. A browser must then get the
+    page back, not raw JSON, so this redirects to the Variants tab.
+    """
+    form = ProductVariantForm(request.POST, request.FILES, instance=instance)
+    if not form.is_valid():
+        if not _is_ajax(request):
+            messages.error(
+                request, f'The variant did not save: {form.errors.as_text()}')
+            return redirect(_dashboard_url(
+                product.pk, 'variants',
+                variant_id=instance.pk if instance else None))
+        return JsonResponse(
+            {'ok': False, 'errors': form.errors.get_json_data(escape_html=True)},
+            status=400)
+
+    variant = form.save(commit=False)
+    variant.product = product
+    variant.save()
+    form.save_m2m()
+
+    if not _is_ajax(request):
+        messages.success(request, 'Saved the variant.')
+        return redirect(_dashboard_url(product.pk, 'variants', variant_id=variant.pk))
+    return JsonResponse({'ok': True, 'variant': _variant_json(variant)})
+
+
+@staff_member_required
+def save_one_variant(request, variant_id):
+    """Save the variant in the focus pane of the Variants tab."""
+    variant = get_object_or_404(ProductVariant, pk=variant_id)
+    if request.method != 'POST':
+        return redirect(_dashboard_url(variant.product_id, 'variants',
+                                       variant_id=variant.pk))
+    return _save_variant_form(request, variant, variant.product)
+
+
+@staff_member_required
+def create_variant(request, product_id):
+    """Add one variant to this product, from the empty focus pane."""
+    product = get_object_or_404(Product, pk=product_id)
+    if request.method != 'POST':
+        return redirect(_dashboard_url(product.pk, 'variants'))
+    return _save_variant_form(request, None, product)
+
+
+@staff_member_required
+def delete_variant(request, variant_id):
+    """Remove one variant from the Variants tab."""
+    variant = get_object_or_404(ProductVariant, pk=variant_id)
+    product_id = variant.product_id
+    if request.method == 'POST':
+        variant.delete()
+        messages.success(request, 'Removed the variant.')
+    return redirect(_dashboard_url(product_id, 'variants'))
 
 
 @staff_member_required
@@ -341,6 +526,33 @@ def customer_search(request):
         for customer in customers
     ]
     return JsonResponse({'results': results})
+
+
+@staff_member_required
+def product_list(request):
+    """The rows of the left list, for the search box.
+
+    This answers with HTML, not JSON. The page and the live search render the
+    same include, so a row cannot look one way on load and another way after
+    a search.
+    """
+    search = request.GET.get('q', '').strip()
+    active_tab = request.GET.get('tab', DEFAULT_TAB)
+    if active_tab not in dict(TABS):
+        active_tab = DEFAULT_TAB
+
+    product = _selected_product(request.GET.get('product', ''))
+    focus_variant = None
+    if product is not None:
+        focus_variant = _focus_variant(product, request.GET.get('variant', ''))
+
+    return TemplateResponse(request, 'chemsapp/_product_list.html', {
+        'product_rows': _search_products(search),
+        'product': product,
+        'focus_variant': focus_variant,
+        'search': search,
+        'active_tab': active_tab,
+    })
 
 
 @staff_member_required

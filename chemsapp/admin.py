@@ -293,8 +293,9 @@ class ProductEquivalencyInline(admin.TabularInline):
 class ProductVariantInline(admin.TabularInline):
     model = ProductVariant
     extra = 1
-    fields = ('code', 'size', 'pack_size', 'description', 'barcode',
-              'carton_barcode', 'label_code', 'image', 'label')
+    fields = ('code', 'size', 'pack_size', 'recommended_retail_price',
+              'description', 'barcode', 'carton_barcode', 'label_code',
+              'image', 'label')
 
     def formfield_for_dbfield(self, db_field, request, **kwargs):
         field = super().formfield_for_dbfield(db_field, request, **kwargs)
@@ -421,7 +422,8 @@ class ProductVariantAdmin(admin.ModelAdmin):
     (inlines can't nest inside ProductVariantInline on the product page)."""
     change_list_template = 'admin/chemsapp/productvariant/change_list.html'
     search_fields = ['code', 'product__name', 'barcode', 'carton_barcode', 'label_code']
-    list_display = ['__str__', 'code', 'pack_size', 'size_volume', 'label_code']
+    list_display = ['__str__', 'code', 'pack_size', 'recommended_retail_price',
+                    'size_volume', 'label_code']
     list_select_related = ['product', 'size']
     inlines = [DilutionVariantInline]
 

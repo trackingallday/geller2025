@@ -191,6 +191,9 @@ class ProductVariant(models.Model):
     product = models.ForeignKey(Product, related_name='variants', on_delete=models.CASCADE)
     size = models.ForeignKey('Size', related_name='variants', on_delete=models.SET_NULL, blank=True, null=True)
     pack_size = models.IntegerField()
+    recommended_retail_price = models.DecimalField(
+        max_digits=10, decimal_places=2, blank=True, null=True,
+        help_text='Recommended retail price of this size, in dollars.')
     description = models.TextField(blank=True, null=True)
     barcode = models.CharField(max_length=255)
     carton_barcode = models.CharField(

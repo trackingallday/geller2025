@@ -161,7 +161,8 @@ class ProductVariantSerializer(serializers.ModelSerializer):
 
     class Meta:
         model = ProductVariant
-        fields = ('id', 'code', 'size', 'pack_size', 'description', 'barcode', 'image', 'image_url')
+        fields = ('id', 'code', 'size', 'pack_size', 'recommended_retail_price',
+                  'description', 'barcode', 'image', 'image_url')
 
     def get_image_url(self, obj):
         if not obj.image:
