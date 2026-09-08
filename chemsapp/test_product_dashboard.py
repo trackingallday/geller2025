@@ -87,12 +87,12 @@ class ProductDashboardTests(TestCase):
         self.assertEqual(response.context['active_tab'], 'product')
 
     def test_the_tabs_are_in_the_order_the_client_asked_for(self):
-        """Prices is not a tab: price moved to the Variants tab's focus pane."""
+        """Variants, Prices and Dilutions are not tabs. A variant is its own
+        view, reached from the sidebar, holding its own price and dilutions."""
         response = self.client.get(self.url, {'product': self.product.pk})
         self.assertEqual(
             [key for key, label in response.context['tabs']],
-            ['product', 'variants', 'customers', 'compliance', 'dilutions',
-             'equivalents'])
+            ['product', 'customers', 'compliance', 'equivalents'])
 
     def test_list_query_count_is_flat(self):
         """Adding products must not add queries. This proves the prefetch works.
@@ -581,7 +581,7 @@ class VariantFocusTests(TestCase):
         """The row of the variant in the focus pane keeps its mark."""
         response = self.client.get(reverse('dashboard_product_list'), {
             'q': 'CLEANO5', 'product': str(self.product.pk),
-            'tab': 'variants', 'variant': str(self.second.pk)})
+            'variant': str(self.second.pk)})
         body = response.content.decode()
         marked = body.index(f'data-variant="{self.second.pk}"')
         self.assertIn('active', body[marked:marked + 120])
@@ -593,46 +593,74 @@ class VariantFocusTests(TestCase):
         self.assertIn('/admin/login/', response['Location'])
 
     # --- the focus pane ---
+    # The sidebar is what picks a product or a variant. Selecting a product
+    # with no ?variant= must show the product, not any variant of it — a
+    # variant only ever shows when the URL explicitly asks for one.
+
+    def test_selecting_a_product_with_no_variant_param_shows_the_product(self):
+        response = self.client.get(self.url, {'product': self.product.pk})
+        self.assertIsNone(response.context['focus_variant'])
+        self.assertFalse(response.context['showing_variant'])
 
     def test_variant_id_focuses_that_variant(self):
         response = self.client.get(
-            self.url,
-            {'product': self.product.pk, 'tab': 'variants', 'variant': self.second.pk})
+            self.url, {'product': self.product.pk, 'variant': self.second.pk})
         self.assertEqual(response.context['focus_variant'], self.second)
-        self.assertEqual(response.context['other_variants'], [self.variant])
-
-    def test_no_variant_id_focuses_the_first_variant(self):
-        response = self.client.get(
-            self.url, {'product': self.product.pk, 'tab': 'variants'})
-        self.assertEqual(response.context['focus_variant'], self.variant)
+        self.assertTrue(response.context['showing_variant'])
 
     def test_a_variant_of_another_product_is_ignored(self):
         """A stray id must not show one product's variant under another."""
         response = self.client.get(
-            self.url,
-            {'product': self.product.pk, 'tab': 'variants', 'variant': self.foreign.pk})
-        self.assertEqual(response.context['focus_variant'], self.variant)
+            self.url, {'product': self.product.pk, 'variant': self.foreign.pk})
+        self.assertIsNone(response.context['focus_variant'])
+        self.assertFalse(response.context['showing_variant'])
 
     def test_an_unknown_variant_id_does_not_break_the_page(self):
         response = self.client.get(
-            self.url,
-            {'product': self.product.pk, 'tab': 'variants', 'variant': '999999'})
+            self.url, {'product': self.product.pk, 'variant': '999999'})
         self.assertEqual(response.status_code, 200)
-        self.assertEqual(response.context['focus_variant'], self.variant)
-
-    def test_a_product_with_no_variant_has_no_focus(self):
-        response = self.client.get(
-            self.url, {'product': self.other_product.pk, 'tab': 'variants'})
-        self.assertEqual(response.context['focus_variant'], self.foreign)
-        self.assertEqual(response.context['other_variants'], [])
+        self.assertIsNone(response.context['focus_variant'])
 
     def test_new_opens_an_empty_pane(self):
         response = self.client.get(
-            self.url, {'product': self.product.pk, 'tab': 'variants', 'new': '1'})
+            self.url, {'product': self.product.pk, 'new': '1'})
         self.assertTrue(response.context['is_new_variant'])
         self.assertIsNone(response.context['focus_variant'])
-        # With no variant in focus, every variant is an "other" variant.
-        self.assertEqual(len(response.context['other_variants']), 2)
+        self.assertTrue(response.context['showing_variant'])
+
+    def test_the_product_view_has_no_variant_tab_content(self):
+        """The old bulk-formset and Prices/Dilutions tabs are gone from the
+        product view — a variant is only ever shown in its own view."""
+        response = self.client.get(self.url, {'product': self.product.pk})
+        self.assertNotIn('variant_formset', response.context)
+        self.assertNotIn('dilution_groups', response.context)
+
+    # --- the sidebar always expands the open product's variants ---
+
+    def test_a_focused_variants_product_always_shows_its_variants(self):
+        """Even a search too short to nest variants must not hide the one
+        product currently open in a variant view."""
+        response = self.client.get(
+            self.url, {'product': self.product.pk, 'variant': self.second.pk,
+                       'q': 'Cle'})
+        rows = {row['product'].pk: row['variants'] for row in response.context['product_rows']}
+        self.assertEqual(len(rows[self.product.pk]), 2)
+
+    def test_an_unrelated_products_variants_stay_hidden(self):
+        response = self.client.get(
+            self.url, {'product': self.product.pk, 'variant': self.second.pk,
+                       'q': 'Cle'})
+        rows = {row['product'].pk: row['variants'] for row in response.context['product_rows']}
+        self.assertNotIn(self.other_product.pk, rows)
+
+    def test_a_product_open_in_its_tabs_also_shows_its_variants(self):
+        """A variant of the open product must stay one click away even when
+        it is shown as its tabs, not as one of its variants — otherwise a
+        variant would only ever be reachable by typing its own code."""
+        response = self.client.get(
+            self.url, {'product': self.product.pk, 'q': 'Cle'})
+        rows = {row['product'].pk: row['variants'] for row in response.context['product_rows']}
+        self.assertEqual(len(rows[self.product.pk]), 2)
 
     # --- saving one variant ---
 

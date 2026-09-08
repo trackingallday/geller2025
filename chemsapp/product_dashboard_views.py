@@ -25,15 +25,14 @@ from .models import (
 # this when nothing is typed. Customers always apply it: the table grows.
 SEARCH_LIMIT = 50
 
-# The order the tabs show in. The first one is the tab a product opens on.
-# Prices is not here: price is a variant concern now, and lives inside the
-# Variants tab's focus pane instead of its own tab.
+# The order the tabs show in, for the PRODUCT view. The first one is the tab
+# a product opens on. Variants is not a tab: a variant is its own view, with
+# no tabs, reached only from the sidebar. Prices and Dilutions moved into
+# that view for the same reason — they are variant data, not product data.
 TABS = [
     ('product', 'Product'),
-    ('variants', 'Variants'),
     ('customers', 'Customers'),
     ('compliance', 'Compliance'),
-    ('dilutions', 'Dilutions'),
     ('equivalents', 'Equivalents'),
 ]
 
@@ -111,7 +110,7 @@ def _dashboard_url(product_id=None, tab=None, search='', variant_id=None):
     return f'{url}?{"&".join(params)}' if params else url
 
 
-def _search_products(search):
+def _search_products(search, always_expand=None):
     """The left list: one row for each product, with its variants under it.
 
     A row is {'product': product, 'variants': [variant, ...]}. With no search
@@ -123,65 +122,81 @@ def _search_products(search):
     list too long to read. From VARIANT_SEARCH_LENGTH characters the term is
     specific enough, and every product in the results shows all of its
     variants. The user can then click one without opening the product first.
+
+    always_expand is the id of the product currently open in a variant view.
+    A variant is only reachable from this list, so the product being worked
+    on must show its variants regardless of the search — otherwise a short
+    search could hide the one product the user needs a variant of.
     """
     products = Product.objects.prefetch_related('variants__size').order_by('name')
-    if not search:
-        return [{'product': product, 'variants': []} for product in products]
+    show_variants = search and len(search) >= VARIANT_SEARCH_LENGTH
 
-    products = products.filter(
-        Q(name__icontains=search) |
-        Q(productCode__icontains=search) |
-        Q(brand__icontains=search)
-    ).distinct()
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(productCode__icontains=search) |
+            Q(brand__icontains=search)
+        ).distinct()
 
-    if len(search) < VARIANT_SEARCH_LENGTH:
-        return [{'product': product, 'variants': []} for product in products]
-
-    variant_query = Q()
-    for field in VARIANT_SEARCH_FIELDS:
-        variant_query |= Q(**{f'{field}__icontains': search})
-    matched = (
-        ProductVariant.objects
-        .filter(variant_query)
-        .select_related('product')
-        .order_by('code')
-    )
-
-    # A product shows when it matches, or when one of its variants does.
     rows = {product.pk: product for product in products}
+    matched_variants_by_product = {}
 
-    # A product that only a variant matched is not in `rows` yet. Fetch them
-    # together, with the same prefetch: every row lists its variants, and
-    # variant.product would make one query for each row.
-    missing = {v.product_id for v in matched} - set(rows)
-    if missing:
-        extra = (Product.objects
-                 .prefetch_related('variants__size')
-                 .filter(pk__in=missing))
-        for product in extra:
-            rows[product.pk] = product
+    if show_variants:
+        variant_query = Q()
+        for field in VARIANT_SEARCH_FIELDS:
+            variant_query |= Q(**{f'{field}__icontains': search})
+        matched = (
+            ProductVariant.objects
+            .filter(variant_query)
+            .select_related('product')
+            .order_by('code')
+        )
+        for variant in matched:
+            matched_variants_by_product.setdefault(variant.product_id, []).append(variant)
 
-    # Every product in the results lists all of its variants, not only the
-    # ones that matched. The prefetch already holds them, so this is free.
+        # A product that only a variant matched is not in `rows` yet.
+        missing = set(matched_variants_by_product) - set(rows)
+        if missing:
+            extra = (Product.objects
+                     .prefetch_related('variants__size')
+                     .filter(pk__in=missing))
+            for product in extra:
+                rows[product.pk] = product
+
+    if always_expand and always_expand not in rows:
+        extra_product = (
+            Product.objects.prefetch_related('variants__size')
+            .filter(pk=always_expand).first())
+        if extra_product:
+            rows[always_expand] = extra_product
+
+    def variants_for(product):
+        if product.pk == always_expand or show_variants:
+            # Every product in the results lists all of its variants, not
+            # only the ones that matched. The prefetch already holds them.
+            return list(product.variants.all())
+        return []
+
     return [
-        {'product': product, 'variants': list(product.variants.all())}
+        {'product': product, 'variants': variants_for(product)}
         for product in sorted(rows.values(), key=lambda p: p.name)
     ]
 
 
 def _focus_variant(product, variant_id):
-    """The variant the Variants tab shows in its focus pane.
+    """The variant the page shows on its own, with no tabs, or None.
 
-    An id that belongs to another product is ignored, as an unknown product
-    id is. The first variant then takes the focus, so the tab is never empty
-    when the product has a variant.
+    The sidebar is what picks a product or a variant now, so only an
+    explicit, valid ?variant= puts the page in variant mode. An id that
+    belongs to another product is ignored, as an unknown id is — the page
+    then shows the product, not a variant it was not asked for.
     """
-    variants = list(product.variants.all())
-    if variant_id:
-        for variant in variants:
-            if str(variant.pk) == str(variant_id):
-                return variant
-    return variants[0] if variants else None
+    if not variant_id:
+        return None
+    for variant in product.variants.all():
+        if str(variant.pk) == str(variant_id):
+            return variant
+    return None
 
 
 def _selected_product(product_id):
@@ -213,14 +228,38 @@ def _selected_product(product_id):
 
 @staff_member_required
 def product_dashboard(request):
-    """Product list on the left, the tabbed editor on the right."""
+    """Product list on the left. The right side is one of three things:
+    nothing selected, a product with its tabs, or one variant with no tabs.
+
+    The sidebar is what switches between a product and a variant — there is
+    no tab for it. Selecting a variant replaces the whole right side with
+    that variant alone: its fields, its price, its dilutions. Selecting a
+    product shows the product's own tabs, none of which are variant data.
+    """
     search = request.GET.get('q', '').strip()
     active_tab = request.GET.get('tab', DEFAULT_TAB)
     if active_tab not in dict(TABS):
         active_tab = DEFAULT_TAB
 
-    product_rows = _search_products(search)
     product = _selected_product(request.GET.get('product', ''))
+
+    is_new_variant = request.GET.get('new') == '1'
+    focus_variant = None
+    if product is not None and not is_new_variant:
+        focus_variant = _focus_variant(product, request.GET.get('variant', ''))
+
+    # True when the right side must show one variant alone, with no tabs.
+    # A plain Python bool, not a template expression: Django's {% if %} has
+    # no parentheses, so `product and (focus_variant or is_new_variant)`
+    # cannot be written correctly in the template.
+    showing_variant = product is not None and (focus_variant is not None or is_new_variant)
+
+    # The open product's own variants always show in the sidebar, however
+    # short the search — it is the one product the user is working on,
+    # whether that shows as its tabs or as one of its variants, so a variant
+    # of it must stay one click away either way.
+    open_product_id = product.pk if product is not None else None
+    product_rows = _search_products(search, always_expand=open_product_id)
 
     context = {
         'product_rows': product_rows,
@@ -228,12 +267,17 @@ def product_dashboard(request):
         'search': search,
         'tabs': TABS,
         'active_tab': active_tab,
+        'is_new_variant': is_new_variant,
+        'focus_variant': focus_variant,
+        'showing_variant': showing_variant,
     }
 
-    if product is not None:
+    if product is not None and not showing_variant:
+        # The product view. A variant is never shown here — Prices and
+        # Dilutions moved into the variant's own view, and Variants is not
+        # a tab any more.
         context['details_form'] = ProductDetailsForm(instance=product)
         context['compliance_form'] = ProductComplianceForm(instance=product)
-        context['variant_formset'] = VariantFormSet(instance=product)
         context['equivalency_formset'] = EquivalencyFormSet(instance=product)
         context['compliance_documents'] = [
             {'field': context['compliance_form'][name], 'label': label,
@@ -250,24 +294,10 @@ def product_dashboard(request):
             'subCategory': [
                 {'id': c.pk, 'name': c.name} for c in product.subCategory.all()],
         })
-        context['dilution_groups'] = [
-            {'variant': variant, 'formset': DilutionFormSet(
-                instance=variant, prefix=f'dilution-{variant.pk}')}
-            for variant in product.variants.all()
-        ]
 
-        # The Variants tab: one variant in the focus pane, the rest below it.
-        # ?new=1 opens an empty pane, which the save creates as a new row.
-        is_new_variant = request.GET.get('new') == '1'
-        focus_variant = None if is_new_variant else _focus_variant(
-            product, request.GET.get('variant', ''))
-        context['is_new_variant'] = is_new_variant
-        context['focus_variant'] = focus_variant
+    if showing_variant:
+        # The variant view: one variant, full width, no tabs.
         context['focus_form'] = ProductVariantForm(instance=focus_variant)
-        context['other_variants'] = [
-            variant for variant in product.variants.all()
-            if focus_variant is None or variant.pk != focus_variant.pk
-        ]
         context['focus_dilution_formset'] = DilutionFormSet(
             instance=focus_variant,
             prefix=f'dilution-{focus_variant.pk}') if focus_variant else None
@@ -530,14 +560,20 @@ def product_list(request):
         active_tab = DEFAULT_TAB
 
     product = _selected_product(request.GET.get('product', ''))
+    is_new_variant = request.GET.get('new') == '1'
     focus_variant = None
-    if product is not None:
+    if product is not None and not is_new_variant:
         focus_variant = _focus_variant(product, request.GET.get('variant', ''))
 
+    showing_variant = product is not None and (focus_variant is not None or is_new_variant)
+    open_product_id = product.pk if product is not None else None
+
     return TemplateResponse(request, 'chemsapp/_product_list.html', {
-        'product_rows': _search_products(search),
+        'product_rows': _search_products(search, always_expand=open_product_id),
         'product': product,
         'focus_variant': focus_variant,
+        'is_new_variant': is_new_variant,
+        'showing_variant': showing_variant,
         'search': search,
         'active_tab': active_tab,
     })

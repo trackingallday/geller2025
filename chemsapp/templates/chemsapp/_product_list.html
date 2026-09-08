@@ -2,10 +2,14 @@
 The rows of the left list: one product, then the variants that match the
 search under it. The full page and the live search both render this, so the
 two cannot show a row in two different shapes.
+
+This list is the only way to reach a variant. Clicking a product opens it
+with its tabs; clicking a variant replaces the right side with that variant
+alone, no tabs.
 {% endcomment %}
 {% for row in product_rows %}
-    <a href="?product={{ row.product.pk }}&tab={{ active_tab }}{% if search %}&q={{ search }}{% endif %}"
-       class="product-list-item {% if product and product.pk == row.product.pk %}active{% endif %}">
+    <a href="?product={{ row.product.pk }}{% if search %}&q={{ search }}{% endif %}"
+       class="product-list-item {% if product and product.pk == row.product.pk and not showing_variant %}active{% endif %}">
         <div class="d-flex justify-content-between align-items-start">
             <strong>{{ row.product.name }}</strong>
             {% if row.product.public %}
@@ -18,11 +22,11 @@ two cannot show a row in two different shapes.
         </small>
     </a>
     {% comment %}
-    The variants that match the search, under their product. A click opens
-    the Variants tab with that variant in the focus pane.
+    The variants that match the search, under their product. A click
+    replaces the right side with that variant alone.
     {% endcomment %}
     {% for variant in row.variants %}
-        <a href="?product={{ row.product.pk }}&tab=variants&variant={{ variant.pk }}{% if search %}&q={{ search }}{% endif %}"
+        <a href="?product={{ row.product.pk }}&variant={{ variant.pk }}{% if search %}&q={{ search }}{% endif %}"
            data-variant="{{ variant.pk }}"
            class="variant-list-item {% if focus_variant and focus_variant.pk == variant.pk %}active{% endif %}">
             <span class="v-code">{{ variant.code|default:"No code" }}</span>
@@ -30,6 +34,17 @@ two cannot show a row in two different shapes.
             <span class="v-price">{% if variant.recommended_retail_price %}${{ variant.recommended_retail_price }}{% endif %}</span>
         </a>
     {% endfor %}
+    {% if product and product.pk == row.product.pk %}
+        {% comment %}
+        Only the product currently open — as its tabs, or as one of its
+        variants — gets this link. Every other row would make a long,
+        unfiltered list cluttered for no reason.
+        {% endcomment %}
+        <a class="variant-list-item variant-add"
+           href="?product={{ row.product.pk }}&new=1{% if search %}&q={{ search }}{% endif %}">
+            <i class="bi bi-plus-lg"></i> Add a variant
+        </a>
+    {% endif %}
 {% empty %}
     <div class="p-3 text-muted">
         {% if search %}Nothing matches "{{ search }}".{% else %}No products yet.{% endif %}

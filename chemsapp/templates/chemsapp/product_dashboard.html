@@ -396,7 +396,228 @@
 
     <!-- Editor -->
     <div class="product-detail-panel">
-        {% if product %}
+        {% if showing_variant %}
+            {% comment %}
+            The variant view. No tabs: the sidebar is what chose this variant
+            over the product, so there is nothing else to switch to here.
+            {% endcomment %}
+            <div class="mb-3">
+                <a href="?product={{ product.pk }}{% if search %}&q={{ search }}{% endif %}"
+                   class="text-decoration-none text-muted small">
+                    <i class="bi bi-arrow-left"></i> {{ product.name }}
+                </a>
+            </div>
+
+            {% if focus_variant or is_new_variant %}
+                <div class="variant-focus mb-3">
+                    <form class="variant-focus-form" enctype="multipart/form-data"
+                          method="post"
+                          data-product="{{ product.pk }}"
+                          data-is-new="{% if is_new_variant %}1{% else %}0{% endif %}"
+                          action="{% if focus_variant %}{% url 'save_one_variant' focus_variant.pk %}{% else %}{% url 'create_variant' product.pk %}{% endif %}">
+                        {% csrf_token %}
+                        <div class="variant-focus-header">
+                            <span class="v-code">
+                                {% if focus_variant %}{{ focus_variant.code|default:"No code" }}{% else %}New variant{% endif %}
+                            </span>
+                            <span class="text-muted">
+                                {% if focus_variant %}{{ focus_variant.size|default:"No size" }}{% endif %}
+                            </span>
+                            <span class="v-price">{% if focus_variant.recommended_retail_price %}${{ focus_variant.recommended_retail_price }}{% endif %}</span>
+                        </div>
+
+                        <div class="d-flex gap-4">
+                            <div class="variant-media">
+                                {% with img=focus_variant.image %}
+                                    {% if img %}
+                                        <a href="{{ img.url }}" target="_blank" title="Open the full image">
+                                            <img src="{{ img.url }}" class="thumb thumb-lg" alt="">
+                                        </a>
+                                    {% else %}
+                                        <span class="thumb thumb-lg thumb-empty"><i class="bi bi-image"></i></span>
+                                    {% endif %}
+                                {% endwith %}
+                                <div class="field-label mt-2">Image</div>
+                                <input type="file" name="image">
+                                {% if focus_variant.image %}
+                                    <label class="d-block small text-muted">
+                                        <input type="checkbox" name="image-clear">
+                                        Remove image
+                                    </label>
+                                {% endif %}
+                            </div>
+
+                            <div class="variant-fields">
+                                <div class="row g-2">
+                                    <div class="col-md-4">
+                                        <div class="field-label">Code</div>{{ focus_form.code }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="field-label">Size</div>{{ focus_form.size }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="field-label">Pack size</div>{{ focus_form.pack_size }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="field-label">Price</div>{{ focus_form.recommended_retail_price }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="field-label">Barcode</div>{{ focus_form.barcode }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="field-label">Carton barcode</div>{{ focus_form.carton_barcode }}
+                                    </div>
+                                    <div class="col-md-4">
+                                        <div class="field-label">Label code</div>{{ focus_form.label_code }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="field-label">Description</div>{{ focus_form.description }}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <div class="field-label">Product label artwork</div>
+                                        <input type="file" name="label">
+                                        {% if focus_variant.label %}
+                                            <a href="{{ focus_variant.label.url }}" target="_blank"
+                                               class="small me-2">View label</a>
+                                            <label class="small text-muted">
+                                                <input type="checkbox" name="label-clear">
+                                                Remove
+                                            </label>
+                                        {% endif %}
+                                    </div>
+                                </div>
+
+                                <div class="d-flex align-items-center gap-2 mt-3">
+                                    <button class="btn btn-primary btn-sm" type="submit">
+                                        {% if focus_variant %}Save this variant{% else %}Add this variant{% endif %}
+                                    </button>
+                                    <span class="save-mark" hidden>Saved.</span>
+                                </div>
+                            </div>
+                        </div>
+                    </form>
+
+                    {% if focus_variant %}
+                        <hr>
+                        <h6 class="mb-2">Dilutions</h6>
+                        <form method="post" action="{% url 'save_dilutions' focus_variant.pk %}">
+                            {% csrf_token %}
+                            {{ focus_dilution_formset.management_form }}
+                            <table class="table table-sm row-table">
+                                <thead>
+                                    <tr>
+                                        <th>Application type</th><th>Value</th>
+                                        <th>Note</th><th class="delete-cell">Remove</th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                {% for form in focus_dilution_formset %}
+                                    <tr>
+                                        {{ form.id }}
+                                        <td>{{ form.application_type }}</td>
+                                        <td>{{ form.value }}</td>
+                                        <td>{{ form.note }}</td>
+                                        <td class="delete-cell">{{ form.DELETE }}</td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                            <button class="btn btn-sm btn-outline-secondary" type="submit">
+                                Save dilutions
+                            </button>
+                        </form>
+
+                        <hr>
+                        <h6 class="mb-2">Customer prices</h6>
+                        <p class="text-muted small">
+                            A customer with no price here pays the
+                            recommended retail price above.
+                        </p>
+                        {% if focus_variant.pricing_variants.all %}
+                            <table class="table table-sm row-table align-middle">
+                                <thead>
+                                    <tr><th>Name</th><th>Price</th><th>Qty from</th><th>Customers</th><th class="delete-cell"></th></tr>
+                                </thead>
+                                <tbody>
+                                {% for pricing in focus_variant.pricing_variants.all %}
+                                    <tr>
+                                        <td>{{ pricing.name|default:"—" }}</td>
+                                        <td>${{ pricing.price }}</td>
+                                        <td>{{ pricing.min_quantity|default:"Any" }}</td>
+                                        <td>
+                                            {% for customer in pricing.customers.all %}
+                                                <span class="badge bg-light text-dark border">{{ customer.businessName }}</span>
+                                            {% empty %}
+                                                <span class="text-muted">No customers</span>
+                                            {% endfor %}
+                                        </td>
+                                        <td class="delete-cell">
+                                            <form method="post" action="{% url 'delete_pricing_variant' pricing.pk %}">
+                                                {% csrf_token %}
+                                                <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                        title="Remove this price">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="empty-note">
+                                No customer prices. Every customer pays the recommended retail price.
+                            </div>
+                        {% endif %}
+
+                        <h6 class="mb-3 mt-3">Add a price</h6>
+                        <form method="post" action="{% url 'save_pricing_variant' focus_variant.pk %}">
+                            {% csrf_token %}
+                            <input type="hidden" name="product_variant" value="{{ focus_variant.pk }}">
+                            <div class="row g-3">
+                                <div class="col-md-3">
+                                    <div class="field-label">Name</div>
+                                    {{ pricing_form.name }}
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="field-label">Price</div>
+                                    {{ pricing_form.price }}
+                                </div>
+                                <div class="col-md-2">
+                                    <div class="field-label">Qty from</div>
+                                    {{ pricing_form.min_quantity }}
+                                </div>
+                                <div class="col-md-5">
+                                    <div class="field-label">Customers</div>
+                                    {% comment %}
+                                    Type to search, then click a name to add it. The
+                                    chosen customers become hidden inputs named
+                                    "customers", which is what the form expects. Every
+                                    customer is offered, not only those linked to the
+                                    product — a price can come before the link.
+                                    {% endcomment %}
+                                    <div class="search-picker" data-field="customers"
+                                         data-url="{% url 'dashboard_customer_search' %}?exclude_priced_variant={{ focus_variant.pk }}"
+                                         data-placeholder="Search customers, then click to add"
+                                         data-empty="No customers added yet."></div>
+                                </div>
+                            </div>
+                            <button class="btn btn-sm btn-primary mt-3" type="submit">Add price</button>
+                        </form>
+
+                        <hr>
+                        <form method="post" action="{% url 'delete_variant' focus_variant.pk %}"
+                              onsubmit="return confirm('Remove this variant?');">
+                            {% csrf_token %}
+                            <button class="btn btn-sm btn-outline-danger" type="submit">
+                                <i class="bi bi-trash"></i> Remove this variant
+                            </button>
+                        </form>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+        {% elif product %}
             <div class="mb-3">
                 <h4 class="mb-1">{{ product.name }}</h4>
                 <div class="text-muted">
@@ -409,7 +630,7 @@
                 {% for key, label in tabs %}
                     <li class="nav-item">
                         <a class="nav-link {% if active_tab == key %}active{% endif %}"
-                           href="?product={{ product.pk }}&tab={{ key }}{% if focus_variant %}&variant={{ focus_variant.pk }}{% endif %}{% if search %}&q={{ search }}{% endif %}">{{ label }}</a>
+                           href="?product={{ product.pk }}&tab={{ key }}{% if search %}&q={{ search }}{% endif %}">{{ label }}</a>
                     </li>
                 {% endfor %}
             </ul>
@@ -482,258 +703,6 @@
                     </form>
                 </div>
 
-            {% elif active_tab == 'variants' %}
-                {% comment %}
-                One variant fills the focus pane. The others stay below as
-                compact rows. The client works in variants, so the variant,
-                not the product, is the unit of work here.
-                {% endcomment %}
-                {% if focus_variant or is_new_variant %}
-                    <div class="variant-focus mb-3">
-                        <form class="variant-focus-form" enctype="multipart/form-data"
-                              method="post"
-                              data-product="{{ product.pk }}"
-                              data-is-new="{% if is_new_variant %}1{% else %}0{% endif %}"
-                              action="{% if focus_variant %}{% url 'save_one_variant' focus_variant.pk %}{% else %}{% url 'create_variant' product.pk %}{% endif %}">
-                            {% csrf_token %}
-                            <div class="variant-focus-header">
-                                <span class="v-code">
-                                    {% if focus_variant %}{{ focus_variant.code|default:"No code" }}{% else %}New variant{% endif %}
-                                </span>
-                                <span class="text-muted">
-                                    {% if focus_variant %}{{ focus_variant.size|default:"No size" }}{% endif %}
-                                </span>
-                                <span class="v-price">{% if focus_variant.recommended_retail_price %}${{ focus_variant.recommended_retail_price }}{% endif %}</span>
-                            </div>
-
-                            <div class="d-flex gap-4">
-                                <div class="variant-media">
-                                    {% with img=focus_variant.image %}
-                                        {% if img %}
-                                            <a href="{{ img.url }}" target="_blank" title="Open the full image">
-                                                <img src="{{ img.url }}" class="thumb thumb-lg" alt="">
-                                            </a>
-                                        {% else %}
-                                            <span class="thumb thumb-lg thumb-empty"><i class="bi bi-image"></i></span>
-                                        {% endif %}
-                                    {% endwith %}
-                                    <div class="field-label mt-2">Image</div>
-                                    <input type="file" name="image">
-                                    {% if focus_variant.image %}
-                                        <label class="d-block small text-muted">
-                                            <input type="checkbox" name="image-clear">
-                                            Remove image
-                                        </label>
-                                    {% endif %}
-                                </div>
-
-                                <div class="variant-fields">
-                                    <div class="row g-2">
-                                        <div class="col-md-4">
-                                            <div class="field-label">Code</div>{{ focus_form.code }}
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="field-label">Size</div>{{ focus_form.size }}
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="field-label">Pack size</div>{{ focus_form.pack_size }}
-                                        </div>
-                                        <div class="col-md-2">
-                                            <div class="field-label">Price</div>{{ focus_form.recommended_retail_price }}
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="field-label">Barcode</div>{{ focus_form.barcode }}
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="field-label">Carton barcode</div>{{ focus_form.carton_barcode }}
-                                        </div>
-                                        <div class="col-md-4">
-                                            <div class="field-label">Label code</div>{{ focus_form.label_code }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="field-label">Description</div>{{ focus_form.description }}
-                                        </div>
-                                        <div class="col-md-6">
-                                            <div class="field-label">Product label artwork</div>
-                                            <input type="file" name="label">
-                                            {% if focus_variant.label %}
-                                                <a href="{{ focus_variant.label.url }}" target="_blank"
-                                                   class="small me-2">View label</a>
-                                                <label class="small text-muted">
-                                                    <input type="checkbox" name="label-clear">
-                                                    Remove
-                                                </label>
-                                            {% endif %}
-                                        </div>
-                                    </div>
-
-                                    <div class="d-flex align-items-center gap-2 mt-3">
-                                        <button class="btn btn-primary btn-sm" type="submit">
-                                            {% if focus_variant %}Save this variant{% else %}Add this variant{% endif %}
-                                        </button>
-                                        <span class="save-mark" hidden>Saved.</span>
-                                    </div>
-                                </div>
-                            </div>
-                        </form>
-
-                        {% if focus_variant %}
-                            <hr>
-                            <h6 class="mb-2">Dilutions</h6>
-                            <form method="post" action="{% url 'save_dilutions' focus_variant.pk %}">
-                                {% csrf_token %}
-                                {{ focus_dilution_formset.management_form }}
-                                <table class="table table-sm row-table">
-                                    <thead>
-                                        <tr>
-                                            <th>Application type</th><th>Value</th>
-                                            <th>Note</th><th class="delete-cell">Remove</th>
-                                        </tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for form in focus_dilution_formset %}
-                                        <tr>
-                                            {{ form.id }}
-                                            <td>{{ form.application_type }}</td>
-                                            <td>{{ form.value }}</td>
-                                            <td>{{ form.note }}</td>
-                                            <td class="delete-cell">{{ form.DELETE }}</td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                                <button class="btn btn-sm btn-outline-secondary" type="submit">
-                                    Save dilutions
-                                </button>
-                            </form>
-
-                            <hr>
-                            <h6 class="mb-2">Customer prices</h6>
-                            <p class="text-muted small">
-                                A customer with no price here pays the
-                                recommended retail price above.
-                            </p>
-                            {% if focus_variant.pricing_variants.all %}
-                                <table class="table table-sm row-table align-middle">
-                                    <thead>
-                                        <tr><th>Name</th><th>Price</th><th>Qty from</th><th>Customers</th><th class="delete-cell"></th></tr>
-                                    </thead>
-                                    <tbody>
-                                    {% for pricing in focus_variant.pricing_variants.all %}
-                                        <tr>
-                                            <td>{{ pricing.name|default:"—" }}</td>
-                                            <td>${{ pricing.price }}</td>
-                                            <td>{{ pricing.min_quantity|default:"Any" }}</td>
-                                            <td>
-                                                {% for customer in pricing.customers.all %}
-                                                    <span class="badge bg-light text-dark border">{{ customer.businessName }}</span>
-                                                {% empty %}
-                                                    <span class="text-muted">No customers</span>
-                                                {% endfor %}
-                                            </td>
-                                            <td class="delete-cell">
-                                                <form method="post" action="{% url 'delete_pricing_variant' pricing.pk %}">
-                                                    {% csrf_token %}
-                                                    <button class="btn btn-sm btn-outline-danger" type="submit"
-                                                            title="Remove this price">
-                                                        <i class="bi bi-x-lg"></i>
-                                                    </button>
-                                                </form>
-                                            </td>
-                                        </tr>
-                                    {% endfor %}
-                                    </tbody>
-                                </table>
-                            {% else %}
-                                <div class="empty-note">
-                                    No customer prices. Every customer pays the recommended retail price.
-                                </div>
-                            {% endif %}
-
-                            <h6 class="mb-3 mt-3">Add a price</h6>
-                            <form method="post" action="{% url 'save_pricing_variant' focus_variant.pk %}">
-                                {% csrf_token %}
-                                <input type="hidden" name="product_variant" value="{{ focus_variant.pk }}">
-                                <div class="row g-3">
-                                    <div class="col-md-3">
-                                        <div class="field-label">Name</div>
-                                        {{ pricing_form.name }}
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="field-label">Price</div>
-                                        {{ pricing_form.price }}
-                                    </div>
-                                    <div class="col-md-2">
-                                        <div class="field-label">Qty from</div>
-                                        {{ pricing_form.min_quantity }}
-                                    </div>
-                                    <div class="col-md-5">
-                                        <div class="field-label">Customers</div>
-                                        {% comment %}
-                                        Type to search, then click a name to add it. The
-                                        chosen customers become hidden inputs named
-                                        "customers", which is what the form expects. Every
-                                        customer is offered, not only those linked to the
-                                        product — a price can come before the link.
-                                        {% endcomment %}
-                                        <div class="search-picker" data-field="customers"
-                                             data-url="{% url 'dashboard_customer_search' %}?exclude_priced_variant={{ focus_variant.pk }}"
-                                             data-placeholder="Search customers, then click to add"
-                                             data-empty="No customers added yet."></div>
-                                    </div>
-                                </div>
-                                <button class="btn btn-sm btn-primary mt-3" type="submit">Add price</button>
-                            </form>
-
-                            <hr>
-                            <form method="post" action="{% url 'delete_variant' focus_variant.pk %}"
-                                  onsubmit="return confirm('Remove this variant?');">
-                                {% csrf_token %}
-                                <button class="btn btn-sm btn-outline-danger" type="submit">
-                                    <i class="bi bi-trash"></i> Remove this variant
-                                </button>
-                            </form>
-                        {% endif %}
-                    </div>
-                {% endif %}
-
-                <div class="panel-card">
-                    <h6 class="mb-2">
-                        {% if focus_variant or is_new_variant %}Other variants{% else %}Variants{% endif %}
-                    </h6>
-                    {% for variant in other_variants %}
-                        <a class="variant-row"
-                           href="?product={{ product.pk }}&tab=variants&variant={{ variant.pk }}{% if search %}&q={{ search }}{% endif %}">
-                            {% if variant.image %}
-                                <img src="{{ variant.image.url }}" class="thumb-sm" alt="">
-                            {% else %}
-                                <span class="thumb-sm thumb-empty"><i class="bi bi-image"></i></span>
-                            {% endif %}
-                            <span class="v-code">{{ variant.code|default:"No code" }}</span>
-                            <span class="text-muted">{{ variant.size|default:"No size" }}</span>
-                            <span class="text-muted small">Pack of {{ variant.pack_size }}</span>
-                            {% if variant.recommended_retail_price %}
-                                <span class="v-price">${{ variant.recommended_retail_price }}</span>
-                            {% endif %}
-                        </a>
-                    {% empty %}
-                        <div class="empty-note">
-                            {% if focus_variant or is_new_variant %}
-                                This product has no other variant.
-                            {% else %}
-                                This product has no variants yet.
-                            {% endif %}
-                        </div>
-                    {% endfor %}
-
-                    {% if not is_new_variant %}
-                        <a class="btn btn-sm btn-outline-primary mt-3"
-                           href="?product={{ product.pk }}&tab=variants&new=1{% if search %}&q={{ search }}{% endif %}">
-                            <i class="bi bi-plus-lg"></i> Add a variant
-                        </a>
-                    {% endif %}
-                </div>
-
             {% elif active_tab == 'compliance' %}
                 <div class="panel-card mb-3">
                     <form method="post" action="{% url 'save_product_compliance' product.pk %}"
@@ -794,56 +763,6 @@
                         <span class="text-muted">None set. Add it on the Product tab.</span>
                     {% endfor %}
                 </div>
-
-            {% elif active_tab == 'dilutions' %}
-                {% for group in dilution_groups %}
-                    <div class="panel-card mb-3">
-                        <h6 class="mb-3">
-                            {{ group.variant.size|default:"No size" }}
-                            <small class="text-muted">{{ group.variant.code }}</small>
-                        </h6>
-                        <form method="post" action="{% url 'save_dilutions' group.variant.pk %}">
-                            {% csrf_token %}
-                            {{ group.formset.management_form }}
-                            <table class="table table-sm row-table">
-                                <thead>
-                                    <tr>
-                                        <th>Application type</th><th>Value</th>
-                                        <th>Note</th><th>Fills per pack</th>
-                                        <th class="delete-cell">Remove</th>
-                                    </tr>
-                                </thead>
-                                <tbody>
-                                {% for form in group.formset %}
-                                    <tr>
-                                        {{ form.id }}
-                                        <td>{{ form.application_type }}</td>
-                                        <td>{{ form.value }}</td>
-                                        <td>{{ form.note }}</td>
-                                        <td class="text-muted small">
-                                            {% if form.instance.pk %}
-                                                {% with fills=form.instance.fills %}
-                                                    {% if fills %}
-                                                        {{ fills }} × {{ form.instance.application_type.unit_label }}
-                                                    {% else %}
-                                                        —
-                                                    {% endif %}
-                                                {% endwith %}
-                                            {% endif %}
-                                        </td>
-                                        <td class="delete-cell">{{ form.DELETE }}</td>
-                                    </tr>
-                                {% endfor %}
-                                </tbody>
-                            </table>
-                            <button class="btn btn-sm btn-primary" type="submit">Save dilutions</button>
-                        </form>
-                    </div>
-                {% empty %}
-                    <div class="panel-card empty-note">
-                        This product has no variants. Add one on the Variants tab first.
-                    </div>
-                {% endfor %}
 
             {% elif active_tab == 'equivalents' %}
                 <div class="panel-card">
@@ -1075,10 +994,10 @@
 </script>
 
 <script>
-/* The focus pane on the Variants tab saves by itself, with no page reload.
-   On success it updates the header and shows a mark. On failure it writes
-   each message under its field. With no JavaScript the form still posts
-   normally, so the pane works either way. */
+/* The variant view saves by itself, with no page reload. On success it
+   updates the header and shows a mark. On failure it writes each message
+   under its field. With no JavaScript the form still posts normally, so
+   the page works either way. */
 (function () {
     var form = document.querySelector('.variant-focus-form');
     if (!form) { return; }
@@ -1149,12 +1068,12 @@
             .then(function (data) {
                 button.disabled = false;
                 if (data.ok) {
-                    /* A new variant has no row yet. Reload so the list and
-                       the dilution table show it. */
+                    /* A new variant has no row yet. Reload so the sidebar
+                       and the dilution table show it. */
                     if (form.dataset.isNew === '1') {
                         window.location.search =
                             '?product=' + form.dataset.product +
-                            '&tab=variants&variant=' + data.variant.id;
+                            '&variant=' + data.variant.id;
                         return;
                     }
                     showSaved(data.variant);
@@ -1195,7 +1114,7 @@
         var ask = new URLSearchParams();
         ask.set('q', query);
         /* Keep the selection, so the open product and variant stay marked. */
-        ['product', 'tab', 'variant'].forEach(function (name) {
+        ['product', 'tab', 'variant', 'new'].forEach(function (name) {
             if (params.get(name)) { ask.set(name, params.get(name)); }
         });
 
