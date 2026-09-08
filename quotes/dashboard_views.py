@@ -2,10 +2,12 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.auth.decorators import login_required
+from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 
 from chemsapp.models import Customer, ProductVariant
+from chemsapp.pricing import resolve_price
 from .models import Quote
 from .services import create_quote, send_quote_pdf_email
 
@@ -86,6 +88,35 @@ def _builder_context():
         'catalogue': catalogue,
         'customers': customers,
     }
+
+
+@login_required
+def dashboard_variant_price(request):
+    """The price to suggest for one line: ?variant_id=&customer_id=.
+
+    The customer price if one exists, else the variant's recommended retail
+    price. The quote builder prefills a line's price field with this and the
+    user can always type over it — this is a suggestion, not a rule.
+    """
+    variant_id = request.GET.get('variant_id', '').strip()
+    variant = ProductVariant.objects.filter(pk=variant_id).first() if variant_id else None
+    if variant is None:
+        return JsonResponse({'price': None, 'source': None})
+
+    customer_id = request.GET.get('customer_id', '').strip()
+    customer = Customer.objects.filter(pk=customer_id).first() if customer_id else None
+    price, pricing = resolve_price(variant, customer)
+
+    source = None
+    if pricing is not None:
+        source = f'Customer price{f" ({pricing.name})" if pricing.name else ""}'
+    elif price is not None:
+        source = 'Recommended retail price'
+
+    return JsonResponse({
+        'price': str(price) if price is not None else None,
+        'source': source,
+    })
 
 
 @login_required

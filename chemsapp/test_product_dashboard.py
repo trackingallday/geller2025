@@ -87,11 +87,12 @@ class ProductDashboardTests(TestCase):
         self.assertEqual(response.context['active_tab'], 'product')
 
     def test_the_tabs_are_in_the_order_the_client_asked_for(self):
+        """Prices is not a tab: price moved to the Variants tab's focus pane."""
         response = self.client.get(self.url, {'product': self.product.pk})
         self.assertEqual(
             [key for key, label in response.context['tabs']],
             ['product', 'variants', 'customers', 'compliance', 'dilutions',
-             'prices', 'equivalents'])
+             'equivalents'])
 
     def test_list_query_count_is_flat(self):
         """Adding products must not add queries. This proves the prefetch works.
@@ -108,13 +109,6 @@ class ProductDashboardTests(TestCase):
             self.client.get(self.url)
 
     # --- saving ---
-
-    def test_save_rrp(self):
-        self.client.post(
-            reverse('save_product_rrp', args=[self.product.pk]),
-            {'recommended_retail_price': '24.60'})
-        self.product.refresh_from_db()
-        self.assertEqual(str(self.product.recommended_retail_price), '24.60')
 
     def test_save_details(self):
         self.client.post(
@@ -200,32 +194,44 @@ class ProductDashboardTests(TestCase):
         self.assertEqual(DilutionVariant.objects.filter(variant=self.variant).count(), 1)
 
     # --- prices ---
+    # Price is a variant concern now. save_pricing_variant is keyed by
+    # variant id, and a price on one variant must not appear on a sibling
+    # variant of the same product.
 
     def test_add_a_pricing_variant(self):
         customer = make_customer('jimmys', 'Jimmys Pies Ltd')
         self.client.post(
-            reverse('save_pricing_variant', args=[self.product.pk]),
-            {'product': str(self.product.pk), 'price': '22.38',
+            reverse('save_pricing_variant', args=[self.variant.pk]),
+            {'product_variant': str(self.variant.pk), 'price': '22.38',
              'name': 'Sell Price 1', 'customers': [str(customer.pk)]})
-        pricing = PricingVariant.objects.get(product=self.product)
+        pricing = PricingVariant.objects.get(product_variant=self.variant)
         self.assertEqual(str(pricing.price), '22.38')
         self.assertIn(customer, pricing.customers.all())
 
     def test_duplicate_customer_price_is_refused(self):
         customer = make_customer('otago', 'Otago Cleaning Products')
-        pricing = PricingVariant.objects.create(product=self.product, price='18.20')
+        pricing = PricingVariant.objects.create(product_variant=self.variant, price='18.20')
         pricing.customers.add(customer)
 
         response = self.client.post(
-            reverse('save_pricing_variant', args=[self.product.pk]),
-            {'product': str(self.product.pk), 'price': '9.99',
+            reverse('save_pricing_variant', args=[self.variant.pk]),
+            {'product_variant': str(self.variant.pk), 'price': '9.99',
              'name': 'Cheaper', 'customers': [str(customer.pk)]}, follow=True)
 
-        self.assertEqual(PricingVariant.objects.filter(product=self.product).count(), 1)
+        self.assertEqual(PricingVariant.objects.filter(product_variant=self.variant).count(), 1)
         self.assertContains(response, 'already have a price')
 
+    def test_a_price_on_one_variant_does_not_reach_a_sibling_variant(self):
+        other_variant = ProductVariant.objects.create(
+            product=self.product, size=self.size, pack_size=1,
+            barcode='9421033272331', code='CLEANO5-20L')
+        customer = make_customer('jimmys3', 'Jimmys Pies Ltd')
+        PricingVariant.objects.create(
+            product_variant=self.variant, price='18.20').customers.add(customer)
+        self.assertEqual(other_variant.pricing_variants.count(), 0)
+
     def test_delete_a_pricing_variant(self):
-        pricing = PricingVariant.objects.create(product=self.product, price='18.20')
+        pricing = PricingVariant.objects.create(product_variant=self.variant, price='18.20')
         self.client.post(reverse('delete_pricing_variant', args=[pricing.pk]))
         self.assertEqual(PricingVariant.objects.filter(pk=pricing.pk).count(), 0)
 
@@ -267,10 +273,11 @@ class ProductDashboardTests(TestCase):
     def test_price_records_a_minimum_quantity(self):
         customer = make_customer('jimmys2', 'Jimmys Pies Ltd')
         self.client.post(
-            reverse('save_pricing_variant', args=[self.product.pk]),
-            {'product': str(self.product.pk), 'price': '22.38', 'name': 'Bulk',
+            reverse('save_pricing_variant', args=[self.variant.pk]),
+            {'product_variant': str(self.variant.pk), 'price': '22.38', 'name': 'Bulk',
              'min_quantity': '144', 'customers': [str(customer.pk)]})
-        self.assertEqual(PricingVariant.objects.get(product=self.product).min_quantity, 144)
+        self.assertEqual(
+            PricingVariant.objects.get(product_variant=self.variant).min_quantity, 144)
 
     def test_add_an_equivalent_product(self):
         self.client.post(
@@ -379,11 +386,12 @@ class ProductDashboardTests(TestCase):
     def test_customer_search_hides_customers_that_already_have_a_price(self):
         taken = make_customer('taken', 'Taken Ltd')
         free = make_customer('free', 'Free Ltd')
-        pricing = PricingVariant.objects.create(product=self.product, price='10.00')
+        pricing = PricingVariant.objects.create(product_variant=self.variant, price='10.00')
         pricing.customers.add(taken)
 
         response = self.client.get(
-            reverse('dashboard_customer_search'), {'exclude_priced': self.product.pk})
+            reverse('dashboard_customer_search'),
+            {'exclude_priced_variant': self.variant.pk})
         names = [row['name'] for row in response.json()['results']]
         self.assertIn('Free Ltd', names)
         self.assertNotIn('Taken Ltd', names)
@@ -439,10 +447,9 @@ class ProductDashboardTests(TestCase):
 
     def test_get_on_a_save_view_changes_nothing(self):
         """A stray GET must not save. It just returns to the tab."""
-        response = self.client.get(reverse('save_product_rrp', args=[self.product.pk]))
+        response = self.client.get(reverse('save_pricing_variant', args=[self.variant.pk]))
         self.assertEqual(response.status_code, 302)
-        self.product.refresh_from_db()
-        self.assertIsNone(self.product.recommended_retail_price)
+        self.assertEqual(PricingVariant.objects.filter(product_variant=self.variant).count(), 0)
 
 
 class VariantFocusTests(TestCase):

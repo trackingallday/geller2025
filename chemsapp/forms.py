@@ -12,25 +12,26 @@ class PricingVariantForm(ModelForm):
         fields = '__all__'
 
     def clean(self):
-        """Stop a customer having two prices for the same product.
+        """Stop a customer having two prices for the same variant.
 
         The check lives here and not on the model, because Django writes the
         many-to-many rows after it saves the object. self.customers is empty
         during Model.clean() on a new object.
         """
         cleaned_data = super().clean()
-        product = cleaned_data.get('product')
+        product_variant = cleaned_data.get('product_variant')
         customers = cleaned_data.get('customers')
-        if not product or not customers:
+        if not product_variant or not customers:
             return cleaned_data
 
         clashes = PricingVariant.objects.filter(
-            product=product, customers__in=customers).exclude(pk=self.instance.pk)
+            product_variant=product_variant, customers__in=customers).exclude(pk=self.instance.pk)
         if clashes.exists():
             clashing_names = ', '.join(
                 str(customer) for customer in customers.filter(pricing_variants__in=clashes).distinct())
             raise ValidationError(
-                'These customers already have a price for {}: {}'.format(product.name, clashing_names))
+                'These customers already have a price for {}: {}'.format(
+                    product_variant.code or str(product_variant), clashing_names))
         return cleaned_data
 
 

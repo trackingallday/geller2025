@@ -403,13 +403,13 @@ class DilutionVariantInline(admin.TabularInline):
 
 
 class PricingVariantAdmin(admin.ModelAdmin):
-    """Per-customer prices. Customers with no pricing variant for a product
-    pay the recommended retail price of the product."""
+    """Per-customer prices. Customers with no pricing variant for a variant
+    pay the recommended retail price of the variant."""
     form = PricingVariantForm
-    search_fields = ['product__name', 'name']
-    list_display = ['product', 'name', 'price', 'min_quantity', 'customer_count']
-    list_filter = ['product']
-    list_select_related = ['product']
+    search_fields = ['product_variant__product__name', 'product_variant__code', 'name']
+    list_display = ['product_variant', 'name', 'price', 'min_quantity', 'customer_count']
+    list_filter = ['product_variant__product']
+    list_select_related = ['product_variant', 'product_variant__product']
     filter_horizontal = ['customers']
 
     def customer_count(self, obj):

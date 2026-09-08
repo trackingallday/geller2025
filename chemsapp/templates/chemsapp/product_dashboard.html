@@ -414,96 +414,7 @@
                 {% endfor %}
             </ul>
 
-            {% if active_tab == 'prices' %}
-                <div class="panel-card mb-3">
-                    <form method="post" action="{% url 'save_product_rrp' product.pk %}">
-                        {% csrf_token %}
-                        <div class="field-label">Recommended retail price</div>
-                        <div class="d-flex align-items-center gap-3">
-                            <div class="rrp-value">
-                                {% if product.recommended_retail_price %}${{ product.recommended_retail_price }}{% else %}Not set{% endif %}
-                            </div>
-                            <div style="max-width: 180px;">{{ price_form.recommended_retail_price }}</div>
-                            <button class="btn btn-sm btn-primary" type="submit">Save</button>
-                        </div>
-                    </form>
-                </div>
-
-                <div class="panel-card">
-                    <h6 class="mb-3">Customer prices</h6>
-                    {% if product.pricing_variants.all %}
-                        <table class="table table-sm row-table align-middle">
-                            <thead>
-                                <tr><th>Name</th><th>Price</th><th>Qty from</th><th>Customers</th><th class="delete-cell"></th></tr>
-                            </thead>
-                            <tbody>
-                            {% for pricing in product.pricing_variants.all %}
-                                <tr>
-                                    <td>{{ pricing.name|default:"—" }}</td>
-                                    <td>${{ pricing.price }}</td>
-                                    <td>{{ pricing.min_quantity|default:"Any" }}</td>
-                                    <td>
-                                        {% for customer in pricing.customers.all %}
-                                            <span class="badge bg-light text-dark border">{{ customer.businessName }}</span>
-                                        {% empty %}
-                                            <span class="text-muted">No customers</span>
-                                        {% endfor %}
-                                    </td>
-                                    <td class="delete-cell">
-                                        <form method="post" action="{% url 'delete_pricing_variant' pricing.pk %}">
-                                            {% csrf_token %}
-                                            <button class="btn btn-sm btn-outline-danger" type="submit"
-                                                    title="Remove this price">
-                                                <i class="bi bi-x-lg"></i>
-                                            </button>
-                                        </form>
-                                    </td>
-                                </tr>
-                            {% endfor %}
-                            </tbody>
-                        </table>
-                    {% else %}
-                        <div class="empty-note">
-                            No customer prices. Every customer pays the recommended retail price.
-                        </div>
-                    {% endif %}
-
-                    <hr>
-                    <h6 class="mb-3">Add a price</h6>
-                    <form method="post" action="{% url 'save_pricing_variant' product.pk %}">
-                        {% csrf_token %}
-                        <input type="hidden" name="product" value="{{ product.pk }}">
-                        <div class="row g-3">
-                            <div class="col-md-3">
-                                <div class="field-label">Name</div>
-                                {{ pricing_form.name }}
-                            </div>
-                            <div class="col-md-2">
-                                <div class="field-label">Price</div>
-                                {{ pricing_form.price }}
-                            </div>
-                            <div class="col-md-2">
-                                <div class="field-label">Qty from</div>
-                                {{ pricing_form.min_quantity }}
-                            </div>
-                            <div class="col-md-5">
-                                <div class="field-label">Customers</div>
-                                {% comment %}
-                                Type to search, then click a name to add it. The
-                                chosen customers become hidden inputs named
-                                "customers", which is what the form expects.
-                                {% endcomment %}
-                                <div class="search-picker" data-field="customers"
-                                     data-url="{% url 'dashboard_customer_search' %}?exclude_priced={{ product.pk }}"
-                                     data-placeholder="Search customers, then click to add"
-                                     data-empty="No customers added yet."></div>
-                            </div>
-                        </div>
-                        <button class="btn btn-sm btn-primary mt-3" type="submit">Add price</button>
-                    </form>
-                </div>
-
-            {% elif active_tab == 'product' %}
+            {% if active_tab == 'product' %}
                 <div class="panel-card">
                     <form method="post" action="{% url 'save_product_details' product.pk %}"
                           enctype="multipart/form-data">
@@ -694,6 +605,84 @@
                                 <button class="btn btn-sm btn-outline-secondary" type="submit">
                                     Save dilutions
                                 </button>
+                            </form>
+
+                            <hr>
+                            <h6 class="mb-2">Customer prices</h6>
+                            <p class="text-muted small">
+                                A customer with no price here pays the
+                                recommended retail price above.
+                            </p>
+                            {% if focus_variant.pricing_variants.all %}
+                                <table class="table table-sm row-table align-middle">
+                                    <thead>
+                                        <tr><th>Name</th><th>Price</th><th>Qty from</th><th>Customers</th><th class="delete-cell"></th></tr>
+                                    </thead>
+                                    <tbody>
+                                    {% for pricing in focus_variant.pricing_variants.all %}
+                                        <tr>
+                                            <td>{{ pricing.name|default:"—" }}</td>
+                                            <td>${{ pricing.price }}</td>
+                                            <td>{{ pricing.min_quantity|default:"Any" }}</td>
+                                            <td>
+                                                {% for customer in pricing.customers.all %}
+                                                    <span class="badge bg-light text-dark border">{{ customer.businessName }}</span>
+                                                {% empty %}
+                                                    <span class="text-muted">No customers</span>
+                                                {% endfor %}
+                                            </td>
+                                            <td class="delete-cell">
+                                                <form method="post" action="{% url 'delete_pricing_variant' pricing.pk %}">
+                                                    {% csrf_token %}
+                                                    <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                            title="Remove this price">
+                                                        <i class="bi bi-x-lg"></i>
+                                                    </button>
+                                                </form>
+                                            </td>
+                                        </tr>
+                                    {% endfor %}
+                                    </tbody>
+                                </table>
+                            {% else %}
+                                <div class="empty-note">
+                                    No customer prices. Every customer pays the recommended retail price.
+                                </div>
+                            {% endif %}
+
+                            <h6 class="mb-3 mt-3">Add a price</h6>
+                            <form method="post" action="{% url 'save_pricing_variant' focus_variant.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_variant" value="{{ focus_variant.pk }}">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="field-label">Name</div>
+                                        {{ pricing_form.name }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="field-label">Price</div>
+                                        {{ pricing_form.price }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="field-label">Qty from</div>
+                                        {{ pricing_form.min_quantity }}
+                                    </div>
+                                    <div class="col-md-5">
+                                        <div class="field-label">Customers</div>
+                                        {% comment %}
+                                        Type to search, then click a name to add it. The
+                                        chosen customers become hidden inputs named
+                                        "customers", which is what the form expects. Every
+                                        customer is offered, not only those linked to the
+                                        product — a price can come before the link.
+                                        {% endcomment %}
+                                        <div class="search-picker" data-field="customers"
+                                             data-url="{% url 'dashboard_customer_search' %}?exclude_priced_variant={{ focus_variant.pk }}"
+                                             data-placeholder="Search customers, then click to add"
+                                             data-empty="No customers added yet."></div>
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-primary mt-3" type="submit">Add price</button>
                             </form>
 
                             <hr>

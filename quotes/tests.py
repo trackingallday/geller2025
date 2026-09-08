@@ -8,7 +8,10 @@ from django.core.management import call_command
 from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
-from chemsapp.models import ApplicationType, DilutionVariant, Product, ProductVariant, Size
+from chemsapp.models import (
+    ApplicationType, Customer, DilutionVariant, PricingVariant, Product,
+    ProductVariant, Size,
+)
 from chemsapp.wall_chart_colors import row_colors
 from .models import Quote, QuoteLine, generate_quote_number
 from .services import (
@@ -546,3 +549,60 @@ class RefreshQuoteDescriptionsCommandTestCase(TestCase):
         output = self._run()
         self.assertIn('Quotes with a changed description: 0', output)
         mock_pdf.assert_not_called()
+
+
+class VariantPriceEndpointTestCase(TestCase):
+    """/quotes/dashboard/variant-price/, the quote builder's price prefill."""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            username='staff2', email='staff2@example.com', password='pass12345')
+        self.client.force_login(self.user)
+
+        self.product = make_product()
+        self.variant = make_variant(
+            self.product, volume_litres=Decimal('20'),
+            recommended_retail_price=Decimal('100.00'))
+
+        user = User.objects.create_user(username='cust1', email='cust1@example.com')
+        self.customer = Customer.objects.create(
+            user=user, phoneNumber='123', businessName='Cust Ltd', address='1 Road')
+        self.pricing = PricingVariant.objects.create(
+            product_variant=self.variant, price=Decimal('80.00'))
+        self.pricing.customers.add(self.customer)
+
+    def test_requires_login(self):
+        self.client.logout()
+        response = self.client.get('/quotes/dashboard/variant-price/')
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('/login/', response.url)
+
+    def test_a_priced_customer_gets_their_price(self):
+        response = self.client.get('/quotes/dashboard/variant-price/', {
+            'variant_id': self.variant.pk, 'customer_id': self.customer.pk})
+        data = response.json()
+        self.assertEqual(data['price'], '80.00')
+        self.assertIn('Customer price', data['source'])
+
+    def test_an_unpriced_customer_gets_the_variant_rrp(self):
+        user = User.objects.create_user(username='cust2', email='cust2@example.com')
+        other_customer = Customer.objects.create(
+            user=user, phoneNumber='123', businessName='Other Ltd', address='2 Road')
+        response = self.client.get('/quotes/dashboard/variant-price/', {
+            'variant_id': self.variant.pk, 'customer_id': other_customer.pk})
+        data = response.json()
+        self.assertEqual(data['price'], '100.00')
+        self.assertEqual(data['source'], 'Recommended retail price')
+
+    def test_no_customer_gets_the_variant_rrp(self):
+        response = self.client.get(
+            '/quotes/dashboard/variant-price/', {'variant_id': self.variant.pk})
+        data = response.json()
+        self.assertEqual(data['price'], '100.00')
+
+    def test_an_unknown_variant_answers_with_no_price(self):
+        response = self.client.get(
+            '/quotes/dashboard/variant-price/', {'variant_id': '999999'})
+        data = response.json()
+        self.assertIsNone(data['price'])
+        self.assertIsNone(data['source'])

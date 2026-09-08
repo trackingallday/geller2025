@@ -11,6 +11,8 @@ urlpatterns = [
     # Dashboard (session auth, admin-facing test pages)
     path('dashboard/', dashboard_views.quote_dashboard, name='quote_dashboard'),
     path('dashboard/create/', dashboard_views.dashboard_create_quote, name='dashboard_create_quote'),
+    path('dashboard/variant-price/', dashboard_views.dashboard_variant_price,
+         name='dashboard_variant_price'),
     path('dashboard/<int:quote_id>/email/', dashboard_views.dashboard_email_quote, name='dashboard_email_quote'),
     path('<int:pk>/', views.quote_detail, name='quote_detail'),
     path('', views.quotes_list, name='quotes_list'),

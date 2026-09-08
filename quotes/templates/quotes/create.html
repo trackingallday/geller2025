@@ -127,7 +127,46 @@
         // Spell out what the price applies to: one unit of the chosen variant
         const hint = row.querySelector('.price-hint');
         hint.textContent = variant ? `for one ${variant.label.split(' (')[0]} unit` : '';
+        fillPrice(row);
         updatePreview(row);
+    }
+
+    // The price prefill. A customer price wins over the variant's own
+    // recommended retail price; the user can always type over either. Once
+    // they do, this stops touching that row — a typed price must never be
+    // silently replaced.
+    let priceRequestId = 0;
+    function fillPrice(row) {
+        const sourceEl = row.querySelector('.price-source');
+        const variant = currentVariant(row);
+        if (row.dataset.priceEdited === '1') {
+            sourceEl.textContent = variant ? 'Custom price' : '';
+            return;
+        }
+        if (!variant) {
+            sourceEl.textContent = '';
+            return;
+        }
+
+        const customerId = document.getElementById('customer-select').value;
+        const params = new URLSearchParams({variant_id: variant.id});
+        if (customerId) { params.set('customer_id', customerId); }
+
+        const requestId = ++priceRequestId;
+        fetch(`{% url 'quotes:dashboard_variant_price' %}?${params}`, {credentials: 'same-origin'})
+            .then(response => response.json())
+            .then(data => {
+                // A slower, older request must not overwrite a newer answer,
+                // and the row may have been marked edited while this was in flight.
+                if (requestId !== priceRequestId || row.dataset.priceEdited === '1') { return; }
+                // No resolvable price must clear the field, not leave behind
+                // whatever price the previous variant or customer left there
+                // — a stale number with no label would look like a real one.
+                row.querySelector('.price-input').value = data.price !== null ? data.price : '';
+                sourceEl.textContent = data.source || '';
+                updatePreview(row);
+            })
+            .catch(() => { sourceEl.textContent = ''; });
     }
 
     function updatePreview(row) {
@@ -168,6 +207,7 @@
             <td>
                 <input type="number" step="0.01" min="0.01" class="form-control price-input" name="price" placeholder="0.00">
                 <div class="form-text price-hint"></div>
+                <div class="form-text price-source"></div>
             </td>
             <td class="ciu-preview ciu-block"><span class="text-muted">—</span></td>
             <td><button type="button" class="btn btn-sm btn-outline-danger remove-line"><i class="bi bi-x-lg"></i></button></td>
@@ -175,7 +215,13 @@
         row.querySelector('.product-select').addEventListener('change', () => updateVariants(row));
         row.querySelector('.variant-select').addEventListener('change', () => updateDilutions(row));
         row.querySelector('.dilution-select').addEventListener('change', () => updatePreview(row));
-        row.querySelector('.price-input').addEventListener('input', () => updatePreview(row));
+        row.querySelector('.price-input').addEventListener('input', () => {
+            // Any keystroke here is the user overriding the price. From now
+            // on a variant or customer change must leave this row alone.
+            row.dataset.priceEdited = '1';
+            row.querySelector('.price-source').textContent = 'Custom price';
+            updatePreview(row);
+        });
         row.querySelector('.remove-line').addEventListener('click', () => {
             if (document.querySelectorAll('#lines-body tr').length > 1) row.remove();
         });
@@ -191,15 +237,19 @@
         const c = customersById[this.value];
         const datalist = document.getElementById('contact-suggestions');
         datalist.innerHTML = '';
-        if (!c) return;
-        document.getElementById('company-name').value = c.name;
-        document.getElementById('company-address').value = c.address;
-        c.contacts.forEach(name => {
-            const opt = document.createElement('option');
-            opt.value = name;
-            datalist.appendChild(opt);
-        });
-        if (c.contacts.length) document.getElementById('contact-name').value = c.contacts[0];
+        if (c) {
+            document.getElementById('company-name').value = c.name;
+            document.getElementById('company-address').value = c.address;
+            c.contacts.forEach(name => {
+                const opt = document.createElement('option');
+                opt.value = name;
+                datalist.appendChild(opt);
+            });
+            if (c.contacts.length) document.getElementById('contact-name').value = c.contacts[0];
+        }
+        // A different customer can mean a different negotiated price.
+        // Every row that the user has not typed into re-resolves.
+        document.querySelectorAll('#lines-body tr').forEach(row => fillPrice(row));
     });
 </script>
 {% endblock %}

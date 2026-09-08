@@ -140,9 +140,6 @@ class Product(models.Model):
     description = RichTextField()
     directions = RichTextField()
     productCode = models.CharField(max_length=255, unique=True)
-    recommended_retail_price = models.DecimalField(
-        max_digits=10, decimal_places=2, blank=True, null=True,
-        help_text='Recommended retail price, in dollars.')
     productCodes = models.TextField(max_length=1000, blank=True, null=True)
     brand = models.CharField(max_length=255)
     product_range = models.CharField(
@@ -365,16 +362,17 @@ class Customer(Profile):
 
 
 class PricingVariant(models.Model):
-    """A negotiated price for one product, for a set of customers.
+    """A negotiated price for one product variant, for a set of customers.
 
-    A customer with no PricingVariant for a product pays the recommended
-    retail price of the product.
+    A customer with no PricingVariant for a variant pays the recommended
+    retail price of the variant.
     """
-    product = models.ForeignKey(Product, related_name='pricing_variants', on_delete=models.CASCADE)
+    product_variant = models.ForeignKey(
+        ProductVariant, related_name='pricing_variants', on_delete=models.CASCADE)
     customers = models.ManyToManyField(Customer, related_name='pricing_variants', blank=True)
     price = models.DecimalField(
         max_digits=10, decimal_places=2,
-        help_text='Price that these customers pay for this product, in dollars.')
+        help_text='Price that these customers pay for this variant, in dollars.')
     name = models.CharField(
         max_length=255, blank=True, default='',
         help_text='Optional label, e.g. "2026 contract" or "Bulk tier".')
@@ -383,11 +381,11 @@ class PricingVariant(models.Model):
         help_text='Smallest order that gets this price. Blank for any quantity.')
 
     class Meta:
-        ordering = ['product__name', 'price']
+        ordering = ['product_variant__product__name', 'product_variant__code', 'price']
 
     def __str__(self):
         label = f' ({self.name})' if self.name else ''
-        return f'{self.product.name}{label} - {self.price}'
+        return f'{self.product_variant}{label} - {self.price}'
 
 
 class ProductEquivalency(models.Model):

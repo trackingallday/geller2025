@@ -26,13 +26,14 @@ from .models import (
 SEARCH_LIMIT = 50
 
 # The order the tabs show in. The first one is the tab a product opens on.
+# Prices is not here: price is a variant concern now, and lives inside the
+# Variants tab's focus pane instead of its own tab.
 TABS = [
     ('product', 'Product'),
     ('variants', 'Variants'),
     ('customers', 'Customers'),
     ('compliance', 'Compliance'),
     ('dilutions', 'Dilutions'),
-    ('prices', 'Prices'),
     ('equivalents', 'Equivalents'),
 ]
 
@@ -59,7 +60,6 @@ COMPLIANCE_DOCUMENTS = [
 
 ProductDetailsForm = modelform_factory(Product, fields=PRODUCT_FIELDS)
 ProductComplianceForm = modelform_factory(Product, fields=COMPLIANCE_FIELDS)
-ProductPriceForm = modelform_factory(Product, fields=['recommended_retail_price'])
 
 # The fields of one variant. The bulk formset and the single-variant form
 # share this list, so the two cannot drift apart.
@@ -198,7 +198,7 @@ def _selected_product(product_id):
             .prefetch_related(
                 'variants__size',
                 'variants__dilutions__application_type',
-                'pricing_variants__customers',
+                'variants__pricing_variants__customers',
                 'equivalents__equivalent_product',
                 'customers__user',
                 'productCategory',
@@ -233,10 +233,8 @@ def product_dashboard(request):
     if product is not None:
         context['details_form'] = ProductDetailsForm(instance=product)
         context['compliance_form'] = ProductComplianceForm(instance=product)
-        context['price_form'] = ProductPriceForm(instance=product)
         context['variant_formset'] = VariantFormSet(instance=product)
         context['equivalency_formset'] = EquivalencyFormSet(instance=product)
-        context['pricing_form'] = PricingVariantForm(initial={'product': product})
         context['compliance_documents'] = [
             {'field': context['compliance_form'][name], 'label': label,
              'file': getattr(product, name)}
@@ -273,6 +271,10 @@ def product_dashboard(request):
         context['focus_dilution_formset'] = DilutionFormSet(
             instance=focus_variant,
             prefix=f'dilution-{focus_variant.pk}') if focus_variant else None
+        # Customer prices for the focused variant. A new variant has none
+        # yet — it has no pk to hang a price off until it is first saved.
+        context['pricing_form'] = PricingVariantForm(
+            initial={'product_variant': focus_variant}) if focus_variant else None
 
     return TemplateResponse(request, 'chemsapp/product_dashboard.html', context)
 
@@ -307,22 +309,6 @@ def save_product_compliance(request, product_id):
     else:
         messages.error(request, f'The documents did not save: {form.errors.as_text()}')
     return redirect(_dashboard_url(product.pk, 'compliance'))
-
-
-@staff_member_required
-def save_product_rrp(request, product_id):
-    """Save the recommended retail price at the top of the Prices tab."""
-    product = get_object_or_404(Product, pk=product_id)
-    if request.method != 'POST':
-        return redirect(_dashboard_url(product.pk, 'prices'))
-
-    form = ProductPriceForm(request.POST, instance=product)
-    if form.is_valid():
-        form.save()
-        messages.success(request, 'Saved the recommended retail price.')
-    else:
-        messages.error(request, f'The price did not save: {form.errors.as_text()}')
-    return redirect(_dashboard_url(product.pk, 'prices'))
 
 
 @staff_member_required
@@ -493,18 +479,20 @@ def remove_product_customer(request, product_id, customer_id):
 def customer_search(request):
     """Customers matching ?q=, for the "add customer" box on the Prices tab.
 
-    Customers that already have a price for ?product= are left out. The form
-    rejects them anyway, so offering them would only produce an error.
+    Customers that already have a price for ?exclude_priced_variant= are left
+    out. The form rejects them anyway, so offering them would only produce an
+    error.
     """
     search = request.GET.get('q', '').strip()
     customers = Customer.objects.select_related('user')
 
-    # ?exclude_priced=<product id> leaves out customers that already have a
-    # price for that product. ?exclude_linked=<product id> leaves out those
-    # already linked to it. Each picker asks for the one it needs.
-    priced_for = request.GET.get('exclude_priced', '')
+    # ?exclude_priced_variant=<variant id> leaves out customers that already
+    # have a price for that variant. ?exclude_linked=<product id> leaves out
+    # those already linked to that product. Each picker asks for the one it
+    # needs.
+    priced_for = request.GET.get('exclude_priced_variant', '')
     if priced_for:
-        customers = customers.exclude(pricing_variants__product_id=priced_for)
+        customers = customers.exclude(pricing_variants__product_variant_id=priced_for)
 
     linked_to = request.GET.get('exclude_linked', '')
     if linked_to:
@@ -575,21 +563,21 @@ def category_search(request):
 
 
 @staff_member_required
-def save_pricing_variant(request, product_id):
-    """Add or edit one price on the Prices tab.
+def save_pricing_variant(request, variant_id):
+    """Add or edit one customer price, from the Variants tab focus pane.
 
     PricingVariantForm refuses to give one customer two prices for the same
-    product. That rule holds here too.
+    variant. That rule holds here too.
     """
-    product = get_object_or_404(Product, pk=product_id)
+    variant = get_object_or_404(ProductVariant, pk=variant_id)
     if request.method != 'POST':
-        return redirect(_dashboard_url(product.pk, 'prices'))
+        return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
 
     pricing_variant = None
     pricing_variant_id = request.POST.get('pricing_variant_id')
     if pricing_variant_id:
         pricing_variant = get_object_or_404(
-            PricingVariant, pk=pricing_variant_id, product=product)
+            PricingVariant, pk=pricing_variant_id, product_variant=variant)
 
     form = PricingVariantForm(request.POST, instance=pricing_variant)
     if form.is_valid():
@@ -597,15 +585,15 @@ def save_pricing_variant(request, product_id):
         messages.success(request, 'Saved the price.')
     else:
         messages.error(request, f'The price did not save: {form.errors.as_text()}')
-    return redirect(_dashboard_url(product.pk, 'prices'))
+    return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
 
 
 @staff_member_required
 def delete_pricing_variant(request, pricing_variant_id):
-    """Remove one price from the Prices tab."""
+    """Remove one price from the Variants tab focus pane."""
     pricing_variant = get_object_or_404(PricingVariant, pk=pricing_variant_id)
-    product_id = pricing_variant.product_id
+    variant = pricing_variant.product_variant
     if request.method == 'POST':
         pricing_variant.delete()
         messages.success(request, 'Removed the price.')
-    return redirect(_dashboard_url(product_id, 'prices'))
+    return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
