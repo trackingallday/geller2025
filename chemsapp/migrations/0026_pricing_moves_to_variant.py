@@ -5,33 +5,21 @@ their own recommended_retail_price already (migration 0024). PricingVariant
 moves from a FK on Product to a FK on ProductVariant, so a negotiated price
 applies to one size, not every size of a product.
 
-Existing PricingVariant rows point at a product with no single matching
-variant, so there is no correct variant to repoint them at. The client asked
-to drop them and re-enter prices per variant, rather than guess.
+The table is empty by this point — 0025 cleared it in its own transaction,
+so this ALTER TABLE does not run into Postgres's "pending trigger events"
+restriction.
 """
 from django.db import migrations, models
 import django.db.models.deletion
 
 
-def delete_existing_pricing_variants(apps, schema_editor):
-    PricingVariant = apps.get_model('chemsapp', 'PricingVariant')
-    PricingVariant.objects.all().delete()
-
-
 class Migration(migrations.Migration):
 
     dependencies = [
-        ('chemsapp', '0024_productvariant_recommended_retail_price'),
+        ('chemsapp', '0025_delete_existing_pricing_variants'),
     ]
 
     operations = [
-        # Clear the table before the FK changes shape, while `product` still
-        # exists on the model. Nothing here can pick the right variant for
-        # an old product-level price, so this must run first, not as an
-        # AlterField default.
-        migrations.RunPython(
-            delete_existing_pricing_variants, migrations.RunPython.noop),
-
         migrations.RemoveField(
             model_name='pricingvariant',
             name='product',
