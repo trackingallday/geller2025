@@ -7,7 +7,7 @@ import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
     MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact,\
-    ApplicationType, DilutionVariant, PricingVariant, ProductEquivalency
+    ApplicationType, DilutionVariant, PricingVariant, ProductEquivalency, CustomerGroup
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm, ProductForm,\
@@ -247,6 +247,9 @@ class CustomerProductVariantInline(admin.TabularInline):
 
 class CustomerAdmin(ImportExportModelAdmin):
     search_fields = ['address', 'businessName',]
+    list_display = ['businessName', 'group']
+    list_filter = ['group']
+    autocomplete_fields = ['group']
     resource_class = CustomerResource
     inlines = [CustomerContactInline, CustomerProductVariantInline]
     filter_horizontal = ['products']
@@ -271,6 +274,11 @@ class CustomerAdmin(ImportExportModelAdmin):
         response = HttpResponse(pdf_bytes, content_type='application/pdf')
         response['Content-Disposition'] = f'inline; filename="wall-chart-{customer_id}.pdf"'
         return response
+
+
+class CustomerGroupAdmin(admin.ModelAdmin):
+    list_display = ['name', 'note']
+    search_fields = ['name']
 
 
 class ProfileAdmin(admin.ModelAdmin):
@@ -616,6 +624,7 @@ admin.site.register(Size, SizeAdmin)
 admin.site.register(Config, ConfigAdmin)
 admin.site.register(Distributor, DistributorAdmin)
 admin.site.register(Customer, CustomerAdmin)
+admin.site.register(CustomerGroup, CustomerGroupAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductVariant, ProductVariantAdmin)
 admin.site.register(PricingVariant, PricingVariantAdmin)

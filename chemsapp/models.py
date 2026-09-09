@@ -352,9 +352,25 @@ class MarketCategory(models.Model):
         return "{}".format(self.name)
 
 
+class CustomerGroup(MyBaseModel):
+    """A named set of customers. One customer is in one group at a time."""
+    name = models.CharField(max_length=255, unique=True)
+    note = models.CharField(max_length=500, blank=True, default='')
+
+    class Meta:
+        ordering = ['name']
+
+    def __str__(self):
+        return self.name
+
+
 class Customer(Profile):
     products = models.ManyToManyField(Product, related_name="customers", blank=True)
     geocodingDetail = models.TextField(max_length=1500, blank=True, null=True)
+    group = models.ForeignKey(
+        CustomerGroup, related_name='customers', blank=True, null=True,
+        on_delete=models.SET_NULL,
+        help_text='The one group this customer is in. Blank for no group.')
 
     def __str__(self):
         distributor_names = ", ".join([d.businessname for d in self.distributors.all()[:3]])

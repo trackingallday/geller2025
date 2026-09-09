@@ -1,0 +1,20 @@
+{% comment %}
+The rows of the customers list. The full page and the live search both
+render this include, so a row keeps its shape after a search.
+{% endcomment %}
+{% for row in customer_rows %}
+    <a href="?view=customers&customer={{ row.pk }}{% if search %}&q={{ search }}{% endif %}"
+       class="row-link {% if customer and customer.pk == row.pk %}active{% endif %}">
+        <strong>{{ row.businessName|default:row.user.username }}</strong>
+        <div class="text-muted small">{{ row.user.email|default:"—" }}</div>
+        {% if row.group %}
+            <span class="group-tag">{{ row.group.name }}</span>
+        {% else %}
+            <span class="no-group-tag">No group</span>
+        {% endif %}
+    </a>
+{% empty %}
+    <div class="p-3 text-muted">
+        {% if search %}Nothing matches "{{ search }}".{% else %}No customers yet.{% endif %}
+    </div>
+{% endfor %}

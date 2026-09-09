@@ -1,0 +1,580 @@
+{% load static %}<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{% if active_view == 'groups' %}Customer Groups{% else %}Customers{% endif %} - Geller</title>
+
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/css/bootstrap.min.css" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/bootstrap-icons@1.7.2/font/bootstrap-icons.css">
+
+    <style>
+        :root {
+            --geller: #5A2D82;
+            --geller-soft: #efe6f7;
+            --geller-hover: #f5f0fa;
+        }
+        .navbar-brand { font-weight: bold; }
+        .navbar.bg-geller { background-color: var(--geller); }
+
+        .dashboard-layout { display: flex; height: calc(100vh - 56px); }
+        .list-panel {
+            width: 30%;
+            min-width: 280px;
+            border-right: 1px solid #dee2e6;
+            overflow-y: auto;
+            flex-shrink: 0;
+            background: #fff;
+        }
+        .detail-panel {
+            flex: 1;
+            overflow-y: auto;
+            padding: 24px;
+            background: #f8f9fa;
+        }
+        .list-panel-header {
+            padding: 12px;
+            background: #f8f9fa;
+            border-bottom: 1px solid #dee2e6;
+            position: sticky;
+            top: 0;
+            z-index: 2;
+        }
+        .row-link {
+            display: block;
+            padding: 12px;
+            border-bottom: 1px solid #f0f0f0;
+            border-left: 3px solid transparent;
+            text-decoration: none;
+            color: inherit;
+            transition: background 0.1s;
+        }
+        .row-link:hover { background: var(--geller-hover); color: inherit; }
+        .row-link.active {
+            background: var(--geller-soft);
+            border-left-color: var(--geller);
+        }
+        .row-link .group-tag {
+            display: inline-block;
+            margin-top: 3px;
+            font-size: 0.72rem;
+            padding: 1px 7px;
+            border-radius: 10px;
+            background: var(--geller-soft);
+            color: #6c4a8a;
+        }
+        .row-link .no-group-tag {
+            display: inline-block;
+            margin-top: 3px;
+            font-size: 0.72rem;
+            color: #adb5bd;
+        }
+
+        .view-tabs { border-bottom: 1px solid #dee2e6; margin-bottom: 20px; }
+        .view-tabs a {
+            display: inline-block;
+            padding: 8px 18px;
+            text-decoration: none;
+            color: #495057;
+            border-bottom: 2px solid transparent;
+            margin-bottom: -1px;
+        }
+        .view-tabs a.active {
+            color: var(--geller);
+            font-weight: 600;
+            border-bottom-color: var(--geller);
+        }
+
+        .panel-card {
+            background: #fff;
+            border: 1px solid #dee2e6;
+            border-radius: 6px;
+            padding: 20px;
+            margin-bottom: 20px;
+        }
+        .field-label {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 0.04em;
+            color: #6c757d;
+            margin-bottom: 4px;
+        }
+        .empty-note { color: #6c757d; padding: 24px 0; }
+        .delete-cell { width: 70px; text-align: center; }
+        .save-mark { color: #198754; font-size: 0.85rem; }
+        .field-error { color: #dc3545; font-size: 0.8rem; margin-top: 2px; }
+
+        .panel-card input[type=text], .panel-card input[type=email],
+        .panel-card input[type=number], .panel-card select, .panel-card textarea {
+            display: block;
+            width: 100%;
+            padding: 0.375rem 0.75rem;
+            font-size: 0.95rem;
+            color: #212529;
+            background-color: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+        }
+        table.row-table { background: #fff; }
+        table.row-table td { vertical-align: middle; }
+        table.row-table input, table.row-table select { font-size: 0.9rem; }
+
+        /* Search-and-add picker: a search box, a results list, and chips.
+           Copied from the product dashboard so the two screens match. */
+        .search-picker { position: relative; }
+        .picker-results {
+            position: absolute;
+            z-index: 20;
+            left: 0;
+            right: 0;
+            max-height: 240px;
+            overflow-y: auto;
+            background: #fff;
+            border: 1px solid #ced4da;
+            border-radius: 0.25rem;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+        }
+        .customer-result {
+            display: block;
+            width: 100%;
+            text-align: left;
+            padding: 7px 10px;
+            border: none;
+            background: none;
+            font-size: 0.85rem;
+            border-bottom: 1px solid #f1f3f5;
+        }
+        .customer-result:last-child { border-bottom: none; }
+        .customer-result:hover, .customer-result.active { background: var(--geller-soft); }
+        .customer-result .detail { color: #868e96; font-size: 0.75rem; }
+        .picker-chosen {
+            margin-top: 8px;
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            align-items: center;
+        }
+        .customer-chip {
+            display: inline-flex;
+            align-items: center;
+            gap: 6px;
+            padding: 3px 6px 3px 10px;
+            font-size: 0.8rem;
+            background: var(--geller-soft);
+            border: 1px solid #d9c7e8;
+            border-radius: 12px;
+        }
+        .customer-chip button {
+            border: none;
+            background: none;
+            line-height: 1;
+            padding: 0 2px;
+            color: #6c4a8a;
+            font-size: 0.95rem;
+        }
+        .customer-chip button:hover { color: #b02a37; }
+    </style>
+</head>
+<body>
+<nav class="navbar navbar-expand-lg navbar-dark bg-geller">
+    <div class="container-fluid">
+        <a class="navbar-brand" href="{% url 'customer_dashboard' %}">
+            <i class="bi bi-people-fill"></i> Geller Customers
+        </a>
+        <div class="ms-auto">
+            <a class="nav-link d-inline text-white-50 me-3" href="/admin/">Admin</a>
+            <a class="nav-link d-inline text-white-50 me-3" href="{% url 'product_dashboard' %}">Products</a>
+            <a class="nav-link d-inline text-white-50" href="/quotes/dashboard/">Proposals</a>
+        </div>
+    </div>
+</nav>
+
+{% if messages %}
+    <div class="container-fluid mt-2">
+        {% for message in messages %}
+            <div class="alert alert-{% if message.tags == 'error' %}danger{% else %}{{ message.tags }}{% endif %} alert-dismissible fade show mb-2">
+                {{ message }}
+                <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+            </div>
+        {% endfor %}
+    </div>
+{% endif %}
+
+<div class="dashboard-layout">
+
+    <!-- Left list -->
+    <div class="list-panel">
+        <div class="list-panel-header">
+            {% if active_view == 'groups' %}
+                <form method="get" class="d-flex gap-2 mb-2" id="list-search-form"
+                      data-url="{% url 'dashboard_group_list' %}">
+                    <input type="hidden" name="view" value="groups">
+                    <input type="search" name="q" value="{{ search }}" id="list-search"
+                           class="form-control form-control-sm" autocomplete="off"
+                           placeholder="Search groups">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+                <form method="post" action="{% url 'create_customer_group' %}" class="d-flex gap-2">
+                    {% csrf_token %}
+                    <input type="text" name="name" class="form-control form-control-sm"
+                           placeholder="New group name" required>
+                    <button class="btn btn-sm btn-primary" type="submit">Add</button>
+                </form>
+            {% else %}
+                <form method="get" class="d-flex gap-2" id="list-search-form"
+                      data-url="{% url 'dashboard_customer_list' %}">
+                    <input type="hidden" name="view" value="customers">
+                    <input type="search" name="q" value="{{ search }}" id="list-search"
+                           class="form-control form-control-sm" autocomplete="off"
+                           placeholder="Search customers">
+                    <button class="btn btn-sm btn-outline-secondary" type="submit">
+                        <i class="bi bi-search"></i>
+                    </button>
+                </form>
+            {% endif %}
+        </div>
+        <div id="list-rows">
+            {% if active_view == 'groups' %}
+                {% include 'chemsapp/_group_list.html' %}
+            {% else %}
+                {% include 'chemsapp/_customer_list.html' %}
+            {% endif %}
+        </div>
+    </div>
+
+    <!-- Detail -->
+    <div class="detail-panel">
+        <div class="view-tabs">
+            {% for key, label in views %}
+                <a href="?view={{ key }}" class="{% if active_view == key %}active{% endif %}">{{ label }}</a>
+            {% endfor %}
+        </div>
+
+        {% if active_view == 'groups' %}
+            {% if group %}
+                <div class="panel-card">
+                    <form method="post" action="{% url 'rename_group' group.pk %}" class="row g-3 align-items-end">
+                        {% csrf_token %}
+                        <div class="col-md-5">
+                            <div class="field-label">Group name</div>
+                            <input type="text" name="name" value="{{ group.name }}" required>
+                        </div>
+                        <div class="col-md-5">
+                            <div class="field-label">Note</div>
+                            <input type="text" name="note" value="{{ group.note }}">
+                        </div>
+                        <div class="col-md-2">
+                            <button class="btn btn-sm btn-primary w-100" type="submit">Save</button>
+                        </div>
+                    </form>
+                    <hr>
+                    <form method="post" action="{% url 'delete_group' group.pk %}"
+                          onsubmit="return confirm('Delete {{ group.name|escapejs }}? {{ members|length }} customer(s) lose this group. The customers stay.');">
+                        {% csrf_token %}
+                        <button class="btn btn-sm btn-outline-danger" type="submit">
+                            <i class="bi bi-trash"></i> Delete this group
+                        </button>
+                    </form>
+                </div>
+
+                <div class="panel-card">
+                    <h6 class="mb-3">Add customers to {{ group.name }}</h6>
+                    <form method="post" action="{% url 'add_group_customers' group.pk %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-8">
+                                <div class="search-picker" data-field="customer"
+                                     data-url="{% url 'dashboard_group_customer_search' %}?exclude_group={{ group.pk }}"
+                                     data-placeholder="Search customers, then click to add"
+                                     data-empty="No customer chosen yet."></div>
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-primary mt-3" type="submit">Add to group</button>
+                    </form>
+                </div>
+
+                <div class="panel-card">
+                    <h6 class="mb-3">{{ members|length }} customer(s) in this group</h6>
+                    {% if members %}
+                        <table class="table table-sm row-table align-middle">
+                            <thead>
+                                <tr><th>Customer</th><th>Email</th><th class="delete-cell"></th></tr>
+                            </thead>
+                            <tbody>
+                            {% for member in members %}
+                                <tr>
+                                    <td>{{ member.businessName|default:member.user.username }}</td>
+                                    <td class="text-muted small">{{ member.user.email|default:"—" }}</td>
+                                    <td class="delete-cell">
+                                        <form method="post"
+                                              action="{% url 'remove_group_customer' group.pk member.pk %}">
+                                            {% csrf_token %}
+                                            <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                    title="Take this customer out of the group">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-note">No customers in this group yet. Add some above.</div>
+                    {% endif %}
+                </div>
+            {% else %}
+                <div class="text-muted d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center">
+                        <i class="bi bi-collection" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                        <p class="mt-2">Select a group on the left, or make one.</p>
+                    </div>
+                </div>
+            {% endif %}
+
+        {% else %}
+            {% if customer %}
+                <div class="panel-card">
+                    <div class="d-flex justify-content-between align-items-start mb-3">
+                        <h5 class="mb-0">{{ customer.businessName|default:customer.user.username }}</h5>
+                        <span class="text-muted small">{{ customer.user.email }}</span>
+                    </div>
+
+                    <form method="post" action="{% url 'set_customer_group' customer.pk %}" class="mb-3">
+                        {% csrf_token %}
+                        <div class="field-label">Group</div>
+                        <select name="group" onchange="this.form.submit()" style="max-width: 320px;">
+                            <option value="">— No group —</option>
+                            {% for g in all_groups %}
+                                <option value="{{ g.pk }}"
+                                    {% if customer.group_id == g.pk %}selected{% endif %}>{{ g.name }}</option>
+                            {% endfor %}
+                        </select>
+                        <noscript><button class="btn btn-sm btn-primary mt-2" type="submit">Set group</button></noscript>
+                    </form>
+
+                    <hr>
+                    <form method="post" action="{% url 'save_customer_details' customer.pk %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            {% for field in details_form %}
+                                <div class="col-md-6">
+                                    <div class="field-label">{{ field.label }}</div>
+                                    {{ field }}
+                                    {% for error in field.errors %}
+                                        <div class="field-error">{{ error }}</div>
+                                    {% endfor %}
+                                </div>
+                            {% endfor %}
+                        </div>
+                        <button class="btn btn-sm btn-primary mt-3" type="submit">Save details</button>
+                    </form>
+                </div>
+
+                <div class="panel-card">
+                    <h6 class="mb-3">Contacts</h6>
+                    <form method="post" action="{% url 'save_customer_contacts' customer.pk %}">
+                        {% csrf_token %}
+                        {{ contact_formset.management_form }}
+                        <table class="table table-sm row-table align-middle">
+                            <thead>
+                                <tr><th>Name</th><th>Role</th><th>Email</th><th>Phone</th><th>Report</th><th class="delete-cell">Del</th></tr>
+                            </thead>
+                            <tbody>
+                            {% for form in contact_formset %}
+                                <tr>
+                                    {% for hidden in form.hidden_fields %}{{ hidden }}{% endfor %}
+                                    <td>{{ form.name }}</td>
+                                    <td>{{ form.role }}</td>
+                                    <td>{{ form.email }}</td>
+                                    <td>{{ form.phone }}</td>
+                                    <td class="text-center">{{ form.receive_report }}</td>
+                                    <td class="delete-cell">{% if form.instance.pk %}{{ form.DELETE }}{% endif %}</td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                        <button class="btn btn-sm btn-primary" type="submit">Save contacts</button>
+                    </form>
+                </div>
+            {% else %}
+                <div class="text-muted d-flex align-items-center justify-content-center h-100">
+                    <div class="text-center">
+                        <i class="bi bi-person-lines-fill" style="font-size: 2.5rem; opacity: 0.3;"></i>
+                        <p class="mt-2">Select a customer on the left.</p>
+                    </div>
+                </div>
+            {% endif %}
+        {% endif %}
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.1.3/dist/js/bootstrap.bundle.min.js"></script>
+
+<script>
+/* Search-and-add picker. Type to search, click a result to add a chip,
+   click x on a chip to remove it. Each chosen row becomes a hidden input
+   that posts the field name. Copied from the product dashboard. */
+(function () {
+    document.querySelectorAll('.search-picker').forEach(function (root) {
+        var fieldName = root.dataset.field;
+        var url = root.dataset.url;
+        var chosen = [];
+
+        root.innerHTML =
+            '<input type="search" class="form-control form-control-sm picker-input"' +
+            ' autocomplete="off" placeholder="' + root.dataset.placeholder + '">' +
+            '<div class="picker-results d-none"></div>' +
+            '<div class="picker-chosen"></div>';
+
+        var input = root.querySelector('.picker-input');
+        var results = root.querySelector('.picker-results');
+        var chosenBox = root.querySelector('.picker-chosen');
+
+        function renderChosen() {
+            if (!chosen.length) {
+                chosenBox.innerHTML =
+                    '<span class="text-muted small">' + root.dataset.empty + '</span>';
+                return;
+            }
+            chosenBox.innerHTML = '';
+            chosen.forEach(function (item, index) {
+                var chip = document.createElement('span');
+                chip.className = 'customer-chip';
+                chip.textContent = item.name;
+
+                var remove = document.createElement('button');
+                remove.type = 'button';
+                remove.innerHTML = '&times;';
+                remove.title = 'Remove ' + item.name;
+                remove.addEventListener('click', function () {
+                    chosen.splice(index, 1);
+                    renderChosen();
+                });
+                chip.appendChild(remove);
+
+                var hidden = document.createElement('input');
+                hidden.type = 'hidden';
+                hidden.name = fieldName;
+                hidden.value = item.id;
+                chip.appendChild(hidden);
+
+                chosenBox.appendChild(chip);
+            });
+        }
+
+        function hideResults() {
+            results.classList.add('d-none');
+            results.innerHTML = '';
+        }
+
+        function showResults(rows) {
+            results.innerHTML = '';
+            var fresh = rows.filter(function (row) {
+                return !chosen.some(function (item) { return String(item.id) === String(row.id); });
+            });
+            if (!fresh.length) {
+                results.innerHTML = '<div class="customer-result text-muted">No matches.</div>';
+                results.classList.remove('d-none');
+                return;
+            }
+            fresh.forEach(function (row) {
+                var button = document.createElement('button');
+                button.type = 'button';
+                button.className = 'customer-result';
+                button.innerHTML = row.detail
+                    ? row.name + '<div class="detail">' + row.detail + '</div>'
+                    : row.name;
+                button.addEventListener('click', function () {
+                    chosen.push({id: row.id, name: row.name});
+                    input.value = '';
+                    hideResults();
+                    renderChosen();
+                    input.focus();
+                });
+                results.appendChild(button);
+            });
+            results.classList.remove('d-none');
+        }
+
+        var timer = null;
+        function search() {
+            var query = input.value.trim();
+            var joiner = url.indexOf('?') === -1 ? '?' : '&';
+            fetch(url + joiner + 'q=' + encodeURIComponent(query), {
+                credentials: 'same-origin'
+            })
+                .then(function (response) { return response.json(); })
+                .then(function (data) { showResults(data.results || []); })
+                .catch(function () { hideResults(); });
+        }
+
+        input.addEventListener('input', function () {
+            clearTimeout(timer);
+            timer = setTimeout(search, 200);
+        });
+        input.addEventListener('focus', search);
+
+        document.addEventListener('click', function (event) {
+            if (!root.contains(event.target)) { hideResults(); }
+        });
+
+        renderChosen();
+    });
+})();
+</script>
+
+<script>
+/* The left list updates as the user types. The server renders the same
+   include the page loaded with. With no JavaScript the form still posts. */
+(function () {
+    var form = document.getElementById('list-search-form');
+    var input = document.getElementById('list-search');
+    var rows = document.getElementById('list-rows');
+    if (!form || !input || !rows) { return; }
+
+    var url = form.dataset.url;
+    var params = new URLSearchParams(window.location.search);
+    var timer = null;
+    var latest = 0;
+
+    function search() {
+        var query = input.value.trim();
+        var ticket = ++latest;
+
+        var ask = new URLSearchParams();
+        ask.set('q', query);
+        ['view', 'customer', 'group'].forEach(function (name) {
+            if (params.get(name)) { ask.set(name, params.get(name)); }
+        });
+
+        fetch(url + '?' + ask.toString(), {credentials: 'same-origin'})
+            .then(function (response) { return response.text(); })
+            .then(function (html) {
+                if (ticket !== latest) { return; }
+                rows.innerHTML = html;
+                if (query) { params.set('q', query); } else { params.delete('q'); }
+                var query_string = params.toString();
+                history.replaceState(
+                    null, '',
+                    window.location.pathname + (query_string ? '?' + query_string : ''));
+            })
+            .catch(function () { /* Leave the last good list on the screen. */ });
+    }
+
+    input.addEventListener('input', function () {
+        clearTimeout(timer);
+        timer = setTimeout(search, 200);
+    });
+
+    form.addEventListener('submit', function (event) {
+        event.preventDefault();
+        clearTimeout(timer);
+        search();
+    });
+})();
+</script>
+</body>
+</html>

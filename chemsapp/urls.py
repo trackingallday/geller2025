@@ -7,6 +7,7 @@ from chemsapp.views import customers_list, products_list, sds_products, info_she
     sizes_list, download_product_document, sds_enquire, special_customer_edit, backup_documents
 from chemsapp.wall_chart_views import wall_chart_pdf
 from chemsapp import product_dashboard_views
+from chemsapp import customer_dashboard_views
 
 urlpatterns = [
     re_path(r'^auth$', drf_views.obtain_auth_token, name='auth'),
@@ -44,6 +45,32 @@ urlpatterns = [
             product_dashboard_views.save_pricing_variant, name='save_pricing_variant'),
     re_path(r'^product-dashboard/price/(?P<pricing_variant_id>\d+)/delete/$',
             product_dashboard_views.delete_pricing_variant, name='delete_pricing_variant'),
+
+    # Customer dashboard (staff only, session auth)
+    re_path(r'^customer-dashboard/$', customer_dashboard_views.customer_dashboard,
+            name='customer_dashboard'),
+    re_path(r'^customer-dashboard/(?P<customer_id>\d+)/save-details/$',
+            customer_dashboard_views.save_customer_details, name='save_customer_details'),
+    re_path(r'^customer-dashboard/(?P<customer_id>\d+)/save-contacts/$',
+            customer_dashboard_views.save_customer_contacts, name='save_customer_contacts'),
+    re_path(r'^customer-dashboard/(?P<customer_id>\d+)/set-group/$',
+            customer_dashboard_views.set_customer_group, name='set_customer_group'),
+    re_path(r'^customer-dashboard/customer-list/$',
+            customer_dashboard_views.customer_list, name='dashboard_customer_list'),
+    re_path(r'^customer-dashboard/group-list/$',
+            customer_dashboard_views.group_list, name='dashboard_group_list'),
+    re_path(r'^customer-dashboard/group-customer-search/$',
+            customer_dashboard_views.group_customer_search, name='dashboard_group_customer_search'),
+    re_path(r'^customer-dashboard/create-group/$',
+            customer_dashboard_views.create_group, name='create_customer_group'),
+    re_path(r'^customer-dashboard/group/(?P<group_id>\d+)/rename/$',
+            customer_dashboard_views.rename_group, name='rename_group'),
+    re_path(r'^customer-dashboard/group/(?P<group_id>\d+)/delete/$',
+            customer_dashboard_views.delete_group, name='delete_group'),
+    re_path(r'^customer-dashboard/group/(?P<group_id>\d+)/add-customers/$',
+            customer_dashboard_views.add_group_customers, name='add_group_customers'),
+    re_path(r'^customer-dashboard/group/(?P<group_id>\d+)/remove-customer/(?P<customer_id>\d+)/$',
+            customer_dashboard_views.remove_group_customer, name='remove_group_customer'),
 
     # Marketing utility routes
     re_path(r'^product_download/(?P<product_id>\d+)/(?P<document_type>[a-z]{3,4})/$', download_product_document, name="product_download"),

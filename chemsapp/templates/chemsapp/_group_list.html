@@ -1,0 +1,18 @@
+{% comment %}
+The rows of the groups list: one group and its member count. The full page
+and the live search both render this include.
+{% endcomment %}
+{% for row in group_rows %}
+    <a href="?view=groups&group={{ row.pk }}{% if search %}&q={{ search }}{% endif %}"
+       class="row-link {% if group and group.pk == row.pk %}active{% endif %}">
+        <strong>{{ row.name }}</strong>
+        <div class="text-muted small">
+            {{ row.member_count }} customer{{ row.member_count|pluralize }}
+        </div>
+        {% if row.note %}<div class="text-muted small">{{ row.note }}</div>{% endif %}
+    </a>
+{% empty %}
+    <div class="p-3 text-muted">
+        {% if search %}Nothing matches "{{ search }}".{% else %}No groups yet. Make one above.{% endif %}
+    </div>
+{% endfor %}
