@@ -325,6 +325,80 @@
                         <div class="empty-note">No customers in this group yet. Add some above.</div>
                     {% endif %}
                 </div>
+
+                <div class="panel-card">
+                    <h6 class="mb-2">Group prices</h6>
+                    <p class="text-muted small">
+                        A price every customer in this group pays for a
+                        variant. A customer's own price wins over the group
+                        price.
+                    </p>
+                    {% if group_prices %}
+                        <table class="table table-sm row-table align-middle">
+                            <thead>
+                                <tr><th>Variant</th><th>Name</th><th>Price</th><th>Qty from</th><th class="delete-cell"></th></tr>
+                            </thead>
+                            <tbody>
+                            {% for group_price in group_prices %}
+                                <tr>
+                                    <td>
+                                        {{ group_price.product_variant.product.name }}
+                                        <span class="text-muted small">
+                                            {{ group_price.product_variant.code|default:group_price.product_variant.size|default:"" }}
+                                        </span>
+                                    </td>
+                                    <td>{{ group_price.name|default:"—" }}</td>
+                                    <td>${{ group_price.price }}</td>
+                                    <td>{{ group_price.min_quantity|default:"Any" }}</td>
+                                    <td class="delete-cell">
+                                        <form method="post"
+                                              action="{% url 'remove_group_price' group.pk group_price.pk %}">
+                                            {% csrf_token %}
+                                            <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                    title="Remove this group price">
+                                                <i class="bi bi-x-lg"></i>
+                                            </button>
+                                        </form>
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-note">
+                            No prices for this group. Every customer in it pays
+                            each variant's own customer price, or the
+                            recommended retail price.
+                        </div>
+                    {% endif %}
+
+                    <h6 class="mb-3 mt-3">Add a group price</h6>
+                    <form method="post" action="{% url 'add_group_price' group.pk %}">
+                        {% csrf_token %}
+                        <div class="row g-3">
+                            <div class="col-md-6">
+                                <div class="field-label">Variants</div>
+                                <div class="search-picker" data-field="variant"
+                                     data-url="{% url 'dashboard_variant_search' %}?exclude_group_priced={{ group.pk }}"
+                                     data-placeholder="Search variants, then click to add"
+                                     data-empty="No variants added yet."></div>
+                            </div>
+                            <div class="col-md-2">
+                                <div class="field-label">Price</div>
+                                <input type="number" name="price" step="0.01" min="0">
+                            </div>
+                            <div class="col-md-2">
+                                <div class="field-label">Name</div>
+                                <input type="text" name="name">
+                            </div>
+                            <div class="col-md-2">
+                                <div class="field-label">Qty from</div>
+                                <input type="number" name="min_quantity" min="1">
+                            </div>
+                        </div>
+                        <button class="btn btn-sm btn-primary mt-3" type="submit">Add group price</button>
+                    </form>
+                </div>
             {% else %}
                 <div class="text-muted d-flex align-items-center justify-content-center h-100">
                     <div class="text-center">
@@ -398,6 +472,49 @@
                         </table>
                         <button class="btn btn-sm btn-primary" type="submit">Save contacts</button>
                     </form>
+                </div>
+
+                <div class="panel-card">
+                    <h6 class="mb-2">Prices</h6>
+                    <p class="text-muted small">
+                        The price this customer pays for each variant that has
+                        a customer or group price. Edit customer prices on the
+                        product dashboard. Edit group prices on the Groups tab.
+                    </p>
+                    {% if resolved_prices %}
+                        <table class="table table-sm row-table align-middle">
+                            <thead>
+                                <tr><th>Variant</th><th>Price</th><th>Source</th></tr>
+                            </thead>
+                            <tbody>
+                            {% for row in resolved_prices %}
+                                <tr>
+                                    <td>
+                                        {{ row.variant.product.name }}
+                                        <span class="text-muted small">
+                                            {{ row.variant.code|default:row.variant.size|default:"" }}
+                                        </span>
+                                    </td>
+                                    <td>{% if row.price is not None %}${{ row.price }}{% else %}—{% endif %}</td>
+                                    <td>
+                                        {% if row.source_kind == 'customer' %}
+                                            <span class="badge bg-success-subtle text-success border">Customer price</span>
+                                        {% elif row.source_kind == 'group' %}
+                                            <span class="badge bg-primary-subtle text-primary border">Group price</span>
+                                        {% else %}
+                                            <span class="badge bg-light text-dark border">Recommended retail price</span>
+                                        {% endif %}
+                                    </td>
+                                </tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% else %}
+                        <div class="empty-note">
+                            No special prices. This customer pays every
+                            variant's recommended retail price.
+                        </div>
+                    {% endif %}
                 </div>
             {% else %}
                 <div class="text-muted d-flex align-items-center justify-content-center h-100">

@@ -353,7 +353,12 @@ class MarketCategory(models.Model):
 
 
 class CustomerGroup(MyBaseModel):
-    """A named set of customers. One customer is in one group at a time."""
+    """A named set of customers. One customer is in one group at a time.
+
+    A group can have a GroupPricingVariant for a product variant. Every
+    customer in the group then pays that price for the variant, unless the
+    customer has their own PricingVariant for it.
+    """
     name = models.CharField(max_length=255, unique=True)
     note = models.CharField(max_length=500, blank=True, default='')
 
@@ -380,8 +385,9 @@ class Customer(Profile):
 class PricingVariant(models.Model):
     """A negotiated price for one product variant, for a set of customers.
 
-    A customer with no PricingVariant for a variant pays the recommended
-    retail price of the variant.
+    The price chain for a customer is: the customer's own PricingVariant
+    price, then their group's GroupPricingVariant price, then the variant's
+    recommended retail price. See chemsapp.pricing.resolve_price.
     """
     product_variant = models.ForeignKey(
         ProductVariant, related_name='pricing_variants', on_delete=models.CASCADE)
@@ -402,6 +408,42 @@ class PricingVariant(models.Model):
     def __str__(self):
         label = f' ({self.name})' if self.name else ''
         return f'{self.product_variant}{label} - {self.price}'
+
+
+class GroupPricingVariant(models.Model):
+    """A price for one product variant, for one customer group.
+
+    A customer whose group has a GroupPricingVariant for a variant pays
+    that price, unless the customer has their own PricingVariant for the
+    same variant (which wins). A customer with neither pays the variant's
+    recommended retail price. See chemsapp.pricing.resolve_price.
+    """
+    product_variant = models.ForeignKey(
+        ProductVariant, related_name='group_pricing_variants',
+        on_delete=models.CASCADE)
+    customer_group = models.ForeignKey(
+        CustomerGroup, related_name='pricing_variants', on_delete=models.CASCADE)
+    price = models.DecimalField(
+        max_digits=10, decimal_places=2,
+        help_text='Price that this group pays for this variant, in dollars.')
+    name = models.CharField(
+        max_length=255, blank=True, default='',
+        help_text='Optional label, e.g. "2026 contract".')
+    min_quantity = models.PositiveIntegerField(
+        blank=True, null=True, verbose_name='Minimum quantity',
+        help_text='Smallest order that gets this price. Blank for any quantity.')
+
+    class Meta:
+        ordering = ['product_variant__product__name', 'product_variant__code', 'price']
+        constraints = [
+            models.UniqueConstraint(
+                fields=['product_variant', 'customer_group'],
+                name='one_group_price_per_variant_and_group'),
+        ]
+
+    def __str__(self):
+        label = f' ({self.name})' if self.name else ''
+        return f'{self.product_variant} — {self.customer_group}{label} - {self.price}'
 
 
 class ProductEquivalency(models.Model):

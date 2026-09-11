@@ -7,11 +7,11 @@ import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
     MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact,\
-    ApplicationType, DilutionVariant, PricingVariant, ProductEquivalency, CustomerGroup
+    ApplicationType, DilutionVariant, PricingVariant, GroupPricingVariant, ProductEquivalency, CustomerGroup
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm, ProductForm,\
-    PricingVariantForm
+    PricingVariantForm, GroupPricingVariantForm
 from django.urls import path, reverse
 from django.shortcuts import render, redirect, get_object_or_404
 from django.contrib import messages
@@ -425,6 +425,22 @@ class PricingVariantAdmin(admin.ModelAdmin):
     customer_count.short_description = 'Customers'
 
 
+class GroupPricingVariantAdmin(admin.ModelAdmin):
+    """Per-group prices. A customer whose group has a price for a variant
+    pays it, unless the customer has their own PricingVariant for the
+    variant. A customer with neither pays the recommended retail price."""
+    form = GroupPricingVariantForm
+    search_fields = [
+        'product_variant__product__name', 'product_variant__code',
+        'customer_group__name', 'name']
+    list_display = [
+        'product_variant', 'customer_group', 'name', 'price', 'min_quantity']
+    list_filter = ['customer_group', 'product_variant__product']
+    list_select_related = [
+        'product_variant', 'product_variant__product', 'customer_group']
+    autocomplete_fields = ['product_variant', 'customer_group']
+
+
 class ProductVariantAdmin(admin.ModelAdmin):
     """Standalone variant admin so dilution options can be edited
     (inlines can't nest inside ProductVariantInline on the product page)."""
@@ -628,6 +644,7 @@ admin.site.register(CustomerGroup, CustomerGroupAdmin)
 admin.site.register(Product, ProductAdmin)
 admin.site.register(ProductVariant, ProductVariantAdmin)
 admin.site.register(PricingVariant, PricingVariantAdmin)
+admin.site.register(GroupPricingVariant, GroupPricingVariantAdmin)
 admin.site.register(ApplicationType, ApplicationTypeAdmin)
 admin.site.register(Profile, ProfileAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)

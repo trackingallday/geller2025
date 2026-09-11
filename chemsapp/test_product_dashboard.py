@@ -5,8 +5,9 @@ from django.urls import reverse
 
 from chemsapp.product_dashboard_views import VARIANT_SEARCH_LENGTH
 from chemsapp.models import (
-    ApplicationType, Customer, DilutionVariant, PricingVariant, Product,
-    ProductCategory, ProductEquivalency, ProductVariant, SafetyWear, Size,
+    ApplicationType, Customer, CustomerGroup, DilutionVariant,
+    GroupPricingVariant, PricingVariant, Product, ProductCategory,
+    ProductEquivalency, ProductVariant, SafetyWear, Size,
 )
 
 
@@ -234,6 +235,51 @@ class ProductDashboardTests(TestCase):
         pricing = PricingVariant.objects.create(product_variant=self.variant, price='18.20')
         self.client.post(reverse('delete_pricing_variant', args=[pricing.pk]))
         self.assertEqual(PricingVariant.objects.filter(pk=pricing.pk).count(), 0)
+
+    # --- group prices ---
+    # A group price is per (variant, group). One group cannot get a second
+    # price for the same variant.
+
+    def test_add_a_group_price(self):
+        group = CustomerGroup.objects.create(name='North')
+        self.client.post(
+            reverse('save_group_pricing_variant', args=[self.variant.pk]),
+            {'product_variant': str(self.variant.pk), 'customer_group': str(group.pk),
+             'price': '22.38', 'name': 'Contract'})
+        group_price = GroupPricingVariant.objects.get(product_variant=self.variant)
+        self.assertEqual(str(group_price.price), '22.38')
+        self.assertEqual(group_price.customer_group, group)
+
+    def test_the_focus_pane_shows_the_group_prices_table(self):
+        group = CustomerGroup.objects.create(name='North')
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=group, price='22.38')
+        response = self.client.get(
+            self.url, {'product': self.product.pk, 'variant': self.variant.pk})
+        self.assertContains(response, 'Group prices')
+        self.assertContains(response, 'North')
+        self.assertContains(response, '22.38')
+
+    def test_duplicate_group_price_is_refused(self):
+        group = CustomerGroup.objects.create(name='North')
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=group, price='18.20')
+        response = self.client.post(
+            reverse('save_group_pricing_variant', args=[self.variant.pk]),
+            {'product_variant': str(self.variant.pk), 'customer_group': str(group.pk),
+             'price': '9.99'}, follow=True)
+        self.assertEqual(
+            GroupPricingVariant.objects.filter(product_variant=self.variant).count(), 1)
+        self.assertContains(response, 'already has a price')
+
+    def test_delete_a_group_price(self):
+        group = CustomerGroup.objects.create(name='North')
+        group_price = GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=group, price='18.20')
+        self.client.post(
+            reverse('delete_group_pricing_variant', args=[group_price.pk]))
+        self.assertEqual(
+            GroupPricingVariant.objects.filter(pk=group_price.pk).count(), 0)
 
     # --- the fields added from the client's spreadsheet ---
 

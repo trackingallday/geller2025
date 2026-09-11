@@ -6,7 +6,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 
-from chemsapp.models import Customer, ProductVariant
+from chemsapp.models import Customer, GroupPricingVariant, ProductVariant
 from chemsapp.pricing import resolve_price
 from .models import Quote
 from .services import create_quote, send_quote_pdf_email
@@ -108,7 +108,10 @@ def dashboard_variant_price(request):
     price, pricing = resolve_price(variant, customer)
 
     source = None
-    if pricing is not None:
+    if isinstance(pricing, GroupPricingVariant):
+        label = f' ({pricing.name})' if pricing.name else ''
+        source = f'Group price ({pricing.customer_group.name}){label}'
+    elif pricing is not None:
         source = f'Customer price{f" ({pricing.name})" if pricing.name else ""}'
     elif price is not None:
         source = 'Recommended retail price'

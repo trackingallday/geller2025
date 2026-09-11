@@ -15,10 +15,11 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 
-from .forms import PricingVariantForm
+from .forms import GroupPricingVariantForm, PricingVariantForm
 from .models import (
-    Customer, DilutionVariant, PricingVariant, Product, ProductCategory,
-    ProductEquivalency, ProductVariant,
+    Customer, CustomerGroup, DilutionVariant, GroupPricingVariant,
+    PricingVariant, Product, ProductCategory, ProductEquivalency,
+    ProductVariant,
 )
 
 # Most rows a search returns. Categories are a short fixed list and ignore
@@ -214,6 +215,7 @@ def _selected_product(product_id):
                 'variants__size',
                 'variants__dilutions__application_type',
                 'variants__pricing_variants__customers',
+                'variants__group_pricing_variants__customer_group',
                 'equivalents__equivalent_product',
                 'customers__user',
                 'productCategory',
@@ -301,10 +303,14 @@ def product_dashboard(request):
         context['focus_dilution_formset'] = DilutionFormSet(
             instance=focus_variant,
             prefix=f'dilution-{focus_variant.pk}') if focus_variant else None
-        # Customer prices for the focused variant. A new variant has none
-        # yet — it has no pk to hang a price off until it is first saved.
+        # Customer prices and group prices for the focused variant. A new
+        # variant has none yet — it has no pk to hang a price off until it
+        # is first saved.
         context['pricing_form'] = PricingVariantForm(
             initial={'product_variant': focus_variant}) if focus_variant else None
+        context['group_pricing_form'] = GroupPricingVariantForm(
+            initial={'product_variant': focus_variant}) if focus_variant else None
+        context['all_groups'] = CustomerGroup.objects.order_by('name')
 
     return TemplateResponse(request, 'chemsapp/product_dashboard.html', context)
 
@@ -632,4 +638,42 @@ def delete_pricing_variant(request, pricing_variant_id):
     if request.method == 'POST':
         pricing_variant.delete()
         messages.success(request, 'Removed the price.')
+    return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
+
+
+@staff_member_required
+def save_group_pricing_variant(request, variant_id):
+    """Add or edit one group price, from the variant focus pane.
+
+    GroupPricingVariantForm refuses to give one group two prices for the
+    same variant. That rule holds here too.
+    """
+    variant = get_object_or_404(ProductVariant, pk=variant_id)
+    if request.method != 'POST':
+        return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
+
+    group_pricing_variant = None
+    group_pricing_variant_id = request.POST.get('group_pricing_variant_id')
+    if group_pricing_variant_id:
+        group_pricing_variant = get_object_or_404(
+            GroupPricingVariant, pk=group_pricing_variant_id, product_variant=variant)
+
+    form = GroupPricingVariantForm(request.POST, instance=group_pricing_variant)
+    if form.is_valid():
+        form.save()
+        messages.success(request, 'Saved the group price.')
+    else:
+        messages.error(request, f'The group price did not save: {form.errors.as_text()}')
+    return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
+
+
+@staff_member_required
+def delete_group_pricing_variant(request, group_pricing_variant_id):
+    """Remove one group price from the variant focus pane."""
+    group_pricing_variant = get_object_or_404(
+        GroupPricingVariant, pk=group_pricing_variant_id)
+    variant = group_pricing_variant.product_variant
+    if request.method == 'POST':
+        group_pricing_variant.delete()
+        messages.success(request, 'Removed the group price.')
     return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))

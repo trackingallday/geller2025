@@ -4,7 +4,10 @@ from django.forms.widgets import TextInput
 from django.contrib.auth.models import User
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import Post, ProductCategory, Distributor, Profile, Product, PricingVariant
+from .models import (
+    Post, ProductCategory, Distributor, Profile, Product, PricingVariant,
+    GroupPricingVariant,
+)
 
 class PricingVariantForm(ModelForm):
     class Meta:
@@ -32,6 +35,34 @@ class PricingVariantForm(ModelForm):
             raise ValidationError(
                 'These customers already have a price for {}: {}'.format(
                     product_variant.code or str(product_variant), clashing_names))
+        return cleaned_data
+
+
+class GroupPricingVariantForm(ModelForm):
+    class Meta:
+        model = GroupPricingVariant
+        fields = '__all__'
+
+    def clean(self):
+        """Stop a group having two prices for the same variant.
+
+        The database has a UniqueConstraint for this. The form check gives a
+        readable message before the database raises an IntegrityError.
+        """
+        cleaned_data = super().clean()
+        product_variant = cleaned_data.get('product_variant')
+        customer_group = cleaned_data.get('customer_group')
+        if not product_variant or not customer_group:
+            return cleaned_data
+
+        clash = GroupPricingVariant.objects.filter(
+            product_variant=product_variant, customer_group=customer_group
+        ).exclude(pk=self.instance.pk)
+        if clash.exists():
+            raise ValidationError(
+                '{} already has a price for {}.'.format(
+                    customer_group.name,
+                    product_variant.code or str(product_variant)))
         return cleaned_data
 
 

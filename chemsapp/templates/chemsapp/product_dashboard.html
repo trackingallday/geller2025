@@ -531,8 +531,9 @@
                         <hr>
                         <h6 class="mb-2">Customer prices</h6>
                         <p class="text-muted small">
-                            A customer with no price here pays the
-                            recommended retail price above.
+                            A customer pays their own price first, then their
+                            group's price, then the recommended retail price
+                            above.
                         </p>
                         {% if focus_variant.pricing_variants.all %}
                             <table class="table table-sm row-table align-middle">
@@ -567,7 +568,8 @@
                             </table>
                         {% else %}
                             <div class="empty-note">
-                                No customer prices. Every customer pays the recommended retail price.
+                                No customer prices. Every customer pays their
+                                group price or the recommended retail price.
                             </div>
                         {% endif %}
 
@@ -605,6 +607,75 @@
                             </div>
                             <button class="btn btn-sm btn-primary mt-3" type="submit">Add price</button>
                         </form>
+
+                        <hr>
+                        <h6 class="mb-2">Group prices</h6>
+                        <p class="text-muted small">
+                            A price for a whole customer group. A customer's
+                            own price above wins over the group price.
+                        </p>
+                        {% if focus_variant.group_pricing_variants.all %}
+                            <table class="table table-sm row-table align-middle">
+                                <thead>
+                                    <tr><th>Group</th><th>Name</th><th>Price</th><th>Qty from</th><th class="delete-cell"></th></tr>
+                                </thead>
+                                <tbody>
+                                {% for group_price in focus_variant.group_pricing_variants.all %}
+                                    <tr>
+                                        <td>{{ group_price.customer_group.name }}</td>
+                                        <td>{{ group_price.name|default:"—" }}</td>
+                                        <td>${{ group_price.price }}</td>
+                                        <td>{{ group_price.min_quantity|default:"Any" }}</td>
+                                        <td class="delete-cell">
+                                            <form method="post" action="{% url 'delete_group_pricing_variant' group_price.pk %}">
+                                                {% csrf_token %}
+                                                <button class="btn btn-sm btn-outline-danger" type="submit"
+                                                        title="Remove this group price">
+                                                    <i class="bi bi-x-lg"></i>
+                                                </button>
+                                            </form>
+                                        </td>
+                                    </tr>
+                                {% endfor %}
+                                </tbody>
+                            </table>
+                        {% else %}
+                            <div class="empty-note">
+                                No group prices. Every group pays the customer
+                                price or the recommended retail price.
+                            </div>
+                        {% endif %}
+
+                        <h6 class="mb-3 mt-3">Add a group price</h6>
+                        {% if all_groups %}
+                            <form method="post" action="{% url 'save_group_pricing_variant' focus_variant.pk %}">
+                                {% csrf_token %}
+                                <input type="hidden" name="product_variant" value="{{ focus_variant.pk }}">
+                                <div class="row g-3">
+                                    <div class="col-md-3">
+                                        <div class="field-label">Group</div>
+                                        {{ group_pricing_form.customer_group }}
+                                    </div>
+                                    <div class="col-md-3">
+                                        <div class="field-label">Name</div>
+                                        {{ group_pricing_form.name }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="field-label">Price</div>
+                                        {{ group_pricing_form.price }}
+                                    </div>
+                                    <div class="col-md-2">
+                                        <div class="field-label">Qty from</div>
+                                        {{ group_pricing_form.min_quantity }}
+                                    </div>
+                                </div>
+                                <button class="btn btn-sm btn-primary mt-3" type="submit">Add group price</button>
+                            </form>
+                        {% else %}
+                            <div class="empty-note">
+                                No customer groups yet. Make one on the customer dashboard.
+                            </div>
+                        {% endif %}
 
                         <hr>
                         <form method="post" action="{% url 'delete_variant' focus_variant.pk %}"

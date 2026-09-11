@@ -13,6 +13,8 @@ time from the group side.
 
 This file follows the shape of chemsapp/product_dashboard_views.py.
 """
+from decimal import Decimal, InvalidOperation
+
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Count, Q
@@ -22,7 +24,11 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 
-from .models import Customer, CustomerContact, CustomerGroup
+from .models import (
+    Customer, CustomerContact, CustomerGroup, GroupPricingVariant,
+    ProductVariant,
+)
+from .pricing import resolve_price
 
 # Most rows a search returns. The customer table grows, so the list always
 # applies this limit.
@@ -120,6 +126,40 @@ def _selected_group(group_id):
         return None
 
 
+def _resolved_prices(customer):
+    """One row for each variant that has a non-RRP price for this customer.
+
+    A row is {'variant', 'price', 'source_kind'} where source_kind is
+    'customer', 'group' or 'rrp'. The list holds only variants where the
+    customer or the customer's group has set a price — a variant on the
+    plain recommended retail price is not listed.
+    """
+    conditions = Q(pricing_variants__customers=customer)
+    if customer.group_id is not None:
+        conditions |= Q(group_pricing_variants__customer_group_id=customer.group_id)
+
+    variants = (
+        ProductVariant.objects
+        .filter(conditions)
+        .select_related('product', 'size')
+        .prefetch_related('pricing_variants__customers', 'group_pricing_variants')
+        .distinct()
+        .order_by('product__name', 'code')
+    )
+
+    rows = []
+    for variant in variants:
+        price, source = resolve_price(variant, customer)
+        if isinstance(source, GroupPricingVariant):
+            source_kind = 'group'
+        elif source is not None:
+            source_kind = 'customer'
+        else:
+            source_kind = 'rrp'
+        rows.append({'variant': variant, 'price': price, 'source_kind': source_kind})
+    return rows
+
+
 @staff_member_required
 def customer_dashboard(request):
     """The whole page. ?view= picks the customers list or the groups list."""
@@ -141,6 +181,11 @@ def customer_dashboard(request):
         context['group'] = group
         if group is not None:
             context['members'] = group.customers.select_related('user').order_by('businessName')
+            context['group_prices'] = (
+                group.pricing_variants
+                .select_related('product_variant__product', 'product_variant__size')
+                .all()
+            )
     else:
         customer = _selected_customer(request.GET.get('customer', ''))
         context['customer_rows'] = _search_customers(search)
@@ -148,6 +193,7 @@ def customer_dashboard(request):
         if customer is not None:
             context['details_form'] = CustomerDetailsForm(instance=customer)
             context['contact_formset'] = ContactFormSet(instance=customer)
+            context['resolved_prices'] = _resolved_prices(customer)
 
     return TemplateResponse(request, 'chemsapp/customer_dashboard.html', context)
 
@@ -346,3 +392,102 @@ def group_customer_search(request):
         for customer in customers
     ]
     return JsonResponse({'results': results})
+
+
+@staff_member_required
+def variant_search(request):
+    """Product variants matching ?q=, for the "add a group price" box.
+
+    ?exclude_group_priced=<group id> leaves out variants that group already
+    has a price for. That group cannot get a second price for the same
+    variant, so offering those would only produce an error.
+    """
+    search = request.GET.get('q', '').strip()
+    variants = ProductVariant.objects.select_related('product', 'size')
+
+    exclude_group_priced = request.GET.get('exclude_group_priced', '')
+    if exclude_group_priced:
+        variants = variants.exclude(
+            group_pricing_variants__customer_group_id=exclude_group_priced)
+
+    if search:
+        variants = variants.filter(
+            Q(code__icontains=search) |
+            Q(barcode__icontains=search) |
+            Q(product__name__icontains=search) |
+            Q(size__name__icontains=search)
+        )
+
+    variants = variants.order_by('product__name', 'code')[:SEARCH_LIMIT]
+    results = [
+        {'id': variant.pk,
+         'name': variant.code or str(variant),
+         'detail': '{}{}'.format(
+             variant.product.name,
+             f' · {variant.size}' if variant.size else '')}
+        for variant in variants
+    ]
+    return JsonResponse({'results': results})
+
+
+@staff_member_required
+def add_group_price(request, group_id):
+    """Add one price for a group, from the group editor.
+
+    The picker allows more than one variant before saving, so this reads
+    every chosen variant and gives each the same price. A variant the group
+    already has a price for is skipped, not overwritten.
+    """
+    group = get_object_or_404(CustomerGroup, pk=group_id)
+    if request.method != 'POST':
+        return redirect(_dashboard_url('groups', group_id=group.pk))
+
+    variant_ids = request.POST.getlist('variant')
+    variants = ProductVariant.objects.filter(pk__in=variant_ids)
+    if not variants:
+        messages.error(request, 'Select a variant first.')
+        return redirect(_dashboard_url('groups', group_id=group.pk))
+
+    try:
+        price = Decimal(request.POST.get('price', '').strip())
+        if price <= 0:
+            raise InvalidOperation
+    except (InvalidOperation, ValueError):
+        messages.error(request, 'Type a price greater than zero.')
+        return redirect(_dashboard_url('groups', group_id=group.pk))
+
+    name = request.POST.get('name', '').strip()
+    min_quantity = request.POST.get('min_quantity', '').strip() or None
+
+    already_priced = set(
+        GroupPricingVariant.objects
+        .filter(customer_group=group, product_variant__in=variants)
+        .values_list('product_variant_id', flat=True)
+    )
+    added = 0
+    for variant in variants:
+        if variant.pk in already_priced:
+            continue
+        GroupPricingVariant.objects.create(
+            product_variant=variant, customer_group=group, price=price,
+            name=name, min_quantity=min_quantity)
+        added += 1
+
+    skipped = len(variants) - added
+    message = f'Added {added} group price(s) to {group.name}.'
+    if skipped:
+        message += f' {skipped} variant(s) already had a price and were left alone.'
+    messages.success(request, message)
+    return redirect(_dashboard_url('groups', group_id=group.pk))
+
+
+@staff_member_required
+def remove_group_price(request, group_id, group_pricing_variant_id):
+    """Remove one group price from the group editor."""
+    group = get_object_or_404(CustomerGroup, pk=group_id)
+    if request.method == 'POST':
+        group_price = get_object_or_404(
+            GroupPricingVariant, pk=group_pricing_variant_id, customer_group=group)
+        group_price.delete()
+        messages.success(request, 'Removed the group price.')
+    return redirect(_dashboard_url('groups', group_id=group.pk))

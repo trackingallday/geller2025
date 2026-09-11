@@ -9,8 +9,8 @@ from django.test import TestCase, override_settings
 from rest_framework.test import APIClient
 
 from chemsapp.models import (
-    ApplicationType, Customer, DilutionVariant, PricingVariant, Product,
-    ProductVariant, Size,
+    ApplicationType, Customer, CustomerGroup, DilutionVariant,
+    GroupPricingVariant, PricingVariant, Product, ProductVariant, Size,
 )
 from chemsapp.wall_chart_colors import row_colors
 from .models import Quote, QuoteLine, generate_quote_number
@@ -606,3 +606,34 @@ class VariantPriceEndpointTestCase(TestCase):
         data = response.json()
         self.assertIsNone(data['price'])
         self.assertIsNone(data['source'])
+
+    def test_a_grouped_customer_with_no_customer_price_gets_the_group_price(self):
+        group = CustomerGroup.objects.create(name='North')
+        grouped_user = User.objects.create_user(
+            username='cust3', email='cust3@example.com')
+        grouped_customer = Customer.objects.create(
+            user=grouped_user, phoneNumber='123', businessName='Grouped Ltd',
+            address='3 Road', group=group)
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=group, price='75.00')
+
+        response = self.client.get('/quotes/dashboard/variant-price/', {
+            'variant_id': self.variant.pk, 'customer_id': grouped_customer.pk})
+        data = response.json()
+        self.assertEqual(data['price'], '75.00')
+        self.assertEqual(data['source'], 'Group price (North)')
+
+    def test_moving_a_customer_out_of_the_group_falls_back_to_the_rrp(self):
+        group = CustomerGroup.objects.create(name='North')
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=group, price='75.00')
+        user = User.objects.create_user(username='cust4', email='cust4@example.com')
+        customer = Customer.objects.create(
+            user=user, phoneNumber='123', businessName='Loose Ltd',
+            address='4 Road', group=None)
+
+        response = self.client.get('/quotes/dashboard/variant-price/', {
+            'variant_id': self.variant.pk, 'customer_id': customer.pk})
+        data = response.json()
+        self.assertEqual(data['price'], '100.00')
+        self.assertEqual(data['source'], 'Recommended retail price')

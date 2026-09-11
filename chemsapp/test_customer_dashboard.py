@@ -3,7 +3,10 @@ from django.contrib.auth.models import User
 from django.test import TestCase
 from django.urls import reverse
 
-from chemsapp.models import Customer, CustomerContact, CustomerGroup
+from chemsapp.models import (
+    Customer, CustomerContact, CustomerGroup, GroupPricingVariant,
+    PricingVariant, Product, ProductVariant,
+)
 
 
 def make_customer(username, business, group=None):
@@ -11,6 +14,14 @@ def make_customer(username, business, group=None):
     return Customer.objects.create(
         user=user, phoneNumber='123', businessName=business, address='1 Road',
         group=group)
+
+
+def make_variant(name, code, rrp=None):
+    product = Product.objects.create(
+        name=name, description='d', directions='d', productCode=code, brand='b')
+    return ProductVariant.objects.create(
+        product=product, pack_size=1, code=f'{code}-5L', barcode=code,
+        recommended_retail_price=rrp)
 
 
 class CustomerGroupModelTests(TestCase):
@@ -194,3 +205,121 @@ class CustomerDashboardTests(TestCase):
             reverse('save_customer_contacts', args=[self.acme.pk]), data)
         self.assertEqual(
             CustomerContact.objects.filter(customer=self.acme, name='Jane Doe').count(), 1)
+
+
+class GroupPriceDashboardTests(TestCase):
+    """The group-price card in the groups view, and the read-only price card
+    in the customers view."""
+
+    def setUp(self):
+        User.objects.create_user('staffer', password='pw12345678', is_staff=True)
+        self.client.login(username='staffer', password='pw12345678')
+        self.url = reverse('customer_dashboard')
+        self.north = CustomerGroup.objects.create(name='North Island')
+        self.variant = make_variant('Cleaner', 'C1', rrp='100.00')
+        self.other_variant = make_variant('Degreaser', 'C2', rrp='200.00')
+        self.acme = make_customer('acme', 'Acme Cleaning', group=self.north)
+        self.solo = make_customer('solo', 'Solo Ltd')
+
+    # --- add / remove a group price ---
+
+    def test_add_a_group_price_from_the_group_editor(self):
+        self.client.post(
+            reverse('add_group_price', args=[self.north.pk]),
+            {'variant': [self.variant.pk], 'price': '70.00', 'name': 'Contract'})
+        group_price = GroupPricingVariant.objects.get(customer_group=self.north)
+        self.assertEqual(str(group_price.price), '70.00')
+        self.assertEqual(group_price.product_variant, self.variant)
+
+    def test_add_a_group_price_takes_many_variants_at_once(self):
+        self.client.post(
+            reverse('add_group_price', args=[self.north.pk]),
+            {'variant': [self.variant.pk, self.other_variant.pk], 'price': '70.00'})
+        self.assertEqual(
+            GroupPricingVariant.objects.filter(customer_group=self.north).count(), 2)
+
+    def test_add_a_group_price_skips_a_variant_the_group_already_prices(self):
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=self.north, price='55.00')
+        self.client.post(
+            reverse('add_group_price', args=[self.north.pk]),
+            {'variant': [self.variant.pk], 'price': '70.00'})
+        group_price = GroupPricingVariant.objects.get(customer_group=self.north)
+        # The old price stays; a duplicate is not made.
+        self.assertEqual(str(group_price.price), '55.00')
+
+    def test_add_a_group_price_rejects_a_price_of_zero(self):
+        self.client.post(
+            reverse('add_group_price', args=[self.north.pk]),
+            {'variant': [self.variant.pk], 'price': '0'})
+        self.assertEqual(
+            GroupPricingVariant.objects.filter(customer_group=self.north).count(), 0)
+
+    def test_remove_a_group_price(self):
+        group_price = GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=self.north, price='70.00')
+        self.client.post(
+            reverse('remove_group_price', args=[self.north.pk, group_price.pk]))
+        self.assertFalse(
+            GroupPricingVariant.objects.filter(pk=group_price.pk).exists())
+
+    def test_the_group_editor_shows_its_prices(self):
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=self.north, price='70.00')
+        response = self.client.get(
+            self.url, {'view': 'groups', 'group': self.north.pk})
+        self.assertContains(response, 'Group prices')
+        self.assertContains(response, '70.00')
+        self.assertContains(response, 'Cleaner')
+
+    # --- variant search for the picker ---
+
+    def test_variant_search_returns_the_result_shape(self):
+        response = self.client.get(
+            reverse('dashboard_variant_search'), {'q': 'Cleaner'})
+        rows = response.json()['results']
+        self.assertEqual(len(rows), 1)
+        self.assertIn('id', rows[0])
+        self.assertIn('name', rows[0])
+        self.assertIn('detail', rows[0])
+
+    def test_variant_search_excludes_variants_the_group_already_prices(self):
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=self.north, price='70.00')
+        response = self.client.get(
+            reverse('dashboard_variant_search'),
+            {'q': '', 'exclude_group_priced': self.north.pk})
+        ids = [row['id'] for row in response.json()['results']]
+        self.assertNotIn(self.variant.pk, ids)
+        self.assertIn(self.other_variant.pk, ids)
+
+    # --- the read-only price card on the customer editor ---
+
+    def test_customer_editor_shows_the_group_price_as_the_source(self):
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=self.north, price='70.00')
+        response = self.client.get(
+            self.url, {'view': 'customers', 'customer': self.acme.pk})
+        rows = response.context['resolved_prices']
+        self.assertEqual(len(rows), 1)
+        self.assertEqual(rows[0]['source_kind'], 'group')
+        self.assertEqual(str(rows[0]['price']), '70.00')
+        self.assertContains(response, 'Group price')
+
+    def test_customer_editor_shows_a_customer_price_winning_over_the_group(self):
+        GroupPricingVariant.objects.create(
+            product_variant=self.variant, customer_group=self.north, price='70.00')
+        customer_price = PricingVariant.objects.create(
+            product_variant=self.variant, price='50.00')
+        customer_price.customers.add(self.acme)
+        response = self.client.get(
+            self.url, {'view': 'customers', 'customer': self.acme.pk})
+        rows = response.context['resolved_prices']
+        self.assertEqual(rows[0]['source_kind'], 'customer')
+        self.assertEqual(str(rows[0]['price']), '50.00')
+
+    def test_customer_editor_price_card_is_empty_with_no_special_price(self):
+        response = self.client.get(
+            self.url, {'view': 'customers', 'customer': self.solo.pk})
+        self.assertEqual(response.context['resolved_prices'], [])
+        self.assertContains(response, 'No special prices')
