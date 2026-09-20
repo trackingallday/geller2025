@@ -8,7 +8,6 @@ import base64
 import json
 import logging
 import threading
-import uuid
 
 import requests
 from django.conf import settings
@@ -24,7 +23,7 @@ from rest_framework.authtoken.models import Token
 
 from .forms import GroupPricingVariantForm, PricingVariantForm
 from .models import (
-    Customer, CustomerGroup, DilutionVariant, GroupPricingVariant,
+    Customer, CustomerGroup, DilutionVariant, GellerAISyncRun, GroupPricingVariant,
     PricingVariant, Product, ProductCategory, ProductEquivalency,
     ProductVariant,
 )
@@ -762,13 +761,6 @@ def sync_product_to_geller_ai(request, product_id):
     return JsonResponse(data)
 
 
-# In-memory bulk-sync status, keyed by run id. One run at a time in practice
-# (the UI disables the button while a run is in progress) — a plain module
-# dict is enough for a low-traffic internal tool; it does not survive a
-# worker restart, which is fine since the run itself would have died too.
-_bulk_sync_status = {}
-
-
 def _run_bulk_sync(run_id, user_id):
     """Background thread body: sync every product, one at a time.
 
@@ -777,28 +769,35 @@ def _run_bulk_sync(run_id, user_id):
     loops over chemsapp.Product only, reusing the same per-product
     function and payload shape (and therefore the same price-free
     guarantee) as the single-product button.
+
+    Progress is written to a GellerAISyncRun row rather than kept in
+    memory — gunicorn runs several worker processes (see Dockerfile), so
+    a run started on one worker and polled from another cannot share an
+    in-memory dict. Only this one background thread ever writes this row,
+    so there is no write concurrency to worry about, only reads from
+    other workers' status-poll requests.
     """
     from django.contrib.auth.models import User
+    run = GellerAISyncRun.objects.get(pk=run_id)
     user = User.objects.get(pk=user_id)
-    include_pdfs = _bulk_sync_status[run_id]['include_pdfs']
     product_ids = list(Product.objects.order_by('pk').values_list('pk', flat=True))
-    status = _bulk_sync_status[run_id]
-    status['total'] = len(product_ids)
+    run.total = len(product_ids)
+    run.save(update_fields=['total'])
 
     for product_id in product_ids:
-        if status.get('cancelled'):
-            break
         try:
             product = Product.objects.get(pk=product_id)
-            _sync_product_to_geller_ai(product, user, include_pdfs)
-            status['succeeded'] += 1
+            _sync_product_to_geller_ai(product, user, run.include_pdfs)
+            run.succeeded += 1
         except Exception as e:
-            status['failed'] += 1
-            status['errors'].append(f'{product_id}: {e}')
+            run.failed += 1
+            run.errors.append(f'{product_id}: {e}')
             logger.warning('Bulk Geller AI sync failed for product %s: %s', product_id, e)
-        status['processed'] += 1
+        run.processed += 1
+        run.save(update_fields=['processed', 'succeeded', 'failed', 'errors'])
 
-    status['done'] = True
+    run.done = True
+    run.save(update_fields=['done'])
 
 
 @staff_member_required
@@ -806,38 +805,35 @@ def sync_all_products_to_geller_ai(request):
     """Start a background sync of every product (not competitor/knowledge data).
 
     Returns a run id immediately; the page polls sync_all_products_status
-    for progress. Only one run's status is kept per run id — the button
-    disables itself client-side while a run is active, so this doesn't
-    need to reject a second concurrent start server-side.
+    for progress. Nothing stops a second concurrent run from being
+    started server-side — the button disables itself client-side while a
+    run is in progress, which is enough for this low-traffic internal tool.
     """
     if request.method != 'POST':
         return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
 
     include_pdfs = request.POST.get('include_pdfs') == 'true'
-    run_id = uuid.uuid4().hex
-    _bulk_sync_status[run_id] = {
-        'total': 0, 'processed': 0, 'succeeded': 0, 'failed': 0,
-        'errors': [], 'done': False, 'cancelled': False, 'include_pdfs': include_pdfs,
-    }
+    run = GellerAISyncRun.objects.create(started_by=request.user, include_pdfs=include_pdfs)
 
     thread = threading.Thread(
-        target=_run_bulk_sync, args=(run_id, request.user.pk), daemon=True)
+        target=_run_bulk_sync, args=(run.pk, request.user.pk), daemon=True)
     thread.start()
 
-    return JsonResponse({'ok': True, 'run_id': run_id})
+    return JsonResponse({'ok': True, 'run_id': str(run.pk)})
 
 
 @staff_member_required
 def sync_all_products_status(request, run_id):
-    status = _bulk_sync_status.get(run_id)
-    if status is None:
+    try:
+        run = GellerAISyncRun.objects.get(pk=run_id)
+    except GellerAISyncRun.DoesNotExist:
         return JsonResponse({'ok': False, 'error': 'Unknown run id'}, status=404)
     return JsonResponse({
         'ok': True,
-        'total': status['total'],
-        'processed': status['processed'],
-        'succeeded': status['succeeded'],
-        'failed': status['failed'],
-        'done': status['done'],
-        'errors': status['errors'][-10:],
+        'total': run.total,
+        'processed': run.processed,
+        'succeeded': run.succeeded,
+        'failed': run.failed,
+        'done': run.done,
+        'errors': run.errors[-10:],
     })
