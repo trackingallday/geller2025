@@ -7,6 +7,8 @@ shape of the quote dashboard in quotes/dashboard_views.py.
 import base64
 import json
 import logging
+import threading
+import uuid
 
 import requests
 from django.conf import settings
@@ -747,3 +749,84 @@ def sync_product_to_geller_ai(request, product_id):
             {'ok': False, 'error': 'Could not reach Geller AI.'}, status=502)
 
     return JsonResponse(data)
+
+
+# In-memory bulk-sync status, keyed by run id. One run at a time in practice
+# (the UI disables the button while a run is in progress) — a plain module
+# dict is enough for a low-traffic internal tool; it does not survive a
+# worker restart, which is fine since the run itself would have died too.
+_bulk_sync_status = {}
+
+
+def _run_bulk_sync(run_id, user_id):
+    """Background thread body: sync every product, one at a time.
+
+    Deliberately does NOT touch competitor/knowledge/training/catalogue
+    data — those only come from geller_ai's local batch pipeline. This
+    loops over chemsapp.Product only, reusing the same per-product
+    function and payload shape (and therefore the same price-free
+    guarantee) as the single-product button.
+    """
+    from django.contrib.auth.models import User
+    user = User.objects.get(pk=user_id)
+    include_pdfs = _bulk_sync_status[run_id]['include_pdfs']
+    product_ids = list(Product.objects.order_by('pk').values_list('pk', flat=True))
+    status = _bulk_sync_status[run_id]
+    status['total'] = len(product_ids)
+
+    for product_id in product_ids:
+        if status.get('cancelled'):
+            break
+        try:
+            product = Product.objects.get(pk=product_id)
+            _sync_product_to_geller_ai(product, user, include_pdfs)
+            status['succeeded'] += 1
+        except Exception as e:
+            status['failed'] += 1
+            status['errors'].append(f'{product_id}: {e}')
+            logger.warning('Bulk Geller AI sync failed for product %s: %s', product_id, e)
+        status['processed'] += 1
+
+    status['done'] = True
+
+
+@staff_member_required
+def sync_all_products_to_geller_ai(request):
+    """Start a background sync of every product (not competitor/knowledge data).
+
+    Returns a run id immediately; the page polls sync_all_products_status
+    for progress. Only one run's status is kept per run id — the button
+    disables itself client-side while a run is active, so this doesn't
+    need to reject a second concurrent start server-side.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+
+    include_pdfs = request.POST.get('include_pdfs') == 'true'
+    run_id = uuid.uuid4().hex
+    _bulk_sync_status[run_id] = {
+        'total': 0, 'processed': 0, 'succeeded': 0, 'failed': 0,
+        'errors': [], 'done': False, 'cancelled': False, 'include_pdfs': include_pdfs,
+    }
+
+    thread = threading.Thread(
+        target=_run_bulk_sync, args=(run_id, request.user.pk), daemon=True)
+    thread.start()
+
+    return JsonResponse({'ok': True, 'run_id': run_id})
+
+
+@staff_member_required
+def sync_all_products_status(request, run_id):
+    status = _bulk_sync_status.get(run_id)
+    if status is None:
+        return JsonResponse({'ok': False, 'error': 'Unknown run id'}, status=404)
+    return JsonResponse({
+        'ok': True,
+        'total': status['total'],
+        'processed': status['processed'],
+        'succeeded': status['succeeded'],
+        'failed': status['failed'],
+        'done': status['done'],
+        'errors': status['errors'][-10:],
+    })

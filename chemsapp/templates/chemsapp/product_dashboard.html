@@ -376,6 +376,26 @@
     <!-- Product list -->
     <div class="product-list-panel">
         <div class="list-panel-header">
+            <div class="sync-all-geller-ai mb-2"
+                 data-start-url="{% url 'sync_all_products_to_geller_ai' %}"
+                 data-status-url-template="{% url 'sync_all_products_status' 'deadbeef' %}">
+                {% csrf_token %}
+                <div class="d-flex align-items-center gap-2">
+                    <button type="button" class="btn btn-sm btn-outline-primary sync-all-btn">
+                        Sync all products to Geller AI
+                    </button>
+                    <label class="form-check-label small text-muted mb-0">
+                        <input type="checkbox" class="form-check-input sync-all-include-pdfs">
+                        Include PDFs
+                    </label>
+                </div>
+                <div class="sync-all-progress-wrap mt-1" hidden>
+                    <div class="progress" style="height: 6px;">
+                        <div class="progress-bar sync-all-progress-bar" role="progressbar" style="width: 0%"></div>
+                    </div>
+                    <div class="sync-all-progress small text-muted mt-1"></div>
+                </div>
+            </div>
             {% comment %}
             The list updates as the user types. The button stays for a
             browser with no JavaScript, which posts the form as before.
@@ -1227,6 +1247,95 @@
                 button.disabled = false;
                 errorEl.textContent = 'Could not reach the server.';
                 errorEl.hidden = false;
+            });
+    });
+})();
+</script>
+
+<script>
+/* "Sync all products to Geller AI": starts a background bulk sync (products
+   only, never competitor/knowledge data) and polls for progress. Reuses the
+   same per-product endpoint and payload shape server-side, so it carries the
+   same price-free guarantee. */
+(function () {
+    var wrap = document.querySelector('.sync-all-geller-ai');
+    if (!wrap) { return; }
+
+    var button = wrap.querySelector('.sync-all-btn');
+    var checkbox = wrap.querySelector('.sync-all-include-pdfs');
+    var progressWrap = wrap.querySelector('.sync-all-progress-wrap');
+    var progressBar = wrap.querySelector('.sync-all-progress-bar');
+    var progressEl = wrap.querySelector('.sync-all-progress');
+    var csrfInput = wrap.querySelector('input[name=csrfmiddlewaretoken]');
+    var statusUrlTemplate = wrap.dataset.statusUrlTemplate;
+    var pollTimer = null;
+
+    function statusUrl(runId) {
+        return statusUrlTemplate.replace('deadbeef', runId);
+    }
+
+    function poll(runId) {
+        fetch(statusUrl(runId), { credentials: 'same-origin' })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.ok) {
+                    progressEl.textContent = data.error || 'Lost track of the sync run.';
+                    button.disabled = false;
+                    return;
+                }
+                var pct = data.total ? Math.round((data.processed / data.total) * 100) : 0;
+                progressBar.style.width = pct + '%';
+                progressBar.classList.toggle('bg-danger', data.failed > 0);
+                progressEl.textContent = 'Synced ' + data.processed + '/' + data.total +
+                    ' (' + data.succeeded + ' ok, ' + data.failed + ' failed)';
+                if (data.done) {
+                    clearInterval(pollTimer);
+                    pollTimer = null;
+                    button.disabled = false;
+                    progressEl.textContent += data.failed > 0 && data.errors.length
+                        ? ' — done. e.g. ' + data.errors[0]
+                        : ' — done.';
+                } else if (!pollTimer) {
+                    pollTimer = setInterval(function () { poll(runId); }, 2000);
+                }
+            })
+            .catch(function () {
+                progressEl.textContent = 'Lost connection while checking progress.';
+            });
+    }
+
+    button.addEventListener('click', function () {
+        if (!confirm('Sync every product to Geller AI now? This can take several minutes.')) {
+            return;
+        }
+        button.disabled = true;
+        progressWrap.hidden = false;
+        progressBar.style.width = '0%';
+        progressBar.classList.remove('bg-danger');
+        progressEl.textContent = 'Starting…';
+
+        var body = new FormData();
+        body.append('csrfmiddlewaretoken', csrfInput.value);
+        body.append('include_pdfs', checkbox.checked ? 'true' : 'false');
+
+        fetch(wrap.dataset.startUrl, {
+            method: 'POST',
+            body: body,
+            credentials: 'same-origin',
+            headers: { 'X-Requested-With': 'XMLHttpRequest' }
+        })
+            .then(function (r) { return r.json(); })
+            .then(function (data) {
+                if (!data.ok) {
+                    progressEl.textContent = data.error || 'Could not start the sync.';
+                    button.disabled = false;
+                    return;
+                }
+                poll(data.run_id);
+            })
+            .catch(function () {
+                progressEl.textContent = 'Could not reach the server.';
+                button.disabled = false;
             });
     });
 })();
