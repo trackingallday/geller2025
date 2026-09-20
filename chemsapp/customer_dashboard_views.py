@@ -17,6 +17,7 @@ from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db import transaction
 from django.db.models import Count, Q
 from django.forms import inlineformset_factory, modelform_factory
 from django.http import JsonResponse
@@ -24,6 +25,7 @@ from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
 
+from .customers_import import import_customers_workbook
 from .models import (
     Customer, CustomerContact, CustomerGroup, GroupPricingVariant,
     ProductVariant,
@@ -34,10 +36,11 @@ from .pricing import resolve_price
 # applies this limit.
 SEARCH_LIMIT = 50
 
-# The two views the dashboard switches between. The first one is the default.
+# The three views the dashboard switches between. The first one is the default.
 VIEWS = [
     ('customers', 'Customers'),
     ('groups', 'Groups'),
+    ('import', 'Import'),
 ]
 DEFAULT_VIEW = VIEWS[0][0]
 
@@ -186,7 +189,7 @@ def customer_dashboard(request):
                 .select_related('product_variant__product', 'product_variant__size')
                 .all()
             )
-    else:
+    elif view == 'customers':
         customer = _selected_customer(request.GET.get('customer', ''))
         context['customer_rows'] = _search_customers(search)
         context['customer'] = customer
@@ -220,6 +223,52 @@ def group_list(request):
         'group': group,
         'search': search,
     })
+
+
+@staff_member_required
+def import_customers(request):
+    """Upload a customers spreadsheet and create the new customers in it.
+
+    "Validate only" runs the same import inside a transaction that is
+    always rolled back, so staff see the report with nothing saved. The
+    form resubmits to this same URL, so the report always sits below the
+    import tab's form.
+    """
+    if request.method != 'POST':
+        return redirect(_dashboard_url('import'))
+
+    upload = request.FILES.get('workbook')
+    dry_run = bool(request.POST.get('dry_run'))
+    stats = None
+
+    if not upload:
+        messages.error(request, 'Choose a spreadsheet (.xlsx) to upload.')
+    else:
+        try:
+            with transaction.atomic():
+                stats = import_customers_workbook(upload)
+                if dry_run:
+                    transaction.set_rollback(True)
+        except Exception as e:
+            messages.error(request, f'The import failed: {e}')
+        else:
+            verb = 'Checked the file.' if dry_run else 'Import saved.'
+            messages.success(
+                request,
+                f"{verb} {len(stats['created'])} customer(s) to create, "
+                f"{len(stats['skipped_existing'])} already exist, "
+                f"{len(stats['errors'])} row(s) with a problem.",
+            )
+
+    context = {
+        'views': VIEWS,
+        'active_view': 'import',
+        'search': '',
+        'all_groups': CustomerGroup.objects.order_by('name'),
+        'import_stats': stats,
+        'import_dry_run': dry_run,
+    }
+    return TemplateResponse(request, 'chemsapp/customer_dashboard.html', context)
 
 
 @staff_member_required

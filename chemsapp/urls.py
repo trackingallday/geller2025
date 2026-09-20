@@ -4,7 +4,8 @@ from rest_framework.authtoken import views as drf_views
 from chemsapp.views import customers_list, products_list, sds_products, info_sheet_products, new_customer, edit_customer, safety_wears_list,\
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
     new_distributor, edit_distributor, printout, public_products, markets_list, categories_list, create_contact,\
-    sizes_list, download_product_document, sds_enquire, special_customer_edit, backup_documents
+    sizes_list, download_product_document, sds_enquire, special_customer_edit, backup_documents, \
+    applead_signup_start, applead_signup_verify
 from chemsapp.wall_chart_views import wall_chart_pdf
 from chemsapp import product_dashboard_views
 from chemsapp import customer_dashboard_views
@@ -83,6 +84,8 @@ urlpatterns = [
             customer_dashboard_views.add_group_customers, name='add_group_customers'),
     re_path(r'^customer-dashboard/group/(?P<group_id>\d+)/remove-customer/(?P<customer_id>\d+)/$',
             customer_dashboard_views.remove_group_customer, name='remove_group_customer'),
+    re_path(r'^customer-dashboard/import/$',
+            customer_dashboard_views.import_customers, name='import_customers'),
 
     # Marketing utility routes
     re_path(r'^product_download/(?P<product_id>\d+)/(?P<document_type>[a-z]{3,4})/$', download_product_document, name="product_download"),
@@ -108,6 +111,8 @@ urlpatterns = [
     re_path(r'^printout/', printout, name="printout"),
     re_path(r'^public_products/', public_products, name="public_products"),
     re_path(r'^create_contact/', create_contact, name="create_contact"),
+    re_path(r'^applead_signup/start/$', applead_signup_start, name="applead_signup_start"),
+    re_path(r'^applead_signup/verify/$', applead_signup_verify, name="applead_signup_verify"),
     re_path(r'^markets_list/', markets_list, name="markets_list"),
     re_path(r'^categories_list/', categories_list, name="categories_list"),
     re_path(r'^sizes_list/', sizes_list, name="sizes_list"),

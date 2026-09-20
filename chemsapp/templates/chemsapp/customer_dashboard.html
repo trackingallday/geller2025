@@ -408,7 +408,83 @@
                 </div>
             {% endif %}
 
-        {% else %}
+        {% elif active_view == 'import' %}
+            <div class="panel-card">
+                <h6 class="mb-2">Import customers from a spreadsheet</h6>
+                <p class="text-muted small">
+                    Upload the customers workbook (.xlsx, with a "Customers"
+                    sheet and a "Users" sheet). Check "Validate only" first
+                    to see the report below with nothing saved. Untick it
+                    and upload again to run the import for real. A business
+                    whose contact email already has an account is always
+                    skipped, never changed.
+                </p>
+                <form method="post" action="{% url 'import_customers' %}" enctype="multipart/form-data">
+                    {% csrf_token %}
+                    <div class="row g-3 align-items-end">
+                        <div class="col-md-6">
+                            <div class="field-label">Spreadsheet (.xlsx)</div>
+                            <input type="file" name="workbook" accept=".xlsx" required>
+                        </div>
+                        <div class="col-md-3">
+                            <label class="d-flex align-items-center gap-2">
+                                <input type="checkbox" name="dry_run" value="1"
+                                       {% if import_dry_run|default_if_none:True %}checked{% endif %}>
+                                Validate only (don't save)
+                            </label>
+                        </div>
+                        <div class="col-md-3">
+                            <button class="btn btn-sm btn-primary w-100" type="submit">Run</button>
+                        </div>
+                    </div>
+                </form>
+            </div>
+
+            {% if import_stats %}
+                <div class="panel-card">
+                    <h6 class="mb-3">Report</h6>
+                    <p>
+                        <strong>{{ import_stats.created|length }}</strong> customer(s) to create ·
+                        <strong>{{ import_stats.skipped_existing|length }}</strong> already exist ·
+                        <strong>{{ import_stats.errors|length }}</strong> row(s) with a problem
+                    </p>
+
+                    {% if import_stats.created %}
+                        <h6 class="mt-3 mb-2">Created ({{ import_stats.created|length }})</h6>
+                        <table class="table table-sm row-table">
+                            <tbody>
+                            {% for line in import_stats.created %}
+                                <tr><td>{{ line }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+
+                    {% if import_stats.skipped_existing %}
+                        <h6 class="mt-3 mb-2">Already exist ({{ import_stats.skipped_existing|length }})</h6>
+                        <table class="table table-sm row-table">
+                            <tbody>
+                            {% for line in import_stats.skipped_existing %}
+                                <tr><td class="text-muted">{{ line }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+
+                    {% if import_stats.errors %}
+                        <h6 class="mt-3 mb-2 text-danger">Problems ({{ import_stats.errors|length }})</h6>
+                        <table class="table table-sm row-table">
+                            <tbody>
+                            {% for line in import_stats.errors %}
+                                <tr><td class="text-danger">{{ line }}</td></tr>
+                            {% endfor %}
+                            </tbody>
+                        </table>
+                    {% endif %}
+                </div>
+            {% endif %}
+
+        {% elif active_view == 'customers' %}
             {% if customer %}
                 <div class="panel-card">
                     <div class="d-flex justify-content-between align-items-start mb-3">

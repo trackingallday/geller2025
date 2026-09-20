@@ -12,7 +12,8 @@ from django.core.files.storage import FileSystemStorage
 from ckeditor.fields import RichTextField
 
 
-typeChoices = [("customer", "customer"), ("distributor", "distributor"), ("admin", "admin")]
+typeChoices = [("customer", "customer"), ("distributor", "distributor"), ("admin", "admin"),
+               ("applead", "applead")]
 
 
 @receiver(post_save, sender=settings.AUTH_USER_MODEL)
@@ -596,6 +597,28 @@ class Contact(MyBaseModel):
 
     def __str__(self):
         return self.nameFrom
+
+
+class AppLeadSignupCode(MyBaseModel):
+    """A pending AppLead signup, waiting on its emailed 6-digit code.
+
+    No User is created until the code is verified, so an abandoned or
+    mistyped-email signup never leaves a stray account behind. The
+    password is hashed with Django's normal password hasher up front
+    (never stored in plain text) and copied onto the real User once the
+    code is confirmed.
+    """
+    email = models.EmailField()
+    password_hash = models.CharField(max_length=255)
+    first_name = models.CharField(max_length=255, blank=True, default='')
+    last_name = models.CharField(max_length=255, blank=True, default='')
+    business_name = models.CharField(max_length=255, blank=True, default='')
+    code = models.CharField(max_length=6)
+    expires_at = models.DateTimeField()
+    consumed = models.BooleanField(default=False)
+
+    def __str__(self):
+        return f'{self.email} ({"used" if self.consumed else "pending"})'
 
 
 # Map each model to the FileField names that hold images (not PDFs/docs).

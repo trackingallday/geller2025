@@ -453,6 +453,21 @@ def get_user_profile_api(request):
                 status=status.HTTP_200_OK
             )
 
+        elif profile_type == 'applead':
+            # AppLeads: return just enough to confirm the role, so the
+            # mobile app can show its minimal product-gallery tab set on
+            # any login, not only right after signup.
+            return Response(
+                {
+                    'success': True,
+                    'user_id': user.id,
+                    'profileType': profile_type,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                },
+                status=status.HTTP_200_OK
+            )
+
         else:
             return Response(
                 {

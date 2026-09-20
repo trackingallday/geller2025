@@ -81,8 +81,11 @@ from chemsapp.serializers import ProductSerializer, CustomerSerializer, SafetyWe
     ProductMapSerializer, UserSerializer, CustomerSheetSerializer, DistributorSerializer, PublicProductSerializer, \
     CategorySerializer, PostSererializer, MarketSerializer, ConfigSerializer, ContactSerializer, SizeSerializer, \
     SectorSerializer, NewsPostSerializer
-from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle
+from chemsapp.models import Customer, Product, SafetyWear, Distributor, ProductCategory, Post, MarketCategory, Config, Contact, Size, MarketSector, NewsArticle, AppLeadSignupCode
 from django.contrib.auth.models import User
+from django.contrib.auth.hashers import make_password
+from django.utils import timezone
+from rest_framework.authtoken.models import Token
 from rest_framework.decorators import api_view
 
 import base64
@@ -752,6 +755,141 @@ def sizes_list(request):
         return JsonResponse(data, safe=False)
 
     return JsonResponse({'error': 'evildoer'})
+
+
+APPLEAD_CODE_LIFETIME = datetime.timedelta(minutes=15)
+
+
+def _generate_applead_code():
+    return ''.join(random.choice(string.digits) for _ in range(6))
+
+
+@csrf_exempt
+def applead_signup_start(request):
+    """Step 1 of self-serve AppLead signup: email a 6-digit code.
+
+    Open to anonymous callers, like `create_contact` below — there is no
+    staff/distributor gate here on purpose. No User is created yet, so a
+    mistyped email or an abandoned signup never leaves a stray account
+    behind; `applead_signup_verify` below is what actually creates one.
+
+    POST body (JSON): first_name, last_name, email, password,
+    business_name (optional).
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+
+    email = (data.get('email') or '').strip()
+    password = data.get('password') or ''
+    first_name = (data.get('first_name') or '').strip()
+    last_name = (data.get('last_name') or '').strip()
+    business_name = (data.get('business_name') or '').strip()
+
+    if not email:
+        return JsonResponse({'error': 'An email address is required.'}, status=400)
+    if len(password) < 8:
+        return JsonResponse(
+            {'error': 'The password must have at least 8 characters.'}, status=400)
+    if User.objects.filter(email__iexact=email).exists():
+        return JsonResponse(
+            {'error': 'An account with this email address already exists.'}, status=400)
+
+    # Drop any earlier unconsumed codes for this email so only the latest
+    # one sent is ever valid.
+    AppLeadSignupCode.objects.filter(email__iexact=email, consumed=False).delete()
+
+    code = _generate_applead_code()
+    pending = AppLeadSignupCode.objects.create(
+        email=email, password_hash=make_password(password),
+        first_name=first_name, last_name=last_name, business_name=business_name,
+        code=code, expires_at=timezone.now() + APPLEAD_CODE_LIFETIME,
+    )
+
+    try:
+        postmark = PostmarkClient(server_token=settings.POSTMARK_SERVER_API_TOKEN)
+        postmark.emails.Email(
+            From='noreply@geller.co.nz',
+            To=email,
+            Subject='Your Geller verification code',
+            TextBody=(
+                f'Hi {first_name or "there"},\n\n'
+                f'Your Geller verification code is: {code}\n\n'
+                'This code expires in 15 minutes. If you did not request '
+                'this, you can ignore this email.'
+            ),
+            ReplyTo=settings.EMAIL_ADMIN,
+        ).send()
+    except Exception as e:
+        logger.error(f"Failed to send AppLead verification email: {e}")
+        pending.delete()
+        return JsonResponse(
+            {'error': 'Could not send the verification email. Please try again.'},
+            status=502)
+
+    return JsonResponse({'success': True, 'email': email})
+
+
+@csrf_exempt
+def applead_signup_verify(request):
+    """Step 2 of self-serve AppLead signup: check the emailed code and
+    create the real User (plus its auto-created Profile, marked as an
+    applead). Returns a token immediately so the app can log the lead in
+    without a further request.
+
+    POST body (JSON): email, code.
+    """
+    if request.method != 'POST':
+        return JsonResponse({'error': 'POST required'}, status=405)
+
+    try:
+        data = json.loads(request.body)
+    except ValueError:
+        return JsonResponse({'error': 'Invalid JSON body'}, status=400)
+
+    email = (data.get('email') or '').strip()
+    code = (data.get('code') or '').strip()
+
+    pending = AppLeadSignupCode.objects.filter(
+        email__iexact=email, code=code, consumed=False,
+    ).order_by('-created_at').first()
+
+    if pending is None:
+        return JsonResponse({'error': 'That code is incorrect.'}, status=400)
+    if pending.expires_at < timezone.now():
+        return JsonResponse(
+            {'error': 'That code has expired. Please sign up again.'}, status=400)
+    if User.objects.filter(email__iexact=email).exists():
+        pending.consumed = True
+        pending.save()
+        return JsonResponse(
+            {'error': 'An account with this email address already exists.'}, status=400)
+
+    user = User.objects.create(
+        username=pending.email, email=pending.email,
+        first_name=pending.first_name, last_name=pending.last_name,
+        password=pending.password_hash,
+    )
+
+    profile = user.profile
+    profile.profileType = 'applead'
+    if pending.business_name:
+        profile.businessName = pending.business_name
+    profile.hasSetPassword = True
+    profile.save()
+
+    pending.consumed = True
+    pending.save()
+
+    token, _ = Token.objects.get_or_create(user=user)
+    return JsonResponse({
+        'success': True, 'token': token.key, 'user_id': user.id, 'email': user.email,
+        'profileType': 'applead',
+    })
 
 
 @csrf_exempt
