@@ -1,4 +1,5 @@
 # -*- coding: utf-8 -*-
+import uuid
 from decimal import Decimal
 
 from django.db import models
@@ -619,6 +620,31 @@ class AppLeadSignupCode(MyBaseModel):
 
     def __str__(self):
         return f'{self.email} ({"used" if self.consumed else "pending"})'
+
+
+class GellerAISyncRun(models.Model):
+    """Progress of one "sync all products" bulk run.
+
+    Gunicorn runs several worker processes (see Dockerfile), so a run
+    started on one worker and polled from another cannot share an
+    in-memory dict — this table is the shared state both sides read/write.
+    A run's row is small and short-lived; rows are not automatically
+    cleaned up, since the resulting table stays tiny (one row per bulk
+    click, not per product).
+    """
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    started_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True)
+    include_pdfs = models.BooleanField(default=False)
+    total = models.IntegerField(default=0)
+    processed = models.IntegerField(default=0)
+    succeeded = models.IntegerField(default=0)
+    failed = models.IntegerField(default=0)
+    errors = models.JSONField(default=list, blank=True)
+    done = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    def __str__(self):
+        return f'sync run {self.pk} ({self.processed}/{self.total})'
 
 
 # Map each model to the FileField names that hold images (not PDFs/docs).

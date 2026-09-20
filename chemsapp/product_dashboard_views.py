@@ -706,12 +706,23 @@ def _sync_product_to_geller_ai(product, user, include_pdfs):
 
     payload = {'detail': detail, 'include_pdfs': include_pdfs}
     if include_pdfs:
+        # A FieldFile can be truthy (a name is set) while the file itself is
+        # missing from storage — a stale reference to a deleted upload. Skip
+        # that one file rather than failing the whole product's sync over it.
         if product.infoSheet:
-            with product.infoSheet.open('rb') as f:
-                payload['info_sheet_b64'] = base64.b64encode(f.read()).decode('ascii')
+            try:
+                with product.infoSheet.open('rb') as f:
+                    payload['info_sheet_b64'] = base64.b64encode(f.read()).decode('ascii')
+            except (FileNotFoundError, OSError) as e:
+                logger.warning(
+                    'infoSheet missing from storage for product %s: %s', product.pk, e)
         if product.sdsSheet:
-            with product.sdsSheet.open('rb') as f:
-                payload['sds_b64'] = base64.b64encode(f.read()).decode('ascii')
+            try:
+                with product.sdsSheet.open('rb') as f:
+                    payload['sds_b64'] = base64.b64encode(f.read()).decode('ascii')
+            except (FileNotFoundError, OSError) as e:
+                logger.warning(
+                    'sdsSheet missing from storage for product %s: %s', product.pk, e)
 
     token, _ = Token.objects.get_or_create(user=user)
     response = requests.post(
