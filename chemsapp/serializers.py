@@ -173,6 +173,62 @@ class ProductVariantSerializer(serializers.ModelSerializer):
         return obj.image.url
 
 
+class ProductSyncSerializer(serializers.ModelSerializer):
+    """Payload for geller_ai's real-time product ingest endpoint.
+
+    Deliberately an explicit field allowlist, NOT a subclass of
+    ProductSerializer or ProductVariantSerializer (the latter includes
+    recommended_retail_price directly) — geller_ai must never receive
+    pricing data. Do not add recommended_retail_price, PricingVariant, or
+    GroupPricingVariant fields here, and do not import chemsapp.pricing in
+    this serializer. See product_dashboard_views.sync_product_to_geller_ai.
+    """
+    productCategory = serializers.SerializerMethodField()
+    subCategory = serializers.SerializerMethodField()
+    markets = serializers.SerializerMethodField()
+    safetyWears = serializers.SerializerMethodField()
+    sizes = serializers.SerializerMethodField()
+    variants = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Product
+        fields = (
+            'id', 'name', 'subheading', 'brand', 'productCode', 'productCodes',
+            'usageType', 'amountDesc', 'description', 'directions', 'application',
+            'procedure', 'properties',
+            'productCategory', 'subCategory', 'markets', 'safetyWears', 'sizes', 'variants',
+        )
+
+    def get_productCategory(self, obj):
+        return [c.name for c in obj.productCategory.all()]
+
+    def get_subCategory(self, obj):
+        return [c.name for c in obj.subCategory.all()]
+
+    def get_markets(self, obj):
+        return [m.name for m in obj.markets.all()]
+
+    def get_safetyWears(self, obj):
+        return [s.name for s in obj.safetyWears.all()]
+
+    def get_sizes(self, obj):
+        return [str(s) for s in obj.sizes.all()]
+
+    def get_variants(self, obj):
+        return [
+            {
+                'id': v.pk,
+                'code': v.code,
+                'size': str(v.size) if v.size else None,
+                'pack_size': v.pack_size,
+                'barcode': v.barcode,
+                'description': v.description,
+                # Never add recommended_retail_price or any other price field here.
+            }
+            for v in obj.variants.all()
+        ]
+
+
 class CustomerContactSerializer(serializers.ModelSerializer):
 
     class Meta:

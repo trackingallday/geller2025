@@ -149,6 +149,9 @@ ONEPAGECRM_USER_ID = os.getenv('ONEPAGECRM_USER_ID', '69e6e1d66d24124e94187104')
 # records the conversations (ai.AIThread / ai.AIMessage).
 GELLER_AI_ENDPOINT = os.getenv('GELLER_AI_ENDPOINT', 'http://localhost:4111')
 GELLER_AI_TIMEOUT = int(os.getenv('GELLER_AI_TIMEOUT', '300'))
+# Separate, much shorter timeout for the product dashboard's "Sync to Geller
+# AI" button — a short interactive request, not the long chat proxy above.
+GELLER_AI_SYNC_TIMEOUT = int(os.getenv('GELLER_AI_SYNC_TIMEOUT', '30'))
 
 
 # Base64 label photos proxied to the AI service exceed Django's 2.5 MB default.

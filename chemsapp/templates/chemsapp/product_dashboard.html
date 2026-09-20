@@ -698,6 +698,20 @@
                 </div>
             </div>
 
+            <div class="sync-geller-ai d-flex align-items-center gap-2 mb-3"
+                 data-url="{% url 'sync_product_to_geller_ai' product.pk %}">
+                {% csrf_token %}
+                <button type="button" class="btn btn-sm btn-outline-primary sync-geller-ai-btn">
+                    Sync to Geller AI
+                </button>
+                <label class="form-check-label small text-muted mb-0">
+                    <input type="checkbox" class="form-check-input sync-include-pdfs">
+                    Also re-extract SDS/info-sheet PDFs
+                </label>
+                <span class="sync-mark text-success small" hidden></span>
+                <span class="sync-error text-danger small" hidden></span>
+            </div>
+
             <ul class="nav nav-tabs mb-3">
                 {% for key, label in tabs %}
                     <li class="nav-item">
@@ -1158,6 +1172,61 @@
                 /* The fetch failed. Fall back to a normal post so the work
                    is not lost. */
                 form.submit();
+            });
+    });
+})();
+</script>
+
+<script>
+/* Sync to Geller AI: fetch-only, no plain-form fallback. The checkbox
+   controls whether SDS/info-sheet PDFs are re-extracted (slower) or only
+   the structured fields are sent (fast path, the default). */
+(function () {
+    var wrap = document.querySelector('.sync-geller-ai');
+    if (!wrap) { return; }
+
+    var button = wrap.querySelector('.sync-geller-ai-btn');
+    var checkbox = wrap.querySelector('.sync-include-pdfs');
+    var mark = wrap.querySelector('.sync-mark');
+    var errorEl = wrap.querySelector('.sync-error');
+    var csrfInput = wrap.querySelector('input[name=csrfmiddlewaretoken]');
+
+    button.addEventListener('click', function () {
+        button.disabled = true;
+        mark.hidden = true;
+        errorEl.hidden = true;
+
+        var body = new FormData();
+        body.append('csrfmiddlewaretoken', csrfInput.value);
+        body.append('include_pdfs', checkbox.checked ? 'true' : 'false');
+
+        fetch(wrap.dataset.url, {
+            method: 'POST',
+            body: body,
+            credentials: 'same-origin',
+            headers: {'X-Requested-With': 'XMLHttpRequest'}
+        })
+            .then(function (response) { return response.json(); })
+            .then(function (data) {
+                button.disabled = false;
+                if (data.ok) {
+                    var types = (data.chunk_types_written || []).join(', ');
+                    var text = 'Synced' + (types ? ' (' + types + ')' : '');
+                    if (data.warnings && data.warnings.length) {
+                        text += ' — with warnings';
+                    }
+                    mark.textContent = text;
+                    mark.hidden = false;
+                    setTimeout(function () { mark.hidden = true; }, 4000);
+                } else {
+                    errorEl.textContent = data.error || 'Sync failed.';
+                    errorEl.hidden = false;
+                }
+            })
+            .catch(function () {
+                button.disabled = false;
+                errorEl.textContent = 'Could not reach the server.';
+                errorEl.hidden = false;
             });
     });
 })();

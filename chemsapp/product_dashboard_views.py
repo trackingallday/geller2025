@@ -4,8 +4,12 @@ The stock admin splits a product across a product page, a variant page and a
 pricing page. This dashboard puts them on one page with five tabs, in the
 shape of the quote dashboard in quotes/dashboard_views.py.
 """
+import base64
 import json
+import logging
 
+import requests
+from django.conf import settings
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
@@ -14,6 +18,7 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 from django.urls import reverse
+from rest_framework.authtoken.models import Token
 
 from .forms import GroupPricingVariantForm, PricingVariantForm
 from .models import (
@@ -21,6 +26,9 @@ from .models import (
     PricingVariant, Product, ProductCategory, ProductEquivalency,
     ProductVariant,
 )
+from .serializers import ProductSyncSerializer
+
+logger = logging.getLogger(__name__)
 
 # Most rows a search returns. Categories are a short fixed list and ignore
 # this when nothing is typed. Customers always apply it: the table grows.
@@ -677,3 +685,65 @@ def delete_group_pricing_variant(request, group_pricing_variant_id):
         group_pricing_variant.delete()
         messages.success(request, 'Removed the group price.')
     return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
+
+
+def _sync_product_to_geller_ai(product, user, include_pdfs):
+    """Push one product's data into geller_ai's real-time ingest endpoint.
+
+    Returns the parsed JSON response on success. Raises requests.Timeout or
+    requests.RequestException on failure — callers decide how to surface
+    that (the dashboard button must not swallow it: syncing is the whole
+    point of the click, unlike the best-effort OnePageCRM integration).
+
+    The payload is built from ProductSyncSerializer, which is a hand-written
+    allowlist that never includes pricing — see that serializer's docstring.
+    Do not extend this function to pull in PricingVariant/GroupPricingVariant
+    or chemsapp.pricing.resolve_price.
+    """
+    detail = ProductSyncSerializer(product).data
+
+    payload = {'detail': detail, 'include_pdfs': include_pdfs}
+    if include_pdfs:
+        if product.infoSheet:
+            with product.infoSheet.open('rb') as f:
+                payload['info_sheet_b64'] = base64.b64encode(f.read()).decode('ascii')
+        if product.sdsSheet:
+            with product.sdsSheet.open('rb') as f:
+                payload['sds_b64'] = base64.b64encode(f.read()).decode('ascii')
+
+    token, _ = Token.objects.get_or_create(user=user)
+    response = requests.post(
+        f"{settings.GELLER_AI_ENDPOINT}/ingest/product/{product.pk}",
+        json=payload,
+        headers={'Authorization': f'Token {token.key}'},
+        timeout=settings.GELLER_AI_SYNC_TIMEOUT,
+    )
+    response.raise_for_status()
+    return response.json()
+
+
+@staff_member_required
+def sync_product_to_geller_ai(request, product_id):
+    """Push one product's current data into geller_ai's search index.
+
+    Unlike the other dashboard actions this is AJAX-only: there is no
+    plain-form fallback, since the button always posts by fetch.
+    """
+    product = get_object_or_404(Product, pk=product_id)
+    if request.method != 'POST':
+        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+
+    include_pdfs = request.POST.get('include_pdfs') == 'true'
+
+    try:
+        data = _sync_product_to_geller_ai(product, request.user, include_pdfs)
+    except requests.Timeout:
+        logger.warning('Geller AI sync timed out for product %s', product.pk)
+        return JsonResponse(
+            {'ok': False, 'error': 'Geller AI timed out. Try again.'}, status=504)
+    except requests.RequestException as e:
+        logger.warning('Geller AI sync failed for product %s: %s', product.pk, e)
+        return JsonResponse(
+            {'ok': False, 'error': 'Could not reach Geller AI.'}, status=502)
+
+    return JsonResponse(data)

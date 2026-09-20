@@ -18,6 +18,8 @@ urlpatterns = [
             name='product_dashboard'),
     re_path(r'^product-dashboard/(?P<product_id>\d+)/save-details/$',
             product_dashboard_views.save_product_details, name='save_product_details'),
+    re_path(r'^product-dashboard/(?P<product_id>\d+)/sync-geller-ai/$',
+            product_dashboard_views.sync_product_to_geller_ai, name='sync_product_to_geller_ai'),
     re_path(r'^product-dashboard/(?P<product_id>\d+)/save-compliance/$',
             product_dashboard_views.save_product_compliance, name='save_product_compliance'),
     re_path(r'^product-dashboard/(?P<product_id>\d+)/save-variants/$',
