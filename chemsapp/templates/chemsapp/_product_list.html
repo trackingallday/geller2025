@@ -11,7 +11,7 @@ alone, no tabs.
     <a href="?product={{ row.product.pk }}{% if search %}&q={{ search }}{% endif %}"
        class="product-list-item {% if product and product.pk == row.product.pk and not showing_variant %}active{% endif %}">
         <div class="d-flex justify-content-between align-items-start">
-            <strong>{{ row.product.name }}</strong>
+            <strong>{{ row.product }}</strong>
             {% if row.product.public %}
                 <span class="badge bg-success-subtle text-success border">Public</span>
             {% endif %}

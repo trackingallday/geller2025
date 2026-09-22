@@ -342,7 +342,7 @@
                             {% for group_price in group_prices %}
                                 <tr>
                                     <td>
-                                        {{ group_price.product_variant.product.name }}
+                                        {{ group_price.product_variant.product }}
                                         <span class="text-muted small">
                                             {{ group_price.product_variant.code|default:group_price.product_variant.size|default:"" }}
                                         </span>
@@ -566,7 +566,7 @@
                             {% for row in resolved_prices %}
                                 <tr>
                                     <td>
-                                        {{ row.variant.product.name }}
+                                        {{ row.variant.product }}
                                         <span class="text-muted small">
                                             {{ row.variant.code|default:row.variant.size|default:"" }}
                                         </span>

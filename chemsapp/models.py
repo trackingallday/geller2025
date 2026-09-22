@@ -182,7 +182,9 @@ class Product(models.Model):
     procedure = RichTextField(blank=True, null=True)
 
     def __str__(self):
-        return f'{self.name}'
+        if self.brand:
+            return f'({self.brand}) {self.name}'
+        return self.name
 
 
 class ProductVariant(models.Model):
