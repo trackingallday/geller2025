@@ -305,6 +305,16 @@ def product_dashboard(request):
             'subCategory': [
                 {'id': c.pk, 'name': c.name} for c in product.subCategory.all()],
         })
+        # The equivalent-product picker for each formset row needs the id and
+        # name of the product already chosen there, keyed by the row's
+        # prefix, because the widget value holds only the id.
+        context['equivalent_picker_selected'] = json.dumps({
+            form.prefix: (
+                {'id': form.instance.equivalent_product_id,
+                 'name': form.instance.equivalent_product.name}
+                if form.instance.equivalent_product_id else None)
+            for form in context['equivalency_formset']
+        })
 
     if showing_variant:
         # The variant view: one variant, full width, no tabs.
@@ -609,6 +619,35 @@ def category_search(request):
     results = [
         {'id': category.pk, 'name': category.name, 'detail': ''}
         for category in categories
+    ]
+    return JsonResponse({'results': results})
+
+
+@staff_member_required
+def product_search(request):
+    """Products matching ?q=, for the "equivalent product" picker.
+
+    ?exclude=<product id> leaves out that product, so a product cannot be
+    set as its own equivalent.
+    """
+    search = request.GET.get('q', '').strip()
+    products = Product.objects.order_by('name')
+
+    exclude_id = request.GET.get('exclude', '')
+    if exclude_id:
+        products = products.exclude(pk=exclude_id)
+
+    if search:
+        products = products.filter(
+            Q(name__icontains=search) |
+            Q(productCode__icontains=search) |
+            Q(brand__icontains=search)
+        )
+
+    products = products[:SEARCH_LIMIT]
+    results = [
+        {'id': product.pk, 'name': product.name, 'detail': product.productCode}
+        for product in products
     ]
     return JsonResponse({'results': results})
 

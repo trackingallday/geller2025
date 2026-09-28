@@ -892,7 +892,14 @@
                             {% for form in equivalency_formset %}
                                 <tr>
                                     {{ form.id }}
-                                    <td>{{ form.equivalent_product }}</td>
+                                    <td>
+                                        <div class="search-picker search-picker-single"
+                                             data-field="{{ form.equivalent_product.html_name }}"
+                                             data-url="{% url 'dashboard_product_search' %}?exclude={{ product.pk }}"
+                                             data-placeholder="Search products"
+                                             data-empty="No product chosen yet."
+                                             data-prefix="{{ form.prefix }}"></div>
+                                    </td>
                                     <td>{{ form.note }}</td>
                                     <td>
                                         {% if form.instance.pk %}
@@ -990,11 +997,18 @@
    name that the multi-select posted. */
 (function () {
     var preselected = {{ picker_selected|default:"{}"|safe }};
+    var singlePreselected = {{ equivalent_picker_selected|default:"{}"|safe }};
 
     document.querySelectorAll('.search-picker').forEach(function (root) {
         var fieldName = root.dataset.field;
         var url = root.dataset.url;
-        var chosen = (preselected[fieldName] || []).slice();
+        var single = root.classList.contains('search-picker-single');
+        var chosen = single
+            ? (function () {
+                var current = singlePreselected[root.dataset.prefix];
+                return current ? [current] : [];
+            })()
+            : (preselected[fieldName] || []).slice();
 
         root.innerHTML =
             '<input type="search" class="form-control form-control-sm picker-input"' +
@@ -1009,7 +1023,10 @@
         function renderChosen() {
             if (!chosen.length) {
                 chosenBox.innerHTML =
-                    '<span class="text-muted small">' + root.dataset.empty + '</span>';
+                    '<span class="text-muted small">' + root.dataset.empty + '</span>' +
+                    (single
+                        ? '<input type="hidden" name="' + fieldName + '" value="">'
+                        : '');
                 return;
             }
             chosenBox.innerHTML = '';
@@ -1045,9 +1062,11 @@
 
         function showResults(rows) {
             results.innerHTML = '';
-            var fresh = rows.filter(function (row) {
-                return !chosen.some(function (item) { return String(item.id) === String(row.id); });
-            });
+            var fresh = single
+                ? rows
+                : rows.filter(function (row) {
+                    return !chosen.some(function (item) { return String(item.id) === String(row.id); });
+                });
             if (!fresh.length) {
                 results.innerHTML = '<div class="customer-result text-muted">No matches.</div>';
                 results.classList.remove('d-none');
@@ -1061,7 +1080,7 @@
                     ? row.name + '<div class="detail">' + row.detail + '</div>'
                     : row.name;
                 button.addEventListener('click', function () {
-                    chosen.push({id: row.id, name: row.name});
+                    chosen = single ? [{id: row.id, name: row.name}] : chosen.concat([{id: row.id, name: row.name}]);
                     input.value = '';
                     hideResults();
                     renderChosen();

@@ -38,6 +38,8 @@ urlpatterns = [
             product_dashboard_views.customer_search, name='dashboard_customer_search'),
     re_path(r'^product-dashboard/category-search/$',
             product_dashboard_views.category_search, name='dashboard_category_search'),
+    re_path(r'^product-dashboard/product-search/$',
+            product_dashboard_views.product_search, name='dashboard_product_search'),
     re_path(r'^product-dashboard/product-list/$',
             product_dashboard_views.product_list, name='dashboard_product_list'),
     re_path(r'^product-dashboard/variant/(?P<variant_id>\d+)/save-dilutions/$',
