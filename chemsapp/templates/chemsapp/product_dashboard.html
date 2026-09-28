@@ -1084,7 +1084,11 @@
                     input.value = '';
                     hideResults();
                     renderChosen();
-                    input.focus();
+                    if (single) {
+                        input.blur();
+                    } else {
+                        input.focus();
+                    }
                 });
                 results.appendChild(button);
             });
