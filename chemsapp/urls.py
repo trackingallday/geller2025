@@ -5,7 +5,7 @@ from chemsapp.views import customers_list, products_list, sds_products, info_she
     new_product, edit_product, user_details, products_map, customers_table, customers_table_admin, distributors_list,\
     new_distributor, edit_distributor, printout, public_products, markets_list, categories_list, create_contact,\
     sizes_list, download_product_document, sds_enquire, special_customer_edit, backup_documents, \
-    applead_signup_start, applead_signup_verify
+    applead_signup_start, applead_signup_verify, applead_delete_account
 from chemsapp.wall_chart_views import wall_chart_pdf
 from chemsapp import product_dashboard_views
 from chemsapp import customer_dashboard_views
@@ -121,6 +121,7 @@ urlpatterns = [
     re_path(r'^create_contact/', create_contact, name="create_contact"),
     re_path(r'^applead_signup/start/$', applead_signup_start, name="applead_signup_start"),
     re_path(r'^applead_signup/verify/$', applead_signup_verify, name="applead_signup_verify"),
+    re_path(r'^applead/delete_account/$', applead_delete_account, name="applead_delete_account"),
     re_path(r'^markets_list/', markets_list, name="markets_list"),
     re_path(r'^categories_list/', categories_list, name="categories_list"),
     re_path(r'^sizes_list/', sizes_list, name="sizes_list"),

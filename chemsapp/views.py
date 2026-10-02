@@ -892,6 +892,81 @@ def applead_signup_verify(request):
     })
 
 
+def _applead_has_records_worth_keeping(user):
+    """True if deleting `user` would cascade-delete a business record
+    (a report, ticket, or similar) that must be kept for audit reasons.
+
+    Apple App Store Guideline 5.1.1(v) requires in-app account deletion, but
+    a plain `user.delete()` would CASCADE through `Report.prepared_by`,
+    `Ticket.created_by`/`author`/`uploaded_by`, `AIThread.user`,
+    `ReportType.created_by`, and `QuestionTemplate.created_by`. If the user
+    has left any of those behind, anonymize instead of a hard delete.
+    """
+    from ai.models import AIThread
+    from reports.models import Report, ReportType, QuestionTemplate
+    from tickets.models import Ticket, TicketReply, TicketImage
+
+    return (
+        Report.objects.filter(prepared_by=user).exists()
+        or ReportType.objects.filter(created_by=user).exists()
+        or QuestionTemplate.objects.filter(created_by=user).exists()
+        or Ticket.objects.filter(created_by=user).exists()
+        or TicketReply.objects.filter(author=user).exists()
+        or TicketImage.objects.filter(uploaded_by=user).exists()
+        or AIThread.objects.filter(user=user).exists()
+    )
+
+
+@csrf_exempt
+@api_view(['POST'])
+def applead_delete_account(request):
+    """Self-service account deletion for AppLead users (Apple App Store
+    Guideline 5.1.1(v): an app that supports account creation must also
+    support in-app account deletion).
+
+    Requires the caller's own auth token (`Authorization: Token <key>`),
+    same as `/reports/api/user/profile/`. Only deletes the caller's own
+    account, and only for an `applead` profile — this endpoint does not
+    touch customer, distributor, or admin accounts.
+
+    If the user has no reports/tickets/etc. that would be cascade-deleted
+    with them, the account is removed outright. Otherwise, personal fields
+    are scrubbed and the account is deactivated, so the audit trail those
+    records are part of survives. Either way, login is no longer possible
+    and the auth token is destroyed.
+
+    POST /applead/delete_account/ (no body required).
+    """
+    user = request.user
+    profile = getattr(user, 'profile', None)
+
+    if profile is None or profile.profileType != 'applead':
+        return JsonResponse(
+            {'error': 'This endpoint is only for AppLead accounts.'}, status=403)
+
+    user_id = user.id
+    if _applead_has_records_worth_keeping(user):
+        placeholder_email = f'deleted-user-{user_id}@geller.invalid'
+        user.first_name = ''
+        user.last_name = ''
+        user.email = placeholder_email
+        user.username = placeholder_email
+        user.is_active = False
+        user.set_unusable_password()
+        user.save()
+
+        profile.phoneNumber = ''
+        profile.cellPhoneNumber = ''
+        profile.businessName = ''
+        profile.address = ''
+        profile.save()
+        Token.objects.filter(user=user).delete()
+    else:
+        user.delete()
+
+    return JsonResponse({'success': True})
+
+
 @csrf_exempt
 def create_contact(request):
     b = json.loads(request.GET['data'])
