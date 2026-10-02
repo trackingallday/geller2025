@@ -968,6 +968,40 @@ def applead_delete_account(request):
 
 
 @csrf_exempt
+@api_view(['POST'])
+def applead_update_profile(request):
+    """Self-service name update for AppLead users.
+
+    Requires the caller's own auth token, same as `applead_delete_account`.
+    Only updates the caller's own `applead` profile. Business name, email,
+    and password are not editable here.
+
+    POST /applead/update_profile/ {"first_name": "...", "last_name": "..."}
+    """
+    user = request.user
+    profile = getattr(user, 'profile', None)
+
+    if profile is None or profile.profileType != 'applead':
+        return JsonResponse(
+            {'error': 'This endpoint is only for AppLead accounts.'}, status=403)
+
+    first_name = (request.data.get('first_name') or '').strip()
+    last_name = (request.data.get('last_name') or '').strip()
+
+    if not first_name or not last_name:
+        return JsonResponse(
+            {'error': 'First and last name are required.'}, status=400)
+
+    user.first_name = first_name
+    user.last_name = last_name
+    user.save()
+
+    return JsonResponse({
+        'success': True, 'first_name': user.first_name, 'last_name': user.last_name,
+    })
+
+
+@csrf_exempt
 def create_contact(request):
     b = json.loads(request.GET['data'])
 
