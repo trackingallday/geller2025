@@ -7,7 +7,8 @@ import pytz
 from chemsapp.models import SafetyWear, Distributor, Customer, Profile,\
     Product, ProductAdd, ProductRemove, ProductCategory, Post, MarketCategory, Config, Contact, Size,\
     MarketSector, MarketSectorSection, NewsArticle, ProductVariant, CustomerProductVariant, CustomerContact,\
-    ApplicationType, DilutionVariant, PricingVariant, GroupPricingVariant, ProductEquivalency, CustomerGroup
+    ApplicationType, DilutionVariant, PricingVariant, GroupPricingVariant, ProductEquivalency, CustomerGroup,\
+    AppLeadSignupCode
 from import_export.admin import ImportExportModelAdmin
 from import_export import resources
 from .forms import ProductCategoryForm, PostForm, SpecialPostForm, DistributorAdminForm, DistributorUserInlineForm, ProductForm,\
@@ -522,7 +523,17 @@ class ProductVariantAdmin(admin.ModelAdmin):
 
 
 class ProfileAdmin(ImportExportModelAdmin):
-    pass
+    list_display = ['user', 'profileType', 'businessName', 'phoneNumber', 'created_at']
+    list_filter = ['profileType']
+    search_fields = ['user__username', 'user__email', 'businessName', 'phoneNumber']
+    autocomplete_fields = ['user']
+
+
+class AppLeadSignupCodeAdmin(admin.ModelAdmin):
+    list_display = ['email', 'first_name', 'last_name', 'business_name', 'consumed', 'expires_at', 'created_at']
+    list_filter = ['consumed']
+    search_fields = ['email', 'first_name', 'last_name', 'business_name']
+    readonly_fields = ['password_hash']
 
 
 class CategoryAdmin(ImportExportModelAdmin):
@@ -647,6 +658,7 @@ admin.site.register(PricingVariant, PricingVariantAdmin)
 admin.site.register(GroupPricingVariant, GroupPricingVariantAdmin)
 admin.site.register(ApplicationType, ApplicationTypeAdmin)
 admin.site.register(Profile, ProfileAdmin)
+admin.site.register(AppLeadSignupCode, AppLeadSignupCodeAdmin)
 admin.site.register(ProductCategory, CategoryAdmin)
 admin.site.register(Post, PostAdmin)
 admin.site.register(NewsArticle, NewsPostAdmin)
