@@ -73,7 +73,7 @@
                             </h6>
                             <p class="card-text small text-muted">
                                 {{ report.report_type.name }}<br>
-                                {% if report.customer %}{{ report.customer.businessName }}{% endif %}<br>
+                                {% if report.customer %}{{ report.customer.businessName }}{% elif report.prospect %}{{ report.prospect.business_name }}{% endif %}<br>
                                 <small>{{ report.pdf_generated_at|date:"M d, Y" }}</small>
                             </p>
                         </div>

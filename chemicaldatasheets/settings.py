@@ -145,6 +145,11 @@ ONEPAGECRM_ENDPOINT = os.getenv('ONEPAGECRM_ENDPOINT', 'https://app.onepagecrm.c
 ONEPAGECRM_API_KEY = os.getenv('ONEPAGECRM_API_KEY', 'Nprht0mvpI4AB2Sa4KEoE5K9C9E0qTYwhDoGBZKwcgI=')
 ONEPAGECRM_USER_ID = os.getenv('ONEPAGECRM_USER_ID', '69e6e1d66d24124e94187104')
 
+# Where Site Assessment report submissions are emailed. Defaults to a test
+# inbox — set SITE_ASSESSMENT_SALES_EMAIL in the environment to switch to
+# sales@geller.co.nz once the client is ready to go live.
+SITE_ASSESSMENT_SALES_EMAIL = os.getenv('SITE_ASSESSMENT_SALES_EMAIL', 'rimu.boddy@gmail.com')
+
 # Geller AI (Mastra) service — the /ai/ proxy forwards requests here and
 # records the conversations (ai.AIThread / ai.AIMessage).
 GELLER_AI_ENDPOINT = os.getenv('GELLER_AI_ENDPOINT', 'http://localhost:4111')
@@ -315,6 +320,8 @@ POSTMARK_SERVER_API_TOKEN="67a52ab6-6b27-4b86-82fd-1388ed4dcfdb"
 # Trust the X-Forwarded-Proto header from Railway's proxy so request.build_absolute_uri()
 # returns https:// URLs instead of http://.
 SECURE_PROXY_SSL_HEADER = ('HTTP_X_FORWARDED_PROTO', 'https')
+#this is a demo key but no need to upgrade
+GOOGLE_API_KEY="AIzaSyCnLWwirNdMCLpVPpId9NqJ3qYcwYubCjQ"
 
 '''If you are runnig Django on Apache using mod_wsgi you have to add
 WSGIPassAuthorization On

@@ -34,6 +34,15 @@
                         </div>
 
                         <div class="mb-3">
+                            <label for="{{ form.category.id_for_label }}" class="form-label">Category</label>
+                            {{ form.category }}
+                            {% if form.category.errors %}
+                                <div class="text-danger small">{{ form.category.errors.0 }}</div>
+                            {% endif %}
+                            <div class="form-text">Standard reports are for existing customers. Site Assessments are for prospective businesses and are pushed to the CRM/sales on submission.</div>
+                        </div>
+
+                        <div class="mb-3">
                             <label for="{{ form.auto_number_prefix.id_for_label }}" class="form-label">Auto Number Prefix</label>
                             {{ form.auto_number_prefix }}
                             {% if form.auto_number_prefix.errors %}

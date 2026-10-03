@@ -10,7 +10,7 @@ import json
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
     Report, Answer, AnswerAttachment, ConditionalRule, ReportTypeCustomer, ReportTypeDistributor,
-    QuestionTemplate, ComplianceManager
+    QuestionTemplate, ComplianceManager, Prospect
 )
 from chemsapp.models import Customer
 
@@ -49,10 +49,17 @@ class ReportTypeDistributorInline(admin.TabularInline):
     readonly_fields = ('assigned_date', 'assigned_by')
 
 
+@admin.register(Prospect)
+class ProspectAdmin(admin.ModelAdmin):
+    list_display = ('business_name', 'address', 'phone', 'created_by', 'created_at')
+    search_fields = ('business_name', 'address', 'phone', 'google_place_id')
+    readonly_fields = ('created_at', 'updated_at')
+
+
 @admin.register(ReportType)
 class ReportTypeAdmin(admin.ModelAdmin):
-    list_display = ('name', 'auto_number_prefix', 'assigned_customers_count', 'assigned_distributors_count', 'is_active', 'created_by', 'created_at')
-    list_filter = ('is_active', 'created_at')
+    list_display = ('name', 'category', 'auto_number_prefix', 'assigned_customers_count', 'assigned_distributors_count', 'is_active', 'created_by', 'created_at')
+    list_filter = ('category', 'is_active', 'created_at')
     search_fields = ('name', 'description')
     inlines = [ReportSectionInline, QuestionInline, ReportTypeCustomerInline, ReportTypeDistributorInline]
     
@@ -236,17 +243,26 @@ class AnswerInline(admin.TabularInline):
 
 @admin.register(Report)
 class ReportAdmin(admin.ModelAdmin):
-    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'compliance_manager_display', 'status', 'prepared_by', 'inspection_date', 'images_count', 'pdf_status', 'pdf_download_link', 'completed_reports_link')
+    """Manage existing reports (view/edit/filter) only.
+
+    Reports are always created through the website (reports:report_create)
+    or the mobile API (create_report_api) — never through this admin, so
+    add is disabled rather than maintained as a second, unused creation path.
+    """
+    list_display = ('document_number', 'report_type', 'customer', 'distributor', 'prospect', 'compliance_manager_display', 'status', 'prepared_by', 'inspection_date', 'images_count', 'pdf_status', 'pdf_download_link', 'completed_reports_link')
     list_filter = ('status', 'report_type', 'inspection_date', 'created_at', 'pdf_needs_regeneration', 'compliance_manager')
-    search_fields = ('document_number', 'customer__businessName', 'distributor__businessname', 'store_compliance_manager', 'compliance_manager__name')
+    search_fields = ('document_number', 'customer__businessName', 'distributor__businessname', 'prospect__business_name', 'store_compliance_manager', 'compliance_manager__name')
     readonly_fields = ('document_number', 'created_at', 'updated_at', 'pdf_generated_at', 'pdf_download_button', 'regenerate_pdf_button', 'images_summary', 'completed_reports_view_button')
     inlines = [AnswerInline]
 
+    def has_add_permission(self, request):
+        return False
+
     actions = ['generate_pdfs', 'regenerate_pdfs']
-    
+
     fieldsets = (
         ('Report Information', {
-            'fields': ('document_number', 'report_type', 'customer', 'distributor', 'completed_reports_view_button')
+            'fields': ('document_number', 'report_type', 'customer', 'distributor', 'prospect', 'completed_reports_view_button')
         }),
         ('Report Details', {
             'fields': ('compliance_manager', 'store_compliance_manager', 'inspection_date', 'prepared_by')
@@ -305,6 +321,8 @@ class ReportAdmin(admin.ModelAdmin):
     completed_reports_link.short_description = 'View'
 
     def pdf_download_button(self, obj):
+        if not obj.pk:
+            return "Save the report first."
         if obj.pdf_file:
             download_url = reverse('admin:reports_report_pdf_download', args=[obj.pk])
             return format_html(
@@ -321,6 +339,8 @@ class ReportAdmin(admin.ModelAdmin):
     pdf_download_button.short_description = 'PDF Download'
 
     def regenerate_pdf_button(self, obj):
+        if not obj.pk:
+            return "Save the report first."
         regenerate_url = reverse('admin:reports_report_regenerate_pdf', args=[obj.pk])
         return format_html(
             '<a href="{}" class="button" onclick="return confirm(\'Regenerate PDF for this report?\')">Regenerate PDF</a>',
@@ -330,6 +350,8 @@ class ReportAdmin(admin.ModelAdmin):
 
     def completed_reports_view_button(self, obj):
         """Large button to view report in Completed Reports interface"""
+        if not obj.pk:
+            return "Save the report first."
         completed_url = reverse('reports:completed_report_detail', args=[obj.pk])
         return format_html(
             '<a href="{}" target="_blank" class="button default" style="font-size: 14px; padding: 10px 20px;">'

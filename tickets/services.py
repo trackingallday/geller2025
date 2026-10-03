@@ -16,6 +16,8 @@ def _build_flagged_body(report, flagged_answers):
     ]
     if report.customer:
         lines.append(f"Customer: {report.customer.businessName}")
+    elif report.prospect:
+        lines.append(f"Prospect: {report.prospect.business_name}")
     lines.append(f"Inspection date: {report.inspection_date}")
     lines.append("")
     lines.append("Flagged items:")

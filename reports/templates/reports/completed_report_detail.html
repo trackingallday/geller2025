@@ -54,11 +54,29 @@
                             <td>
                                 {% if report.customer %}
                                     {{ report.customer.businessName }}
+                                {% elif report.prospect %}
+                                    {{ report.prospect.business_name }} <span class="text-muted">(prospect)</span>
                                 {% else %}
                                     <span class="text-muted">Not specified</span>
                                 {% endif %}
                             </td>
                         </tr>
+                        {% if report.prospect %}
+                        <tr>
+                            <th>Address:</th>
+                            <td>{{ report.prospect.address|default:"-" }}</td>
+                        </tr>
+                        <tr>
+                            <th>Phone:</th>
+                            <td>{{ report.prospect.phone|default:"-" }}</td>
+                        </tr>
+                        {% if report.prospect.maps_link %}
+                        <tr>
+                            <th>Map:</th>
+                            <td><a href="{{ report.prospect.maps_link }}" target="_blank">{{ report.prospect.maps_link }}</a></td>
+                        </tr>
+                        {% endif %}
+                        {% endif %}
                         <tr>
                             <th>Distributor:</th>
                             <td>

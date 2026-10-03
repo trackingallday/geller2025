@@ -131,6 +131,8 @@
                                             <td>
                                                 {% if report.customer %}
                                                     {{ report.customer.businessName }}
+                                                {% elif report.prospect %}
+                                                    {{ report.prospect.business_name }}
                                                 {% else %}
                                                     <span class="text-muted">-</span>
                                                 {% endif %}

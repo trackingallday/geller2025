@@ -3,7 +3,7 @@ from django.contrib.auth.models import User
 from chemsapp.models import Customer, Distributor, CustomerContact
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
-    Report, Answer, AnswerAttachment, ComplianceManager, QUESTION_TYPES
+    Report, Answer, AnswerAttachment, ComplianceManager, Prospect, QUESTION_TYPES
 )
 import base64
 import io
@@ -143,7 +143,7 @@ class ReportTypeSerializer(serializers.ModelSerializer):
     class Meta:
         model = ReportType
         fields = [
-            'id', 'name', 'description', 'auto_number_prefix', 'is_active',
+            'id', 'name', 'description', 'category', 'auto_number_prefix', 'is_active',
             'created_by', 'created_at', 'sections', 'questions',
             'assigned_customers', 'assigned_distributors'
         ]
@@ -274,11 +274,24 @@ class ReportListSerializer(serializers.ModelSerializer):
         return None
 
 
+class ProspectSerializer(serializers.ModelSerializer):
+    """Serializer for a prospective (not-yet-customer) business captured during a Site Assessment"""
+
+    class Meta:
+        model = Prospect
+        fields = [
+            'id', 'business_name', 'address', 'phone',
+            'google_place_id', 'maps_link', 'notes',
+        ]
+        read_only_fields = ['id']
+
+
 class ReportSerializer(serializers.ModelSerializer):
     """Full report serializer with all data"""
     report_type = ReportTypeSerializer(read_only=True)
     customer = CustomerSerializer(read_only=True)
     distributor = DistributorSerializer(read_only=True)
+    prospect = ProspectSerializer(read_only=True)
     compliance_manager_obj = ComplianceManagerSerializer(source='compliance_manager', read_only=True)
     compliance_manager_name = serializers.CharField(read_only=True)
     prepared_by = UserSerializer(read_only=True)
@@ -289,7 +302,7 @@ class ReportSerializer(serializers.ModelSerializer):
     class Meta:
         model = Report
         fields = [
-            'id', 'document_number', 'report_type', 'customer', 'distributor',
+            'id', 'document_number', 'report_type', 'customer', 'distributor', 'prospect',
             'compliance_manager', 'compliance_manager_obj', 'store_compliance_manager',
             'compliance_manager_name', 'inspection_date', 'prepared_by',
             'status', 'status_display', 'submitted_at', 'reviewed_by',
@@ -301,34 +314,61 @@ class ReportSerializer(serializers.ModelSerializer):
 class ReportSubmissionSerializer(serializers.ModelSerializer):
     """Serializer for submitting complete report with answers"""
     answers = AnswerSerializer(many=True, write_only=True)
+    prospect = ProspectSerializer(required=False, allow_null=True)
 
     class Meta:
         model = Report
         fields = [
-            'id', 'customer', 'distributor', 'compliance_manager',
+            'id', 'customer', 'distributor', 'prospect', 'compliance_manager',
             'store_compliance_manager', 'inspection_date', 'answers'
         ]
         read_only_fields = ['id']
-    
+
+    def _resolve_prospect(self, prospect_data, created_by):
+        """Create a Prospect, reusing an existing one by google_place_id when present."""
+        if not prospect_data:
+            return None
+
+        place_id = prospect_data.get('google_place_id')
+        if place_id:
+            existing = Prospect.objects.filter(google_place_id=place_id).first()
+            if existing:
+                for attr, value in prospect_data.items():
+                    setattr(existing, attr, value)
+                existing.save()
+                return existing
+
+        return Prospect.objects.create(created_by=created_by, **prospect_data)
+
     def create(self, validated_data):
         """Create report with all answers"""
         answers_data = validated_data.pop('answers', [])
-        
+        prospect_data = validated_data.pop('prospect', None)
+
+        validated_data['prospect'] = self._resolve_prospect(
+            prospect_data, validated_data.get('prepared_by')
+        )
+
         # Create the report
         report = Report.objects.create(**validated_data)
-        
+
         # Create answers
         for answer_data in answers_data:
             answer_serializer = AnswerSerializer(data=answer_data)
             if answer_serializer.is_valid():
                 answer_serializer.save(report=report)
-        
+
         return report
     
     def update(self, instance, validated_data):
         """Update report and all answers"""
         answers_data = validated_data.pop('answers', [])
-        
+        if 'prospect' in validated_data:
+            prospect_data = validated_data.pop('prospect')
+            validated_data['prospect'] = self._resolve_prospect(
+                prospect_data, instance.prepared_by
+            )
+
         # Update report fields
         for attr, value in validated_data.items():
             setattr(instance, attr, value)

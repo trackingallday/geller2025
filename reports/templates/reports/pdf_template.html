@@ -26,6 +26,8 @@
                 {{ report.customer.businessName }} / {{ report.report_type.name }}
             {% elif report.distributor %}
                 {{ report.distributor.businessname }} / {{ report.report_type.name }}
+            {% elif report.prospect %}
+                {{ report.prospect.business_name }} / {{ report.report_type.name }}
             {% endif %}
         </div>
 
@@ -55,11 +57,33 @@
                         {{ report.customer.businessName }}
                     {% elif report.distributor %}
                         {{ report.distributor.businessname }}
+                    {% elif report.prospect %}
+                        {{ report.prospect.business_name }}
                     {% else %}
                         N/A
                     {% endif %}
                 </td>
             </tr>
+            {% if report.prospect %}
+                {% if report.prospect.address %}
+                <tr>
+                    <td class="label">Address</td>
+                    <td class="value">{{ report.prospect.address }}</td>
+                </tr>
+                {% endif %}
+                {% if report.prospect.phone %}
+                <tr>
+                    <td class="label">Phone</td>
+                    <td class="value">{{ report.prospect.phone }}</td>
+                </tr>
+                {% endif %}
+                {% if report.prospect.maps_link %}
+                <tr>
+                    <td class="label">Map</td>
+                    <td class="value"><a href="{{ report.prospect.maps_link }}">{{ report.prospect.maps_link }}</a></td>
+                </tr>
+                {% endif %}
+            {% endif %}
             {% if report.compliance_manager_name %}
             <tr>
                 <td class="label">Compliance Manager</td>
@@ -248,6 +272,11 @@
                 {% if report.customer %}
                     <div class="signature-info" style="margin-top: 20px;">
                         {{ report.customer.businessName }}<br>
+                        {{ report.submitted_at|date:"d.m.Y H:i" }} NZST
+                    </div>
+                {% elif report.prospect %}
+                    <div class="signature-info" style="margin-top: 20px;">
+                        {{ report.prospect.business_name }}<br>
                         {{ report.submitted_at|date:"d.m.Y H:i" }} NZST
                     </div>
                 {% endif %}

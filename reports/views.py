@@ -17,15 +17,20 @@ from chemsapp.models import Customer, Distributor
 
 @login_required
 def report_type_list(request):
-    """List all report types"""
-    report_types = ReportType.objects.filter(is_active=True).order_by('-created_at')
+    """List all report types, separated into Standard and Site Assessment tabs"""
+    category = request.GET.get('category', 'standard')
+    if category not in ('standard', 'site_assessment'):
+        category = 'standard'
+
+    report_types = ReportType.objects.filter(is_active=True, category=category).order_by('-created_at')
     paginator = Paginator(report_types, 10)
     page_number = request.GET.get('page')
     page_obj = paginator.get_page(page_number)
-    
+
     context = {
         'page_obj': page_obj,
-        'title': 'Report Types'
+        'title': 'Report Types',
+        'active_category': category,
     }
     return render(request, 'reports/report_type_list.html', context)
 

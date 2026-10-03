@@ -33,14 +33,21 @@ class ReportStatus:
     REJECTED = 'rejected'
 
 
+REPORT_TYPE_CATEGORIES = [
+    ('standard', 'Standard Report'),
+    ('site_assessment', 'Site Assessment'),
+]
+
+
 class ReportType(MyBaseModel):
     """Template for different types of reports (Monthly Audit, Equipment Check, etc.)"""
     name = models.CharField(max_length=255)
     description = models.TextField(blank=True, null=True)
+    category = models.CharField(max_length=20, choices=REPORT_TYPE_CATEGORIES, default='standard', help_text="Standard reports are filled out for existing customers. Site Assessments are for prospective businesses and are pushed to the CRM/sales on submission.")
     auto_number_prefix = models.CharField(max_length=10, blank=True, null=True, help_text="Prefix for auto-generated document numbers")
     is_active = models.BooleanField(default=True)
     created_by = models.ForeignKey(User, on_delete=models.CASCADE)
-    
+
     class Meta:
         ordering = ['name']
     
@@ -214,15 +221,38 @@ class QuestionOption(MyBaseModel):
         return f"{self.question.question_text[:30]}... - {self.text}"
 
 
+class Prospect(MyBaseModel):
+    """A business that is not (yet) a Geller customer, captured during a Site Assessment.
+
+    Filled in from a Google Places lookup (business_name, address, maps_link,
+    google_place_id) or entered manually (notes) when no Place match is used.
+    """
+    business_name = models.CharField(max_length=255)
+    address = models.CharField(max_length=500, blank=True, default='')
+    phone = models.CharField(max_length=100, blank=True, default='')
+    google_place_id = models.CharField(max_length=255, blank=True, default='', help_text="Google Places place_id, if the business was found via search")
+    maps_link = models.URLField(max_length=1000, blank=True, default='', help_text="Link to view this business on Google Maps")
+    notes = models.TextField(blank=True, default='')
+    created_by = models.ForeignKey(User, on_delete=models.SET_NULL, null=True, blank=True, related_name='prospects_created')
+
+    class Meta:
+        ordering = ['business_name']
+
+    def __str__(self):
+        return self.business_name
+
+
 class Report(MyBaseModel):
     """Instance of a filled report"""
     report_type = models.ForeignKey(ReportType, on_delete=models.CASCADE, related_name='reports')
     document_number = models.CharField(max_length=50, unique=True)
-    
+
     # Link to existing customer/distributor system
     customer = models.ForeignKey(Customer, on_delete=models.CASCADE, related_name='reports', blank=True, null=True)
     distributor = models.ForeignKey(Distributor, on_delete=models.CASCADE, related_name='reports', blank=True, null=True)
-    
+    # Link to a prospective (not-yet-customer) business, used by Site Assessment reports
+    prospect = models.ForeignKey(Prospect, on_delete=models.SET_NULL, related_name='reports', blank=True, null=True)
+
     # Report metadata
     compliance_manager = models.ForeignKey('ComplianceManager', on_delete=models.SET_NULL, blank=True, null=True, related_name='reports', help_text="Select a compliance manager from the customer's list")
     store_compliance_manager = models.CharField(max_length=255, blank=True, null=True, help_text="Manual entry for compliance manager name (used if no compliance manager is selected)")
@@ -239,6 +269,10 @@ class Report(MyBaseModel):
     pdf_file = models.FileField(upload_to='report_pdfs/', blank=True, null=True, help_text="Generated PDF of the report")
     pdf_generated_at = models.DateTimeField(blank=True, null=True)
     pdf_needs_regeneration = models.BooleanField(default=True, help_text="True if PDF needs to be regenerated due to changes")
+
+    # Site Assessment lead routing (set once pushed, so submission is idempotent)
+    crm_pushed_at = models.DateTimeField(blank=True, null=True, help_text="When this report was pushed to OnePageCRM as a lead")
+    sales_emailed_at = models.DateTimeField(blank=True, null=True, help_text="When this report was emailed to sales@geller.co.nz")
     
     class Meta:
         ordering = ['-created_at']
@@ -293,6 +327,34 @@ class Report(MyBaseModel):
             logging.getLogger('django').exception(
                 "Failed to create flagged-report ticket for report %s", self.pk
             )
+
+        # Site Assessments are leads: push to the CRM and notify sales.
+        # Each side effect is isolated and idempotent so a retry/duplicate
+        # submission never creates duplicate CRM contacts or emails.
+        if self.report_type.category == 'site_assessment':
+            from .services import push_site_assessment_to_onepagecrm, email_site_assessment_to_sales
+            import logging
+            logger = logging.getLogger('django')
+
+            if not self.crm_pushed_at:
+                try:
+                    push_site_assessment_to_onepagecrm(self)
+                    self.crm_pushed_at = timezone.now()
+                    self.save(update_fields=['crm_pushed_at'])
+                except Exception:
+                    logger.exception(
+                        "Failed to push site assessment report %s to OnePageCRM", self.pk
+                    )
+
+            if not self.sales_emailed_at:
+                try:
+                    email_site_assessment_to_sales(self)
+                    self.sales_emailed_at = timezone.now()
+                    self.save(update_fields=['sales_emailed_at'])
+                except Exception:
+                    logger.exception(
+                        "Failed to email site assessment report %s to sales", self.pk
+                    )
 
     @property
     def compliance_manager_name(self):
