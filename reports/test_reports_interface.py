@@ -86,8 +86,8 @@ class ReportsInterfaceTestCase(LiveServerTestCase):
         )
         
         self.distributor = Distributor.objects.create(
-            businessName=f'Test Distributor {test_id}',
-            phoneNumber='555-5678',
+            businessname=f'Test Distributor {test_id}',
+            phonenumber='555-5678',
             address='456 Distributor Ave'
         )
         self.distributor.users.add(self.distributor_user)
@@ -137,7 +137,25 @@ class ReportsInterfaceTestCase(LiveServerTestCase):
             is_required=True,
             order=3
         )
-    
+
+        self.login_user()
+
+    def login_user(self, username=None, password='testpass123'):
+        """Log the admin user into the site so @login_required views are reachable."""
+        if username is None:
+            username = self.admin_user.username
+
+        self.selenium.get(f'{self.live_server_url}/admin/login/')
+        username_input = self.selenium.find_element(By.NAME, 'username')
+        password_input = self.selenium.find_element(By.NAME, 'password')
+        username_input.send_keys(username)
+        password_input.send_keys(password)
+        self.selenium.find_element(By.XPATH, '//input[@value="Log in"]').click()
+
+        WebDriverWait(self.selenium, 10).until(
+            EC.presence_of_element_located((By.CLASS_NAME, 'dashboard'))
+        )
+
     def test_reports_homepage_loads(self):
         """Test that the reports homepage loads correctly."""
         print("🏠 Testing reports homepage...")
@@ -475,8 +493,8 @@ class QuickFunctionalTest(LiveServerTestCase):
         )
         
         distributor = Distributor.objects.create(
-            businessName='Quick Test Distributor',
-            phoneNumber='555-5678',
+            businessname='Quick Test Distributor',
+            phonenumber='555-5678',
             address='456 Quick Ave'
         )
         distributor.users.add(distributor_user)

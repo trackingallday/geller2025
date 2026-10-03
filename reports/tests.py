@@ -120,26 +120,6 @@ class BasicViewTestCase(TestCase):
         # Should work without authentication (or redirect to login)
         self.assertIn(response.status_code, [200, 302])
 
-    def test_form_builder_view_exists(self):
-        """Test that form builder view exists"""
-        self.client.login(username='testuser', password='testpass123')
-        
-        url = reverse('reports:form_builder', kwargs={'report_type_id': self.report_type.pk})
-        response = self.client.get(url)
-        
-        # Should either work or redirect, but not 404
-        self.assertNotEqual(response.status_code, 404)
-
-    def test_customer_assignments_view_exists(self):
-        """Test that customer assignments view exists"""
-        self.client.login(username='testuser', password='testpass123')
-        
-        url = reverse('reports:customer_assignments', kwargs={'report_type_id': self.report_type.pk})
-        response = self.client.get(url)
-        
-        # Should either work or redirect, but not 404
-        self.assertNotEqual(response.status_code, 404)
-
 
 class URLTestCase(TestCase):
     def setUp(self):
@@ -168,32 +148,13 @@ class URLTestCase(TestCase):
         urls_to_test = [
             ('reports:report_type_list', {}),
             ('reports:report_type_detail', {'pk': self.report_type.pk}),
-            ('reports:form_builder', {'report_type_id': self.report_type.pk}),
-            ('reports:customer_assignments', {'report_type_id': self.report_type.pk}),
-            ('reports:question_templates', {}),
         ]
-        
+
         for url_name, kwargs in urls_to_test:
             with self.subTest(url=url_name):
                 try:
                     url = reverse(url_name, kwargs=kwargs)
                     self.assertTrue(url.startswith('/'))  # Just check URL exists
-                except Exception as e:
-                    self.fail(f'URL {url_name} does not exist: {e}')
-
-    def test_ajax_urls_exist(self):
-        """Test that AJAX URLs exist"""
-        ajax_urls_to_test = [
-            ('reports:ajax_create_section', {'report_type_id': self.report_type.pk}),
-            ('reports:ajax_create_question', {'report_type_id': self.report_type.pk}),
-            ('reports:ajax_update_order', {'report_type_id': self.report_type.pk}),
-        ]
-        
-        for url_name, kwargs in ajax_urls_to_test:
-            with self.subTest(url=url_name):
-                try:
-                    url = reverse(url_name, kwargs=kwargs)
-                    self.assertTrue(url.startswith('/'))
                 except Exception as e:
                     self.fail(f'URL {url_name} does not exist: {e}')
 

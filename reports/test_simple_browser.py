@@ -54,8 +54,8 @@ class SimpleReportTest(TransactionTestCase):
         )
         
         self.distributor = Distributor.objects.create(
-            businessName='Test Distributor Inc',
-            phoneNumber='555-5678',
+            businessname='Test Distributor Inc',
+            phonenumber='555-5678',
             address='456 Distributor Ave'
         )
         self.distributor.users.add(self.distributor_user)
