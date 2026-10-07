@@ -199,6 +199,7 @@ def report_type_duplicate(request, pk):
         initial_data = {
             'name': f"{original_report_type.name} (Copy)",
             'description': original_report_type.description,
+            'category': original_report_type.category,
             'auto_number_prefix': f"{original_report_type.auto_number_prefix}C" if original_report_type.auto_number_prefix else None,
             'is_active': original_report_type.is_active
         }

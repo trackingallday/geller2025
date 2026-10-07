@@ -71,9 +71,10 @@ def push_site_assessment_to_onepagecrm(report):
 def email_site_assessment_to_sales(report):
     """Email a submitted Site Assessment report (with PDF) to the sales inbox.
 
-    Recipient is SITE_ASSESSMENT_SALES_EMAIL (settings) so it can be pointed
-    at sales@geller.co.nz in production without a code change. Raises on
-    failure — the caller (Report.mark_submitted) catches and logs.
+    Recipient is SITE_ASSESSMENT_SALES_EMAIL (settings), which defaults to
+    sales@geller.co.nz. Change the inbox with that environment variable, not
+    with a code change. Raises on failure — the caller
+    (Report.mark_submitted) catches and logs.
     """
     from .api_views import send_report_email
 

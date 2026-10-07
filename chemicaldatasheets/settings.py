@@ -145,10 +145,9 @@ ONEPAGECRM_ENDPOINT = os.getenv('ONEPAGECRM_ENDPOINT', 'https://app.onepagecrm.c
 ONEPAGECRM_API_KEY = os.getenv('ONEPAGECRM_API_KEY', 'Nprht0mvpI4AB2Sa4KEoE5K9C9E0qTYwhDoGBZKwcgI=')
 ONEPAGECRM_USER_ID = os.getenv('ONEPAGECRM_USER_ID', '69e6e1d66d24124e94187104')
 
-# Where Site Assessment report submissions are emailed. Defaults to a test
-# inbox — set SITE_ASSESSMENT_SALES_EMAIL in the environment to switch to
-# sales@geller.co.nz once the client is ready to go live.
-SITE_ASSESSMENT_SALES_EMAIL = os.getenv('SITE_ASSESSMENT_SALES_EMAIL', 'rimu.boddy@gmail.com')
+# Where Site Assessment report submissions are emailed. Set
+# SITE_ASSESSMENT_SALES_EMAIL in the environment to use a different inbox.
+SITE_ASSESSMENT_SALES_EMAIL = os.getenv('SITE_ASSESSMENT_SALES_EMAIL', 'sales@geller.co.nz')
 
 # Geller AI (Mastra) service — the /ai/ proxy forwards requests here and
 # records the conversations (ai.AIThread / ai.AIMessage).

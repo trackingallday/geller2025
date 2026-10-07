@@ -21,6 +21,10 @@ postgres. Always give a settings module for local work.
 
 Start the server on the local `geller1` database:
 
+curl -s -X POST https://admin.geller.co.nz/get_auth_token/ \
+  -H "Content-Type: application/json" \
+  -d '{"username": "adminrimu", "password": "SouthernWare400!"}'
+
 ```
 .venv/bin/python manage.py runserver 8912 --settings=chemicaldatasheets.settings_dev
 ```
