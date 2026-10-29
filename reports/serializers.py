@@ -133,30 +133,25 @@ class ReportSectionSerializer(serializers.ModelSerializer):
 
 
 class ReportTypeSerializer(serializers.ModelSerializer):
-    """Serializer for report type structure"""
+    """Serializer for report type structure.
+
+    This serializer does not include the assigned customers or the assigned
+    distributors. A report type can have many assigned customers. Each one
+    added a query for its user, its compliance managers and its contacts.
+    This made the mobile report type screen take minutes to load. No client
+    reads these two fields. To find the customers for a report type, use
+    ReportType.get_assigned_customers().
+    """
     sections = ReportSectionSerializer(many=True, read_only=True)
     questions = QuestionSerializer(many=True, read_only=True)
     created_by = UserSerializer(read_only=True)
-    assigned_customers = serializers.SerializerMethodField()
-    assigned_distributors = serializers.SerializerMethodField()
 
     class Meta:
         model = ReportType
         fields = [
             'id', 'name', 'description', 'category', 'auto_number_prefix', 'is_active',
             'created_by', 'created_at', 'sections', 'questions',
-            'assigned_customers', 'assigned_distributors'
         ]
-
-    def get_assigned_customers(self, obj):
-        """Get all customers assigned to this report type"""
-        customers = obj.get_assigned_customers()
-        return CustomerSerializer(customers, many=True).data
-
-    def get_assigned_distributors(self, obj):
-        """Get all distributors assigned to this report type"""
-        distributors = obj.get_assigned_distributors()
-        return DistributorSerializer(distributors, many=True).data
 
 
 class AnswerAttachmentSerializer(serializers.ModelSerializer):

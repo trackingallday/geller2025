@@ -506,9 +506,10 @@ class Report(MyBaseModel):
         flagged_count = 0
         action_count = 0
 
-        for answer in self.answers.all():
-            # Check if any selected options are flagged
-            if answer.selected_options.filter(is_flag=True).exists():
+        for answer in self.answers.prefetch_related('selected_options'):
+            # Keep this check in Python so the prefetch above is used. A
+            # .filter() on selected_options makes a query for each answer.
+            if any(opt.is_flag for opt in answer.selected_options.all()):
                 flagged_count += 1
 
             # Check if text answer contains failure/warning keywords
@@ -531,14 +532,16 @@ class Report(MyBaseModel):
             flag_reason = None
             badge_type = 'default'
 
-            # Check if any selected options are flagged
-            flagged_options = answer.selected_options.filter(is_flag=True)
+            # Check if any selected options are flagged. Keep this filter in
+            # Python: selected_options is prefetched, but a .filter() on it
+            # makes a new query for each answer.
+            flagged_options = [opt for opt in answer.selected_options.all() if opt.is_flag]
             additional_instructions = None
-            if flagged_options.exists():
+            if flagged_options:
                 is_flagged = True
                 flag_reason = ', '.join([opt.text for opt in flagged_options])
                 # Get badge_type from the first flagged option
-                first_flagged = flagged_options.first()
+                first_flagged = flagged_options[0]
                 if hasattr(first_flagged, 'badge_type') and first_flagged.badge_type != 'default':
                     badge_type = first_flagged.badge_type
                 # Collect additional_instructions from all flagged options

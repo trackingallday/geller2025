@@ -4,15 +4,77 @@ from rest_framework.permissions import IsAuthenticated
 from rest_framework.response import Response
 from django.shortcuts import get_object_or_404
 from django.db import transaction
+from django.db.models import Prefetch
+from chemsapp.models import CustomerContact
 from django.utils import timezone
 from django.conf import settings
 from postmarker.core import PostmarkClient
 
-from .models import Report, ReportType, Answer, QuestionOption, ReportStatus
+from .models import Report, ReportType, Answer, Question, QuestionOption, ReportStatus
 from .serializers import (
     ReportSerializer, ReportListSerializer, ReportSubmissionSerializer,
     ReportTypeSerializer, CustomerSerializer, DistributorSerializer
 )
+
+
+def report_for_response(report):
+    """Read a report again with all the data that ReportSerializer shows.
+
+    ReportSerializer shows the full report type, with each section, each
+    question and each option. Without this, the response to a create, an
+    update or a submit makes one query for each of them. The data does not
+    change, only the number of queries.
+    """
+    return report_response_queryset().get(pk=report.pk)
+
+
+def report_response_queryset():
+    """Give the queryset that ReportSerializer needs, with all related data."""
+    # report_type is not in select_related. The Prefetch below reads it with
+    # its full structure, and Django ignores a Prefetch for a relation that
+    # select_related already joined.
+    return Report.objects.select_related(
+        'customer', 'customer__user', 'distributor',
+        'prospect', 'compliance_manager', 'prepared_by', 'reviewed_by',
+    ).prefetch_related(
+        'customer__compliance_managers',
+        'customer__contacts',
+        'answers__question__parent_question',
+        'answers__question__options',
+        'answers__selected_options',
+        'answers__attachments',
+        Prefetch('report_type', queryset=ReportType.objects.prefetch_related(
+            *report_type_structure_prefetch())),
+    )
+
+
+def customer_queryset_for_serializer(queryset):
+    """Add the related data that CustomerSerializer reads.
+
+    CustomerSerializer shows the email of the user, the compliance managers
+    and the contacts. Without this, each customer adds three queries. A
+    distributor can have many customers, which made the login slow.
+    """
+    return queryset.select_related('user').prefetch_related(
+        'compliance_managers',
+        Prefetch('contacts', queryset=CustomerContact.objects.order_by('id')))
+
+
+def report_type_structure_prefetch():
+    """Give the prefetch arguments for a full report type structure.
+
+    ReportTypeSerializer shows the text of the parent question for each
+    question. Without select_related on parent_question, each question adds
+    a query. Use this function at all places that serialize a report type.
+    """
+    questions = (Question.objects
+                 .select_related('parent_question')
+                 .prefetch_related('options')
+                 .order_by('order', 'question_text', 'id'))
+    return (
+        Prefetch('sections__questions', queryset=questions),
+        Prefetch('questions', queryset=questions),
+    )
 
 
 class ReportDetailAPIView(generics.RetrieveAPIView):
@@ -26,13 +88,7 @@ class ReportDetailAPIView(generics.RetrieveAPIView):
     lookup_field = 'pk'
     
     def get_queryset(self):
-        return Report.objects.select_related(
-            'report_type', 'customer', 'distributor', 'prepared_by', 'reviewed_by'
-        ).prefetch_related(
-            'answers__question__options',
-            'answers__selected_options',
-            'report_type__sections__questions__options'
-        )
+        return report_response_queryset()
 
 
 class ReportListAPIView(generics.ListAPIView):
@@ -95,8 +151,7 @@ def report_types_by_customer(request, customer_id):
         customer_assignments__is_active=True,
         is_active=True
     ).prefetch_related(
-        'sections__questions__options',
-        'questions__options'
+        *report_type_structure_prefetch()
     ).order_by('name')
 
     serializer = ReportTypeSerializer(report_types, many=True)
@@ -114,8 +169,7 @@ class ReportTypeListAPIView(generics.ListAPIView):
     
     def get_queryset(self):
         return ReportType.objects.filter(is_active=True).prefetch_related(
-            'sections__questions__options',
-            'questions__options'
+            *report_type_structure_prefetch()
         ).order_by('name')
 
 
@@ -131,8 +185,7 @@ class ReportTypeDetailAPIView(generics.RetrieveAPIView):
     
     def get_queryset(self):
         return ReportType.objects.prefetch_related(
-            'sections__questions__options',
-            'questions__options'
+            *report_type_structure_prefetch()
         )
 
 
@@ -193,7 +246,7 @@ def create_report_api(request, report_type_id):
                 report.mark_submitted()
 
                 # Return the complete report data
-                response_serializer = ReportSerializer(report)
+                response_serializer = ReportSerializer(report_for_response(report))
                 return Response(
                     {
                         'success': True,
@@ -272,7 +325,7 @@ def update_report_api(request, report_id):
                 updated_report = serializer.save()
                 
                 # Return the updated report data
-                response_serializer = ReportSerializer(updated_report)
+                response_serializer = ReportSerializer(report_for_response(updated_report))
                 return Response(
                     {
                         'success': True,
@@ -331,7 +384,7 @@ def submit_report_api(request, report_id):
     try:
         report.mark_submitted()
 
-        response_serializer = ReportSerializer(report)
+        response_serializer = ReportSerializer(report_for_response(report))
         return Response(
             {
                 'success': True,
@@ -393,7 +446,8 @@ def get_user_profile_api(request):
             distributor = user.distributors.first()
 
             # Get all customers associated with this distributor
-            customers = Customer.objects.filter(distributors=distributor)
+            customers = customer_queryset_for_serializer(
+                Customer.objects.filter(distributors=distributor))
 
             return Response(
                 {
@@ -435,7 +489,7 @@ def get_user_profile_api(request):
         elif profile_type == 'admin':
             # Handle admin profile - return basic info plus all distributors and customers
             distributors = Distributor.objects.all()
-            customers = Customer.objects.all()
+            customers = customer_queryset_for_serializer(Customer.objects.all())
 
             return Response(
                 {
@@ -497,8 +551,7 @@ def report_questions_api(request, report_type_id):
     """
     report_type = get_object_or_404(
         ReportType.objects.prefetch_related(
-            'sections__questions__options',
-            'questions__options'
+            *report_type_structure_prefetch()
         ),
         pk=report_type_id,
         is_active=True
