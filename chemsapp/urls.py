@@ -10,6 +10,7 @@ from chemsapp.wall_chart_views import wall_chart_pdf
 from chemsapp import product_dashboard_views
 from chemsapp import customer_dashboard_views
 from chemsapp import user_dashboard_views
+from chemsapp import product_api_views
 
 urlpatterns = [
     re_path(r'^auth$', drf_views.obtain_auth_token, name='auth'),
@@ -95,6 +96,17 @@ urlpatterns = [
             customer_dashboard_views.remove_group_customer, name='remove_group_customer'),
     re_path(r'^customer-dashboard/import/$',
             customer_dashboard_views.import_customers, name='import_customers'),
+
+    # JSON reads for the admin app's product screen. The dashboard's own
+    # views answer with HTML; writes still go through them.
+    re_path(r'^staff-api/products/$',
+            product_api_views.product_tree, name='staff_api_product_tree'),
+    re_path(r'^staff-api/products/reference/$',
+            product_api_views.reference_data, name='staff_api_reference_data'),
+    re_path(r'^staff-api/products/(?P<product_id>\d+)/$',
+            product_api_views.product_detail, name='staff_api_product_detail'),
+    re_path(r'^staff-api/variants/(?P<variant_id>\d+)/$',
+            product_api_views.variant_detail, name='staff_api_variant_detail'),
 
     # User management (staff only). JSON only: there is no server-rendered
     # page for these, the admin app is the only caller.
