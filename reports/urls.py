@@ -1,5 +1,5 @@
 from django.urls import path
-from . import views, api_views, completed_reports
+from . import views, api_views, completed_reports, staff_api_views
 
 app_name = 'reports'
 
@@ -62,4 +62,17 @@ urlpatterns = [
     path('api/customer/report_types_by_customer/<int:customer_id>/', api_views.report_types_by_customer, name='api_report_types_by_customer'),
     path('api/user/profile/', api_views.get_user_profile_api, name='api_user_profile'),
     path('api/email-report-pdf/', api_views.email_report_pdf, name='api_email_report_pdf'),
+
+    # The admin app's own reads and PDF actions. Separate from the api/
+    # endpoints above, which serve the mobile app and answer to its shapes.
+    path('staff-api/reports/', staff_api_views.report_list,
+         name='staff_api_report_list'),
+    path('staff-api/reports/<int:report_id>/', staff_api_views.report_detail,
+         name='staff_api_report_detail'),
+    path('staff-api/reports/<int:report_id>/generate-pdf/',
+         staff_api_views.generate_pdf, name='staff_api_generate_pdf'),
+    path('staff-api/reports/<int:report_id>/pdf/', staff_api_views.download_pdf,
+         name='staff_api_download_pdf'),
+    path('staff-api/report-types/', staff_api_views.report_types,
+         name='staff_api_report_types'),
 ]
