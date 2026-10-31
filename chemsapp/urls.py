@@ -11,6 +11,7 @@ from chemsapp import product_dashboard_views
 from chemsapp import customer_dashboard_views
 from chemsapp import user_dashboard_views
 from chemsapp import product_api_views
+from chemsapp import customer_api_views
 
 urlpatterns = [
     re_path(r'^auth$', drf_views.obtain_auth_token, name='auth'),
@@ -107,6 +108,16 @@ urlpatterns = [
             product_api_views.product_detail, name='staff_api_product_detail'),
     re_path(r'^staff-api/variants/(?P<variant_id>\d+)/$',
             product_api_views.variant_detail, name='staff_api_variant_detail'),
+
+    # JSON reads for the admin app's customer screen.
+    re_path(r'^staff-api/customers/$',
+            customer_api_views.customer_tree, name='staff_api_customer_tree'),
+    re_path(r'^staff-api/customers/(?P<customer_id>\d+)/$',
+            customer_api_views.customer_detail, name='staff_api_customer_detail'),
+    re_path(r'^staff-api/groups/$',
+            customer_api_views.group_tree, name='staff_api_group_tree'),
+    re_path(r'^staff-api/groups/(?P<group_id>\d+)/$',
+            customer_api_views.group_detail, name='staff_api_group_detail'),
 
     # User management (staff only). JSON only: there is no server-rendered
     # page for these, the admin app is the only caller.
