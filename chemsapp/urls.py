@@ -12,6 +12,7 @@ from chemsapp import customer_dashboard_views
 from chemsapp import user_dashboard_views
 from chemsapp import product_api_views
 from chemsapp import customer_api_views
+from chemsapp import workflow_api_views
 
 urlpatterns = [
     re_path(r'^auth$', drf_views.obtain_auth_token, name='auth'),
@@ -118,6 +119,24 @@ urlpatterns = [
             customer_api_views.group_tree, name='staff_api_group_tree'),
     re_path(r'^staff-api/groups/(?P<group_id>\d+)/$',
             customer_api_views.group_detail, name='staff_api_group_detail'),
+
+    # Orders, proposals and tickets: list and detail for the admin app.
+    re_path(r'^staff-api/orders/$',
+            workflow_api_views.order_list, name='staff_api_order_list'),
+    re_path(r'^staff-api/orders/(?P<order_id>\d+)/$',
+            workflow_api_views.order_detail, name='staff_api_order_detail'),
+    re_path(r'^staff-api/orders/(?P<order_id>\d+)/pdf/$',
+            workflow_api_views.order_pdf, name='staff_api_order_pdf'),
+    re_path(r'^staff-api/quotes/$',
+            workflow_api_views.quote_list, name='staff_api_quote_list'),
+    re_path(r'^staff-api/quotes/(?P<quote_id>\d+)/$',
+            workflow_api_views.quote_detail, name='staff_api_quote_detail'),
+    re_path(r'^staff-api/quotes/(?P<quote_id>\d+)/pdf/$',
+            workflow_api_views.quote_pdf, name='staff_api_quote_pdf'),
+    re_path(r'^staff-api/tickets/$',
+            workflow_api_views.ticket_list, name='staff_api_ticket_list'),
+    re_path(r'^staff-api/tickets/(?P<ticket_id>\d+)/$',
+            workflow_api_views.ticket_detail, name='staff_api_ticket_detail'),
 
     # User management (staff only). JSON only: there is no server-rendered
     # page for these, the admin app is the only caller.
