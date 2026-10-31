@@ -1,6 +1,6 @@
 import threading
 
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib.auth.models import User
 from django.http import JsonResponse
 from django.shortcuts import redirect, get_object_or_404
@@ -21,7 +21,7 @@ def _build_filter_querystring(params):
     return '&'.join(parts)
 
 
-@login_required
+@staff_member_required
 def ticket_dashboard(request):
     status = request.GET.get('status', '')
     customer_id = request.GET.get('customer', '')
@@ -92,7 +92,7 @@ def ticket_dashboard(request):
     return TemplateResponse(request, 'tickets/dashboard.html', context)
 
 
-@login_required
+@staff_member_required
 def ajax_distributors_for_customer(request):
     customer_id = request.GET.get('customer_id', '')
     if not customer_id:
@@ -102,7 +102,7 @@ def ajax_distributors_for_customer(request):
     return JsonResponse({'distributors': data})
 
 
-@login_required
+@staff_member_required
 def ajax_users_for_distributor(request):
     distributor_id = request.GET.get('distributor_id', '')
     if not distributor_id:
@@ -112,7 +112,7 @@ def ajax_users_for_distributor(request):
     return JsonResponse({'users': data})
 
 
-@login_required
+@staff_member_required
 def dashboard_create_ticket(request):
     if request.method == 'POST':
         customer_id = request.POST.get('customer_id')
@@ -135,7 +135,7 @@ def dashboard_create_ticket(request):
     return redirect('/tickets/dashboard/')
 
 
-@login_required
+@staff_member_required
 def dashboard_reply(request, ticket_id):
     ticket = get_object_or_404(Ticket, pk=ticket_id)
     if request.method == 'POST':
@@ -152,7 +152,7 @@ def dashboard_reply(request, ticket_id):
     return redirect(redirect_url)
 
 
-@login_required
+@staff_member_required
 def dashboard_update_status(request, ticket_id):
     ticket = get_object_or_404(Ticket, pk=ticket_id)
     if request.method == 'POST':
@@ -172,7 +172,7 @@ def dashboard_update_status(request, ticket_id):
     return redirect(redirect_url)
 
 
-@login_required
+@staff_member_required
 def ajax_poll_ticket(request, ticket_id):
     """Return replies and images added after ?after_reply=<id>&after_image=<id>."""
     ticket = get_object_or_404(Ticket, pk=ticket_id)
@@ -205,7 +205,7 @@ def ajax_poll_ticket(request, ticket_id):
     })
 
 
-@login_required
+@staff_member_required
 def dashboard_upload_image(request, ticket_id):
     ticket = get_object_or_404(Ticket, pk=ticket_id)
     if request.method == 'POST' and request.FILES.get('image'):

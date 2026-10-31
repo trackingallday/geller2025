@@ -9,6 +9,7 @@ from chemsapp.views import customers_list, products_list, sds_products, info_she
 from chemsapp.wall_chart_views import wall_chart_pdf
 from chemsapp import product_dashboard_views
 from chemsapp import customer_dashboard_views
+from chemsapp import user_dashboard_views
 
 urlpatterns = [
     re_path(r'^auth$', drf_views.obtain_auth_token, name='auth'),
@@ -94,6 +95,23 @@ urlpatterns = [
             customer_dashboard_views.remove_group_customer, name='remove_group_customer'),
     re_path(r'^customer-dashboard/import/$',
             customer_dashboard_views.import_customers, name='import_customers'),
+
+    # User management (staff only). JSON only: there is no server-rendered
+    # page for these, the admin app is the only caller.
+    re_path(r'^staff-api/users/$',
+            user_dashboard_views.user_list, name='staff_api_user_list'),
+    re_path(r'^staff-api/users/create/$',
+            user_dashboard_views.create_user, name='staff_api_create_user'),
+    re_path(r'^staff-api/users/(?P<user_id>\d+)/$',
+            user_dashboard_views.user_detail, name='staff_api_user_detail'),
+    re_path(r'^staff-api/users/(?P<user_id>\d+)/update/$',
+            user_dashboard_views.update_user, name='staff_api_update_user'),
+    re_path(r'^staff-api/users/(?P<user_id>\d+)/send-password-reset/$',
+            user_dashboard_views.send_password_reset,
+            name='staff_api_send_password_reset'),
+    re_path(r'^staff-api/distributors/$',
+            user_dashboard_views.distributor_list,
+            name='staff_api_distributor_list'),
 
     # Marketing utility routes
     re_path(r'^product_download/(?P<product_id>\d+)/(?P<document_type>[a-z]{3,4})/$', download_product_document, name="product_download"),

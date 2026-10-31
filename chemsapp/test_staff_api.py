@@ -29,7 +29,7 @@ class StaffApiDecoratorTests(TestCase):
 
     def test_anonymous_gets_401_as_json(self):
         from django.contrib.auth.models import AnonymousUser
-        request = self.factory.get('/')
+        request = self.factory.get('/', HTTP_ACCEPT='application/json')
         request.user = AnonymousUser()
         response = _probe(request)
         self.assertEqual(response.status_code, 401)
@@ -44,7 +44,7 @@ class StaffApiDecoratorTests(TestCase):
         self.assertEqual(body(response)['who'], 'gate-staff')
 
     def test_session_non_staff_gets_403(self):
-        request = self.factory.get('/')
+        request = self.factory.get('/', HTTP_ACCEPT='application/json')
         request.user = self.plain
         response = _probe(request)
         self.assertEqual(response.status_code, 403)
@@ -67,7 +67,27 @@ class StaffApiDecoratorTests(TestCase):
 
     def test_unknown_token_gets_401(self):
         from django.contrib.auth.models import AnonymousUser
-        request = self.factory.get('/', HTTP_AUTHORIZATION='Token nope')
+        request = self.factory.get(
+            '/', HTTP_ACCEPT='application/json',
+            HTTP_AUTHORIZATION='Token nope')
+        request.user = AnonymousUser()
+        response = _probe(request)
+        self.assertEqual(response.status_code, 401)
+
+    def test_an_html_caller_is_redirected_to_login(self):
+        """A browser following a bookmark must not be shown JSON."""
+        from django.contrib.auth.models import AnonymousUser
+        request = self.factory.get('/', HTTP_ACCEPT='text/html')
+        request.user = AnonymousUser()
+        response = _probe(request)
+        self.assertEqual(response.status_code, 302)
+        self.assertIn('login', response['Location'])
+
+    def test_an_html_caller_with_a_bad_token_still_gets_json(self):
+        """Presenting a token is a machine's intent, whatever Accept says."""
+        from django.contrib.auth.models import AnonymousUser
+        request = self.factory.get(
+            '/', HTTP_ACCEPT='text/html', HTTP_AUTHORIZATION='Token nope')
         request.user = AnonymousUser()
         response = _probe(request)
         self.assertEqual(response.status_code, 401)
@@ -87,7 +107,8 @@ class StaffApiDecoratorTests(TestCase):
         self.staff.save()
         token, _ = Token.objects.get_or_create(user=self.staff)
         request = self.factory.get(
-            '/', HTTP_AUTHORIZATION=f'Token {token.key}')
+            '/', HTTP_ACCEPT='application/json',
+            HTTP_AUTHORIZATION=f'Token {token.key}')
         response = _probe(request)
         self.assertEqual(response.status_code, 403)
 

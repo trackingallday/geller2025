@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.http import JsonResponse
 from django.core.paginator import Paginator
@@ -15,7 +15,7 @@ from .forms import (
 from chemsapp.models import Customer, Distributor
 
 
-@login_required
+@staff_member_required
 def report_type_list(request):
     """List all report types, separated into Standard and Site Assessment tabs"""
     category = request.GET.get('category', 'standard')
@@ -35,7 +35,7 @@ def report_type_list(request):
     return render(request, 'reports/report_type_list.html', context)
 
 
-@login_required
+@staff_member_required
 def report_type_create(request):
     """Create a new report type"""
     if request.method == 'POST':
@@ -56,7 +56,7 @@ def report_type_create(request):
     return render(request, 'reports/report_type_form.html', context)
 
 
-@login_required
+@staff_member_required
 def report_type_detail(request, pk):
     """View report type details with sections and questions"""
     report_type = get_object_or_404(ReportType, pk=pk)
@@ -72,7 +72,7 @@ def report_type_detail(request, pk):
     return render(request, 'reports/report_type_detail.html', context)
 
 
-@login_required
+@staff_member_required
 def report_type_edit(request, pk):
     """Edit an existing report type"""
     report_type = get_object_or_404(ReportType, pk=pk)
@@ -94,7 +94,7 @@ def report_type_edit(request, pk):
     return render(request, 'reports/report_type_form.html', context)
 
 
-@login_required
+@staff_member_required
 def report_type_delete(request, pk):
     """Delete a report type"""
     report_type = get_object_or_404(ReportType, pk=pk)
@@ -112,7 +112,7 @@ def report_type_delete(request, pk):
     return render(request, 'reports/report_type_confirm_delete.html', context)
 
 
-@login_required
+@staff_member_required
 def report_type_duplicate(request, pk):
     """Duplicate an existing report type with all its structure"""
     original_report_type = get_object_or_404(ReportType, pk=pk)
@@ -213,7 +213,7 @@ def report_type_duplicate(request, pk):
     return render(request, 'reports/report_type_duplicate.html', context)
 
 
-@login_required
+@staff_member_required
 def section_create(request, report_type_id):
     """Create a new section"""
     report_type = get_object_or_404(ReportType, pk=report_type_id)
@@ -237,7 +237,7 @@ def section_create(request, report_type_id):
     return render(request, 'reports/section_form.html', context)
 
 
-@login_required
+@staff_member_required
 def section_edit(request, pk):
     """Edit a section"""
     section = get_object_or_404(ReportSection, pk=pk)
@@ -260,7 +260,7 @@ def section_edit(request, pk):
     return render(request, 'reports/section_form.html', context)
 
 
-@login_required
+@staff_member_required
 def section_delete(request, pk):
     """Delete a section"""
     section = get_object_or_404(ReportSection, pk=pk)
@@ -279,7 +279,7 @@ def section_delete(request, pk):
     return render(request, 'reports/section_confirm_delete.html', context)
 
 
-@login_required
+@staff_member_required
 def section_duplicate(request, pk):
     """Duplicate a section with all its questions"""
     original_section = get_object_or_404(ReportSection, pk=pk)
@@ -370,7 +370,7 @@ def section_duplicate(request, pk):
     return render(request, 'reports/section_duplicate.html', context)
 
 
-@login_required
+@staff_member_required
 def question_duplicate(request, pk):
     """Duplicate a question with all its options"""
     original_question = get_object_or_404(Question, pk=pk)
@@ -420,7 +420,7 @@ def question_duplicate(request, pk):
     return redirect('reports:report_type_detail', pk=report_type.pk)
 
 
-@login_required
+@staff_member_required
 def question_create(request, report_type_id):
     """Create a new question"""
     report_type = get_object_or_404(ReportType, pk=report_type_id)
@@ -450,7 +450,7 @@ def question_create(request, report_type_id):
     return render(request, 'reports/question_form.html', context)
 
 
-@login_required
+@staff_member_required
 def question_edit(request, pk):
     """Edit a question"""
     question = get_object_or_404(Question, pk=pk)
@@ -474,7 +474,7 @@ def question_edit(request, pk):
     return render(request, 'reports/question_form.html', context)
 
 
-@login_required
+@staff_member_required
 def question_delete(request, pk):
     """Delete a question"""
     question = get_object_or_404(Question, pk=pk)
@@ -492,7 +492,7 @@ def question_delete(request, pk):
     return render(request, 'reports/question_confirm_delete.html', context)
 
 
-@login_required
+@staff_member_required
 def question_options(request, pk):
     """Manage options for a question"""
     question = get_object_or_404(Question, pk=pk)
@@ -506,7 +506,7 @@ def question_options(request, pk):
     return render(request, 'reports/question_options.html', context)
 
 
-@login_required
+@staff_member_required
 def option_create(request, question_id):
     """Create a new option for a question"""
     question = get_object_or_404(Question, pk=question_id)
@@ -530,7 +530,7 @@ def option_create(request, question_id):
     return render(request, 'reports/option_form.html', context)
 
 
-@login_required
+@staff_member_required
 def option_edit(request, pk):
     """Edit an option"""
     option = get_object_or_404(QuestionOption, pk=pk)
@@ -553,7 +553,7 @@ def option_edit(request, pk):
     return render(request, 'reports/option_form.html', context)
 
 
-@login_required
+@staff_member_required
 def option_delete(request, pk):
     """Delete an option"""
     option = get_object_or_404(QuestionOption, pk=pk)
@@ -572,7 +572,7 @@ def option_delete(request, pk):
     return render(request, 'reports/option_confirm_delete.html', context)
 
 
-@login_required
+@staff_member_required
 def report_list(request):
     """List all report instances"""
     reports = Report.objects.all().order_by('-created_at')
@@ -587,7 +587,7 @@ def report_list(request):
     return render(request, 'reports/report_list.html', context)
 
 
-@login_required
+@staff_member_required
 def report_create(request, report_type_id):
     """Create a new report instance"""
     report_type = get_object_or_404(ReportType, pk=report_type_id)
@@ -615,7 +615,7 @@ def report_create(request, report_type_id):
     return render(request, 'reports/report_create.html', context)
 
 
-@login_required
+@staff_member_required
 def report_detail(request, pk):
     """View report details and answers"""
     report = get_object_or_404(Report, pk=pk)
@@ -629,7 +629,7 @@ def report_detail(request, pk):
     return render(request, 'reports/report_detail.html', context)
 
 
-@login_required
+@staff_member_required
 def report_fill(request, pk):
     """Fill out a report with answers"""
     report = get_object_or_404(Report, pk=pk)
@@ -702,7 +702,7 @@ def report_fill(request, pk):
     return render(request, 'reports/report_fill.html', context)
 
 
-@login_required
+@staff_member_required
 def report_submit(request, pk):
     """Submit a report for review"""
     report = get_object_or_404(Report, pk=pk)
@@ -720,7 +720,7 @@ def report_submit(request, pk):
     return render(request, 'reports/report_submit.html', context)
 
 
-@login_required
+@staff_member_required
 def create_sample_grocery_report(request):
     """Create a sample grocery store audit report based on the CSV"""
     if request.method == 'POST':
@@ -754,7 +754,7 @@ def create_sample_grocery_report(request):
     return render(request, 'reports/create_sample.html', context)
 
 
-@login_required
+@staff_member_required
 def get_question_options_ajax(request, question_id):
     """AJAX endpoint to get options for a question"""
     try:

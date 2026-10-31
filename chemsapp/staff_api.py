@@ -8,9 +8,15 @@ rather than a session cookie.
 
 ``staff_api`` replaces that decorator. It accepts either credential, so the
 old templates keep working while the new app is built against the same views.
+
+Refusals answer in the caller's own idiom: a JSON caller gets a status code
+and a body, while a browser asking for HTML still gets the admin login
+redirect it had before. Otherwise a signed-out person following a bookmark
+would be shown a page of JSON.
 """
 import json
 
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from functools import wraps
@@ -52,12 +58,29 @@ def staff_api(view):
     browser, so it cannot be used for cross-site request forgery; the session
     path keeps Django's CSRF protection.
     """
+    html_view = staff_member_required(view)
+
     @wraps(view)
     def wrapper(request, *args, **kwargs):
         token_user = _user_from_token(request)
         if token_user is not None:
             request.user = token_user
         user = getattr(request, 'user', None)
+        allowed = (user is not None and user.is_authenticated
+                   and user.is_staff and user.is_active)
+
+        if allowed:
+            return view(request, *args, **kwargs)
+
+        # A browser following a link wants the login page, not a JSON body.
+        # Hand those back to Django's own decorator so the redirect, the
+        # ``next`` parameter and the admin login flow stay exactly as before.
+        # Sending an Authorization header is a machine's intent whatever the
+        # Accept header says, so a bad token is answered in JSON rather than
+        # redirected to a login page no API client can use.
+        sent_token = request.META.get('HTTP_AUTHORIZATION', '').startswith('Token ')
+        if not wants_json(request) and not sent_token:
+            return html_view(request, *args, **kwargs)
 
         if user is None or not user.is_authenticated:
             return JsonResponse(
@@ -65,11 +88,8 @@ def staff_api(view):
         if not user.is_staff:
             return JsonResponse(
                 {'ok': False, 'detail': 'Staff access required.'}, status=403)
-        if not user.is_active:
-            return JsonResponse(
-                {'ok': False, 'detail': 'This account is not active.'}, status=403)
-
-        return view(request, *args, **kwargs)
+        return JsonResponse(
+            {'ok': False, 'detail': 'This account is not active.'}, status=403)
 
     # Only the token path skips CSRF. A session request still needs its token,
     # which Django enforces inside the view's own middleware chain.

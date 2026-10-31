@@ -363,7 +363,9 @@ class DashboardTestCase(TestCase):
     serialized_rollback = True
 
     def setUp(self):
-        self.user = User.objects.create_user(username='staff', email='staff@example.com', password='pass12345')
+        self.user = User.objects.create_user(
+            username='staff', email='staff@example.com', password='pass12345',
+            is_staff=True)
         self.client.force_login(self.user)
 
         self.mop = make_application_type()
@@ -556,7 +558,8 @@ class VariantPriceEndpointTestCase(TestCase):
 
     def setUp(self):
         self.user = User.objects.create_user(
-            username='staff2', email='staff2@example.com', password='pass12345')
+            username='staff2', email='staff2@example.com', password='pass12345',
+            is_staff=True)
         self.client.force_login(self.user)
 
         self.product = make_product()

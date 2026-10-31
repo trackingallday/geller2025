@@ -1,5 +1,5 @@
 from django.shortcuts import render, get_object_or_404, redirect
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.contrib import messages
 from django.http import FileResponse, Http404
 from django.core.paginator import Paginator
@@ -9,7 +9,7 @@ from .models import Report, ReportStatus
 from chemsapp.models import Customer, Distributor
 
 
-@login_required
+@staff_member_required
 def completed_reports_list(request):
     """
     List all completed reports with filtering by distributor, customer, status, and date range
@@ -85,7 +85,7 @@ def completed_reports_list(request):
     return render(request, 'reports/completed_reports_list.html', context)
 
 
-@login_required
+@staff_member_required
 def completed_report_detail(request, pk):
     """
     View detailed information about a completed report with PDF management options
@@ -126,7 +126,7 @@ def completed_report_detail(request, pk):
     return render(request, 'reports/completed_report_detail.html', context)
 
 
-@login_required
+@staff_member_required
 def generate_pdf_view(request, pk):
     """
     Generate or regenerate the PDF for a report, then redirect to its detail page.
@@ -159,7 +159,7 @@ def generate_pdf_view(request, pk):
     return redirect('reports:completed_report_detail', pk=report.pk)
 
 
-@login_required
+@staff_member_required
 def view_pdf(request, pk):
     """
     View or download PDF for a report
@@ -209,7 +209,7 @@ def view_pdf(request, pk):
         return redirect('reports:completed_report_detail', pk=report.pk)
 
 
-@login_required
+@staff_member_required
 def browse_pdfs(request):
     """
     Browse all generated PDFs with thumbnails and quick access

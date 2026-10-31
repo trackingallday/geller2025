@@ -102,11 +102,17 @@ logger = logging.getLogger('django')
 
 import tarfile
 
-@csrf_exempt
+from django.contrib.admin.views.decorators import staff_member_required
+
+@staff_member_required
 def backup_documents(request):
-    """Temporary endpoint to download /data/documents as a tar.gz archive."""
-    if not request.user.is_staff:
-        return HttpResponse(status=403)
+    """Temporary endpoint to download /data/documents as a tar.gz archive.
+
+    This streams every uploaded document, so it is gated on staff by the
+    decorator rather than an inline check, and it is no longer CSRF-exempt:
+    nothing calls it cross-origin, and an exemption on an endpoint that
+    hands out the whole archive buys nothing.
+    """
     documents_dir = '/data/documents'
     if not os.path.isdir(documents_dir):
         return HttpResponse('Documents directory not found', status=404)

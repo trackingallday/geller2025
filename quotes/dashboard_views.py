@@ -1,7 +1,7 @@
 from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
-from django.contrib.auth.decorators import login_required
+from django.contrib.admin.views.decorators import staff_member_required
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
@@ -12,7 +12,7 @@ from .models import Quote
 from .services import create_quote, send_quote_pdf_email
 
 
-@login_required
+@staff_member_required
 def quote_dashboard(request):
     """Admin-facing test page: list of quotes + detail panel (like /tickets/dashboard/)."""
     active_quote_id = request.GET.get('quote', '')
@@ -90,7 +90,7 @@ def _builder_context():
     }
 
 
-@login_required
+@staff_member_required
 def dashboard_variant_price(request):
     """The price to suggest for one line: ?variant_id=&customer_id=.
 
@@ -122,7 +122,7 @@ def dashboard_variant_price(request):
     })
 
 
-@login_required
+@staff_member_required
 def dashboard_create_quote(request):
     """Quote builder page: header fields + dynamic product/price lines."""
     error = None
@@ -188,7 +188,7 @@ def dashboard_create_quote(request):
     return TemplateResponse(request, 'quotes/create.html', context)
 
 
-@login_required
+@staff_member_required
 def dashboard_email_quote(request, quote_id):
     quote = get_object_or_404(Quote, pk=quote_id)
     if request.method == 'POST':

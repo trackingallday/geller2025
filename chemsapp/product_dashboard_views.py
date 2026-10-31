@@ -12,7 +12,6 @@ import threading
 import requests
 from django.conf import settings
 from django.contrib import messages
-from django.contrib.admin.views.decorators import staff_member_required
 from django.db.models import Q
 from django.forms import inlineformset_factory, modelform_factory
 from django.http import JsonResponse
@@ -28,6 +27,7 @@ from .models import (
     ProductVariant,
 )
 from .serializers import ProductSyncSerializer
+from .staff_api import error, form_data, form_errors_response, ok, staff_api, wants_json
 
 logger = logging.getLogger(__name__)
 
@@ -237,7 +237,7 @@ def _selected_product(product_id):
         return None
 
 
-@staff_member_required
+@staff_api
 def product_dashboard(request):
     """Product list on the left. The right side is one of three things:
     nothing selected, a product with its tabs, or one variant with no tabs.
@@ -334,51 +334,66 @@ def product_dashboard(request):
     return TemplateResponse(request, 'chemsapp/product_dashboard.html', context)
 
 
-@staff_member_required
+@staff_api
 def save_product_details(request, product_id):
     """Save the Product tab."""
     product = get_object_or_404(Product, pk=product_id)
     if request.method != 'POST':
         return redirect(_dashboard_url(product.pk, 'product'))
 
-    form = ProductDetailsForm(request.POST, request.FILES, instance=product)
-    if form.is_valid():
-        form.save()
-        messages.success(request, f'Saved the details of {product.name}.')
-    else:
+    form = ProductDetailsForm(form_data(request), request.FILES, instance=product)
+    if not form.is_valid():
+        if wants_json(request):
+            return form_errors_response(form)
         messages.error(request, f'The details did not save: {form.errors.as_text()}')
+        return redirect(_dashboard_url(product.pk, 'product'))
+
+    form.save()
+    if wants_json(request):
+        return ok({'id': product.pk})
+    messages.success(request, f'Saved the details of {product.name}.')
     return redirect(_dashboard_url(product.pk, 'product'))
 
 
-@staff_member_required
+@staff_api
 def save_product_compliance(request, product_id):
     """Save the Compliance tab: the documents and the usage text."""
     product = get_object_or_404(Product, pk=product_id)
     if request.method != 'POST':
         return redirect(_dashboard_url(product.pk, 'compliance'))
 
-    form = ProductComplianceForm(request.POST, request.FILES, instance=product)
-    if form.is_valid():
-        form.save()
-        messages.success(request, f'Saved the documents of {product.name}.')
-    else:
+    form = ProductComplianceForm(form_data(request), request.FILES, instance=product)
+    if not form.is_valid():
+        if wants_json(request):
+            return form_errors_response(form)
         messages.error(request, f'The documents did not save: {form.errors.as_text()}')
+        return redirect(_dashboard_url(product.pk, 'compliance'))
+
+    form.save()
+    if wants_json(request):
+        return ok({'id': product.pk})
+    messages.success(request, f'Saved the documents of {product.name}.')
     return redirect(_dashboard_url(product.pk, 'compliance'))
 
 
-@staff_member_required
+@staff_api
 def save_variants(request, product_id):
     """Save the Variants table: add, edit and remove rows together."""
     product = get_object_or_404(Product, pk=product_id)
     if request.method != 'POST':
         return redirect(_dashboard_url(product.pk, 'variants'))
 
-    formset = VariantFormSet(request.POST, request.FILES, instance=product)
-    if formset.is_valid():
-        formset.save()
-        messages.success(request, f'Saved the variants of {product.name}.')
-    else:
+    formset = VariantFormSet(form_data(request), request.FILES, instance=product)
+    if not formset.is_valid():
+        if wants_json(request):
+            return error('The variants did not save.', errors=formset.errors)
         messages.error(request, f'The variants did not save: {formset.errors}')
+        return redirect(_dashboard_url(product.pk, 'variants'))
+
+    formset.save()
+    if wants_json(request):
+        return ok({'id': product.pk})
+    messages.success(request, f'Saved the variants of {product.name}.')
     return redirect(_dashboard_url(product.pk, 'variants'))
 
 
@@ -396,8 +411,12 @@ def _variant_json(variant):
 
 
 def _is_ajax(request):
-    """True when the focus pane posted by fetch, not as a plain form."""
-    return request.headers.get('X-Requested-With') == 'XMLHttpRequest'
+    """True when the focus pane posted by fetch, not as a plain form.
+
+    The SPA also wants JSON back, by the Accept header rather than this
+    header, so it takes the same branch as the old fetch-based focus pane.
+    """
+    return request.headers.get('X-Requested-With') == 'XMLHttpRequest' or wants_json(request)
 
 
 def _save_variant_form(request, instance, product):
@@ -408,7 +427,7 @@ def _save_variant_form(request, instance, product):
     JavaScript the same form posts normally. A browser must then get the
     page back, not raw JSON, so this redirects to the Variants tab.
     """
-    form = ProductVariantForm(request.POST, request.FILES, instance=instance)
+    form = ProductVariantForm(form_data(request), request.FILES, instance=instance)
     if not form.is_valid():
         if not _is_ajax(request):
             messages.error(
@@ -431,7 +450,7 @@ def _save_variant_form(request, instance, product):
     return JsonResponse({'ok': True, 'variant': _variant_json(variant)})
 
 
-@staff_member_required
+@staff_api
 def save_one_variant(request, variant_id):
     """Save the variant in the focus pane of the Variants tab."""
     variant = get_object_or_404(ProductVariant, pk=variant_id)
@@ -441,7 +460,7 @@ def save_one_variant(request, variant_id):
     return _save_variant_form(request, variant, variant.product)
 
 
-@staff_member_required
+@staff_api
 def create_variant(request, product_id):
     """Add one variant to this product, from the empty focus pane."""
     product = get_object_or_404(Product, pk=product_id)
@@ -450,34 +469,42 @@ def create_variant(request, product_id):
     return _save_variant_form(request, None, product)
 
 
-@staff_member_required
+@staff_api
 def delete_variant(request, variant_id):
     """Remove one variant from the Variants tab."""
     variant = get_object_or_404(ProductVariant, pk=variant_id)
     product_id = variant.product_id
+    variant_pk = variant.pk
     if request.method == 'POST':
         variant.delete()
+        if wants_json(request):
+            return ok({'id': variant_pk})
         messages.success(request, 'Removed the variant.')
     return redirect(_dashboard_url(product_id, 'variants'))
 
 
-@staff_member_required
+@staff_api
 def save_equivalents(request, product_id):
     """Save the Equivalents tab: products that do the same job."""
     product = get_object_or_404(Product, pk=product_id)
     if request.method != 'POST':
         return redirect(_dashboard_url(product.pk, 'equivalents'))
 
-    formset = EquivalencyFormSet(request.POST, instance=product)
-    if formset.is_valid():
-        formset.save()
-        messages.success(request, f'Saved the equivalents of {product.name}.')
-    else:
+    formset = EquivalencyFormSet(form_data(request), instance=product)
+    if not formset.is_valid():
+        if wants_json(request):
+            return error('The equivalents did not save.', errors=formset.errors)
         messages.error(request, f'The equivalents did not save: {formset.errors}')
+        return redirect(_dashboard_url(product.pk, 'equivalents'))
+
+    formset.save()
+    if wants_json(request):
+        return ok({'id': product.pk})
+    messages.success(request, f'Saved the equivalents of {product.name}.')
     return redirect(_dashboard_url(product.pk, 'equivalents'))
 
 
-@staff_member_required
+@staff_api
 def save_dilutions(request, variant_id):
     """Save the dilution rows of one variant."""
     variant = get_object_or_404(ProductVariant, pk=variant_id)
@@ -485,16 +512,21 @@ def save_dilutions(request, variant_id):
         return redirect(_dashboard_url(variant.product_id, 'dilutions'))
 
     formset = DilutionFormSet(
-        request.POST, instance=variant, prefix=f'dilution-{variant.pk}')
-    if formset.is_valid():
-        formset.save()
-        messages.success(request, f'Saved the dilutions of {variant}.')
-    else:
+        form_data(request), instance=variant, prefix=f'dilution-{variant.pk}')
+    if not formset.is_valid():
+        if wants_json(request):
+            return error('The dilutions did not save.', errors=formset.errors)
         messages.error(request, f'The dilutions did not save: {formset.errors}')
+        return redirect(_dashboard_url(variant.product_id, 'dilutions'))
+
+    formset.save()
+    if wants_json(request):
+        return ok({'id': variant.pk})
+    messages.success(request, f'Saved the dilutions of {variant}.')
     return redirect(_dashboard_url(variant.product_id, 'dilutions'))
 
 
-@staff_member_required
+@staff_api
 def add_product_customer(request, product_id):
     """Link one customer to this product, from the Customers tab."""
     product = get_object_or_404(Product, pk=product_id)
@@ -502,9 +534,19 @@ def add_product_customer(request, product_id):
         return redirect(_dashboard_url(product.pk, 'customers'))
 
     # The picker allows more than one chip before saving, so read them all.
-    customer_ids = request.POST.getlist('customer')
+    # A QueryDict needs getlist(); a JSON body already gives a list (or one
+    # bare id, from a client that posts a single value) under the same key.
+    posted = form_data(request)
+    if hasattr(posted, 'getlist'):
+        customer_ids = posted.getlist('customer')
+    else:
+        customer_ids = posted.get('customer', [])
+        if not isinstance(customer_ids, list):
+            customer_ids = [customer_ids]
     customers = Customer.objects.filter(pk__in=customer_ids)
     if not customers:
+        if wants_json(request):
+            return error('Select a customer first.')
         messages.error(request, 'Select a customer first.')
         return redirect(_dashboard_url(product.pk, 'customers'))
 
@@ -514,23 +556,27 @@ def add_product_customer(request, product_id):
         # repeat cannot create a duplicate.
         customer.products.add(product)
         added.append(customer.businessName or customer.user.username)
+    if wants_json(request):
+        return ok({'id': product.pk})
     messages.success(request, 'Added {} to {}.'.format(', '.join(added), product.name))
     return redirect(_dashboard_url(product.pk, 'customers'))
 
 
-@staff_member_required
+@staff_api
 def remove_product_customer(request, product_id, customer_id):
     """Unlink one customer from this product."""
     product = get_object_or_404(Product, pk=product_id)
     if request.method == 'POST':
         customer = get_object_or_404(Customer, pk=customer_id)
         customer.products.remove(product)
+        if wants_json(request):
+            return ok({'id': customer.pk})
         messages.success(
             request, f'Removed {customer.businessName} from {product.name}.')
     return redirect(_dashboard_url(product.pk, 'customers'))
 
 
-@staff_member_required
+@staff_api
 def customer_search(request):
     """Customers matching ?q=, for the "add customer" box on the Prices tab.
 
@@ -571,7 +617,7 @@ def customer_search(request):
     return JsonResponse({'results': results})
 
 
-@staff_member_required
+@staff_api
 def product_list(request):
     """The rows of the left list, for the search box.
 
@@ -604,7 +650,7 @@ def product_list(request):
     })
 
 
-@staff_member_required
+@staff_api
 def category_search(request):
     """Product categories matching ?q=, for the search-and-add pickers.
 
@@ -623,7 +669,7 @@ def category_search(request):
     return JsonResponse({'results': results})
 
 
-@staff_member_required
+@staff_api
 def product_search(request):
     """Products matching ?q=, for the "equivalent product" picker.
 
@@ -652,7 +698,7 @@ def product_search(request):
     return JsonResponse({'results': results})
 
 
-@staff_member_required
+@staff_api
 def save_pricing_variant(request, variant_id):
     """Add or edit one customer price, from the Variants tab focus pane.
 
@@ -663,33 +709,42 @@ def save_pricing_variant(request, variant_id):
     if request.method != 'POST':
         return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
 
+    posted = form_data(request)
     pricing_variant = None
-    pricing_variant_id = request.POST.get('pricing_variant_id')
+    pricing_variant_id = posted.get('pricing_variant_id')
     if pricing_variant_id:
         pricing_variant = get_object_or_404(
             PricingVariant, pk=pricing_variant_id, product_variant=variant)
 
-    form = PricingVariantForm(request.POST, instance=pricing_variant)
-    if form.is_valid():
-        form.save()
-        messages.success(request, 'Saved the price.')
-    else:
+    form = PricingVariantForm(posted, instance=pricing_variant)
+    if not form.is_valid():
+        if wants_json(request):
+            return form_errors_response(form)
         messages.error(request, f'The price did not save: {form.errors.as_text()}')
+        return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
+
+    form.save()
+    if wants_json(request):
+        return ok({'id': variant.pk})
+    messages.success(request, 'Saved the price.')
     return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
 
 
-@staff_member_required
+@staff_api
 def delete_pricing_variant(request, pricing_variant_id):
     """Remove one price from the Variants tab focus pane."""
     pricing_variant = get_object_or_404(PricingVariant, pk=pricing_variant_id)
     variant = pricing_variant.product_variant
     if request.method == 'POST':
+        pricing_variant_pk = pricing_variant.pk
         pricing_variant.delete()
+        if wants_json(request):
+            return ok({'id': pricing_variant_pk})
         messages.success(request, 'Removed the price.')
     return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
 
 
-@staff_member_required
+@staff_api
 def save_group_pricing_variant(request, variant_id):
     """Add or edit one group price, from the variant focus pane.
 
@@ -700,29 +755,38 @@ def save_group_pricing_variant(request, variant_id):
     if request.method != 'POST':
         return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
 
+    posted = form_data(request)
     group_pricing_variant = None
-    group_pricing_variant_id = request.POST.get('group_pricing_variant_id')
+    group_pricing_variant_id = posted.get('group_pricing_variant_id')
     if group_pricing_variant_id:
         group_pricing_variant = get_object_or_404(
             GroupPricingVariant, pk=group_pricing_variant_id, product_variant=variant)
 
-    form = GroupPricingVariantForm(request.POST, instance=group_pricing_variant)
-    if form.is_valid():
-        form.save()
-        messages.success(request, 'Saved the group price.')
-    else:
+    form = GroupPricingVariantForm(posted, instance=group_pricing_variant)
+    if not form.is_valid():
+        if wants_json(request):
+            return form_errors_response(form)
         messages.error(request, f'The group price did not save: {form.errors.as_text()}')
+        return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
+
+    form.save()
+    if wants_json(request):
+        return ok({'id': variant.pk})
+    messages.success(request, 'Saved the group price.')
     return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
 
 
-@staff_member_required
+@staff_api
 def delete_group_pricing_variant(request, group_pricing_variant_id):
     """Remove one group price from the variant focus pane."""
     group_pricing_variant = get_object_or_404(
         GroupPricingVariant, pk=group_pricing_variant_id)
     variant = group_pricing_variant.product_variant
     if request.method == 'POST':
+        group_pricing_variant_pk = group_pricing_variant.pk
         group_pricing_variant.delete()
+        if wants_json(request):
+            return ok({'id': group_pricing_variant_pk})
         messages.success(request, 'Removed the group price.')
     return redirect(_dashboard_url(variant.product_id, 'variants', variant_id=variant.pk))
 
@@ -773,7 +837,7 @@ def _sync_product_to_geller_ai(product, user, include_pdfs):
     return response.json()
 
 
-@staff_member_required
+@staff_api
 def sync_product_to_geller_ai(request, product_id):
     """Push one product's current data into geller_ai's search index.
 
@@ -839,7 +903,7 @@ def _run_bulk_sync(run_id, user_id):
     run.save(update_fields=['done'])
 
 
-@staff_member_required
+@staff_api
 def sync_all_products_to_geller_ai(request):
     """Start a background sync of every product (not competitor/knowledge data).
 
@@ -861,7 +925,7 @@ def sync_all_products_to_geller_ai(request):
     return JsonResponse({'ok': True, 'run_id': str(run.pk)})
 
 
-@staff_member_required
+@staff_api
 def sync_all_products_status(request, run_id):
     try:
         run = GellerAISyncRun.objects.get(pk=run_id)
