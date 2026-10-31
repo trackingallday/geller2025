@@ -85,9 +85,23 @@ MIDDLEWARE = [
     'django.middleware.clickjacking.XFrameOptionsMiddleware',
 ]
 
-CORS_ORIGIN_ALLOW_ALL = True
+# The mobile app and the marketing site are served from several origins, so
+# the wildcard stays the default. Set CORS_ALLOWED_ORIGINS in the environment
+# to replace it with an explicit allowlist.
+_cors_allowlist = [
+    origin.strip()
+    for origin in os.getenv('CORS_ALLOWED_ORIGINS', '').split(',')
+    if origin.strip()
+]
+if _cors_allowlist:
+    CORS_ORIGIN_ALLOW_ALL = False
+    CORS_ALLOWED_ORIGINS = _cors_allowlist
+else:
+    CORS_ORIGIN_ALLOW_ALL = True
 CORS_ALLOW_HEADERS = '*'
 CORS_ALLOW_METHODS = '*'
+# The admin app sends a DRF token, not a cookie, so credentialed CORS is not
+# needed; the Authorization header is covered by CORS_ALLOW_HEADERS above.
 ROOT_URLCONF = 'chemicaldatasheets.urls'
 
 TEMPLATES = [

@@ -39,7 +39,13 @@ class CustomAuthToken(ObtainAuthToken):
                 'token': token.key,
                 'user_id': user.pk,
                 'username': user.username,
-                'email': user.email
+                'email': user.email,
+                # The admin app refuses a non-staff login at the door, so it
+                # needs the flags with the token rather than after a 403.
+                'is_staff': user.is_staff,
+                'is_superuser': user.is_superuser,
+                'first_name': user.first_name,
+                'last_name': user.last_name,
             })
         else:
             return Response({
