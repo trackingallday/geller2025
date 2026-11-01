@@ -1,5 +1,7 @@
 from django.urls import path
-from . import views, api_views, completed_reports, staff_api_views
+from . import (
+    api_views, builder_api_views, completed_reports, staff_api_views, views,
+)
 
 app_name = 'reports'
 
@@ -75,4 +77,54 @@ urlpatterns = [
          name='staff_api_download_pdf'),
     path('staff-api/report-types/', staff_api_views.report_types,
          name='staff_api_report_types'),
+
+    # The report-type builder for the admin app. Every write answers with
+    # the whole builder tree, so the screen redraws from one source.
+    path('staff-api/builder/meta/', builder_api_views.builder_meta,
+         name='staff_api_builder_meta'),
+    path('staff-api/report-types/create/', builder_api_views.report_type_create,
+         name='staff_api_report_type_create'),
+    path('staff-api/report-types/<int:report_type_id>/', builder_api_views.report_type_tree,
+         name='staff_api_report_type_tree'),
+    path('staff-api/report-types/<int:report_type_id>/update/',
+         builder_api_views.report_type_update, name='staff_api_report_type_update'),
+    path('staff-api/report-types/<int:report_type_id>/delete/',
+         builder_api_views.report_type_delete, name='staff_api_report_type_delete'),
+    path('staff-api/report-types/<int:report_type_id>/duplicate/',
+         builder_api_views.report_type_duplicate, name='staff_api_report_type_duplicate'),
+    path('staff-api/report-types/<int:report_type_id>/reorder/',
+         builder_api_views.report_type_reorder, name='staff_api_report_type_reorder'),
+    path('staff-api/report-types/<int:report_type_id>/sections/create/',
+         builder_api_views.section_create, name='staff_api_section_create'),
+    path('staff-api/report-types/<int:report_type_id>/questions/create/',
+         builder_api_views.question_create, name='staff_api_question_create'),
+    path('staff-api/report-types/<int:report_type_id>/assignments/',
+         builder_api_views.report_type_assignments, name='staff_api_report_type_assignments'),
+    path('staff-api/report-types/<int:report_type_id>/assignments/set/',
+         builder_api_views.report_type_assignment_set,
+         name='staff_api_report_type_assignment_set'),
+    path('staff-api/sections/<int:section_id>/update/',
+         builder_api_views.section_update, name='staff_api_section_update'),
+    path('staff-api/sections/<int:section_id>/delete/',
+         builder_api_views.section_delete, name='staff_api_section_delete'),
+    path('staff-api/sections/<int:section_id>/duplicate/',
+         builder_api_views.section_duplicate, name='staff_api_section_duplicate'),
+    path('staff-api/questions/<int:question_id>/update/',
+         builder_api_views.question_update, name='staff_api_question_update'),
+    path('staff-api/questions/<int:question_id>/delete/',
+         builder_api_views.question_delete, name='staff_api_question_delete'),
+    path('staff-api/questions/<int:question_id>/duplicate/',
+         builder_api_views.question_duplicate, name='staff_api_question_duplicate'),
+    path('staff-api/questions/<int:question_id>/options/create/',
+         builder_api_views.option_create, name='staff_api_option_create'),
+    path('staff-api/questions/<int:question_id>/options/reorder/',
+         builder_api_views.option_reorder, name='staff_api_option_reorder'),
+    path('staff-api/options/<int:option_id>/update/',
+         builder_api_views.option_update, name='staff_api_option_update'),
+    path('staff-api/options/<int:option_id>/delete/',
+         builder_api_views.option_delete, name='staff_api_option_delete'),
+    path('staff-api/assignments/', builder_api_views.assignment_matrix,
+         name='staff_api_assignment_matrix'),
+    path('staff-api/assignments/toggle/', builder_api_views.assignment_toggle,
+         name='staff_api_assignment_toggle'),
 ]

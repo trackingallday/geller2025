@@ -74,9 +74,13 @@ class QuestionForm(forms.ModelForm):
         if report_type:
             self.fields['section'].queryset = report_type.sections.all()
             # Allow yes/no and multi-choice questions as parent questions for conditional logic
-            self.fields['parent_question'].queryset = report_type.questions.filter(
+            parents = report_type.questions.filter(
                 question_type__in=['yesno', 'select', 'radio', 'checkbox']
             )
+            # A question cannot be shown on the strength of its own answer.
+            if self.instance and self.instance.pk:
+                parents = parents.exclude(pk=self.instance.pk)
+            self.fields['parent_question'].queryset = parents
         else:
             self.fields['section'].queryset = ReportSection.objects.none()
             self.fields['parent_question'].queryset = Question.objects.none()
@@ -156,8 +160,12 @@ class QuestionForm(forms.ModelForm):
         
         # Set the show_when_parent_values using our model method
         show_when_parent_values = self.cleaned_data.get('show_when_parent_values', [])
-        if show_when_parent_values:
+        if instance.parent_question_id:
             instance.set_show_when_values(show_when_parent_values)
+        else:
+            # No parent, so no condition. Leaving the old values would bring
+            # the condition back the day a parent is chosen again.
+            instance.set_show_when_values([])
         
         if commit:
             instance.save()

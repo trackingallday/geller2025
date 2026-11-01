@@ -5,8 +5,8 @@ from django.http import HttpResponse, Http404, HttpResponseRedirect, JsonRespons
 from django.shortcuts import get_object_or_404, render
 from django.contrib import messages
 from django.views.decorators.http import require_POST
-from django.db import transaction
 import json
+from .builder import set_assignment
 from .models import (
     ReportType, ReportSection, Question, QuestionOption,
     Report, Answer, AnswerAttachment, ConditionalRule, ReportTypeCustomer, ReportTypeDistributor,
@@ -128,17 +128,7 @@ class ReportTypeAdmin(admin.ModelAdmin):
         except (Customer.DoesNotExist, ReportType.DoesNotExist):
             return JsonResponse({'ok': False, 'error': 'Not found'}, status=404)
 
-        with transaction.atomic():
-            assignment, created = ReportTypeCustomer.objects.get_or_create(
-                report_type=report_type,
-                customer=customer,
-                defaults={'assigned_by': request.user, 'is_active': active}
-            )
-            if not created:
-                assignment.is_active = active
-                if active:
-                    assignment.assigned_by = request.user
-                assignment.save(update_fields=['is_active', 'assigned_by'])
+        set_assignment(report_type, customer, active, request.user)
 
         return JsonResponse({'ok': True})
 

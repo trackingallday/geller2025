@@ -14,6 +14,10 @@ from .forms import (
 )
 from chemsapp.models import Customer, Distributor
 
+from .builder import (
+    copy_report_type_structure, copy_section_questions, duplicate_question,
+)
+
 
 @staff_member_required
 def report_type_list(request):
@@ -127,67 +131,13 @@ def report_type_duplicate(request, pk):
                     new_report_type.created_by = request.user
                     new_report_type.save()
                     
-                    # Create mapping of old section IDs to new sections
-                    section_mapping = {}
-                    
-                    # Duplicate sections
-                    for old_section in original_report_type.sections.all():
-                        new_section = ReportSection.objects.create(
-                            report_type=new_report_type,
-                            name=old_section.name,
-                            description=old_section.description,
-                            order=old_section.order
-                        )
-                        section_mapping[old_section.id] = new_section
-                    
-                    # Create mapping of old question IDs to new questions
-                    question_mapping = {}
-                    
-                    # Duplicate questions (first pass - without parent relationships)
-                    for old_question in original_report_type.questions.all():
-                        new_question = Question.objects.create(
-                            report_type=new_report_type,
-                            section=section_mapping.get(old_question.section_id) if old_question.section_id else None,
-                            question_text=old_question.question_text,
-                            question_type=old_question.question_type,
-                            help_text=old_question.help_text,
-                            is_required=old_question.is_required,
-                            order=old_question.order
-                        )
-                        question_mapping[old_question.id] = new_question
-                    
-                    # Second pass - establish parent-child relationships and conditional logic
-                    for old_question in original_report_type.questions.all():
-                        new_question = question_mapping[old_question.id]
-                        if old_question.parent_question_id:
-                            new_question.parent_question = question_mapping.get(old_question.parent_question_id)
-                        
-                        # Copy conditional values
-                        trigger_values = old_question.get_show_when_values()
-                        if trigger_values:
-                            new_question.set_show_when_values(trigger_values)
-                        
-                        new_question.save()
-                    
-                    # Duplicate question options
-                    for old_question in original_report_type.questions.all():
-                        new_question = question_mapping[old_question.id]
-                        for old_option in old_question.options.all():
-                            QuestionOption.objects.create(
-                                question=new_question,
-                                text=old_option.text,
-                                value=old_option.value,
-                                is_flag=old_option.is_flag,
-                                badge_type=old_option.badge_type,
-                                additional_instructions=old_option.additional_instructions,
-                                order=old_option.order
-                                # Note: attached_pdf is not copied to avoid file duplication issues
-                            )
-                    
+                    section_count, question_count = copy_report_type_structure(
+                        original_report_type, new_report_type)
+
                     messages.success(
                         request, 
                         f'Report type "{new_report_type.name}" created successfully as a copy of "{original_report_type.name}"! '
-                        f'Copied {len(section_mapping)} sections, {len(question_mapping)} questions, and their options.'
+                        f'Copied {section_count} sections, {question_count} questions, and their options.'
                     )
                     return redirect('reports:report_type_detail', pk=new_report_type.pk)
                     
@@ -295,57 +245,12 @@ def section_duplicate(request, pk):
                     new_section.report_type = report_type
                     new_section.save()
                     
-                    # Get all questions in the original section
-                    original_questions = original_section.questions.all()
-                    
-                    # Create mapping for question relationships
-                    question_mapping = {}
-                    
-                    # First pass: Duplicate questions without parent relationships
-                    for old_question in original_questions:
-                        new_question = Question.objects.create(
-                            report_type=report_type,
-                            section=new_section,
-                            question_text=old_question.question_text,
-                            question_type=old_question.question_type,
-                            help_text=old_question.help_text,
-                            is_required=old_question.is_required,
-                            order=old_question.order
-                        )
-                        question_mapping[old_question.id] = new_question
-                    
-                    # Second pass: Establish parent-child relationships within duplicated questions
-                    for old_question in original_questions:
-                        new_question = question_mapping[old_question.id]
-                        if old_question.parent_question_id and old_question.parent_question_id in question_mapping:
-                            # Only set parent if the parent is also in this section
-                            new_question.parent_question = question_mapping[old_question.parent_question_id]
-                            
-                            # Copy conditional values
-                            trigger_values = old_question.get_show_when_values()
-                            if trigger_values:
-                                new_question.set_show_when_values(trigger_values)
-                            
-                            new_question.save()
-                    
-                    # Duplicate question options
-                    for old_question in original_questions:
-                        new_question = question_mapping[old_question.id]
-                        for old_option in old_question.options.all():
-                            QuestionOption.objects.create(
-                                question=new_question,
-                                text=old_option.text,
-                                value=old_option.value,
-                                is_flag=old_option.is_flag,
-                                badge_type=old_option.badge_type,
-                                additional_instructions=old_option.additional_instructions,
-                                order=old_option.order
-                            )
-                    
+                    question_count = copy_section_questions(original_section, new_section)
+
                     messages.success(
                         request, 
                         f'Section "{new_section.name}" created successfully as a copy of "{original_section.name}"! '
-                        f'Copied {len(question_mapping)} questions and their options.'
+                        f'Copied {question_count} questions and their options.'
                     )
                     return redirect('reports:report_type_detail', pk=report_type.pk)
                     
@@ -372,51 +277,19 @@ def section_duplicate(request, pk):
 
 @staff_member_required
 def question_duplicate(request, pk):
-    """Duplicate a question with all its options"""
+    """Duplicate a question with all its options.
+
+    POST only: a GET that writes can be fired by a link preview or a crawler.
+    """
     original_question = get_object_or_404(Question, pk=pk)
     report_type = original_question.report_type
+    if request.method != 'POST':
+        return redirect('reports:report_type_detail', pk=report_type.pk)
 
-    try:
-        with transaction.atomic():
-            # Create new question with same properties
-            new_question = Question.objects.create(
-                report_type=report_type,
-                section=original_question.section,
-                question_text=original_question.question_text,
-                question_type=original_question.question_type,
-                help_text=original_question.help_text,
-                is_required=original_question.is_required,
-                order=original_question.order + 1,  # Place it after the original
-                parent_question=original_question.parent_question
-            )
-
-            # Copy conditional values if exists
-            if original_question.parent_question:
-                trigger_values = original_question.get_show_when_values()
-                if trigger_values:
-                    new_question.set_show_when_values(trigger_values)
-                    new_question.save()
-
-            # Duplicate question options
-            for old_option in original_question.options.all():
-                QuestionOption.objects.create(
-                    question=new_question,
-                    text=old_option.text,
-                    value=old_option.value,
-                    is_flag=old_option.is_flag,
-                    badge_type=old_option.badge_type,
-                    additional_instructions=old_option.additional_instructions,
-                    order=old_option.order
-                )
-
-            messages.success(
-                request,
-                f'Question duplicated successfully! Copied {original_question.options.count()} options.'
-            )
-
-    except Exception as e:
-        messages.error(request, f'Error duplicating question: {str(e)}')
-
+    duplicate_question(original_question)
+    messages.success(
+        request,
+        f'Question duplicated successfully! Copied {original_question.options.count()} options.')
     return redirect('reports:report_type_detail', pk=report_type.pk)
 
 
