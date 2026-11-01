@@ -72,8 +72,8 @@ feature table: every row must be doable in the app.
 | 1. Shared groundwork | **Done** | site `24cc536`, app `1cc8231` |
 | 2. Report-type builder | **Done, driven in the browser** | site `63b2e8f` `cce0414`, app `26b1248` |
 | 3. Products, made editable | **Done, driven in the browser** (all but Geller AI sync's success path: no local Geller AI runs; the failure path works. Sync all was not started, as it runs through every product) | app `bd7fb11` |
-| 4. Customers, made editable | Next | |
-| 5. Proposals builder | | |
+| 4. Customers, made editable | **Done, driven in the browser** (details, group, contacts, wall chart, groups, members, group prices, import check and real import) | site `f706fa8`, app (see log) |
+| 5. Proposals builder | Next | |
 | 6. Tickets actions | | |
 | 7. Completed reports gaps | | |
 | 8. Orders actions, Users/distributors editing | | |
