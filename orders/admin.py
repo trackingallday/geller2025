@@ -38,10 +38,8 @@ class CustomerOrderAdmin(admin.ModelAdmin):
         if order.submitted:
             messages.warning(request, f'Order {order.order_number} has already been submitted.')
         else:
-            order.submitted = True
-            order.save()
-            from .utils import OrderPDFGenerator
-            OrderPDFGenerator(order).generate_and_save()
+            from .services import submit_order
+            submit_order(order)
             messages.success(request, f'Order {order.order_number} submitted and PDF generated.')
         return redirect('admin:orders_customerorder_change', pk)
 

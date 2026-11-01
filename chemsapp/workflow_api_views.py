@@ -5,6 +5,7 @@ three separate dashboards each present differently. One module, because
 they share a shape: a filtered list, one record with its children, and in
 two cases a PDF to stream.
 """
+from django.db import transaction
 from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
@@ -98,6 +99,10 @@ def order_list(request):
 
 @staff_api
 def order_detail(request, order_id):
+    return ok(_order_detail(order_id))
+
+
+def _order_detail(order_id):
     order = get_object_or_404(
         CustomerOrder.objects
         .select_related('customer')
@@ -106,7 +111,7 @@ def order_detail(request, order_id):
         pk=order_id,
     )
 
-    return ok({
+    return {
         **_order_row(order),
         'notes': order.notes,
         'line_items': [
@@ -130,7 +135,151 @@ def order_detail(request, order_id):
             }
             for item in order.line_items.all()
         ],
-    })
+    }
+
+
+def _order_lines(rows):
+    """Check posted order lines: [{id?, variant, quantity, soh,
+    max_stock_level, delete?}]. Returns (lines, error message)."""
+    lines = []
+    for index, row in enumerate(rows, start=1):
+        if row.get('delete'):
+            lines.append({'id': _int(row.get('id')), 'delete': True})
+            continue
+        variant = ProductVariant.objects.filter(pk=_int(row.get('variant'))).first()
+        if variant is None:
+            return None, f'Line {index} needs a product.'
+        numbers = {}
+        for field in ('quantity', 'soh', 'max_stock_level'):
+            value = _int(row.get(field, 0) if row.get(field) not in (None, '') else 0)
+            if value is None or value < 0:
+                return None, f'Line {index}: {field.replace("_", " ")} must be a whole number, 0 or more.'
+            numbers[field] = value
+        lines.append({'id': _int(row.get('id')), 'variant': variant, **numbers})
+    return lines, None
+
+
+def _save_order_lines(order, lines):
+    from orders.models import OrderLineItem
+
+    for line in lines:
+        existing = (
+            order.line_items.filter(pk=line['id']).first() if line.get('id') else None)
+        if line.get('delete'):
+            if existing:
+                existing.delete()
+            continue
+        if existing is None:
+            existing = OrderLineItem(order=order)
+        existing.product_variant = line['variant']
+        existing.quantity = line['quantity']
+        existing.soh = line['soh']
+        existing.max_stock_level = line['max_stock_level']
+        existing.save()
+
+
+@staff_api
+def order_create(request):
+    """Body: {customer, notes, lines}. A new order is not submitted: submit
+    it when it is complete, which builds its PDF."""
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    body = json_body(request)
+    customer = Customer.objects.filter(pk=_int(body.get('customer'))).first()
+    if customer is None:
+        return error('Choose a customer.', errors={'customer': ['Choose a customer.']})
+    lines, problem = _order_lines(body.get('lines') or [])
+    if problem:
+        return error(problem, errors={'lines': [problem]})
+    with transaction.atomic():
+        order = CustomerOrder.objects.create(
+            customer=customer, notes=str(body.get('notes') or '').strip() or None)
+        _save_order_lines(order, lines)
+    return ok(_order_detail(order.pk))
+
+
+@staff_api
+def order_update(request, order_id):
+    """Body: any of {fulfilment_status, notes, lines}.
+
+    Lines are locked once the order is submitted: its PDF has gone out
+    with them. Status and notes can still change.
+    """
+    from orders.models import FULFILMENT_STATUS_CHOICES
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    order = get_object_or_404(CustomerOrder, pk=order_id)
+    body = json_body(request)
+
+    if 'fulfilment_status' in body:
+        status = str(body.get('fulfilment_status') or '')
+        if status not in dict(FULFILMENT_STATUS_CHOICES):
+            return error('That is not a fulfilment status.',
+                         errors={'fulfilment_status': ['That is not a fulfilment status.']})
+        order.fulfilment_status = status
+    if 'notes' in body:
+        order.notes = str(body.get('notes') or '').strip() or None
+    lines = None
+    if 'lines' in body:
+        if order.submitted:
+            return error('This order is submitted, so its lines cannot change.', status=409)
+        lines, problem = _order_lines(body.get('lines') or [])
+        if problem:
+            return error(problem, errors={'lines': [problem]})
+
+    with transaction.atomic():
+        order.save()
+        if lines is not None:
+            _save_order_lines(order, lines)
+    return ok(_order_detail(order.pk))
+
+
+@staff_api
+def order_submit(request, order_id):
+    """Submit the order and build its PDF, as the admin's button did, but
+    by POST: a GET that writes can be fired by a link preview."""
+    from orders.services import submit_order
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    order = get_object_or_404(CustomerOrder, pk=order_id)
+    if not order.line_items.exists():
+        return error('Add a line before submitting the order.')
+    if not submit_order(order):
+        return error(f'Order {order.order_number} is already submitted.', status=409)
+    return ok(_order_detail(order.pk))
+
+
+@staff_api
+def order_email(request, order_id):
+    from django.core.exceptions import ValidationError
+    from django.core.validators import validate_email
+    from orders.services import send_order_pdf_email
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    order = get_object_or_404(CustomerOrder, pk=order_id)
+    address = str(json_body(request).get('email_address') or '').strip()
+    try:
+        validate_email(address)
+    except ValidationError:
+        return error('Type a valid email address.', errors={'email_address': ['Type a valid email address.']})
+    try:
+        send_order_pdf_email(order, address)
+    except Exception as e:
+        return error(f'The email did not send: {e}', status=502)
+    return ok({'id': order.pk, 'email_address': address})
+
+
+@staff_api
+def order_delete(request, order_id):
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    order = get_object_or_404(CustomerOrder, pk=order_id)
+    number = order.order_number
+    order.delete()
+    return ok({'id': order_id, 'order_number': number})
 
 
 # --- Proposals (quotes) ------------------------------------------------------

@@ -2,13 +2,12 @@ from rest_framework.decorators import api_view
 from rest_framework.response import Response
 from rest_framework import status
 from django.db import transaction
-from django.conf import settings
-from postmarker.core import PostmarkClient
 
 from chemsapp.models import Customer, ProductVariant
 from chemsapp.serializers import CustomerProductVariantSerializer
 from .models import CustomerOrder, OrderLineItem
 from .serializers import CustomerOrderSerializer, CustomerOrderCreateSerializer
+from .services import send_order_pdf_email
 from .utils import OrderPDFGenerator
 
 
@@ -147,41 +146,7 @@ def email_order_pdf(request):
         return Response({'success': False, 'error': 'Order not found.'}, status=status.HTTP_404_NOT_FOUND)
 
     try:
-        # Generate PDF if not already present
-        if not order.pdf:
-            OrderPDFGenerator(order).generate_and_save()
-            order.refresh_from_db()
-
-        if not order.pdf:
-            return Response({'success': False, 'error': 'Failed to generate PDF'}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
-
-        order.pdf.open('rb')
-        pdf_content = order.pdf.read()
-        order.pdf.close()
-
-        postmark = PostmarkClient(server_token=settings.POSTMARK_SERVER_API_TOKEN)
-        email = postmark.emails.Email(
-            From='noreply@geller.co.nz',
-            To=email_address,
-            Subject=f'Order {order.order_number} — {order.customer.businessName}',
-            HtmlBody=f'''
-                <html>
-                <body>
-                    <h2>Your Order PDF</h2>
-                    <p>Please find attached your order:</p>
-                    <ul>
-                        <li><strong>Order Number:</strong> {order.order_number}</li>
-                        <li><strong>Customer:</strong> {order.customer.businessName}</li>
-                        <li><strong>Date:</strong> {order.date.strftime("%Y-%m-%d")}</li>
-                        <li><strong>Status:</strong> {order.get_fulfilment_status_display()}</li>
-                    </ul>
-                </body>
-                </html>
-            ''',
-            TextBody=f'Order Number: {order.order_number}\nCustomer: {order.customer.businessName}\nDate: {order.date.strftime("%Y-%m-%d")}\nStatus: {order.get_fulfilment_status_display()}',
-        )
-        email.attach_binary(content=pdf_content, filename=f'order-{order.order_number}.pdf')
-        email.send()
+        send_order_pdf_email(order, email_address)
 
         return Response({
             'success': True,
