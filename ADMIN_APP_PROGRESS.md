@@ -76,7 +76,7 @@ feature table: every row must be doable in the app.
 | 5. Proposals builder | **Done, driven in the browser** (all but Send PDF, which could send real mail through Postmark in dev; unit-tested with a mock) | site `cbca24f` |
 | 6. Tickets actions | **Done, driven in the browser** | site `665e163` |
 | 7. Completed reports gaps | **Done, driven in the browser** (email unit-tested only; "create sample" left out on purpose, see `4c7c818`) | site `4c7c818` `6ec76a6` |
-| 8. Orders actions, Users/distributors editing | Next | |
+| 8. Orders actions, Users/distributors editing | **Orders: done, driven in the browser.** Users/distributors: built and unit-tested, **not yet driven in the browser**. Next: drive it with a test user that has no email (a reset sends real email in dev), then delete the user | site `369a564` `095b4db` |
 | 9. Retire the old panels | Only after the user confirms each is in use | |
 
 ### What step 1 gives every later screen
