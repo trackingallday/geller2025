@@ -13,7 +13,8 @@ from orders.models import CustomerOrder
 from quotes.models import Quote
 from tickets.models import Ticket
 
-from .staff_api import ok, staff_api
+from .models import Customer, ProductVariant
+from .staff_api import error, json_body, ok, staff_api
 
 PAGE_SIZE = 50
 
@@ -211,6 +212,124 @@ def quote_detail(request, quote_id):
             for line in quote.lines.all()
         ],
     })
+
+
+@staff_api
+def quote_catalogue(request):
+    """What the proposal builder picks from: product → variant → dilution,
+    and the customers with their address and contacts. The same lists the
+    dashboard's builder page embeds, from the same function.
+    """
+    from quotes.dashboard_views import _builder_context
+    return ok(_builder_context())
+
+
+@staff_api
+def quote_price(request):
+    """The price to suggest for one line: ?variant=&customer=.
+
+    A suggestion only: the user can always type over it. Through the same
+    resolver as every other price, so the builder and the product screen
+    agree.
+    """
+    from chemsapp.pricing import resolve_price
+    from quotes.services import describe_price_source
+
+    variant = ProductVariant.objects.filter(pk=_int(request.GET.get('variant'))).first()
+    if variant is None:
+        return ok({'price': None, 'source': None})
+    customer = Customer.objects.filter(pk=_int(request.GET.get('customer'))).first()
+    price, pricing = resolve_price(variant, customer)
+    return ok({
+        'price': _money(price),
+        'source': describe_price_source(price, pricing),
+    })
+
+
+def _int(value):
+    try:
+        return int(str(value).strip())
+    except (TypeError, ValueError):
+        return None
+
+
+@staff_api
+def quote_create(request):
+    """Make a proposal, freeze its lines and build its PDF.
+
+    Body: {company_name, address, contact_name, customer, lines: [{variant,
+    price, dilution}]}. The lines go through the same checks as the
+    dashboard's builder page.
+    """
+    from quotes.services import QuoteLineError, build_quote_lines, create_quote
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    body = json_body(request)
+    company_name = str(body.get('company_name') or '').strip()
+    try:
+        lines = build_quote_lines(body.get('lines') or [])
+    except QuoteLineError as e:
+        return error(str(e), errors={'lines': [str(e)]})
+    if not company_name:
+        return error('Company name is required.', errors={'company_name': ['Company name is required.']})
+    if not lines:
+        return error('Add at least one product line.', errors={'lines': ['Add at least one product line.']})
+
+    quote = create_quote(
+        user=request.user,
+        company_name=company_name,
+        address=str(body.get('address') or '').strip(),
+        contact_name=str(body.get('contact_name') or '').strip(),
+        customer=Customer.objects.filter(pk=_int(body.get('customer'))).first(),
+        lines=lines,
+    )
+    return ok(_quote_row(quote))
+
+
+@staff_api
+def quote_email(request, quote_id):
+    """Email the proposal's PDF to one address, building the PDF if missing."""
+    from django.core.validators import validate_email
+    from django.core.exceptions import ValidationError
+    from quotes.services import send_quote_pdf_email
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    quote = get_object_or_404(Quote, pk=quote_id)
+    address = str(json_body(request).get('email_address') or '').strip()
+    try:
+        validate_email(address)
+    except ValidationError:
+        return error('Type a valid email address.', errors={'email_address': ['Type a valid email address.']})
+    try:
+        send_quote_pdf_email(quote, address)
+    except Exception as e:
+        return error(f'The email did not send: {e}', status=502)
+    return ok({'id': quote.pk, 'email_address': address})
+
+
+@staff_api
+def quote_regenerate_pdf(request, quote_id):
+    """Build the proposal's PDF again from its frozen lines."""
+    from quotes.utils import QuotePDFGenerator
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    quote = get_object_or_404(Quote, pk=quote_id)
+    QuotePDFGenerator(quote).generate_and_save()
+    quote.refresh_from_db()
+    return ok(_quote_row(quote))
+
+
+@staff_api
+def quote_delete(request, quote_id):
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    quote = get_object_or_404(Quote, pk=quote_id)
+    number = quote.quote_number
+    quote.delete()
+    return ok({'id': quote_id, 'quote_number': number})
 
 
 # --- Tickets -----------------------------------------------------------------

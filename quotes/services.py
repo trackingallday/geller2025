@@ -1,5 +1,5 @@
 import html
-from decimal import Decimal, ROUND_HALF_UP
+from decimal import Decimal, InvalidOperation, ROUND_HALF_UP
 
 from django.conf import settings
 from django.db import transaction
@@ -172,3 +172,57 @@ def refresh_line_snapshots(quote):
             line.dilutions.select_related('application_type', 'variant__size').all(),
         )
         line.save()
+
+
+class QuoteLineError(ValueError):
+    """A proposal line that cannot be built; the message says why."""
+
+
+def build_quote_lines(rows):
+    """Turn posted line rows into the `lines` create_quote takes.
+
+    `rows` is a list of {'variant': id, 'price': text, 'dilution': id or
+    blank}. A row with neither a variant nor a price is an empty line and
+    is skipped. Raises QuoteLineError for a line that is half filled, has a
+    price of zero or less, or names a dilution of another variant. Shared by
+    the dashboard page and the admin app's API, so both refuse the same
+    proposals.
+    """
+    from chemsapp.models import ProductVariant
+
+    lines = []
+    for row in rows:
+        variant_id = str(row.get('variant') or '').strip()
+        price_text = str(row.get('price') or '').strip()
+        dilution_id = str(row.get('dilution') or '').strip()
+        if not variant_id and not price_text:
+            continue
+        try:
+            variant = ProductVariant.objects.select_related('product', 'size').get(pk=variant_id)
+            price = Decimal(price_text)
+            if price <= 0:
+                raise InvalidOperation
+        except (ProductVariant.DoesNotExist, InvalidOperation, ValueError):
+            raise QuoteLineError('Every line needs a product and a price greater than zero.')
+        dilutions = []
+        if dilution_id:
+            dilution = variant.dilutions.select_related('application_type').filter(pk=dilution_id).first()
+            if dilution is None:
+                raise QuoteLineError('The selected dilution does not belong to the chosen variant.')
+            dilutions = [dilution]
+        lines.append({'variant': variant, 'price': price, 'dilutions': dilutions})
+    return lines
+
+
+def describe_price_source(price, pricing):
+    """Words for where a suggested price came from, as the builder shows them."""
+    from chemsapp.models import GroupPricingVariant
+
+    if isinstance(pricing, GroupPricingVariant):
+        label = f' ({pricing.name})' if pricing.name else ''
+        return f'Group price ({pricing.customer_group.name}){label}'
+    if pricing is not None:
+        return f'Customer price{f" ({pricing.name})" if pricing.name else ""}'
+    if price is not None:
+        return 'Recommended retail price'
+    return None

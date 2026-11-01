@@ -1,4 +1,3 @@
-from decimal import Decimal, InvalidOperation
 
 from django.contrib import messages
 from django.contrib.admin.views.decorators import staff_member_required
@@ -6,10 +5,13 @@ from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
 from django.template.response import TemplateResponse
 
-from chemsapp.models import Customer, GroupPricingVariant, ProductVariant
+from chemsapp.models import Customer, ProductVariant
 from chemsapp.pricing import resolve_price
 from .models import Quote
-from .services import create_quote, send_quote_pdf_email
+from .services import (
+    QuoteLineError, build_quote_lines, create_quote, describe_price_source,
+    send_quote_pdf_email,
+)
 
 
 @staff_member_required
@@ -107,14 +109,7 @@ def dashboard_variant_price(request):
     customer = Customer.objects.filter(pk=customer_id).first() if customer_id else None
     price, pricing = resolve_price(variant, customer)
 
-    source = None
-    if isinstance(pricing, GroupPricingVariant):
-        label = f' ({pricing.name})' if pricing.name else ''
-        source = f'Group price ({pricing.customer_group.name}){label}'
-    elif pricing is not None:
-        source = f'Customer price{f" ({pricing.name})" if pricing.name else ""}'
-    elif price is not None:
-        source = 'Recommended retail price'
+    source = describe_price_source(price, pricing)
 
     return JsonResponse({
         'price': str(price) if price is not None else None,
@@ -137,32 +132,16 @@ def dashboard_create_quote(request):
         prices = request.POST.getlist('price')
         dilution_ids = request.POST.getlist('dilution_id')
 
-        lines = []
-        for i, (vid, price) in enumerate(zip(variant_ids, prices)):
-            vid = vid.strip()
-            price = price.strip()
-            did = dilution_ids[i].strip() if i < len(dilution_ids) else ''
-            if not vid and not price:
-                continue  # skip fully empty rows
-            try:
-                variant = ProductVariant.objects.select_related('product', 'size').get(pk=vid)
-                price_dec = Decimal(price)
-                if price_dec <= 0:
-                    raise InvalidOperation
-            except (ProductVariant.DoesNotExist, InvalidOperation, ValueError):
-                lines = None
-                error = 'Every line needs a product and a price greater than zero.'
-                break
-            # One selected dilution per line; blank = no cost-in-use block
-            dilutions = []
-            if did:
-                dilution = variant.dilutions.select_related('application_type').filter(pk=did).first()
-                if dilution is None:
-                    lines = None
-                    error = 'The selected dilution does not belong to the chosen variant.'
-                    break
-                dilutions = [dilution]
-            lines.append({'variant': variant, 'price': price_dec, 'dilutions': dilutions})
+        rows = [
+            {'variant': vid, 'price': price,
+             'dilution': dilution_ids[i] if i < len(dilution_ids) else ''}
+            for i, (vid, price) in enumerate(zip(variant_ids, prices))
+        ]
+        try:
+            lines = build_quote_lines(rows)
+        except QuoteLineError as e:
+            lines = None
+            error = str(e)
 
         if lines is not None:
             if not company_name:
