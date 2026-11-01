@@ -8,8 +8,9 @@ than repeating what it does.
 from django.db.models import Count, Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
+from django.utils.dateparse import parse_date
 
-from chemsapp.staff_api import error, ok, staff_api
+from chemsapp.staff_api import error, json_body, ok, staff_api
 
 from .models import Answer, Report, ReportType
 
@@ -82,9 +83,28 @@ def report_list(request):
             | Q(prospect__business_name__icontains=search)
         )
 
+    # Completed reports by default, as the old completed-reports page had
+    # them: drafts are still being filled in, and rejected ones are void.
+    # Asking for a status by name, draft or rejected included, shows it.
     status = request.GET.get('status', '').strip()
-    if status:
+    if status == 'any':
+        pass
+    elif status:
         reports = reports.filter(status=status)
+    else:
+        reports = reports.exclude(status__in=['draft', 'rejected'])
+
+    distributor = request.GET.get('distributor', '').strip()
+    if distributor.isdigit():
+        reports = reports.filter(distributor_id=int(distributor))
+
+    # The inspection date, which is what the old page's range filtered on.
+    date_from = parse_date(request.GET.get('date_from', '').strip() or '')
+    if date_from:
+        reports = reports.filter(inspection_date__gte=date_from)
+    date_to = parse_date(request.GET.get('date_to', '').strip() or '')
+    if date_to:
+        reports = reports.filter(inspection_date__lte=date_to)
 
     report_type = request.GET.get('type', '').strip()
     if report_type.isdigit():
@@ -166,6 +186,28 @@ def report_detail(request, report_id):
         'reviewed_at': _when(report.reviewed_at),
         'crm_pushed_at': _when(report.crm_pushed_at),
         'sales_emailed_at': _when(report.sales_emailed_at),
+        'distributor': (
+            {'id': report.distributor_id, 'name': report.distributor.businessname}
+            if report.distributor_id else None
+        ),
+        'prospect': {
+            'address': report.prospect.address,
+            'phone': report.prospect.phone,
+            'maps_link': report.prospect.maps_link,
+        } if report.prospect_id else None,
+        # The model's own rule for what is flagged, the one the PDF and the
+        # old detail page use, so the three always agree.
+        'flagged': [
+            {
+                'answer_id': item['answer'].pk,
+                'question': item['question'].question_text,
+                'section': item['section'],
+                'reason': item['flag_reason'],
+                'badge_type': item.get('badge_type', 'default'),
+                'instructions': item.get('additional_instructions'),
+            }
+            for item in report.get_flagged_answers()
+        ],
         'answers': answers,
     })
 
@@ -260,3 +302,60 @@ def download_pdf(request, report_id):
         content_type='application/pdf',
         filename=f'{report.document_number or report.pk}.pdf',
     )
+
+
+@staff_api
+def email_pdf(request, report_id):
+    """Email the report's PDF to one address, building it first if needed.
+
+    The same path the mobile app's "email PDF" uses, behind the staff gate.
+    """
+    from django.core.exceptions import ValidationError
+    from django.core.validators import validate_email
+
+    from .api_views import get_or_generate_report_pdf, send_report_email
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    report = get_object_or_404(Report, pk=report_id)
+    address = str(json_body(request).get('email_address') or '').strip()
+    try:
+        validate_email(address)
+    except ValidationError:
+        return error('Type a valid email address.', errors={'email_address': ['Type a valid email address.']})
+    try:
+        send_report_email(report, address, get_or_generate_report_pdf(report))
+    except Exception as exc:  # noqa: BLE001 - say why, never 500 silently
+        return error(f'The email did not send: {exc}', status=502)
+    return ok({'id': report.pk, 'email_address': address})
+
+
+@staff_api
+def bulk_pdf(request):
+    """Build the PDFs of several reports, as the admin's list action did.
+
+    Body: {ids: [...], force: bool}. Without force, a report whose PDF is
+    present and current is left alone. Answers with what happened to each.
+    """
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    body = json_body(request)
+    try:
+        ids = [int(pk) for pk in body.get('ids', [])]
+    except (TypeError, ValueError):
+        return error('ids must be report ids.')
+    force = bool(body.get('force'))
+
+    built, skipped, failed = [], [], []
+    for report in Report.objects.filter(pk__in=ids):
+        if not force and report.pdf_file and not report.pdf_needs_regeneration:
+            skipped.append(report.pk)
+            continue
+        if force:
+            report.pdf_needs_regeneration = True
+            report.save(update_fields=['pdf_needs_regeneration'])
+        try:
+            (built if report.generate_pdf() else failed).append(report.pk)
+        except Exception as exc:  # noqa: BLE001 - one bad report must not stop the rest
+            failed.append({'id': report.pk, 'reason': str(exc)})
+    return ok({'built': built, 'skipped': skipped, 'failed': failed})

@@ -75,6 +75,10 @@ urlpatterns = [
          staff_api_views.generate_pdf, name='staff_api_generate_pdf'),
     path('staff-api/reports/<int:report_id>/pdf/', staff_api_views.download_pdf,
          name='staff_api_download_pdf'),
+    path('staff-api/reports/<int:report_id>/email/', staff_api_views.email_pdf,
+         name='staff_api_report_email'),
+    path('staff-api/reports/bulk-pdf/', staff_api_views.bulk_pdf,
+         name='staff_api_report_bulk_pdf'),
     path('staff-api/report-types/', staff_api_views.report_types,
          name='staff_api_report_types'),
 
