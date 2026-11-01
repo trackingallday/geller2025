@@ -71,8 +71,8 @@ feature table: every row must be doable in the app.
 |---|---|---|
 | 1. Shared groundwork | **Done** | site `24cc536`, app `1cc8231` |
 | 2. Report-type builder | **Done, driven in the browser** | site `63b2e8f` `cce0414`, app `26b1248` |
-| 3. Products, made editable | **Built, half driven.** Next: drive equivalents, variant edit/new/delete, dilutions, prices and Geller AI sync in the browser, on a throwaway product (make one, delete it after) | app `bd7fb11` |
-| 4. Customers, made editable | | |
+| 3. Products, made editable | **Done, driven in the browser** (all but Geller AI sync's success path: no local Geller AI runs; the failure path works. Sync all was not started, as it runs through every product) | app `bd7fb11` |
+| 4. Customers, made editable | Next | |
 | 5. Proposals builder | | |
 | 6. Tickets actions | | |
 | 7. Completed reports gaps | | |
@@ -122,7 +122,7 @@ App kit, reuse it rather than writing new:
   caller leaves out (`_fields` in `builder_api_views.py`). Otherwise a
   partial save silently unticks a checkbox.
 - Test data made in the dev database is removed afterwards. The dev
-  database holds 5 report types and 0 quotes.
+  database holds 5 report types, 0 quotes, 0 customer groups and 0 active application types; add test ones to drive group pricing or dilutions, then remove them.
 
 ## How to pick this up
 
