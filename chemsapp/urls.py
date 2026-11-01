@@ -190,6 +190,14 @@ urlpatterns = [
     re_path(r'^staff-api/distributors/$',
             user_dashboard_views.distributor_list,
             name='staff_api_distributor_list'),
+    re_path(r'^staff-api/distributors/(?P<distributor_id>\d+)/$',
+            user_dashboard_views.distributor_detail, name='staff_api_distributor_detail'),
+    re_path(r'^staff-api/distributors/(?P<distributor_id>\d+)/link-user/$',
+            user_dashboard_views.distributor_user_link, name='staff_api_distributor_user_link'),
+    re_path(r'^staff-api/distributors/(?P<distributor_id>\d+)/link-customer/$',
+            user_dashboard_views.distributor_customer_link, name='staff_api_distributor_customer_link'),
+    re_path(r'^staff-api/distributors/(?P<distributor_id>\d+)/send-password-resets/$',
+            user_dashboard_views.distributor_send_resets, name='staff_api_distributor_send_resets'),
 
     # Marketing utility routes
     re_path(r'^product_download/(?P<product_id>\d+)/(?P<document_type>[a-z]{3,4})/$', download_product_document, name="product_download"),

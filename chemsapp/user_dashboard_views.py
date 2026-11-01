@@ -12,7 +12,7 @@ from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 
 from .models import Customer, Distributor, Profile
-from .staff_api import error, form_data, ok, staff_api
+from .staff_api import error, form_data, json_body, ok, staff_api
 
 # A page of users at a time. The list is a search tool, not a report.
 PAGE_SIZE = 50
@@ -290,3 +290,75 @@ def distributor_list(request):
         {'id': d.pk, 'name': d.businessname}
         for d in rows.order_by('businessname')[:50]
     ]})
+
+
+
+def _distributor_data(distributor):
+    """A distributor with its people (who sign in for it) and the
+    customers it serves."""
+    return {
+        'id': distributor.pk,
+        'name': distributor.businessname,
+        'users': [
+            {'id': u.pk, 'username': u.username, 'name': u.get_full_name(),
+             'email': u.email, 'is_active': u.is_active}
+            for u in distributor.users.order_by('username')
+        ],
+        'customers': [
+            {'id': c.pk, 'name': c.businessName}
+            for c in distributor.customers.order_by('businessName')
+        ],
+    }
+
+
+@staff_api
+def distributor_detail(request, distributor_id):
+    return ok(_distributor_data(get_object_or_404(Distributor, pk=distributor_id)))
+
+
+def _set_link(request, distributor_id, relation, model):
+    """Link one record to the distributor, or unlink it.
+
+    Body: {id} to link, {id, remove: true} to unlink. Answers with the whole
+    distributor, so the screen redraws from one source.
+    """
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    distributor = get_object_or_404(Distributor, pk=distributor_id)
+    data = json_body(request)
+    try:
+        target = model.objects.get(pk=int(data.get('id')))
+    except (TypeError, ValueError, model.DoesNotExist):
+        return error('That record does not exist.', status=404)
+    links = getattr(distributor, relation)
+    if data.get('remove'):
+        links.remove(target)
+    else:
+        links.add(target)
+    return ok(_distributor_data(distributor))
+
+
+@staff_api
+def distributor_user_link(request, distributor_id):
+    return _set_link(request, distributor_id, 'users', User)
+
+
+@staff_api
+def distributor_customer_link(request, distributor_id):
+    return _set_link(request, distributor_id, 'customers', Customer)
+
+
+@staff_api
+def distributor_send_resets(request, distributor_id):
+    """Email a password reset to every person at the distributor who has an
+    email address, as the admin's bulk action did. Says who was skipped."""
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    distributor = get_object_or_404(Distributor, pk=distributor_id)
+    sent, skipped = [], []
+    for user in distributor.users.order_by('username'):
+        if user.email and _send_reset(request, user.email):
+            sent.append(user.username)
+        else:
+            skipped.append(user.username)
+    return ok({'sent': sent, 'skipped': skipped})
