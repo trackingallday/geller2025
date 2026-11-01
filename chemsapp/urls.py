@@ -115,6 +115,8 @@ urlpatterns = [
             customer_api_views.customer_tree, name='staff_api_customer_tree'),
     re_path(r'^staff-api/customers/(?P<customer_id>\d+)/$',
             customer_api_views.customer_detail, name='staff_api_customer_detail'),
+    re_path(r'^staff-api/customers/(?P<customer_id>\d+)/wall-chart/$',
+            customer_api_views.customer_wall_chart, name='staff_api_customer_wall_chart'),
     re_path(r'^staff-api/groups/$',
             customer_api_views.group_tree, name='staff_api_group_tree'),
     re_path(r'^staff-api/groups/(?P<group_id>\d+)/$',

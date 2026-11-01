@@ -207,3 +207,34 @@ class ReadApiFieldTests(ContractTestCase):
         data = self.app_get(reverse('staff_api_reference_data')).json()['data']
 
         self.assertIn({'id': self.size.pk, 'name': '5L'}, data['sizes'])
+
+
+class CustomerWallChartTests(ContractTestCase):
+    def setUp(self):
+        super().setUp()
+        user = User.objects.create(username='cafe', email='cafe@example.com')
+        self.customer = Customer.objects.create(
+            user=user, phoneNumber='1', businessName='Uno', address='1 Road')
+
+    def test_no_products_means_no_chart(self):
+        response = self.app_get(
+            reverse('staff_api_customer_wall_chart', args=[self.customer.pk]))
+        self.assertEqual(response.status_code, 404)
+        self.assertIn('no products', response.json()['detail'])
+
+    def test_a_customer_with_products_gets_a_pdf(self):
+        self.customer.products.add(self.product)
+        with mock.patch(
+            'chemsapp.wall_chart_views._build_wall_chart_pdf', return_value=b'%PDF-1.4 x',
+        ) as build:
+            response = self.app_get(
+                reverse('staff_api_customer_wall_chart', args=[self.customer.pk]))
+        self.assertEqual(response.status_code, 200)
+        self.assertEqual(response['Content-Type'], 'application/pdf')
+        self.assertEqual(list(build.call_args.args[1]), [self.product])
+
+    def test_the_detail_counts_the_products(self):
+        self.customer.products.add(self.product)
+        data = self.app_get(
+            reverse('staff_api_customer_detail', args=[self.customer.pk])).json()['data']
+        self.assertEqual(data['product_count'], 1)

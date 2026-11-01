@@ -8,7 +8,7 @@ from django.shortcuts import get_object_or_404
 
 from .customer_dashboard_views import _resolved_prices, _search_customers, _search_groups
 from .models import Customer, CustomerGroup
-from .staff_api import ok, staff_api
+from .staff_api import error, ok, staff_api
 
 
 def _money(value):
@@ -94,6 +94,8 @@ def customer_detail(request, customer_id):
         ],
         'distributors': [
             {'id': d.pk, 'name': d.businessname} for d in customer.distributors.all()],
+        # How many products a wall chart would hold.
+        'product_count': customer.products.count(),
         'prices': [
             {
                 'variant': {
@@ -160,3 +162,24 @@ def group_detail(request, group_id):
             for price in prices
         ],
     })
+
+
+@staff_api
+def customer_wall_chart(request, customer_id):
+    """The customer's wall chart PDF, from every product linked to them.
+
+    The same chart the Django admin's "Download Wall Chart" builds, behind
+    the staff gate so the admin app can fetch it with a token.
+    """
+    from django.http import HttpResponse
+
+    from .wall_chart_views import _build_wall_chart_pdf
+
+    customer = get_object_or_404(Customer, pk=customer_id)
+    products = customer.products.prefetch_related('safetyWears').order_by('name')
+    if not products.exists():
+        return error('This customer has no products, so there is no wall chart.', status=404)
+    pdf_bytes = _build_wall_chart_pdf(customer, products, request.build_absolute_uri('/'))
+    response = HttpResponse(pdf_bytes, content_type='application/pdf')
+    response['Content-Disposition'] = f'inline; filename="wall-chart-{customer.pk}.pdf"'
+    return response
