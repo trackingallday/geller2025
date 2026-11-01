@@ -71,7 +71,7 @@ feature table: every row must be doable in the app.
 |---|---|---|
 | 1. Shared groundwork | **Done** | site `24cc536`, app `1cc8231` |
 | 2. Report-type builder | **Done, driven in the browser** | site `63b2e8f` `cce0414`, app `26b1248` |
-| 3. Products, made editable | Next | |
+| 3. Products, made editable | **Built, half driven.** Next: drive equivalents, variant edit/new/delete, dilutions, prices and Geller AI sync in the browser, on a throwaway product (make one, delete it after) | app `bd7fb11` |
 | 4. Customers, made editable | | |
 | 5. Proposals builder | | |
 | 6. Tickets actions | | |
