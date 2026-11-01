@@ -61,11 +61,68 @@ builds a missing PDF, rebuilds a stale one, and opens an existing one.
 The dev database holds no proposals, so Proposals was checked against a
 test proposal made for the purpose and removed afterwards.
 
-## Next up
+## Parity plan: where it stands
 
-Follow the parity plan's order of work. Step 1 is the shared groundwork:
-the backend contract fixes, then the frontend form kit. Step 2 is the
-report-type builder.
+Plan: `/Users/rimu/.claude/plans/omg-you-have-totally-atomic-acorn.md`.
+Work its "Order of work" top to bottom. Measure each screen against its
+feature table: every row must be doable in the app.
+
+| Step | State | Commits |
+|---|---|---|
+| 1. Shared groundwork | **Done** | site `24cc536`, app `1cc8231` |
+| 2. Report-type builder | **Done, driven in the browser** | site `63b2e8f` `cce0414`, app `26b1248` |
+| 3. Products, made editable | Next | |
+| 4. Customers, made editable | | |
+| 5. Proposals builder | | |
+| 6. Tickets actions | | |
+| 7. Completed reports gaps | | |
+| 8. Orders actions, Users/distributors editing | | |
+| 9. Retire the old panels | Only after the user confirms each is in use | |
+
+### What step 1 gives every later screen
+
+Backend (`chemsapp/staff_api.py`): `formset_errors_response` keys formset
+errors as `"<row>.<field>"`. Variant save answers the `{ok, data}` envelope
+to a JSON caller. Geller AI sync reads JSON bodies. Prices carry `name` and
+`min_quantity`, and the reference data lists `sizes`.
+
+App kit, reuse it rather than writing new:
+- `src/lib/form-data.ts`: `toFormData` (M2M as repeated keys, booleans
+  as "true"/"false", a `File` replaces, `null` clears, `undefined` leaves),
+  `toFormset` (management form, existing rows first), `formsetOrder`.
+- `src/lib/field-errors.ts`: `fieldError`, `formErrors`, `rowFieldError`.
+- `src/lib/search.ts`: the dashboards' picker searches.
+- `src/components/shared/`: `SearchPicker`, `FileField`,
+  `RichTextField` (TipTap, same HTML as CKEditor), `ConfirmDialog`
+  (`useConfirm()`).
+- `useReferenceData()` in `features/products/hooks/useProducts.ts`.
+
+### What step 2 built
+
+- Backend: `reports/builder.py` holds the shared copy, reorder and
+  assignment logic. The old Django pages now call it too.
+  `reports/builder_api_views.py` holds the JSON API. Every write answers
+  with the whole builder tree.
+- App: `/reports/types/:id?tab=build|preview|assign|settings&question=`,
+  `/reports?view=types&category=`, `/reports/assign?q=&assigned=1`.
+- The pattern to copy for later editors: `useBuilderWrite` in
+  `features/reports/hooks/useBuilder.ts` puts the server's answer
+  straight into the cache. A local draft resets when the server's copy
+  changes, as in `QuestionEditor`. Field errors are read with
+  `fieldError(mutation.error, "field")`.
+
+### Lessons from driving it (apply them to every later screen)
+
+- **Drive every action in the browser.** All tests passed, yet two
+  drag-and-drop bugs showed up only in the browser.
+- dnd-kit: read the in-progress layout from a ref, not from state. A
+  quick drop can arrive before React re-renders a drag-over. Use
+  container-first collision, as in `BuilderCanvas.tsx`.
+- An update endpoint must fall back to the stored value for any field the
+  caller leaves out (`_fields` in `builder_api_views.py`). Otherwise a
+  partial save silently unticks a checkbox.
+- Test data made in the dev database is removed afterwards. The dev
+  database holds 5 report types and 0 quotes.
 
 ## How to pick this up
 
