@@ -96,3 +96,7 @@ class CompletedReportsTests(TestCase):
         forced = self.call('staff_api_report_bulk_pdf', body={
             'ids': [self.approved.pk], 'force': True}).json()['data']
         self.assertEqual(forced['built'], [self.approved.pk])
+
+    def test_has_pdf_lists_only_reports_with_one(self):
+        Report.objects.filter(pk=self.approved.pk).update(pdf_file='reports/a2.pdf')
+        self.assertEqual(self.numbers({'has_pdf': '1'}), ['A2'])

@@ -116,6 +116,9 @@ def report_list(request):
 
     if request.GET.get('needs_pdf') == '1':
         reports = reports.filter(Q(pdf_file='') | Q(pdf_needs_regeneration=True))
+    # The browse-PDFs grid: only reports that have one.
+    if request.GET.get('has_pdf') == '1':
+        reports = reports.exclude(pdf_file='').exclude(pdf_file__isnull=True)
 
     total = reports.count()
     try:
