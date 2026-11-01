@@ -384,20 +384,23 @@ def ticket_list(request):
     if customer.isdigit():
         tickets = tickets.filter(customer_id=int(customer))
 
+    # A distributor's tickets are those of the customers it serves.
+    distributor = request.GET.get('distributor', '').strip()
+    if distributor.isdigit():
+        tickets = tickets.filter(customer__distributors__id=int(distributor)).distinct()
+
     rows, meta = _page(tickets.order_by('-updated_at'), request)
     return ok({'tickets': [_ticket_row(t) for t in rows], **meta})
 
 
-@staff_api
-def ticket_detail(request, ticket_id):
+def _ticket_detail(ticket_id, user):
     ticket = get_object_or_404(
         Ticket.objects
         .select_related('customer', 'created_by', 'assigned_to', 'source_report')
         .prefetch_related('replies__author', 'images'),
         pk=ticket_id,
     )
-
-    return ok({
+    return {
         **_ticket_row(ticket),
         'body': ticket.body,
         'replies': [
@@ -406,6 +409,8 @@ def ticket_detail(request, ticket_id):
                 'author': reply.author.username if reply.author_id else None,
                 'body': reply.body,
                 'created_at': _when(reply.created_at),
+                # The thread shows the reader's own replies on the right.
+                'is_self': reply.author_id == user.pk,
             }
             for reply in ticket.replies.all()
         ],
@@ -419,7 +424,141 @@ def ticket_detail(request, ticket_id):
             }
             for image in ticket.images.all()
         ],
-    })
+    }
+
+
+@staff_api
+def ticket_detail(request, ticket_id):
+    return ok(_ticket_detail(ticket_id, request.user))
+
+
+def _bump(ticket):
+    """New activity on a ticket marked read puts it back to pending, and
+    every save moves it to the top of the list, as the old dashboard did."""
+    if ticket.status == 'read':
+        ticket.status = 'pending'
+    ticket.save()
+
+
+@staff_api
+def ticket_create(request):
+    """Body: {customer, subject, body, assigned_to}. Assigning is optional."""
+    from django.contrib.auth.models import User
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    body = json_body(request)
+    errors = {}
+    customer = Customer.objects.filter(pk=_int(body.get('customer'))).first()
+    if customer is None:
+        errors['customer'] = ['Choose a customer.']
+    subject = str(body.get('subject') or '').strip()
+    if not subject:
+        errors['subject'] = ['Type a subject.']
+    text = str(body.get('body') or '').strip()
+    if not text:
+        errors['body'] = ['Say what the ticket is about.']
+    assignee = None
+    if body.get('assigned_to'):
+        assignee = User.objects.filter(pk=_int(body.get('assigned_to'))).first()
+        if assignee is None:
+            errors['assigned_to'] = ['That person does not exist.']
+    if errors:
+        return error('The ticket was not made.', errors=errors)
+
+    ticket = Ticket.objects.create(
+        created_by=request.user, customer=customer, subject=subject, body=text,
+        assigned_to=assignee)
+    return ok(_ticket_detail(ticket.pk, request.user))
+
+
+@staff_api
+def ticket_update(request, ticket_id):
+    """Body: {status} and/or {assigned_to}. `assigned_to: null` unassigns.
+
+    Only the model's own statuses are taken; the old dashboard saved
+    whatever it was sent.
+    """
+    from django.contrib.auth.models import User
+    from tickets.models import TICKET_STATUS_CHOICES
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    ticket = get_object_or_404(Ticket, pk=ticket_id)
+    body = json_body(request)
+    if 'status' in body:
+        status = str(body.get('status') or '')
+        if status not in dict(TICKET_STATUS_CHOICES):
+            return error('That is not a ticket status.', errors={'status': ['That is not a ticket status.']})
+        ticket.status = status
+    if 'assigned_to' in body:
+        if body['assigned_to'] in (None, ''):
+            ticket.assigned_to = None
+        else:
+            assignee = User.objects.filter(pk=_int(body['assigned_to'])).first()
+            if assignee is None:
+                return error('That person does not exist.', errors={'assigned_to': ['That person does not exist.']})
+            ticket.assigned_to = assignee
+    ticket.save()
+    return ok(_ticket_detail(ticket.pk, request.user))
+
+
+@staff_api
+def ticket_reply(request, ticket_id):
+    from tickets.models import TicketReply
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    ticket = get_object_or_404(Ticket, pk=ticket_id)
+    text = str(json_body(request).get('body') or '').strip()
+    if not text:
+        return error('Type a reply.', errors={'body': ['Type a reply.']})
+    TicketReply.objects.create(ticket=ticket, author=request.user, body=text)
+    _bump(ticket)
+    return ok(_ticket_detail(ticket.pk, request.user))
+
+
+@staff_api
+def ticket_image(request, ticket_id):
+    """Attach a photo. It is shrunk in the background, as the old dashboard
+    did, so a phone's full-size picture does not fill the disk."""
+    import threading
+
+    from chemsapp.views import downscale_image
+    from tickets.models import TicketImage
+
+    if request.method != 'POST':
+        return error('POST required.', status=405)
+    ticket = get_object_or_404(Ticket, pk=ticket_id)
+    upload = request.FILES.get('image')
+    if upload is None:
+        return error('Choose an image.', errors={'image': ['Choose an image.']})
+    image = TicketImage.objects.create(ticket=ticket, image=upload, uploaded_by=request.user)
+    threading.Thread(target=downscale_image, args=(image.image.path,), daemon=True).start()
+    _bump(ticket)
+    return ok(_ticket_detail(ticket.pk, request.user))
+
+
+@staff_api
+def customer_distributors(request, customer_id):
+    """The distributors serving a customer, for the new-ticket form."""
+    customer = get_object_or_404(Customer, pk=customer_id)
+    return ok({'distributors': [
+        {'id': d.pk, 'name': d.businessname}
+        for d in customer.distributors.order_by('businessname')
+    ]})
+
+
+@staff_api
+def distributor_users(request, distributor_id):
+    """The people at a distributor, who a ticket can be assigned to."""
+    from django.contrib.auth.models import User
+
+    users = User.objects.filter(distributors__id=distributor_id).order_by('username')
+    return ok({'users': [
+        {'id': u.pk, 'name': f'{u.get_full_name() or u.username} ({u.username})'}
+        for u in users
+    ]})
 
 
 # --- Shared ------------------------------------------------------------------

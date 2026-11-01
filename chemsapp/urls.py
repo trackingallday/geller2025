@@ -151,6 +151,18 @@ urlpatterns = [
             workflow_api_views.ticket_list, name='staff_api_ticket_list'),
     re_path(r'^staff-api/tickets/(?P<ticket_id>\d+)/$',
             workflow_api_views.ticket_detail, name='staff_api_ticket_detail'),
+    re_path(r'^staff-api/tickets/create/$',
+            workflow_api_views.ticket_create, name='staff_api_ticket_create'),
+    re_path(r'^staff-api/tickets/(?P<ticket_id>\d+)/update/$',
+            workflow_api_views.ticket_update, name='staff_api_ticket_update'),
+    re_path(r'^staff-api/tickets/(?P<ticket_id>\d+)/reply/$',
+            workflow_api_views.ticket_reply, name='staff_api_ticket_reply'),
+    re_path(r'^staff-api/tickets/(?P<ticket_id>\d+)/images/$',
+            workflow_api_views.ticket_image, name='staff_api_ticket_image'),
+    re_path(r'^staff-api/customers/(?P<customer_id>\d+)/distributors/$',
+            workflow_api_views.customer_distributors, name='staff_api_customer_distributors'),
+    re_path(r'^staff-api/distributors/(?P<distributor_id>\d+)/users/$',
+            workflow_api_views.distributor_users, name='staff_api_distributor_users'),
 
     # User management (staff only). JSON only: there is no server-rendered
     # page for these, the admin app is the only caller.
