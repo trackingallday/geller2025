@@ -75,8 +75,8 @@ feature table: every row must be doable in the app.
 | 4. Customers, made editable | **Done, driven in the browser** (details, group, contacts, wall chart, groups, members, group prices, import check and real import) | site `f706fa8`, app (see log) |
 | 5. Proposals builder | **Done, driven in the browser** (all but Send PDF, which could send real mail through Postmark in dev; unit-tested with a mock) | site `cbca24f` |
 | 6. Tickets actions | **Done, driven in the browser** | site `665e163` |
-| 7. Completed reports gaps | Next | |
-| 8. Orders actions, Users/distributors editing | | |
+| 7. Completed reports gaps | **Done, driven in the browser** (email unit-tested only; "create sample" left out on purpose, see `4c7c818`) | site `4c7c818` `6ec76a6` |
+| 8. Orders actions, Users/distributors editing | Next | |
 | 9. Retire the old panels | Only after the user confirms each is in use | |
 
 ### What step 1 gives every later screen
