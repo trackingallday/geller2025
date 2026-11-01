@@ -134,6 +134,27 @@ def form_errors_response(form, status=400):
     return JsonResponse({'ok': False, 'errors': form.errors}, status=status)
 
 
+def formset_errors_response(formset, detail, status=400):
+    """A formset validation failure, flattened to one error dict.
+
+    ``formset.errors`` is a list with one dict per row, most of them empty,
+    which a client cannot match to a field. This keys each message by
+    ``<row>.<field>`` instead, so row 2's note is ``"2.note"``. Errors that
+    belong to the whole formset, such as a duplicate across rows, go under
+    ``__all__`` like a form's own non-field errors.
+    """
+    errors = {}
+    for index, row_errors in enumerate(formset.errors):
+        for field, messages in row_errors.items():
+            key = f'{index}.{field}' if field != '__all__' else f'{index}.__all__'
+            errors[key] = list(messages)
+    non_form = list(formset.non_form_errors())
+    if non_form:
+        errors['__all__'] = non_form
+    return JsonResponse(
+        {'ok': False, 'detail': detail, 'errors': errors}, status=status)
+
+
 def error(detail, status=400, **extra):
     """A failure that is not a form validation error."""
     payload = {'ok': False, 'detail': detail}

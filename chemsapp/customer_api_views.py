@@ -142,6 +142,8 @@ def group_detail(request, group_id):
             {
                 'id': price.pk,
                 'price': _money(price.price),
+                'name': price.name,
+                'min_quantity': price.min_quantity,
                 'variant': {
                     'id': price.product_variant_id,
                     'code': price.product_variant.code,

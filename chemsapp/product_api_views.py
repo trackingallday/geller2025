@@ -10,7 +10,7 @@ from django.shortcuts import get_object_or_404
 
 from .models import (
     ApplicationType, CustomerGroup, Product, ProductCategory, ProductVariant,
-    SafetyWear,
+    SafetyWear, Size,
 )
 from .pricing import resolve_price
 from .product_dashboard_views import COMPLIANCE_DOCUMENTS, _search_products
@@ -169,6 +169,7 @@ def variant_detail(request, variant_id):
             {
                 'id': p.pk,
                 'price': _decimal(p.price),
+                'name': p.name,
                 'min_quantity': p.min_quantity,
                 'customers': [
                     {'id': c.pk, 'name': c.businessName} for c in p.customers.all()],
@@ -179,6 +180,8 @@ def variant_detail(request, variant_id):
             {
                 'id': g.pk,
                 'price': _decimal(g.price),
+                'name': g.name,
+                'min_quantity': g.min_quantity,
                 'group': {
                     'id': g.customer_group_id,
                     'name': g.customer_group.name,
@@ -217,4 +220,6 @@ def reference_data(request):
         ],
         'customer_groups': [
             {'id': g.pk, 'name': g.name} for g in CustomerGroup.objects.order_by('name')],
+        # The variant form's size select.
+        'sizes': [{'id': s.pk, 'name': s.name} for s in Size.objects.order_by('name')],
     })

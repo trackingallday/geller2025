@@ -1,7 +1,8 @@
 # Geller Admin App — progress and next steps
 
 Last written 2026-11-01.
-Plan: `/Users/rimu/.claude/plans/look-at-how-in-ethereal-wand.md`
+Original plan: `/Users/rimu/.claude/plans/look-at-how-in-ethereal-wand.md`
+Parity plan (current): `/Users/rimu/.claude/plans/omg-you-have-totally-atomic-acorn.md`
 
 ## Where things stand
 
@@ -12,13 +13,17 @@ Two repositories, both on a branch, nothing merged and nothing pushed.
 | `geller.website` | `admin-app-backend` | 6 new, on top of `0fd6380` |
 | `geller-admin-app` | `main` (new repo) | 7 |
 
-The full Django suite passes: **375 tests, 3 errors**. Those 3 are
+The full Django suite runs **375 tests with 3 errors**. Those 3 are
 `reports.test_browser_integration`, which fail on a corrupt chromedriver
 download and failed the same way before this work started. The app passes
 11 tests, `npx tsc --noEmit` and `npm run build`.
 
-**Every screen in the plan is built.** All seven sidebar entries open a
-screen; none is greyed out.
+**⚠️ The screens are read-only copies, not replacements.** All seven
+sidebar entries open a screen, but none of the custom panels' writes can be
+reached: no editing, no report-type builder, no proposals builder, no ticket
+actions. That missed the point of the work. The parity plan that fixes it is
+`/Users/rimu/.claude/plans/omg-you-have-totally-atomic-acorn.md`. Measure
+progress against its feature tables, not against "the screen renders".
 
 ### The backend
 
@@ -58,17 +63,9 @@ test proposal made for the purpose and removed afterwards.
 
 ## Next up
 
-### 1. Write tests for the new screens
-
-Only `use-url-state.test.tsx` exists. Each screen deserves the same round
-trip the URL rule gets: build a view from a link, change a filter, and read
-the link back.
-
-### 2. Then, per the plan
-
-Retire the replaced Django templates and trim the button bar in
-`templates/admin/base_site.html`. **Last**, and only once each replacement is
-genuinely in use.
+Follow the parity plan's order of work. Step 1 is the shared groundwork:
+the backend contract fixes, then the frontend form kit. Step 2 is the
+report-type builder.
 
 ## How to pick this up
 

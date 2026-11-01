@@ -27,7 +27,10 @@ from .models import (
     ProductVariant,
 )
 from .serializers import ProductSyncSerializer
-from .staff_api import error, form_data, form_errors_response, ok, staff_api, wants_json
+from .staff_api import (
+    error, form_data, form_errors_response, formset_errors_response, ok,
+    staff_api, wants_json,
+)
 
 logger = logging.getLogger(__name__)
 
@@ -386,7 +389,7 @@ def save_variants(request, product_id):
     formset = VariantFormSet(form_data(request), request.FILES, instance=product)
     if not formset.is_valid():
         if wants_json(request):
-            return error('The variants did not save.', errors=formset.errors)
+            return formset_errors_response(formset, 'The variants did not save.')
         messages.error(request, f'The variants did not save: {formset.errors}')
         return redirect(_dashboard_url(product.pk, 'variants'))
 
@@ -435,6 +438,8 @@ def _save_variant_form(request, instance, product):
             return redirect(_dashboard_url(
                 product.pk, 'variants',
                 variant_id=instance.pk if instance else None))
+        if wants_json(request):
+            return form_errors_response(form)
         return JsonResponse(
             {'ok': False, 'errors': form.errors.get_json_data(escape_html=True)},
             status=400)
@@ -447,6 +452,8 @@ def _save_variant_form(request, instance, product):
     if not _is_ajax(request):
         messages.success(request, 'Saved the variant.')
         return redirect(_dashboard_url(product.pk, 'variants', variant_id=variant.pk))
+    if wants_json(request):
+        return ok(_variant_json(variant))
     return JsonResponse({'ok': True, 'variant': _variant_json(variant)})
 
 
@@ -493,7 +500,7 @@ def save_equivalents(request, product_id):
     formset = EquivalencyFormSet(form_data(request), instance=product)
     if not formset.is_valid():
         if wants_json(request):
-            return error('The equivalents did not save.', errors=formset.errors)
+            return formset_errors_response(formset, 'The equivalents did not save.')
         messages.error(request, f'The equivalents did not save: {formset.errors}')
         return redirect(_dashboard_url(product.pk, 'equivalents'))
 
@@ -515,7 +522,7 @@ def save_dilutions(request, variant_id):
         form_data(request), instance=variant, prefix=f'dilution-{variant.pk}')
     if not formset.is_valid():
         if wants_json(request):
-            return error('The dilutions did not save.', errors=formset.errors)
+            return formset_errors_response(formset, 'The dilutions did not save.')
         messages.error(request, f'The dilutions did not save: {formset.errors}')
         return redirect(_dashboard_url(variant.product_id, 'dilutions'))
 
@@ -837,6 +844,16 @@ def _sync_product_to_geller_ai(product, user, include_pdfs):
     return response.json()
 
 
+def _sync_error(message, status):
+    """A Geller AI sync failure.
+
+    The old template reads ``error``; the admin app reads ``detail``, like
+    every other endpoint. Both carry the same message.
+    """
+    return JsonResponse(
+        {'ok': False, 'error': message, 'detail': message}, status=status)
+
+
 @staff_api
 def sync_product_to_geller_ai(request, product_id):
     """Push one product's current data into geller_ai's search index.
@@ -846,20 +863,18 @@ def sync_product_to_geller_ai(request, product_id):
     """
     product = get_object_or_404(Product, pk=product_id)
     if request.method != 'POST':
-        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+        return _sync_error('POST required', 405)
 
-    include_pdfs = request.POST.get('include_pdfs') == 'true'
+    include_pdfs = str(form_data(request).get('include_pdfs')).lower() == 'true'
 
     try:
         data = _sync_product_to_geller_ai(product, request.user, include_pdfs)
     except requests.Timeout:
         logger.warning('Geller AI sync timed out for product %s', product.pk)
-        return JsonResponse(
-            {'ok': False, 'error': 'Geller AI timed out. Try again.'}, status=504)
+        return _sync_error('Geller AI timed out. Try again.', 504)
     except requests.RequestException as e:
         logger.warning('Geller AI sync failed for product %s: %s', product.pk, e)
-        return JsonResponse(
-            {'ok': False, 'error': 'Could not reach Geller AI.'}, status=502)
+        return _sync_error('Could not reach Geller AI.', 502)
 
     return JsonResponse(data)
 
@@ -913,9 +928,9 @@ def sync_all_products_to_geller_ai(request):
     run is in progress, which is enough for this low-traffic internal tool.
     """
     if request.method != 'POST':
-        return JsonResponse({'ok': False, 'error': 'POST required'}, status=405)
+        return _sync_error('POST required', 405)
 
-    include_pdfs = request.POST.get('include_pdfs') == 'true'
+    include_pdfs = str(form_data(request).get('include_pdfs')).lower() == 'true'
     run = GellerAISyncRun.objects.create(started_by=request.user, include_pdfs=include_pdfs)
 
     thread = threading.Thread(
@@ -930,7 +945,7 @@ def sync_all_products_status(request, run_id):
     try:
         run = GellerAISyncRun.objects.get(pk=run_id)
     except GellerAISyncRun.DoesNotExist:
-        return JsonResponse({'ok': False, 'error': 'Unknown run id'}, status=404)
+        return _sync_error('Unknown run id', 404)
     return JsonResponse({
         'ok': True,
         'total': run.total,

@@ -30,7 +30,10 @@ from .models import (
     ProductVariant,
 )
 from .pricing import resolve_price
-from .staff_api import error, form_data, form_errors_response, ok, staff_api, wants_json
+from .staff_api import (
+    error, form_data, form_errors_response, formset_errors_response, ok,
+    staff_api, wants_json,
+)
 
 # Most rows a search returns. The customer table grows, so the list always
 # applies this limit.
@@ -320,7 +323,7 @@ def save_customer_contacts(request, customer_id):
         messages.success(request, f'Saved the contacts of {customer.businessName}.')
     else:
         if wants_json(request):
-            return form_errors_response(formset)
+            return formset_errors_response(formset, 'The contacts did not save.')
         messages.error(request, f'The contacts did not save: {formset.errors}')
     return redirect(_dashboard_url('customers', customer_id=customer.pk))
 
