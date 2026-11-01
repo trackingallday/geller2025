@@ -1,6 +1,6 @@
 # Geller Admin App — progress and next steps
 
-Written 2026-11-01, when a session limit stopped work mid-way.
+Last written 2026-11-01.
 Plan: `/Users/rimu/.claude/plans/look-at-how-in-ethereal-wand.md`
 
 ## Where things stand
@@ -10,14 +10,17 @@ Two repositories, both on a branch, nothing merged and nothing pushed.
 | Repo | Branch | Commits |
 |---|---|---|
 | `geller.website` | `admin-app-backend` | 6 new, on top of `0fd6380` |
-| `geller-admin-app` | `main` (new repo) | 4 |
+| `geller-admin-app` | `main` (new repo) | 7 |
 
 The full Django suite passes: **375 tests, 3 errors**. Those 3 are
 `reports.test_browser_integration`, which fail on a corrupt chromedriver
-download and failed the same way before this work started. 34 tests were
-added.
+download and failed the same way before this work started. The app passes
+11 tests, `npx tsc --noEmit` and `npm run build`.
 
-### Done and verified in the browser
+**Every screen in the plan is built.** All seven sidebar entries open a
+screen; none is greyed out.
+
+### The backend
 
 - **Staff gate** (`chemsapp/staff_api.py`) replacing all 40
   `@staff_member_required` uses on the two dashboards. Takes a DRF token or a
@@ -35,39 +38,33 @@ added.
 - **`backup_documents`** is staff-gated and no longer `@csrf_exempt`.
 - **JSON read endpoints** for products, customers, reports, orders, proposals
   and tickets, plus report PDF generate/regenerate.
-- **The app itself**: scaffold, sidebar shell, token auth, `useUrlState`, and
-  four working screens — Products, Customers, Users, Tickets.
+
+### The app
+
+Scaffold, sidebar shell, token auth, `useUrlState`, and seven screens:
+Products, Customers, Users, Reports, Orders, Proposals, Tickets.
 
 Each screen was driven in a real browser against the local database: a cold
 deep link opens the right record on the right tab, changing a filter rewrites
 the URL, and a hard refresh restores the identical view.
 
+Reports holds two views in one screen — the completed reports, and the
+report types. A report opens a panel with its answers grouped by section,
+flag options in red, and signatures and attachments inline. The PDF column
+builds a missing PDF, rebuilds a stale one, and opens an existing one.
+
+The dev database holds no proposals, so Proposals was checked against a
+test proposal made for the purpose and removed afterwards.
+
 ## Next up
 
-### 1. Finish Reports (half built)
+### 1. Write tests for the new screens
 
-`src/features/reports/` has `api/reports.api.ts`, `hooks/useReports.ts` and
-`components/ReportList.tsx`. It all typechecks but nothing imports it.
+Only `use-url-state.test.tsx` exists. Each screen deserves the same round
+trip the URL rule gets: build a view from a link, change a filter, and read
+the link back.
 
-Still needed: `components/ReportDetail.tsx`, `components/ReportTypeList.tsx`,
-`pages/ReportsPage.tsx`, then the route and the sidebar flag.
-
-### 2. Finish Orders and build Proposals (barely started)
-
-`src/features/orders/api/orders.api.ts` exists. `src/features/quotes/` is empty.
-Each needs api, hooks, a detail component and a page.
-
-**An open question the agent hit and did not resolve:** it was revoking the
-blob URL immediately after `window.open`, and stopped to ask whether the new
-tab would have finished loading first. It would not, reliably. Revoke on a
-timer, or after the tab's load event — do not revoke synchronously.
-
-### 3. Wire the finished screens
-
-In `src/app.tsx` add the routes, and in `src/components/shared/AppSidebar.tsx`
-flip each section's `ready` flag to `true`. Tickets shows the pattern for both.
-
-### 4. Then, per the plan
+### 2. Then, per the plan
 
 Retire the replaced Django templates and trim the button bar in
 `templates/admin/base_site.html`. **Last**, and only once each replacement is
@@ -111,6 +108,11 @@ the canonical link rather than `/customers?view=customers`.
 - The dashboards *look* like JSON APIs — no `render()` calls anywhere — but
   they are not: ~50 `redirect()` against 17 `JsonResponse`. The mutations are
   form handlers.
+- A PDF route is behind the token gate, so a plain `<a href>` cannot reach
+  it: a navigation sends no Authorization header. Each PDF helper fetches
+  the file and opens an object URL. **Revoke that URL on a timer, never on
+  the line after `window.open`** — the new tab has not loaded it yet when
+  `window.open` returns.
 - `Distributor` has **no `name` field**. It is `businessname`, lowercase, with
   a camelCase property shim a queryset cannot use. `Customer.businessName` is
   genuinely camelCase. They differ.
@@ -121,6 +123,9 @@ the canonical link rather than `/customers?view=customers`.
   New users get a long random password instead.
 - Answer fields are `text_answer` / `file_answer` / `signature_answer`;
   `QuestionOption.text`; `ReportSection.name`. Not what their names suggest.
+- An order line's `soh` and `max_stock_level` are snapshots from when the
+  order was placed, not today's stock. A proposal line freezes the product's
+  name, code, price and cost-in-use the same way.
 - `createMemoryRouter` builds a `Request` per navigation, and jsdom's
   `AbortSignal` is not the one Node's fetch accepts. Use `MemoryRouter` in
   tests instead — patching the globals does not work.
