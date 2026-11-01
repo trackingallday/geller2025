@@ -177,8 +177,16 @@ def report_types(request):
         ReportType.objects
         .annotate(
             report_count=Count('reports', distinct=True),
-            customer_count=Count('customer_assignments', distinct=True),
-            distributor_count=Count('distributor_assignments', distinct=True),
+            # Withdrawing an assignment keeps its row, switched off, so
+            # only the rows still on count.
+            customer_count=Count(
+                'customer_assignments', distinct=True,
+                filter=Q(customer_assignments__is_active=True)),
+            distributor_count=Count(
+                'distributor_assignments', distinct=True,
+                filter=Q(distributor_assignments__is_active=True)),
+            section_count=Count('sections', distinct=True),
+            question_count=Count('questions', distinct=True),
         )
         .order_by('name')
     )
@@ -199,6 +207,8 @@ def report_types(request):
                 'report_count': rt.report_count,
                 'customer_count': rt.customer_count,
                 'distributor_count': rt.distributor_count,
+                'section_count': rt.section_count,
+                'question_count': rt.question_count,
             }
             for rt in rows
         ],
