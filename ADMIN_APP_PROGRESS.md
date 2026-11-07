@@ -136,12 +136,20 @@ the user can `/clear` before the context grows large.
 fully test the new admin app first. Ask the user what to do first. The
 open items are:
 
-1. **Check what is still not driven in the browser** (a short session):
-   - Open `/reports?view=types`, search, and make sure that the header
-     count changes. This fix has no unit test and no browser check.
+1. **Browser check of search and proposals: done (2026-11-08).** 20 of 20
+   checks passed, with no page errors and no failed requests. The checks
+   covered:
+   - `/reports?view=types`: the header count changes, a refresh keeps it,
+     and Escape restores it.
    - Search on Products, Users, Distributors and Groups.
-   - Make a test proposal, then try the Proposals customer filter and
-     the customer link on the proposal. Remove the test proposal.
+   - The Proposals customer filter, a refresh with that filter, and the
+     customer link on the proposal.
+
+   The test proposals and test groups are removed. The dev database again
+   holds 0 quotes and 0 groups. The Chrome extension was not connected, so
+   Playwright drove the Chromium in `~/Library/Caches/ms-playwright`.
+   The check found one fault, "1 report types". This fault is corrected.
+   Next: item 2.
 2. **Write a test checklist for the client.** This was offered and not yet
    started: for each screen, short steps to try. Write it as a `.md` file
    in the project. Do not publish an Artifact, because the user does not
@@ -196,10 +204,8 @@ open items are:
        button. Escape also clears it. `CustomerFilter` and `AssigneeFilter`
        are in `src/components/shared/FilterPicker.tsx`.
      - Report types have a search box, `?tq=`, that runs in the browser.
-     - Driven in the browser: Tickets, Reports, report types, Orders,
-       Customers. Checked by unit test and API only: Products, Users,
-       Distributors, Groups. The proposal link and the Proposals filter
-       are not driven, because the dev database holds 0 quotes.
+     - Driven in the browser: all list screens, the Proposals filter and
+       the proposal customer link.
      - Results: Django 476 tests with the same 3 chromedriver errors. App
        108 tests, `tsc` and the build pass.
    - Not part of the six panels, but listed in the parity plan under
