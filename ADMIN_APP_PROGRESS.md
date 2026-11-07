@@ -150,10 +150,12 @@ open items are:
    Playwright drove the Chromium in `~/Library/Caches/ms-playwright`.
    The check found one fault, "1 report types". This fault is corrected.
    Next: item 2.
-2. **Write a test checklist for the client.** This was offered and not yet
-   started: for each screen, short steps to try. Write it as a `.md` file
-   in the project. Do not publish an Artifact, because the user does not
-   like them.
+2. **Test checklist for the client: done (2026-11-08).** The file is
+   `ADMIN_APP_TEST_CHECKLIST.md`. It has steps for each screen, cautions
+   for real email and deletes, the items that stay in `/admin/`, and how
+   to report a problem. It does not give the app URL. Add the URL before
+   you send it to the client.
+   Next: get the user's answers to items 3 and 4.
 3. **Staff-only decision.** The user must decide before a merge (see
    item 3 of the step 9 list below). This question is still open.
 4. **Admin extras.** Ask the user if the client expects these in the app:
