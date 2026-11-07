@@ -12,7 +12,6 @@ import threading
 import requests
 from django.conf import settings
 from django.contrib import messages
-from django.db.models import Q
 from django.forms import inlineformset_factory, modelform_factory
 from django.http import JsonResponse
 from django.shortcuts import get_object_or_404, redirect
@@ -28,7 +27,8 @@ from .models import (
 )
 from .serializers import ProductSyncSerializer
 from .staff_api import (
-    error, form_data, form_errors_response, formset_errors_response, ok,
+    CUSTOMER_SEARCH_FIELDS, PRODUCT_SEARCH_FIELDS, error, form_data,
+    form_errors_response, formset_errors_response, ok, search_q,
     staff_api, wants_json,
 )
 
@@ -88,7 +88,8 @@ VARIANT_FIELDS = [
 VARIANT_SEARCH_LENGTH = 4
 
 VARIANT_SEARCH_FIELDS = [
-    'code', 'barcode', 'carton_barcode', 'label_code', 'size__name',
+    'code', 'barcode', 'carton_barcode', 'label_code', 'description',
+    'size__name', 'product__name', 'product__productCode',
 ]
 
 ProductVariantForm = modelform_factory(ProductVariant, fields=VARIANT_FIELDS)
@@ -145,22 +146,15 @@ def _search_products(search, always_expand=None):
     show_variants = search and len(search) >= VARIANT_SEARCH_LENGTH
 
     if search:
-        products = products.filter(
-            Q(name__icontains=search) |
-            Q(productCode__icontains=search) |
-            Q(brand__icontains=search)
-        ).distinct()
+        products = products.filter(search_q(search, PRODUCT_SEARCH_FIELDS)).distinct()
 
     rows = {product.pk: product for product in products}
     matched_variants_by_product = {}
 
     if show_variants:
-        variant_query = Q()
-        for field in VARIANT_SEARCH_FIELDS:
-            variant_query |= Q(**{f'{field}__icontains': search})
         matched = (
             ProductVariant.objects
-            .filter(variant_query)
+            .filter(search_q(search, VARIANT_SEARCH_FIELDS))
             .select_related('product')
             .order_by('code')
         )
@@ -607,14 +601,15 @@ def customer_search(request):
         customers = customers.exclude(products__id=linked_to)
 
     if search:
-        customers = customers.filter(
-            Q(businessName__icontains=search) |
-            Q(user__email__icontains=search) |
-            Q(user__first_name__icontains=search) |
-            Q(user__last_name__icontains=search)
-        )
+        customers = customers.filter(search_q(search, CUSTOMER_SEARCH_FIELDS))
 
-    customers = customers.order_by('businessName')[:SEARCH_LIMIT]
+    # ?distributor=<id> narrows to the customers that distributor serves,
+    # for a customer filter that sits beside a distributor filter.
+    distributor = request.GET.get('distributor', '')
+    if distributor.isdigit():
+        customers = customers.filter(distributors__id=int(distributor))
+
+    customers = customers.distinct().order_by('businessName')[:SEARCH_LIMIT]
     results = [
         {'id': customer.pk,
          'name': customer.businessName or customer.user.get_full_name() or customer.user.username,
@@ -667,7 +662,7 @@ def category_search(request):
     search = request.GET.get('q', '').strip()
     categories = ProductCategory.objects.order_by('name')
     if search:
-        categories = categories.filter(name__icontains=search)[:SEARCH_LIMIT]
+        categories = categories.filter(search_q(search, ('name',)))[:SEARCH_LIMIT]
 
     results = [
         {'id': category.pk, 'name': category.name, 'detail': ''}
@@ -691,11 +686,7 @@ def product_search(request):
         products = products.exclude(pk=exclude_id)
 
     if search:
-        products = products.filter(
-            Q(name__icontains=search) |
-            Q(productCode__icontains=search) |
-            Q(brand__icontains=search)
-        )
+        products = products.filter(search_q(search, PRODUCT_SEARCH_FIELDS))
 
     products = products[:SEARCH_LIMIT]
     results = [

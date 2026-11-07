@@ -7,12 +7,11 @@ put the whole job in one place for the admin app.
 """
 from django.contrib.auth.forms import PasswordResetForm
 from django.contrib.auth.models import User
-from django.db.models import Q
 from django.shortcuts import get_object_or_404
 from django.utils.crypto import get_random_string
 
 from .models import Customer, Distributor, Profile
-from .staff_api import error, form_data, json_body, ok, staff_api
+from .staff_api import error, form_data, json_body, ok, search_q, staff_api
 
 # A page of users at a time. The list is a search tool, not a report.
 PAGE_SIZE = 50
@@ -61,7 +60,7 @@ def _serialize(user, profile=None):
 def user_list(request):
     """Search and page the user list.
 
-    ``q`` matches username, name or email. ``role`` filters on the profile
+    ``q`` matches username, name, email, business, phone or distributor. ``role`` filters on the profile
     type, with the two Django flags offered as roles of their own because
     "who are the staff" is the question this screen is opened to answer.
     """
@@ -71,12 +70,11 @@ def user_list(request):
     users = User.objects.all().prefetch_related('distributors')
 
     if search:
-        users = users.filter(
-            Q(username__icontains=search)
-            | Q(first_name__icontains=search)
-            | Q(last_name__icontains=search)
-            | Q(email__icontains=search)
-        )
+        users = users.filter(search_q(search, (
+            'username', 'first_name', 'last_name', 'email',
+            'profile__businessName', 'profile__phoneNumber',
+            'profile__cellPhoneNumber', 'distributors__businessname',
+        ))).distinct()
 
     if role == 'staff':
         users = users.filter(is_staff=True)
@@ -285,7 +283,9 @@ def distributor_list(request):
     search = request.GET.get('q', '').strip()
     rows = Distributor.objects.all()
     if search:
-        rows = rows.filter(businessname__icontains=search)
+        rows = rows.filter(search_q(search, (
+            'businessname', 'phonenumber', 'cellphonenumber', 'address',
+        )))
     return ok({'results': [
         {'id': d.pk, 'name': d.businessname}
         for d in rows.order_by('businessname')[:50]

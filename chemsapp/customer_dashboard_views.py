@@ -31,7 +31,8 @@ from .models import (
 )
 from .pricing import resolve_price
 from .staff_api import (
-    error, form_data, form_errors_response, formset_errors_response, ok,
+    CUSTOMER_SEARCH_FIELDS, error, form_data, form_errors_response,
+    formset_errors_response, ok, search_q,
     staff_api, wants_json,
 )
 
@@ -82,12 +83,7 @@ def _search_customers(search):
     """The rows of the customers list, newest business name order."""
     customers = Customer.objects.select_related('user', 'group').order_by('businessName')
     if search:
-        customers = customers.filter(
-            Q(businessName__icontains=search) |
-            Q(user__email__icontains=search) |
-            Q(user__first_name__icontains=search) |
-            Q(user__last_name__icontains=search)
-        ).distinct()
+        customers = customers.filter(search_q(search, CUSTOMER_SEARCH_FIELDS)).distinct()
     return customers[:SEARCH_LIMIT]
 
 
@@ -99,7 +95,7 @@ def _search_groups(search):
         .order_by('name')
     )
     if search:
-        groups = groups.filter(name__icontains=search)
+        groups = groups.filter(search_q(search, ('name', 'note')))
     return groups
 
 
@@ -477,14 +473,9 @@ def group_customer_search(request):
         customers = customers.exclude(group_id=exclude_group)
 
     if search:
-        customers = customers.filter(
-            Q(businessName__icontains=search) |
-            Q(user__email__icontains=search) |
-            Q(user__first_name__icontains=search) |
-            Q(user__last_name__icontains=search)
-        )
+        customers = customers.filter(search_q(search, CUSTOMER_SEARCH_FIELDS))
 
-    customers = customers.order_by('businessName')[:SEARCH_LIMIT]
+    customers = customers.distinct().order_by('businessName')[:SEARCH_LIMIT]
     results = [
         {'id': customer.pk,
          'name': customer.businessName or customer.user.get_full_name() or customer.user.username,
@@ -511,12 +502,10 @@ def variant_search(request):
             group_pricing_variants__customer_group_id=exclude_group_priced)
 
     if search:
-        variants = variants.filter(
-            Q(code__icontains=search) |
-            Q(barcode__icontains=search) |
-            Q(product__name__icontains=search) |
-            Q(size__name__icontains=search)
-        )
+        variants = variants.filter(search_q(search, (
+            'code', 'barcode', 'carton_barcode', 'label_code', 'description',
+            'product__name', 'product__productCode', 'size__name',
+        )))
 
     variants = variants.order_by('product__name', 'code')[:SEARCH_LIMIT]
     results = [

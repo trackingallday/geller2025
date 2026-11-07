@@ -10,7 +10,7 @@ from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_date
 
-from chemsapp.staff_api import error, json_body, ok, staff_api
+from chemsapp.staff_api import error, json_body, ok, search_q, staff_api
 
 from .models import Answer, Report, ReportType
 
@@ -76,12 +76,13 @@ def report_list(request):
 
     search = request.GET.get('q', '').strip()
     if search:
-        reports = reports.filter(
-            Q(document_number__icontains=search)
-            | Q(customer__businessName__icontains=search)
-            | Q(distributor__businessname__icontains=search)
-            | Q(prospect__business_name__icontains=search)
-        )
+        reports = reports.filter(search_q(search, (
+            'document_number', 'report_type__name',
+            'customer__businessName', 'distributor__businessname',
+            'prospect__business_name', 'store_compliance_manager',
+            'compliance_manager__name', 'prepared_by__username',
+            'prepared_by__first_name', 'prepared_by__last_name',
+        )))
 
     # Completed reports by default, as the old completed-reports page had
     # them: drafts are still being filled in, and rejected ones are void.

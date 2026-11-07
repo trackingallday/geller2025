@@ -133,7 +133,53 @@ the user can `/clear` before the context grows large.
    still in use. The panels are: `/product-dashboard/`,
    `/customer-dashboard/`, `/reports/`, `/reports/completed/`,
    `/quotes/dashboard/`, `/tickets/dashboard/`.
-2. For each panel that the user lets you retire, do one panel per session:
+   **Answer (2026-11-08):** the user says that all six panels are in use.
+   The admin header (`templates/admin/base_site.html`) and the tickets and
+   quotes nav bars link to them. As a result, each panel must have full
+   parity in the app before its URL changes.
+   **Decision (2026-11-08):** do not retire, redirect or remove any old
+   panel until the client has fully tested the new admin app. The old
+   panels and the app run side by side until then. Step 2 below waits for
+   the client's approval.
+   **Parity check (2026-11-08), done by code, not in the browser:**
+   - Each write URL of the six panels has a matching call in the app.
+     The bulk `save-variants` is not used. The app saves one variant at
+     a time with `variant/<id>/save/`, so no feature is missing.
+   - Each search filter (`exclude_*`) of the old pickers is in
+     `src/lib/search.ts`.
+   - Gaps found, all small. The API already accepts each filter, so the
+     work is in the app only:
+     1. Tickets: no **customer** filter. The old dashboard has one, and it
+        narrows when you select a distributor.
+     2. Reports and Browse PDFs: no **customer** filter. Both old pages
+        have one.
+     3. Proposal detail: "Customer" is plain text. The old page links to
+        the customer. A link to `/customers?customer=<id>` is better.
+     **Closed (2026-11-08).** Tickets, Reports, Browse PDFs, Orders and
+     Proposals now have a customer filter. Tickets also has an assignee
+     filter. The Orders filter was a fourth gap: the parity check above
+     missed it, because Orders is not one of the six panels. The proposal
+     customer is now a link.
+   - Search was improved on all list screens and pickers (2026-11-08):
+     - `search_q` in `chemsapp/staff_api.py` finds every word, in any field
+       and in any order. Add new searches with it, not with `icontains`.
+     - `CUSTOMER_SEARCH_FIELDS` is the one list for the customer list and
+       the customer pickers. Each list now searches more fields.
+     - `SearchBox` is the one search box. It waits 250 ms and has a clear
+       button. Escape also clears it. `CustomerFilter` and `AssigneeFilter`
+       are in `src/components/shared/FilterPicker.tsx`.
+     - Report types have a search box, `?tq=`, that runs in the browser.
+     - Driven in the browser: Tickets, Reports, report types, Orders,
+       Customers. Checked by unit test and API only: Products, Users,
+       Distributors, Groups. The proposal link and the Proposals filter
+       are not driven, because the dev database holds 0 quotes.
+     - Results: Django 476 tests with the same 3 chromedriver errors. App
+       108 tests, `tsc` and the build pass.
+   - Not part of the six panels, but listed in the parity plan under
+     "Admin extras": the variants XLSX import, the dilutions XLSX import,
+     and the application-types settings. None is in the app. They are in
+     `/admin/` now.
+2. After the client approves, for each panel that the user lets you retire, do one panel per session:
    - Make sure that each row of its feature table in the parity plan is
      in the app.
    - Redirect its URL to the matching app screen, or remove it. Ask the

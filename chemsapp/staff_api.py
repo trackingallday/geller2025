@@ -17,10 +17,45 @@ would be shown a page of JSON.
 import json
 
 from django.contrib.admin.views.decorators import staff_member_required
+from django.db.models import Q
 from django.http import JsonResponse
 from django.views.decorators.csrf import csrf_exempt
 from functools import wraps
 from rest_framework.authtoken.models import Token
+
+
+# The text fields that find a customer. The customer list and all of the
+# customer pickers use this one list, so they find the same customers.
+CUSTOMER_SEARCH_FIELDS = (
+    'businessName', 'phoneNumber', 'cellPhoneNumber', 'address',
+    'user__username', 'user__email', 'user__first_name', 'user__last_name',
+    'contacts__name', 'contacts__email', 'contacts__phone',
+    'group__name', 'distributors__businessname',
+)
+
+PRODUCT_SEARCH_FIELDS = (
+    'name', 'subheading', 'productCode', 'productCodes', 'brand',
+    'product_range',
+)
+
+
+def search_q(search, fields):
+    """A filter that finds every word of ``search``, in any of ``fields``.
+
+    The words can be in different fields, and in any order. "jane acme"
+    finds Jane at Acme, and "smith jane" finds Jane Smith. A plain
+    ``icontains`` on the whole term finds neither of these.
+
+    A field can go through a to-many relation, so the caller must add
+    ``.distinct()`` for such a field.
+    """
+    query = Q()
+    for word in search.split():
+        word_query = Q()
+        for field in fields:
+            word_query |= Q(**{f'{field}__icontains': word})
+        query &= word_query
+    return query
 
 
 def _user_from_token(request):

@@ -6,7 +6,6 @@ they share a shape: a filtered list, one record with its children, and in
 two cases a PDF to stream.
 """
 from django.db import transaction
-from django.db.models import Q
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 
@@ -15,7 +14,7 @@ from quotes.models import Quote
 from tickets.models import Ticket
 
 from .models import Customer, ProductVariant
-from .staff_api import error, json_body, ok, staff_api
+from .staff_api import error, json_body, ok, search_q, staff_api
 
 PAGE_SIZE = 50
 
@@ -77,9 +76,11 @@ def order_list(request):
 
     search = request.GET.get('q', '').strip()
     if search:
-        orders = orders.filter(
-            Q(order_number__icontains=search)
-            | Q(customer__businessName__icontains=search))
+        orders = orders.filter(search_q(search, (
+            'order_number', 'notes', 'customer__businessName',
+            'line_items__product_variant__code',
+            'line_items__product_variant__product__name',
+        ))).distinct()
 
     status = request.GET.get('status', '').strip()
     if status:
@@ -307,11 +308,12 @@ def quote_list(request):
 
     search = request.GET.get('q', '').strip()
     if search:
-        quotes = quotes.filter(
-            Q(quote_number__icontains=search)
-            | Q(company_name__icontains=search)
-            | Q(contact_name__icontains=search)
-            | Q(customer__businessName__icontains=search))
+        quotes = quotes.filter(search_q(search, (
+            'quote_number', 'company_name', 'contact_name', 'address',
+            'customer__businessName', 'created_by__username',
+            'created_by__first_name', 'created_by__last_name',
+            'lines__product_name', 'lines__product_code',
+        ))).distinct()
 
     customer = request.GET.get('customer', '').strip()
     if customer.isdigit():
@@ -512,10 +514,12 @@ def ticket_list(request):
 
     search = request.GET.get('q', '').strip()
     if search:
-        tickets = tickets.filter(
-            Q(subject__icontains=search)
-            | Q(body__icontains=search)
-            | Q(customer__businessName__icontains=search))
+        tickets = tickets.filter(search_q(search, (
+            'subject', 'body', 'customer__businessName', 'replies__body',
+            'source_report__document_number',
+            'created_by__username', 'created_by__first_name', 'created_by__last_name',
+            'assigned_to__username', 'assigned_to__first_name', 'assigned_to__last_name',
+        ))).distinct()
 
     status = request.GET.get('status', '').strip()
     if status:
