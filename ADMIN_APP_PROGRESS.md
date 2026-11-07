@@ -1,6 +1,6 @@
 # Geller Admin App — progress and next steps
 
-Last written 2026-11-01.
+Last written 2026-11-08.
 Original plan: `/Users/rimu/.claude/plans/look-at-how-in-ethereal-wand.md`
 Parity plan (current): `/Users/rimu/.claude/plans/omg-you-have-totally-atomic-acorn.md`
 
@@ -76,7 +76,7 @@ feature table: every row must be doable in the app.
 | 5. Proposals builder | **Done, driven in the browser** (all but Send PDF, which could send real mail through Postmark in dev; unit-tested with a mock) | site `cbca24f` |
 | 6. Tickets actions | **Done, driven in the browser** | site `665e163` |
 | 7. Completed reports gaps | **Done, driven in the browser** (email unit-tested only; "create sample" left out on purpose, see `4c7c818`) | site `4c7c818` `6ec76a6` |
-| 8. Orders actions, Users/distributors editing | **Orders: done, driven in the browser.** Users/distributors: built and unit-tested, **not yet driven in the browser**. Next: drive it with a test user that has no email (a reset sends real email in dev), then delete the user | site `369a564` `095b4db` |
+| 8. Orders actions, Users/distributors editing | **Done, driven in the browser** (create, edit, flags, link and unlink people and customers, "Email everyone" on a distributor with no email addresses. The single-user reset button and a real reset email are unit-tested only, because dev sends real mail) | site `369a564` `095b4db`, app `2d0a417` `f79e05d` |
 | 9. Retire the old panels | Only after the user confirms each is in use | |
 
 ### What step 1 gives every later screen
@@ -123,6 +123,24 @@ App kit, reuse it rather than writing new:
   partial save silently unticks a checkbox.
 - Test data made in the dev database is removed afterwards. The dev
   database holds 5 report types, 0 quotes, 0 customer groups and 0 active application types; add test ones to drive group pricing or dilutions, then remove them.
+
+## Next step: step 9, retire the old panels
+
+Do this in small steps. Write progress here after each one. Then stop so
+the user can `/clear` before the context grows large.
+
+1. Do not remove any panel yet. First, ask the user which old panels are
+   still in use. The panels are: `/product-dashboard/`,
+   `/customer-dashboard/`, `/reports/`, `/reports/completed/`,
+   `/quotes/dashboard/`, `/tickets/dashboard/`.
+2. For each panel that the user lets you retire, do one panel per session:
+   - Make sure that each row of its feature table in the parity plan is
+     in the app.
+   - Redirect its URL to the matching app screen, or remove it. Ask the
+     user which.
+   - Run the Django tests. Record the result here.
+3. Before a merge, the user must decide about the four dashboards that are
+   now staff-only. Non-staff distributors and customers cannot open them.
 
 ## How to pick this up
 
