@@ -10,15 +10,18 @@ Two repositories, both on a branch, nothing merged and nothing pushed.
 
 | Repo | Branch | Commits |
 |---|---|---|
-| `geller.website` | `admin-app-backend` | 6 new, on top of `0fd6380` |
-| `geller-admin-app` | `main` (new repo) | 7 |
+| `geller.website` | `admin-app-backend` | 28 new, on top of `0fd6380` |
+| `geller-admin-app` | `main` (new repo) | 20 |
 
-The full Django suite runs **375 tests with 3 errors**. Those 3 are
+The full Django suite runs **476 tests with 3 errors**. Those 3 are
 `reports.test_browser_integration`, which fail on a corrupt chromedriver
 download and failed the same way before this work started. The app passes
-11 tests, `npx tsc --noEmit` and `npm run build`.
+108 tests, `npx tsc --noEmit` and `npm run build`.
 
-**⚠️ The screens are read-only copies, not replacements.** All seven
+**Steps 1 to 8 of the parity plan are done, so the next paragraph is
+history.** It shows why the parity plan exists.
+
+**⚠️ The screens were read-only copies, not replacements.** All seven
 sidebar entries open a screen, but none of the custom panels' writes can be
 reached: no editing, no report-type builder, no proposals builder, no ticket
 actions. That missed the point of the work. The parity plan that fixes it is
@@ -77,7 +80,7 @@ feature table: every row must be doable in the app.
 | 6. Tickets actions | **Done, driven in the browser** | site `665e163` |
 | 7. Completed reports gaps | **Done, driven in the browser** (email unit-tested only; "create sample" left out on purpose, see `4c7c818`) | site `4c7c818` `6ec76a6` |
 | 8. Orders actions, Users/distributors editing | **Done, driven in the browser** (create, edit, flags, link and unlink people and customers, "Email everyone" on a distributor with no email addresses. The single-user reset button and a real reset email are unit-tested only, because dev sends real mail) | site `369a564` `095b4db`, app `2d0a417` `f79e05d` |
-| 9. Retire the old panels | Only after the user confirms each is in use | |
+| 9. Retire the old panels | **On hold until the client has fully tested the app.** Parity gaps closed and search improved | site `539324c`, app `3747a10` |
 
 ### What step 1 gives every later screen
 
@@ -124,10 +127,34 @@ App kit, reuse it rather than writing new:
 - Test data made in the dev database is removed afterwards. The dev
   database holds 5 report types, 0 quotes, 0 customer groups and 0 active application types; add test ones to drive group pricing or dilutions, then remove them.
 
-## Next step: step 9, retire the old panels
+## Next steps
 
 Do this in small steps. Write progress here after each one. Then stop so
 the user can `/clear` before the context grows large.
+
+**Do not retire, redirect or remove any old panel.** The client must
+fully test the new admin app first. Ask the user what to do first. The
+open items are:
+
+1. **Check what is still not driven in the browser** (a short session):
+   - Open `/reports?view=types`, search, and make sure that the header
+     count changes. This fix has no unit test and no browser check.
+   - Search on Products, Users, Distributors and Groups.
+   - Make a test proposal, then try the Proposals customer filter and
+     the customer link on the proposal. Remove the test proposal.
+2. **Write a test checklist for the client.** This was offered and not yet
+   started: for each screen, short steps to try. Write it as a `.md` file
+   in the project. Do not publish an Artifact, because the user does not
+   like them.
+3. **Staff-only decision.** The user must decide before a merge (see
+   item 3 of the step 9 list below). This question is still open.
+4. **Admin extras.** Ask the user if the client expects these in the app:
+   the variants XLSX import, the dilutions XLSX import and the
+   application-types settings.
+5. `tsconfig.tsbuildinfo` shows as changed in the app repo. It is a build
+   file. It was left out of the commits.
+
+## Step 9 record: retire the old panels
 
 1. Do not remove any panel yet. First, ask the user which old panels are
    still in use. The panels are: `/product-dashboard/`,
