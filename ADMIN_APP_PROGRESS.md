@@ -156,11 +156,53 @@ open items are:
    to report a problem. It does not give the app URL. Add the URL before
    you send it to the client.
    Next: get the user's answers to items 3 and 4.
-3. **Staff-only decision.** The user must decide before a merge (see
-   item 3 of the step 9 list below). This question is still open.
-4. **Admin extras.** Ask the user if the client expects these in the app:
-   the variants XLSX import, the dilutions XLSX import and the
-   application-types settings.
+3. **Staff-only decision: closed (2026-11-08).** The user says: keep the
+   four loose dashboards staff-only. No change is necessary.
+4. **Admin extras: answered (2026-11-08).** The client expects only the
+   **application-types settings** in the app. The variants XLSX import and
+   the dilutions XLSX import stay in `/admin/`.
+   **Next: build an Application types screen in the app.** The model is
+   `ApplicationType` (`chemsapp/models.py:95`). The admin is
+   `ApplicationTypeAdmin` (`chemsapp/admin.py:343`). The admin shows
+   `name`, `category`, `value_kind`, `unit_volume_litres`, `unit_label`,
+   `sort_order` and `is_active`. Staff edit `sort_order` and `is_active`
+   in the list. The admin has a custom `change_list.html` and custom URLs.
+   Read them first: they can hold a feature that the screen must also have.
+   The custom admin URL is only the dilutions import. That stays in
+   `/admin/`, so the screen needs no other feature.
+   Do the work in small steps:
+   1. **Done (2026-11-08).** File: `chemsapp/application_type_api_views.py`.
+      Tests: `chemsapp/test_application_type_api.py` (9 tests). The
+      endpoints:
+      - `GET /staff-api/application-types/?q=` gives
+        `{application_types, value_kinds}`.
+      - `POST` to the same URL creates a type.
+      - `GET`, `POST` and `DELETE` on `/staff-api/application-types/<id>/`.
+        `POST` is a partial update: a field that you do not send keeps its
+        value. As a result, the list can send only `{is_active}` or
+        `{sort_order}`.
+      - `DELETE` of a type with dilution rates returns 409. The message
+        tells staff to set the type to inactive. Each row has
+        `dilution_count`, so the screen can disable Delete.
+      - `unit_volume_litres` is a string, or null.
+      The full suite runs 485 tests with the same 3 chromedriver errors.
+      Next: item 2.
+   2. **Done (2026-11-08).** The screen is in `geller-admin-app`, in
+      `src/features/application-types/`. The route is
+      `/application-types?q=&type=<id>|new`. The sidebar entry is
+      "Application types".
+      - The list has a search box. Each row has an inline sort order and an
+        Active checkbox. Each inline edit sends only its own field. The
+        sort order saves when the field loses focus, or on Enter.
+      - A click on a row opens a panel with all the fields. A save sends
+        only the fields that changed. "New type" opens the same panel
+        empty.
+      - Delete is in the panel. It asks first. It is disabled when the type
+        has dilution rates.
+      - Tests: `ApplicationTypesPage.test.tsx` (12 tests). App 120 tests,
+        `tsc` and the build pass. Nothing is committed.
+      Next: item 3.
+   3. Do a browser check. Add the screen to `ADMIN_APP_TEST_CHECKLIST.md`.
 5. `tsconfig.tsbuildinfo` shows as changed in the app repo. It is a build
    file. It was left out of the commits.
 
@@ -222,6 +264,7 @@ open items are:
    - Run the Django tests. Record the result here.
 3. Before a merge, the user must decide about the four dashboards that are
    now staff-only. Non-staff distributors and customers cannot open them.
+   **Answer (2026-11-08):** keep them staff-only.
 
 ## How to pick this up
 

@@ -11,6 +11,7 @@ from chemsapp import product_dashboard_views
 from chemsapp import customer_dashboard_views
 from chemsapp import user_dashboard_views
 from chemsapp import product_api_views
+from chemsapp import application_type_api_views
 from chemsapp import customer_api_views
 from chemsapp import workflow_api_views
 
@@ -121,6 +122,14 @@ urlpatterns = [
             customer_api_views.group_tree, name='staff_api_group_tree'),
     re_path(r'^staff-api/groups/(?P<group_id>\d+)/$',
             customer_api_views.group_detail, name='staff_api_group_detail'),
+
+    # Application types: list, create, update and delete for the admin app.
+    re_path(r'^staff-api/application-types/$',
+            application_type_api_views.application_type_list,
+            name='staff_api_application_type_list'),
+    re_path(r'^staff-api/application-types/(?P<application_type_id>\d+)/$',
+            application_type_api_views.application_type_detail,
+            name='staff_api_application_type_detail'),
 
     # Orders, proposals and tickets: list and detail for the admin app.
     re_path(r'^staff-api/orders/$',
