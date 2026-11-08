@@ -5,14 +5,18 @@ and showing the images an answer carries. These endpoints expose the same
 things to the admin app, calling the model's own generate_pdf() rather
 than repeating what it does.
 """
-from django.db.models import Count, Q
+from django.db.models import Count, IntegerField, OuterRef, Q, Subquery
+from django.db.models.functions import Coalesce
 from django.http import FileResponse, Http404
 from django.shortcuts import get_object_or_404
 from django.utils.dateparse import parse_date
 
 from chemsapp.staff_api import error, json_body, ok, search_q, staff_api
 
-from .models import Answer, Report, ReportType
+from .models import (
+    Answer, Question, Report, ReportSection, ReportType, ReportTypeCustomer,
+    ReportTypeDistributor,
+)
 
 PAGE_SIZE = 50
 
@@ -216,23 +220,38 @@ def report_detail(request, report_id):
     })
 
 
+def _count_of(model, **filters):
+    """The number of ``model`` rows for each report type, as a subquery.
+
+    One subquery per count. Five ``Count`` joins in one query multiply the
+    rows: reports x assignments x sections x questions for each type. With
+    the production data, that made this list very slow.
+    """
+    rows = (
+        model.objects
+        .filter(report_type=OuterRef('pk'), **filters)
+        # Without order_by(), the model's Meta.ordering adds joins.
+        .order_by()
+        .values('report_type')
+        .annotate(total=Count('pk'))
+        .values('total')
+    )
+    return Coalesce(Subquery(rows, output_field=IntegerField()), 0)
+
+
 @staff_api
 def report_types(request):
     """The report types, with how many reports and assignments each has."""
     rows = (
         ReportType.objects
         .annotate(
-            report_count=Count('reports', distinct=True),
+            report_count=_count_of(Report),
             # Withdrawing an assignment keeps its row, switched off, so
             # only the rows still on count.
-            customer_count=Count(
-                'customer_assignments', distinct=True,
-                filter=Q(customer_assignments__is_active=True)),
-            distributor_count=Count(
-                'distributor_assignments', distinct=True,
-                filter=Q(distributor_assignments__is_active=True)),
-            section_count=Count('sections', distinct=True),
-            question_count=Count('questions', distinct=True),
+            customer_count=_count_of(ReportTypeCustomer, is_active=True),
+            distributor_count=_count_of(ReportTypeDistributor, is_active=True),
+            section_count=_count_of(ReportSection),
+            question_count=_count_of(Question),
         )
         .order_by('name')
     )

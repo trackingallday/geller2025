@@ -266,6 +266,19 @@ open items are:
    now staff-only. Non-staff distributors and customers cannot open them.
    **Answer (2026-11-08):** keep them staff-only.
 
+## Deploy (2026-11-08)
+
+- The app is live at https://geller-admin-app-production.up.railway.app.
+- Railway service `geller-admin-app`, in the project `protective-simplicity`.
+  It deploys each push to `main` of `trackingallday/geller-admin-app`
+  (a private repo).
+- `VITE_DJANGO_ORIGIN=https://admin.geller.co.nz` is set on the service.
+  Vite reads it at build time, so a change to it needs a new deploy.
+- Django (`geller2025`) deploys from the `remove-frontend` branch, not from
+  `main`.
+- Do not confuse `geller-admin-app` with the service `geller-admin`. That
+  service is the old 2017 app.
+
 ## How to pick this up
 
 ```bash
