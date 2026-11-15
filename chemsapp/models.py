@@ -597,6 +597,11 @@ class Contact(MyBaseModel):
     # New SDS Enquiry stuff
     isSDSDownload = models.BooleanField(default=False)
     companyName = models.TextField(max_length=1000, null=True, blank=True)
+    # The product of an SDS download. Rows from before this field have no
+    # link: the product name is only in ``content``.
+    product = models.ForeignKey(
+        'Product', null=True, blank=True, on_delete=models.SET_NULL,
+        related_name='website_contacts')
 
     def __str__(self):
         return self.nameFrom

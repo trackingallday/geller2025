@@ -127,6 +127,37 @@ App kit, reuse it rather than writing new:
 - Test data made in the dev database is removed afterwards. The dev
   database holds 5 report types, 0 quotes, 0 customer groups and 0 active application types; add test ones to drive group pricing or dilutions, then remove them.
 
+## In progress: Website Contacts screen (2026-11-16)
+
+The client asked to see who downloads from the website or sends an
+enquiry: name, company, date, and the product or the enquiry. These are
+`Contact` rows. `sds_enquire` and `create_contact` in `chemsapp/views.py`
+make them. The plan is in `~/.claude/plans/this-is-from-the-wiggly-clarke.md`.
+The user decided: a new Contacts screen in the app, SDS downloads and
+enquiries only. Info-sheet downloads are not logged.
+
+**Backend: done, not committed.**
+
+- `Contact.product` is a new nullable link (migration `0033_contact_product`).
+  `sds_enquire` now sets it. Old SDS rows have no link. The API takes their
+  product name from the `content` text.
+- `chemsapp/contact_api_views.py`:
+  - `GET /staff-api/contacts/` takes `q`, `kind` (`sds` or `enquiry`),
+    `replied` (`0` or `1`) and `page`. It returns rows newest first, with
+    the pager keys of `workflow_api_views._page`.
+  - `GET` and `PATCH /staff-api/contacts/<id>/`. PATCH changes `replied` only.
+- Row keys: `id, name, company, email, created_at, kind, product_id,
+  product_name, message, replied`.
+- Tests: `chemsapp/test_contact_api.py`, 11 tests, all pass. The full suite
+  passes, except the 3 Selenium tests that cannot start Chrome.
+- Run migration `0033` on production when this deploys.
+
+**Next: the app screen** (plan Step 3). Copy `src/features/tickets/`:
+`src/features/contacts/{api,hooks,pages}`, a `/contacts?q=&kind=&replied=&page=`
+route in `src/app.tsx`, and a link in `src/components/shared/AppSidebar.tsx`.
+Columns: Date, Name, Company, Email, Type, What, Replied. Then add a
+Contacts section to `ADMIN_APP_TEST_CHECKLIST.md`.
+
 ## Next steps
 
 Do this in small steps. Write progress here after each one. Then stop so

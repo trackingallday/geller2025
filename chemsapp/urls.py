@@ -12,6 +12,7 @@ from chemsapp import customer_dashboard_views
 from chemsapp import user_dashboard_views
 from chemsapp import product_api_views
 from chemsapp import application_type_api_views
+from chemsapp import contact_api_views
 from chemsapp import customer_api_views
 from chemsapp import workflow_api_views
 
@@ -130,6 +131,12 @@ urlpatterns = [
     re_path(r'^staff-api/application-types/(?P<application_type_id>\d+)/$',
             application_type_api_views.application_type_detail,
             name='staff_api_application_type_detail'),
+    re_path(r'^staff-api/contacts/$',
+            contact_api_views.contact_list,
+            name='staff_api_contact_list'),
+    re_path(r'^staff-api/contacts/(?P<contact_id>\d+)/$',
+            contact_api_views.contact_detail,
+            name='staff_api_contact_detail'),
 
     # Orders, proposals and tickets: list and detail for the admin app.
     re_path(r'^staff-api/orders/$',

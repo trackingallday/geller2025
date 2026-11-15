@@ -1113,7 +1113,7 @@ def sds_enquire(request):
         c.is_valid()
 
         a = c.validated_data
-        c.create(a)
+        c.create({**a, 'product': product})
 
         # Push the lead to OnePageCRM (tag + note). Isolated so a CRM outage
         # never breaks the SDS download for the customer.
