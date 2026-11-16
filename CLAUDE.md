@@ -25,6 +25,8 @@ config, Procfiles or remote branches before a push. Push to deploy.
 | Admin app (`geller-admin-app`) | `~/Documents/GitHub/geller-admin-app` | `main` | `git push origin main` |
 
 - Ask the user before each push. A push is a production deploy.
+- The Django deploy runs `migrate` by itself. Do not run migrations on
+  production by hand.
 - The admin app is live at https://geller-admin-app-production.up.railway.app.
 - Do not confuse the Railway service `geller-admin-app` with `geller-admin`.
   `geller-admin` is the old 2017 app.

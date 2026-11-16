@@ -202,7 +202,7 @@ The user also wants the send feature on its own sidebar entry, easy to use.
    the send mocked, or ask the user for a safe address.
 6. **Checklist and deploy.** Add both features to
    `ADMIN_APP_TEST_CHECKLIST.md`. Ask the user before the push. The
-   deploy has new migrations.
+   deploy runs the new migrations by itself.
 
 **Next: step 1.**
 
@@ -223,7 +223,7 @@ enquiries only. Info-sheet downloads are not logged.
 - `chemsapp/contact_api_views.py`: `GET /staff-api/contacts/?q=&kind=&replied=&page=`,
   and `GET` and `PATCH /staff-api/contacts/<id>/`. PATCH changes `replied` only.
 - Tests: `chemsapp/test_contact_api.py`, 11 tests.
-- **Run migration `0033` on production when this deploys.**
+- Migration `0033` runs by itself on deploy (pushed 2026-11-16).
 
 **App screen: done, not committed (2026-11-16).**
 
@@ -250,7 +250,7 @@ admins.
 
 **Next step for Contacts:** ask the user before you push. A push to
 `main` of the app deploys it. A push to `remove-frontend` deploys Django,
-and then migration `0033` must run on production.
+and the deploy runs migration `0033` by itself.
 
 **Also open:** Application types step 4.3 (browser check). The checklist
 still lists "The application-types settings" under "What is not in the
