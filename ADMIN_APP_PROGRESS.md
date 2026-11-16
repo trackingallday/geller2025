@@ -204,7 +204,27 @@ The user also wants the send feature on its own sidebar entry, easy to use.
    `ADMIN_APP_TEST_CHECKLIST.md`. Ask the user before the push. The
    deploy runs the new migrations by itself.
 
-**Next: step 1.**
+**Step 1: done (2026-11-17).**
+
+- Models at the end of `chemsapp/models.py`: `ProductDocument`,
+  `DocumentSend`, `DocumentSendItem`. Migrations `0034_product_documents`
+  and `0035_backfill_product_documents`.
+- `ProductDocument.POINTER_FIELDS` maps each kind to its old file field.
+  `is_current` is true when the pointer field holds the file of the row.
+  There is no separate "current" flag.
+- `record_document_versions()` runs on `post_save` of `Product` and
+  `ProductVariant`. It makes a row for a pointer file that has none. As a
+  result, an upload through the Django admin or the old dashboard also
+  goes into the history, with no version and no date.
+- To add a version in step 2: make the `ProductDocument` row first, then
+  set the pointer field and save the owner. The signal then finds the row
+  and makes no duplicate.
+- Local database after the backfill: 313 SDS rows, 252 info rows, 0 MPI,
+  0 labels.
+- Tests: `chemsapp/test_product_documents.py`, 10 tests. Full suite: 510
+  tests, with the same 3 chromedriver errors.
+
+**Next: step 2, the versions API.**
 
 ## In progress: Website Contacts screen (2026-11-16)
 

@@ -684,3 +684,123 @@ def _downscale_model_images(sender, instance, **kwargs):
 
 for _model in _IMAGE_FIELDS:
     post_save.connect(_downscale_model_images, sender=_model)
+
+
+class ProductDocument(models.Model):
+    """One uploaded version of a product document.
+
+    The file fields on Product (infoSheet, sdsSheet, mpi_approval_sheet) and
+    ProductVariant (label) stay the pointer to the current version. The
+    website, the download link and the old dashboard read those fields, so
+    they need no change. This table keeps every version with its number and
+    date. A label version also has the size (variant) it belongs to.
+    """
+
+    SDS = 'sds'
+    INFO = 'info'
+    MPI_APPROVAL = 'mpi_approval'
+    LABEL = 'label'
+    KIND_CHOICES = [
+        (SDS, 'SDS'),
+        (INFO, 'Product information sheet'),
+        (MPI_APPROVAL, 'MPI approval'),
+        (LABEL, 'Label'),
+    ]
+    # The pointer field for each kind. A label lives on the variant.
+    POINTER_FIELDS = {
+        SDS: 'sdsSheet',
+        INFO: 'infoSheet',
+        MPI_APPROVAL: 'mpi_approval_sheet',
+        LABEL: 'label',
+    }
+
+    product = models.ForeignKey(Product, related_name='documents', on_delete=models.CASCADE)
+    variant = models.ForeignKey(
+        ProductVariant, related_name='label_documents', on_delete=models.CASCADE,
+        blank=True, null=True, help_text='Only for a label: the size it belongs to.')
+    kind = models.CharField(max_length=20, choices=KIND_CHOICES)
+    file = models.FileField(upload_to='documents/', max_length=255)
+    version = models.CharField(max_length=50, blank=True, default='')
+    issued_on = models.DateField(blank=True, null=True, help_text='The date on the document.')
+    uploaded_at = models.DateTimeField(auto_now_add=True)
+    uploaded_by = models.ForeignKey(User, related_name='product_documents', on_delete=models.SET_NULL, blank=True, null=True)
+
+    class Meta:
+        ordering = ['-uploaded_at', '-id']
+        indexes = [models.Index(fields=['product', 'kind'])]
+
+    def __str__(self):
+        version = f' v{self.version}' if self.version else ''
+        return f'{self.product.name} {self.get_kind_display()}{version}'
+
+    def pointer_owner(self):
+        """The object whose file field points at the current version."""
+        return self.variant if self.kind == self.LABEL else self.product
+
+    @property
+    def is_current(self):
+        owner = self.pointer_owner()
+        current = getattr(owner, self.POINTER_FIELDS[self.kind], None) if owner else None
+        return bool(current and current.name == self.file.name)
+
+
+class DocumentSend(models.Model):
+    """One email that staff sent with download links for SDS and info sheets."""
+
+    recipients = models.JSONField(default=list, help_text='The email addresses.')
+    message = models.TextField(blank=True, default='')
+    sent_by = models.ForeignKey(User, related_name='document_sends', on_delete=models.SET_NULL, blank=True, null=True)
+    sent_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        ordering = ['-sent_at', '-id']
+
+    def __str__(self):
+        return f'{", ".join(self.recipients)} on {self.sent_at:%Y-%m-%d}'
+
+
+class DocumentSendItem(models.Model):
+    """One link in a DocumentSend, with the version that was current then."""
+
+    send = models.ForeignKey(DocumentSend, related_name='items', on_delete=models.CASCADE)
+    product = models.ForeignKey(Product, related_name='document_send_items', on_delete=models.SET_NULL, blank=True, null=True)
+    product_name = models.CharField(max_length=255, help_text='The product name at send time.')
+    kind = models.CharField(max_length=20, choices=[
+        (ProductDocument.SDS, 'SDS'), (ProductDocument.INFO, 'Product information sheet')])
+    document = models.ForeignKey(
+        ProductDocument, related_name='send_items', on_delete=models.SET_NULL, blank=True, null=True,
+        help_text='The version that was current when the email was sent.')
+
+    def __str__(self):
+        return f'{self.product_name} {self.get_kind_display()}'
+
+
+def record_document_versions(owner, product, variant=None):
+    """Make a ProductDocument for each pointer file that has no row yet.
+
+    This keeps the history complete when a file is set by a path that does
+    not know about versions (the Django admin, the old dashboard).
+    """
+    kinds = [ProductDocument.LABEL] if variant is not None else [
+        ProductDocument.SDS, ProductDocument.INFO, ProductDocument.MPI_APPROVAL]
+    for kind in kinds:
+        current = getattr(owner, ProductDocument.POINTER_FIELDS[kind], None)
+        if not current or not current.name:
+            continue
+        exists = ProductDocument.objects.filter(
+            product=product, variant=variant, kind=kind, file=current.name).exists()
+        if not exists:
+            ProductDocument.objects.create(
+                product=product, variant=variant, kind=kind, file=current.name)
+
+
+@receiver(post_save, sender=Product)
+def _record_product_document_versions(sender, instance, raw=False, **kwargs):
+    if not raw:
+        record_document_versions(instance, instance)
+
+
+@receiver(post_save, sender=ProductVariant)
+def _record_label_versions(sender, instance, raw=False, **kwargs):
+    if not raw:
+        record_document_versions(instance, instance.product, variant=instance)
