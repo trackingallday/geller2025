@@ -224,7 +224,29 @@ The user also wants the send feature on its own sidebar entry, easy to use.
 - Tests: `chemsapp/test_product_documents.py`, 10 tests. Full suite: 510
   tests, with the same 3 chromedriver errors.
 
-**Next: step 2, the versions API.**
+**Step 2: done (2026-11-17).**
+
+- File: `chemsapp/document_api_views.py`. Tests:
+  `chemsapp/test_document_api.py`, 11 tests. Full suite: 521 tests, with
+  the same 3 chromedriver errors.
+- `GET /staff-api/products/<id>/documents/` gives
+  `{product_id, documents: {sds, info, mpi_approval}, labels, kinds}`.
+  Each list is newest first. `labels` has one entry for each size:
+  `{variant_id, code, size, versions}`.
+- Each version is `{id, kind, kind_label, variant_id, file_name, url,
+  version, issued_on, uploaded_at, uploaded_by, is_current, send_count}`.
+- `POST` (multipart) to the same URL uploads a version: `kind`, `file`,
+  `version`, `issued_on` (YYYY-MM-DD), and `variant` for a label. The new
+  version becomes current. A label without a size, or with a size of
+  another product, gives 400.
+- `POST /staff-api/product-documents/<id>/` changes `version` or
+  `issued_on`. A field that you do not send keeps its value. Staff can
+  use this to give the backfilled rows a version and a date.
+- `DELETE` on the same URL removes an old version. The current version
+  gives 409. The file stays in storage.
+
+**Next: step 3, the app.** Read
+`features/products/components/editors/ComplianceEditor.tsx` first.
 
 ## In progress: Website Contacts screen (2026-11-16)
 

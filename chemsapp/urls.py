@@ -12,6 +12,7 @@ from chemsapp import customer_dashboard_views
 from chemsapp import user_dashboard_views
 from chemsapp import product_api_views
 from chemsapp import application_type_api_views
+from chemsapp import document_api_views
 from chemsapp import contact_api_views
 from chemsapp import customer_api_views
 from chemsapp import workflow_api_views
@@ -109,6 +110,13 @@ urlpatterns = [
             product_api_views.reference_data, name='staff_api_reference_data'),
     re_path(r'^staff-api/products/(?P<product_id>\d+)/$',
             product_api_views.product_detail, name='staff_api_product_detail'),
+    # Version history of product documents (SDS, info sheet, MPI, labels).
+    re_path(r'^staff-api/products/(?P<product_id>\d+)/documents/$',
+            document_api_views.product_document_list,
+            name='staff_api_product_document_list'),
+    re_path(r'^staff-api/product-documents/(?P<document_id>\d+)/$',
+            document_api_views.product_document_detail,
+            name='staff_api_product_document_detail'),
     re_path(r'^staff-api/variants/(?P<variant_id>\d+)/$',
             product_api_views.variant_detail, name='staff_api_variant_detail'),
 
