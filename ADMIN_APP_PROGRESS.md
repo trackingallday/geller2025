@@ -1,6 +1,6 @@
 # Geller Admin App — progress and next steps
 
-Last written 2026-11-08.
+Last written 2026-11-16.
 Original plan: `/Users/rimu/.claude/plans/look-at-how-in-ethereal-wand.md`
 Parity plan (current): `/Users/rimu/.claude/plans/omg-you-have-totally-atomic-acorn.md`
 
@@ -136,27 +136,47 @@ make them. The plan is in `~/.claude/plans/this-is-from-the-wiggly-clarke.md`.
 The user decided: a new Contacts screen in the app, SDS downloads and
 enquiries only. Info-sheet downloads are not logged.
 
-**Backend: done, not committed.**
+**Backend: done, committed** (site `3ee150a`).
 
 - `Contact.product` is a new nullable link (migration `0033_contact_product`).
   `sds_enquire` now sets it. Old SDS rows have no link. The API takes their
   product name from the `content` text.
-- `chemsapp/contact_api_views.py`:
-  - `GET /staff-api/contacts/` takes `q`, `kind` (`sds` or `enquiry`),
-    `replied` (`0` or `1`) and `page`. It returns rows newest first, with
-    the pager keys of `workflow_api_views._page`.
-  - `GET` and `PATCH /staff-api/contacts/<id>/`. PATCH changes `replied` only.
-- Row keys: `id, name, company, email, created_at, kind, product_id,
-  product_name, message, replied`.
-- Tests: `chemsapp/test_contact_api.py`, 11 tests, all pass. The full suite
-  passes, except the 3 Selenium tests that cannot start Chrome.
-- Run migration `0033` on production when this deploys.
+- `chemsapp/contact_api_views.py`: `GET /staff-api/contacts/?q=&kind=&replied=&page=`,
+  and `GET` and `PATCH /staff-api/contacts/<id>/`. PATCH changes `replied` only.
+- Tests: `chemsapp/test_contact_api.py`, 11 tests.
+- **Run migration `0033` on production when this deploys.**
 
-**Next: the app screen** (plan Step 3). Copy `src/features/tickets/`:
-`src/features/contacts/{api,hooks,pages}`, a `/contacts?q=&kind=&replied=&page=`
-route in `src/app.tsx`, and a link in `src/components/shared/AppSidebar.tsx`.
-Columns: Date, Name, Company, Email, Type, What, Replied. Then add a
-Contacts section to `ADMIN_APP_TEST_CHECKLIST.md`.
+**App screen: done, not committed (2026-11-16).**
+
+- Files: `src/features/contacts/{api/contacts.api.ts,hooks/useContacts.ts,pages/ContactsPage.tsx}`.
+- Route: `/contacts?q=&kind=sds|enquiry&replied=0|1&page=&contact=<id>`.
+  Sidebar entry: "Website contacts" (icon `Mail`).
+- Columns: Date, Name, Company, Email, Type, What, Replied. "What" is the
+  product (a link when the row has `product_id`) or the message, cut short.
+- A click on a row opens a panel with the full message and a `mailto:` link.
+- The Replied box sends `PATCH {replied}` only. It does not open the row.
+- Tests: `ContactsPage.test.tsx` (6 tests). App 126 tests, `tsc` and the
+  build pass.
+- `ADMIN_APP_TEST_CHECKLIST.md` has a new "Website contacts" section.
+
+**Browser check: done (2026-11-16).** 20 of 20 checks passed, with no
+page errors. Playwright drove the Chromium in `~/Library/Caches/ms-playwright`.
+The checks covered every checklist item, the deep link to a panel, a
+refresh, and the next page. Migration `0033` is now on the local
+database. The dev database holds 3305 contacts. The 2 test rows are
+removed. `sds_enquire` was not called, because it sends real mail to the
+admins.
+
+**Committed:** app `4ac95a8`. Nothing is pushed.
+
+**Next step for Contacts:** ask the user before you push. A push to
+`main` of the app deploys it. A push to `remove-frontend` deploys Django,
+and then migration `0033` must run on production.
+
+**Also open:** Application types step 4.3 (browser check). The checklist
+still lists "The application-types settings" under "What is not in the
+app". That line is wrong now. Remove it and add an "Application types"
+section after the browser check.
 
 ## Next steps
 

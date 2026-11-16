@@ -157,6 +157,23 @@ product to Geller AI and takes a long time.
 - [ ] If a ticket comes from a flagged report, click the report link. The
       report opens.
 
+## Website contacts
+
+This screen shows who downloaded an SDS or sent an enquiry on the website.
+
+- [ ] Download an SDS from the website. The download shows at the top of
+      the list, with the product name.
+- [ ] Send an enquiry from the website. The enquiry shows at the top of
+      the list.
+- [ ] Filter by "SDS downloads", then by "Enquiries".
+- [ ] Filter by "Not replied" and by "Replied".
+- [ ] Search for a name, a company or a product.
+- [ ] Click an enquiry. The full message shows in the panel.
+- [ ] Tick "Replied" on a contact. Refresh the page. The tick stays.
+- [ ] Click a product name. The product opens.
+
+Old SDS downloads show the product name as text, not as a link.
+
 ## What is not in the app
 
 These items stay in the old Django admin (`/admin/`) for now:
