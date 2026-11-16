@@ -14,6 +14,21 @@
 ##Always use skill
 always load the simple-english skill and always use it
 
+## Deploy
+
+Railway deploys each push automatically from git. Do not look at Railway
+config, Procfiles or remote branches before a push. Push to deploy.
+
+| What | Repo | Branch | Push with |
+|---|---|---|---|
+| Django (`geller2025`, `admin.geller.co.nz`) | this repo | `remove-frontend` (not `main`) | `git -c credential.helper='!gh auth git-credential' push origin remove-frontend` |
+| Admin app (`geller-admin-app`) | `~/Documents/GitHub/geller-admin-app` | `main` | `git push origin main` |
+
+- Ask the user before each push. A push is a production deploy.
+- The admin app is live at https://geller-admin-app-production.up.railway.app.
+- Do not confuse the Railway service `geller-admin-app` with `geller-admin`.
+  `geller-admin` is the old 2017 app.
+
 ## Local dev server and login
 
 CAUTION: The default `settings.py` database is the Railway **production**

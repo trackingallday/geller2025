@@ -127,6 +127,85 @@ App kit, reuse it rather than writing new:
 - Test data made in the dev database is removed afterwards. The dev
   database holds 5 report types, 0 quotes, 0 customer groups and 0 active application types; add test ones to drive group pricing or dilutions, then remove them.
 
+## In progress: document versions and "Send documents" (2026-11-16)
+
+The client asked for two features:
+
+> "if we can add a area we can add a version number and date for the
+> Product information sheet, SDS, sheet, MPI Approval and also the Label"
+
+> "email a link directly from the admin for PI Sheet and SDS to a client
+> so they can download and if they go back to this link it downloads the
+> latest version"
+
+The user also wants the send feature on its own sidebar entry, easy to use.
+
+### Decisions (user, 2026-11-16)
+
+- **Keep a history.** Each upload is stored with a version and a date.
+  Staff can see and open old versions. The newest version is current.
+- **Recipients:** staff type an email address, or search and pick a
+  customer or any user. More than one recipient is allowed.
+- **Several products in one email.** For each product, staff tick SDS,
+  Info sheet, or both.
+- **The email has SDS and Info sheet links only.** MPI approval and the
+  label get versions, but they are not sent.
+
+### Facts found
+
+- Product files: `Product.infoSheet`, `Product.sdsSheet`,
+  `Product.mpi_approval_sheet` (and `application_sheet`, not in scope).
+- The label is per size: `ProductVariant.label` (`chemsapp/models.py:207`).
+- The "latest" link exists already: `/product_download/<id>/<sds|info>/`
+  (`download_product_document`, `chemsapp/views.py:1156`). It is public and
+  serves the file that is on the product now.
+- Mail goes through Postmark. Copy `mail_customer` in `chemsapp/views.py`.
+  Dev sends real mail, so mock it in tests and in browser checks.
+- The app edits product files in
+  `features/products/components/editors/ComplianceEditor.tsx`.
+
+### Design
+
+- New model `ProductDocument`: `product` (FK, null for a label),
+  `variant` (FK, only for a label), `kind`
+  (`sds`, `info`, `mpi_approval`, `label`), `file`, `version` (text),
+  `issued_on` (date), `uploaded_at`, `uploaded_by`.
+- **The old file fields stay the "current" pointer.** An upload of a new
+  version also sets `Product.sdsSheet` (and so on) to that file. As a
+  result, the website, the download link and the old dashboard keep
+  working with no change.
+- A data migration makes one `ProductDocument` for each file that exists
+  now, with a blank version and no date.
+- New model `DocumentSend`: recipients, items (product, kind, and the
+  version that was current at send time), message, `sent_by`, `sent_at`.
+  Staff can then answer "which SDS revision did this client get?".
+- The email links go to `/product_download/<id>/<kind>/`, so a later
+  click always gives the newest file.
+
+### Order of work (one step per session)
+
+1. **Models and migrations.** `ProductDocument`, `DocumentSend`, the data
+   migration, and the sync to the old file fields. Tests.
+2. **Versions API.** List the versions of a product and of each size
+   label. Upload a new version (file, version, date). Delete an old,
+   non-current version. Tests.
+3. **App: versions in the Compliance tab and on each size.** Show the
+   current version and date, "Upload new version", and the history.
+   Do a browser check.
+4. **Send API.** `POST /staff-api/document-sends/` with emails, items and
+   a message. `GET` gives the past sends. Postmark is mocked in tests.
+   A product without the file cannot be sent.
+5. **App: "Send documents" screen** on the sidebar. Recipients (search a
+   customer or user, or type an email), products with SDS/Info ticks
+   (disabled when the file is missing), a message, a preview, and Send
+   with a confirm. Below that, the recent sends. Do a browser check with
+   the send mocked, or ask the user for a safe address.
+6. **Checklist and deploy.** Add both features to
+   `ADMIN_APP_TEST_CHECKLIST.md`. Ask the user before the push. The
+   deploy has new migrations.
+
+**Next: step 1.**
+
 ## In progress: Website Contacts screen (2026-11-16)
 
 The client asked to see who downloads from the website or sends an
@@ -167,7 +246,7 @@ database. The dev database holds 3305 contacts. The 2 test rows are
 removed. `sds_enquire` was not called, because it sends real mail to the
 admins.
 
-**Committed:** app `4ac95a8`. Nothing is pushed.
+**Committed and pushed (2026-11-16):** app `4ac95a8`, site `bca6ff6`.
 
 **Next step for Contacts:** ask the user before you push. A push to
 `main` of the app deploys it. A push to `remove-frontend` deploys Django,
