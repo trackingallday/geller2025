@@ -279,8 +279,34 @@ The user also wants the send feature on its own sidebar entry, easy to use.
 - The test uploads are removed from the dev database and `media/`.
 - A check of the screen in a browser is still open. Add it to step 6.
 
-**Next: step 4, the Send API.** Read `chemsapp/document_api_views.py`
-first.
+**Step 4: done (2026-11-18).**
+
+- Code: `document_send_list` at the end of `chemsapp/document_api_views.py`.
+  Tests: `chemsapp/test_document_send_api.py`, 7 tests. Full suite: 528
+  tests, with the same 3 chromedriver errors.
+- `POST /staff-api/document-sends/` (JSON):
+  `{emails: [...], items: [{product, kinds: ["sds", "info"]}], message}`.
+  - The API makes the emails lower case and removes duplicates. The limit
+    is 20 addresses.
+  - It sends one email to each address, so a recipient sees only their
+    own address. Reply-To is the email of the staff user.
+  - A product without the file, an unknown product, or a kind other than
+    `sds` and `info` gives 400 with `errors.items`. A bad address gives
+    `errors.emails`. Nothing is sent.
+  - If some sends fail, the response is 200 with `failed: [...]`. The
+    record holds only the sent addresses. If all sends fail, the response
+    is 502 and there is no record.
+  - Each item records the `ProductDocument` that was current at send time.
+- `GET` on the same URL gives the 50 newest sends. `?product=<id>` and
+  `?q=<part of an email>` filter the list. Each send is `{id, recipients,
+  message, sent_by, sent_at, items: [{product_id, product_name, kind,
+  kind_label, document_id, version, issued_on}]}`.
+- Tests mock `chemsapp.document_api_views._send_one`. Mock the same
+  function in a browser check, or ask the user for a safe address.
+
+**Next: step 5, the "Send documents" screen in the app.** Read
+`src/features/products/api/documents.api.ts` and the sidebar file first.
+Keep screen state in the URL (`useUrlState`).
 
 ## In progress: Website Contacts screen (2026-11-16)
 

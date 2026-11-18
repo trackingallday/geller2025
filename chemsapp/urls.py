@@ -117,6 +117,9 @@ urlpatterns = [
     re_path(r'^staff-api/product-documents/(?P<document_id>\d+)/$',
             document_api_views.product_document_detail,
             name='staff_api_product_document_detail'),
+    re_path(r'^staff-api/document-sends/$',
+            document_api_views.document_send_list,
+            name='staff_api_document_send_list'),
     re_path(r'^staff-api/variants/(?P<variant_id>\d+)/$',
             product_api_views.variant_detail, name='staff_api_variant_detail'),
 
