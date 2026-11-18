@@ -354,10 +354,27 @@ Railway. Steps 1 to 5 are live, with migrations 0034 and 0035.
 has the document versions items under "Products" and a new "Send
 documents" section. Committed, not pushed.
 
-**Next: step 6, part 2.** Do the browser check of step 3 (the
-Compliance tab). The same Playwright method works. Then make sure that
-the deploy ran migrations 0034 and 0035 (open a product in the live app
-and look at "Documents with versions").
+**Step 6, part 2, browser check: done (2026-11-18).** 13 of 13 checks
+passed, with no page errors. Playwright signed in as `uitest` on the
+login form (a token in `localStorage` alone is not enough). Product 200
+(Oxybac), Compliance tab. The checks covered:
+
+- The three boxes show. The plain SDS file field is not in the form.
+- Two SDS uploads (with version and date). Each became current, and the
+  older count went up.
+- Delete is only on old versions. Edit of an old version saved.
+- Delete asks first, then removes the row. A refresh keeps the state.
+
+Product 200 has no sizes with labels, so the label boxes were not in
+this check. The API check of step 3 covers a label upload. The test rows
+and files are removed, and `sdsSheet` of product 200 points at
+`deb_oxybac_sds_2016.pdf` again. A delete in the app keeps the file in
+`media/`. This is on purpose (see the comment in
+`product_document_detail`).
+
+**Next: step 6, part 3.** Make sure that the deploy ran migrations 0034
+and 0035. Open a product in the live app and look at "Documents with
+versions". This is a read only. Do not upload or delete in production.
 
 ## In progress: Website Contacts screen (2026-11-16)
 
