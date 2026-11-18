@@ -202,13 +202,32 @@ This screen shows who downloaded an SDS or sent an enquiry on the website.
 
 Old SDS downloads show the product name as text, not as a link.
 
+## Application types
+
+Dilution rates and proposals use these types.
+
+CAUTION: Delete removes the type at once. You cannot undo a delete.
+
+- [ ] Click "New type". Fill in the fields and click "Make the type". The
+      type shows in the list and the count goes up.
+- [ ] Search for a name, a category or a unit. Press Escape to clear the
+      search.
+- [ ] Change the sort order in the list and press Enter. Refresh the page.
+      The new number stays.
+- [ ] Untick "Active" in the list. Refresh the page. The tick stays off.
+- [ ] Click a type. Change the unit label and click "Save". The list
+      shows the new label.
+- [ ] Open a type that has dilution rates. "Delete" is disabled. Set the
+      type to inactive instead.
+- [ ] Open a type with no dilution rates. Click "Delete", then "Cancel".
+      The type stays. Delete only a test type that you made.
+
 ## What is not in the app
 
 These items stay in the old Django admin (`/admin/`) for now:
 
 - The variants `.xlsx` import.
 - The dilutions `.xlsx` import.
-- The application-types settings.
 - Approve or reject of a report.
 
 Tell us if you need any of these in the app.

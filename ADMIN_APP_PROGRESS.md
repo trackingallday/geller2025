@@ -396,8 +396,18 @@ The production database is not proved, because no production login
 works. The 302 result above is the only production evidence.
 
 **Next:** step 6 is complete. Go back to "Next steps" below and ask the
-user what to do next. The Application types browser check (item 4.3) is
-still open.
+user what to do next.
+
+**Local checks of the unchecked items (2026-11-18).** The user asked for a
+local check of each change that no one drove in the browser. The user said
+that the production migrations will be fine, so do not check them again.
+- Application types: done (item 4.3 below).
+- Still not driven, because each one sends email: Proposals "Send PDF",
+  the completed-report email, and the single-user password reset. Each
+  one has unit tests with mail mocked. To drive them, start the dev
+  server with mail mocked (see `run_mocked.py` from the Send documents
+  check), or ask the user for a safe address.
+- Geller AI sync success path: no local Geller AI runs. Not checkable.
 
 ## In progress: Website Contacts screen (2026-11-16)
 
@@ -445,10 +455,7 @@ admins.
 `main` of the app deploys it. A push to `remove-frontend` deploys Django,
 and the deploy runs migration `0033` by itself.
 
-**Also open:** Application types step 4.3 (browser check). The checklist
-still lists "The application-types settings" under "What is not in the
-app". That line is wrong now. Remove it and add an "Application types"
-section after the browser check.
+**Application types step 4.3: done (2026-11-18).** See item 4 below.
 
 ## Next steps
 
@@ -525,7 +532,19 @@ open items are:
       - Tests: `ApplicationTypesPage.test.tsx` (12 tests). App 120 tests,
         `tsc` and the build pass. Nothing is committed.
       Next: item 3.
-   3. Do a browser check. Add the screen to `ADMIN_APP_TEST_CHECKLIST.md`.
+   3. **Done (2026-11-18).** Browser check on the local database: 26 of 26
+      checks passed, with no page errors. Script:
+      `scratchpad/apptypes_check.mjs` (Playwright, the same method as the
+      Compliance check). The checks covered: make two types, search, a
+      refresh, Escape, inline sort order and Active (other fields kept),
+      a panel save, Save disabled with no change, Delete disabled with a
+      dilution rate, Delete with Cancel and with confirm. The test types
+      and the dilution rate are removed. The dev database again holds 0
+      application types and 0 dilution rates.
+      Note: the Active tick changes when the server replies, not at the
+      click. This is a short delay, not a fault.
+      The checklist now has an "Application types" section. The wrong
+      line under "What is not in the app" is removed.
 5. `tsconfig.tsbuildinfo` shows as changed in the app repo. It is a build
    file. It was left out of the commits.
 
