@@ -38,7 +38,15 @@ records.
       The change stays.
 - [ ] Add and remove a category, a subcategory and a safety-wear chip.
 - [ ] Upload a product image.
-- [ ] On the Compliance tab, upload a document. Then clear it.
+- [ ] On the Compliance tab, open "Documents with versions". Upload a new
+      SDS to a `TEST` product, with a version and an issue date. The new
+      file shows as the current version.
+- [ ] Click "Show older versions". The previous SDS shows in the list.
+- [ ] Edit the version and the date of a version. Refresh. The change
+      stays.
+- [ ] Delete an old version. The current version has no Delete button.
+- [ ] Upload a label for one size of the product.
+- [ ] Download the SDS from the website. You get the current version.
 - [ ] Edit the MPI, application and procedure fields, and save.
 - [ ] Add an equivalent product. Edit it. Delete it.
 - [ ] On the Customers tab, add two customers. Remove one.
@@ -156,6 +164,26 @@ product to Geller AI and takes a long time.
       in the admin app in about 5 seconds.
 - [ ] If a ticket comes from a flagged report, click the report link. The
       report opens.
+
+## Send documents
+
+CAUTION: This screen sends real email. Send only to your own email
+address.
+
+- [ ] Type your email address and press Enter. The address shows as a
+      chip.
+- [ ] Type a bad address, for example `abc`. An error shows and the
+      address stays in the box.
+- [ ] Add a customer and a user with "Add a customer" and "Add a user".
+      Then remove both chips.
+- [ ] Add a product. The SDS and Info ticks show the current version and
+      date. A document with no file shows "No file".
+- [ ] Untick the Info sheet. Type a message. Open the preview. The
+      preview shows the message and only the SDS link.
+- [ ] Click Send and confirm. The email arrives with a link to the SDS.
+- [ ] The send shows at the top of "Recent sends".
+- [ ] Search "Recent sends" for your email address. Refresh. The search
+      stays.
 
 ## Website contacts
 

@@ -1,6 +1,6 @@
 # Geller Admin App — progress and next steps
 
-Last written 2026-11-16.
+Last written 2026-11-18.
 Original plan: `/Users/rimu/.claude/plans/look-at-how-in-ethereal-wand.md`
 Parity plan (current): `/Users/rimu/.claude/plans/omg-you-have-totally-atomic-acorn.md`
 
@@ -350,9 +350,14 @@ with no page errors.
 **Pushed (2026-11-18).** Django `90d19e9` and app `78e58e1` went to
 Railway. Steps 1 to 5 are live, with migrations 0034 and 0035.
 
-**Next: step 6.** Add both features to `ADMIN_APP_TEST_CHECKLIST.md`.
-Also do the browser check of step 3 (the Compliance tab). The same
-Playwright method works. Make sure that the deploy ran the migrations.
+**Step 6, part 1: done (2026-11-18).** `ADMIN_APP_TEST_CHECKLIST.md`
+has the document versions items under "Products" and a new "Send
+documents" section. Committed, not pushed.
+
+**Next: step 6, part 2.** Do the browser check of step 3 (the
+Compliance tab). The same Playwright method works. Then make sure that
+the deploy ran migrations 0034 and 0035 (open a product in the live app
+and look at "Documents with versions").
 
 ## In progress: Website Contacts screen (2026-11-16)
 
