@@ -329,18 +329,26 @@ commit `8180034`.
   the `failed` key of the envelope.
 - App: 138 tests, `tsc` and the build pass.
 
-**Next: the browser check of step 5.** Dev sends real mail through
-Postmark. Before you click Send, ask the user for a safe address, or
-patch `_send_one` in the dev server. Do these checks:
+**Browser check of step 5: done (2026-11-18).** 19 of 19 checks passed,
+with no page errors.
 
-1. Add a typed address, a customer and a user. Remove one chip.
-2. Add a product with an SDS and no info sheet. Make sure that the Info
-   tick is disabled.
-3. Make sure that the preview shows the links and the message.
-4. Send, confirm, and make sure that the new row shows in "Recent sends".
-5. Search the recent sends by email. Refresh. The filter stays.
+- Playwright (`~/node_modules/playwright-core`) drove the Chromium in
+  `~/Library/Caches/ms-playwright`. The dev server ran with
+  `_send_one` patched: an address with "fail" in it raised an error, and
+  all other addresses were only printed. No real mail went out.
+- The checks covered: a bad typed address, typed addresses, a customer, a
+  user, the remove of a chip, a product with no info sheet (the Info tick
+  is disabled), an untick, the preview, the confirm, a partial failure,
+  the new row in "Recent sends", and the search with a refresh.
+- The check found one fault. After a partial failure, the failed address
+  stayed, but the products and the message were cleared. As a result, a
+  retry needed the products again. Now the form keeps the products and
+  the message when an address fails. App: 1 new test, 139 tests, `tsc`
+  and the build pass. A second browser run of the retry passed.
+- The test sends are removed from the dev database.
 
-Then do step 6. Also include the browser check of step 3 there.
+**Next: step 6.** Also do the browser check of step 3 (the Compliance
+tab) there. The same Playwright method works.
 
 ## In progress: Website Contacts screen (2026-11-16)
 
