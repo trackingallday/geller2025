@@ -347,8 +347,12 @@ with no page errors.
   and the build pass. A second browser run of the retry passed.
 - The test sends are removed from the dev database.
 
-**Next: step 6.** Also do the browser check of step 3 (the Compliance
-tab) there. The same Playwright method works.
+**Pushed (2026-11-18).** Django `90d19e9` and app `78e58e1` went to
+Railway. Steps 1 to 5 are live, with migrations 0034 and 0035.
+
+**Next: step 6.** Add both features to `ADMIN_APP_TEST_CHECKLIST.md`.
+Also do the browser check of step 3 (the Compliance tab). The same
+Playwright method works. Make sure that the deploy ran the migrations.
 
 ## In progress: Website Contacts screen (2026-11-16)
 
