@@ -534,7 +534,7 @@ open items are:
       Next: item 3.
    3. **Done (2026-11-18).** Browser check on the local database: 26 of 26
       checks passed, with no page errors. Script:
-      `scratchpad/apptypes_check.mjs` (Playwright, the same method as the
+      `/private/tmp/claude-501/-Users-rimu-Documents-GitHub-geller-website/627066ba-b7a7-4b20-b7e9-3f41fb376730/scratchpad/apptypes_check.mjs` (Playwright, the same method as the
       Compliance check). The checks covered: make two types, search, a
       refresh, Escape, inline sort order and Active (other fields kept),
       a panel save, Save disabled with no change, Delete disabled with a
