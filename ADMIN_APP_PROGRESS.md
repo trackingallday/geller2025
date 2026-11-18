@@ -245,8 +245,42 @@ The user also wants the send feature on its own sidebar entry, easy to use.
 - `DELETE` on the same URL removes an old version. The current version
   gives 409. The file stays in storage.
 
-**Next: step 3, the app.** Read
-`features/products/components/editors/ComplianceEditor.tsx` first.
+**Step 3: done (2026-11-18).**
+
+- App files in `src/features/products/`:
+  - `api/documents.api.ts`: fetch, upload, edit and delete of versions.
+  - `components/editors/DocumentVersions.tsx`: `ProductDocumentVersions`
+    (all documents of one product) and `DocumentVersions` (one document).
+  - `components/editors/DocumentVersions.test.tsx`: 6 tests.
+- The Compliance tab now starts with "Documents with versions": SDS, info
+  sheet, MPI approval, and one box for the label of each size. Each box
+  shows the current version and date, "Upload new version" (file, version,
+  issue date), and "Show N older versions". Each row has Edit (version and
+  date). Only an old version has Delete, with a confirm.
+- An upload saves at once. It is not part of "Save compliance". For this
+  reason the panel is above the form, not in it.
+- The plain file fields of SDS, info sheet and MPI approval are removed
+  from the form. "Other documents" keeps only the application sheet.
+- The Label file field on the size editor (`VariantEditor.tsx`) is not
+  changed. An upload there goes into the history with no version and no
+  date, by the signal of step 1.
+- App: 132 tests, `tsc` and the build pass.
+
+- Check (2026-11-18): this session had no browser tool. For this reason
+  the five checks used the API calls of the app, with `curl` against the
+  dev server. All five passed:
+  1. A new SDS upload became current. The old version moved to old.
+  2. An edit of the version and date of a backfilled row worked.
+  3. A delete of the current version gave 409. A delete of an old
+     version worked.
+  4. A label upload for one size worked. A size of another product gave
+     400.
+  5. `/product_download/200/sds/` gave the new file.
+- The test uploads are removed from the dev database and `media/`.
+- A check of the screen in a browser is still open. Add it to step 6.
+
+**Next: step 4, the Send API.** Read `chemsapp/document_api_views.py`
+first.
 
 ## In progress: Website Contacts screen (2026-11-16)
 
