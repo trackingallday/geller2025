@@ -386,10 +386,18 @@ versions". This is a read only. Do not upload or delete in production.
   live. The deploy runs `migrate` before the server starts, so the
   migrations almost certainly ran. A staff login is necessary to prove it.
 
-**Next:** get a working staff login for production from the user, or ask
-the user to open a product in the live app and look at "Documents with
-versions". Then record the result here and correct the password in
-`CLAUDE.md`.
+**Step 6, part 3, local check: done (2026-11-18).** The user said to
+use the local database. On `settings_dev`, `showmigrations` shows 0033,
+0034 and 0035 applied. `GET /staff-api/products/200/documents/` as
+`uitest` returns the backfilled rows: SDS `deb_oxybac_sds_2016.pdf` and
+info `oxybac_PI.pdf`, both current.
+
+The production database is not proved, because no production login
+works. The 302 result above is the only production evidence.
+
+**Next:** step 6 is complete. Go back to "Next steps" below and ask the
+user what to do next. The Application types browser check (item 4.3) is
+still open.
 
 ## In progress: Website Contacts screen (2026-11-16)
 
