@@ -304,9 +304,43 @@ The user also wants the send feature on its own sidebar entry, easy to use.
 - Tests mock `chemsapp.document_api_views._send_one`. Mock the same
   function in a browser check, or ask the user for a safe address.
 
-**Next: step 5, the "Send documents" screen in the app.** Read
-`src/features/products/api/documents.api.ts` and the sidebar file first.
-Keep screen state in the URL (`useUrlState`).
+**Step 5, the screen: done, committed, not pushed (2026-11-18).** App
+commit `8180034`.
+
+- Files in `src/features/documents/`: `api/sends.api.ts`,
+  `hooks/useDocumentSends.ts`, `pages/SendDocumentsPage.tsx`,
+  `pages/SendDocumentsPage.test.tsx` (6 tests).
+- Route: `/send-documents?q=`. The `q` filters the recent sends by email.
+  The draft is in component state, not in the URL. Sidebar entry: "Send
+  documents" (icon `Send`), above "Website contacts".
+- Recipients: a typed address (Enter or "Add"; commas separate
+  addresses), "Add a customer", "Add a user". The pickers leave out
+  entries with no email. A bad typed address stays in the box with an
+  error.
+- Products: "Add a product". Each row loads
+  `/staff-api/products/<id>/documents/`. The SDS and Info ticks start on
+  for each current file. A tick with no file is disabled and shows "No
+  file". Each tick shows the current version and date.
+- The preview copies `_email_body` on the server. The link origin is
+  `VITE_DJANGO_ORIGIN`, or the page origin in dev.
+- Send asks first (an `alertdialog`). After a send, the recipients that
+  failed stay in the form. The app finds them by a comparison of the
+  typed list with `recipients` of the record, because `apiFetch` drops
+  the `failed` key of the envelope.
+- App: 138 tests, `tsc` and the build pass.
+
+**Next: the browser check of step 5.** Dev sends real mail through
+Postmark. Before you click Send, ask the user for a safe address, or
+patch `_send_one` in the dev server. Do these checks:
+
+1. Add a typed address, a customer and a user. Remove one chip.
+2. Add a product with an SDS and no info sheet. Make sure that the Info
+   tick is disabled.
+3. Make sure that the preview shows the links and the message.
+4. Send, confirm, and make sure that the new row shows in "Recent sends".
+5. Search the recent sends by email. Refresh. The filter stays.
+
+Then do step 6. Also include the browser check of step 3 there.
 
 ## In progress: Website Contacts screen (2026-11-16)
 
