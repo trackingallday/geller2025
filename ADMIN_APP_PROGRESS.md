@@ -376,6 +376,21 @@ and files are removed, and `sdsSheet` of product 200 points at
 and 0035. Open a product in the live app and look at "Documents with
 versions". This is a read only. Do not upload or delete in production.
 
+**Step 6, part 3, first try (2026-11-18): not complete.**
+
+- The `adminrimu` password in `CLAUDE.md` is wrong. Production
+  `/get_auth_token/` returns 401 "Invalid credentials".
+- Without a login, production gives 302 (the staff gate) for
+  `staff-api/products/200/documents/` and `staff-api/document-sends/`.
+  An unknown `staff-api/` URL gives 404. As a result, the new code is
+  live. The deploy runs `migrate` before the server starts, so the
+  migrations almost certainly ran. A staff login is necessary to prove it.
+
+**Next:** get a working staff login for production from the user, or ask
+the user to open a product in the live app and look at "Documents with
+versions". Then record the result here and correct the password in
+`CLAUDE.md`.
+
 ## In progress: Website Contacts screen (2026-11-16)
 
 The client asked to see who downloads from the website or sends an
