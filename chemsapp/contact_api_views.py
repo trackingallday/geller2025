@@ -12,7 +12,7 @@ from .staff_api import error, json_body, ok, search_q, staff_api
 from .workflow_api_views import _page, _when
 
 SDS_PREFIX = 'Downloaded SDS for product:'
-SEARCH_FIELDS = ['nameFrom', 'emailFrom', 'companyName', 'content']
+SEARCH_FIELDS = ['nameFrom', 'emailFrom', 'companyName', 'distributorName', 'content']
 
 
 def _serialize(contact):
@@ -31,6 +31,7 @@ def _serialize(contact):
         'id': contact.pk,
         'name': contact.nameFrom,
         'company': contact.companyName or '',
+        'distributor': contact.distributorName or '',
         'email': contact.emailFrom,
         'created_at': _when(contact.created_at),
         'kind': 'sds' if is_sds else 'enquiry',

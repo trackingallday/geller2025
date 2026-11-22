@@ -597,6 +597,9 @@ class Contact(MyBaseModel):
     # New SDS Enquiry stuff
     isSDSDownload = models.BooleanField(default=False)
     companyName = models.TextField(max_length=1000, null=True, blank=True)
+    # The distributor that the person buys from, as they typed it on the
+    # website form. Optional.
+    distributorName = models.TextField(max_length=1000, null=True, blank=True)
     # The product of an SDS download. Rows from before this field have no
     # link: the product name is only in ``content``.
     product = models.ForeignKey(

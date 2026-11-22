@@ -1066,7 +1066,8 @@ def push_sds_to_onepagecrm(b):
     contact_id = _onepagecrm_create_contact_with_note(
         name=b.get('nameFrom'),
         email=b.get('emailFrom'),
-        note_text='Downloaded SDS for product: {} (id {})'.format(product_name, b.get('productId')),
+        note_text='Downloaded SDS for product: {} (id {})\nDistributor: {}'.format(
+            product_name, b.get('productId'), b.get('distributorName') or '-'),
         tags=['Download SDS for {}'.format(product_name)],
         company_name=b.get('companyName'),
     )
@@ -1128,7 +1129,8 @@ def sds_enquire(request):
 Name: {nameFrom}
 Company: {companyName}
 Email: {emailFrom}
-Product: {productName}""".format(**b),
+Distributor: {distributorName}
+Product: {productName}""".format(**{'companyName': '', 'distributorName': '', **b}),
         )
     except Exception as e:
         # Dump the error into alllogs.log

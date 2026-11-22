@@ -613,8 +613,8 @@ class MarketAdmin(ImportExportModelAdmin):
 class ContactAdmin(ImportExportModelAdmin):
     def _created_at(self, obj):
         return obj.created_at.astimezone(pytz.timezone('Pacific/Auckland')).strftime('%c')
-    list_display = ['nameFrom', 'emailFrom', '_created_at']
-    search_fields = ['nameFrom', 'emailFrom', 'companyName',]
+    list_display = ['nameFrom', 'emailFrom', 'distributorName', '_created_at']
+    search_fields = ['nameFrom', 'emailFrom', 'companyName', 'distributorName']
 
 
 class ConfigAdmin(ImportExportModelAdmin):

@@ -373,7 +373,8 @@ class ContactSerializer(serializers.ModelSerializer):
     class Meta:
         model = Contact
         fields = (
-            'id', 'nameFrom', 'emailFrom', 'replied', 'content', 'isSDSDownload', 'companyName'
+            'id', 'nameFrom', 'emailFrom', 'replied', 'content', 'isSDSDownload', 'companyName',
+            'distributorName',
         )
 
 class NewsPostSerializer(serializers.ModelSerializer):

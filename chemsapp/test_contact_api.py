@@ -23,7 +23,7 @@ class ContactApiTests(TestCase):
             content='Please send a price list.')
         self.linked_sds = Contact.objects.create(
             nameFrom='Bob Jones', emailFrom='bob@kiwi.test', companyName='Kiwi Clean',
-            isSDSDownload=True, product=self.product,
+            isSDSDownload=True, product=self.product, distributorName='Bunzl',
             content='Downloaded SDS for product:Citrus Degreaser')
         self.old_sds = Contact.objects.create(
             nameFrom='Ann Lee', emailFrom='ann@old.test', isSDSDownload=True,
@@ -62,6 +62,8 @@ class ContactApiTests(TestCase):
         self.assertEqual(linked['product_id'], self.product.pk)
         self.assertEqual(linked['product_name'], 'Citrus Degreaser')
         self.assertEqual(linked['company'], 'Kiwi Clean')
+        self.assertEqual(linked['distributor'], 'Bunzl')
+        self.assertEqual(enquiry['distributor'], '')
         self.assertEqual(linked['message'], '')
 
     def test_old_sds_row_takes_the_product_name_from_content(self):
@@ -86,6 +88,8 @@ class ContactApiTests(TestCase):
                          ['Jane Smith'])
         self.assertEqual([r['name'] for r in self.get_list(q='glass')['contacts']],
                          ['Ann Lee'])
+        self.assertEqual([r['name'] for r in self.get_list(q='bunzl')['contacts']],
+                         ['Bob Jones'])
 
     def test_patch_sets_replied(self):
         response = self.client.patch(
@@ -124,3 +128,27 @@ class SdsEnquireProductLinkTests(TestCase):
         self.assertTrue(contact.isSDSDownload)
         self.assertEqual(contact.product, product)
         self.assertEqual(contact.content, 'Downloaded SDS for product:Floor Polish')
+
+    @mock.patch('chemsapp.views.mail_admin_async')
+    @mock.patch('chemsapp.views.push_sds_to_onepagecrm')
+    def test_sds_enquire_saves_the_distributor(self, crm, mail):
+        product = Product.objects.create(
+            name='Floor Polish', description='d', directions='d', productCode='FP2', brand='b')
+        payload = {'nameFrom': 'Kim', 'emailFrom': 'kim@x.test', 'companyName': '',
+                   'distributorName': 'Bunzl Auckland', 'productId': product.pk}
+        self.client.get('/sds_enquire/', {'data': json.dumps(payload)})
+        contact = Contact.objects.get(emailFrom='kim@x.test')
+        self.assertEqual(contact.distributorName, 'Bunzl Auckland')
+        self.assertEqual(crm.call_args[0][0]['distributorName'], 'Bunzl Auckland')
+        self.assertIn('Distributor: Bunzl Auckland', mail.call_args[0][1])
+
+    @mock.patch('chemsapp.views.mail_admin_async')
+    @mock.patch('chemsapp.views.push_sds_to_onepagecrm')
+    def test_sds_enquire_works_without_a_distributor(self, _crm, mail):
+        product = Product.objects.create(
+            name='Floor Polish', description='d', directions='d', productCode='FP3', brand='b')
+        payload = {'nameFrom': 'Lee', 'emailFrom': 'lee@x.test', 'productId': product.pk}
+        self.client.get('/sds_enquire/', {'data': json.dumps(payload)})
+        contact = Contact.objects.get(emailFrom='lee@x.test')
+        self.assertIsNone(contact.distributorName)
+        self.assertIn('Distributor: \n', mail.call_args[0][1])
